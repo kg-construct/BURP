@@ -91,7 +91,7 @@ public class Parse {
 	private static Expression prepareExpression(Resource r) {
 		if (r.hasProperty(RML.constant)) {
 			RDFNode constant = r.getProperty(RML.constant).getObject();
-			return new Constant<RDFNode>(constant); 
+			return new TermConstant(constant); 
 		}
 
 		if (r.hasProperty(RML.reference)) {

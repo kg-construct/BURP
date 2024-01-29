@@ -40,30 +40,26 @@ public class Main {
 					// Let subjects be the generated RDF terms that result from applying sm to i
 					Set<RDFNode> subjects = generateTerms(i, sm, conf.baseIRI);
 					
-					System.out.println(subjects);
-					
-					// Let subject_graphs be the set of the generated RDF terms that result from applying each term map in sgm to i
+					// Let subject_graphs be the set of the generated RDF terms 
+					// that result from applying each term map in sgm to i
 					Set<RDFNode> subject_graphs = new HashSet<RDFNode>();
 					for(GraphMap gm : sgm) {
 						subject_graphs.addAll(generateTerms(i, gm, conf.baseIRI));
 					}
 					
-					// For each subject in subjects and each class in classes, add triples to the output dataset as follows:
+					// For each subject in subjects and each class in classes, 
+					// add triples to the output dataset as follows:
 					// subject: 		subject
 					// predicate: 		rdf:type
 					// object:			class
 					// target graphs: 	If sgm is empty: rr:defaultgraph; otherwise: subject_graphs
 					
-					for(RDFNode s : subjects)
-						for(Resource clazz : sm.classes)
-							if(sgm.isEmpty())
-								ds.getDefaultModel().add(s.asResource(), RDF.type, clazz);
-							else
-								for(RDFNode g : subject_graphs)
-									if(g == RML.defaultGraph)
-										ds.getDefaultModel().add(s.asResource(), RDF.type, clazz);
-									else
-										ds.getNamedModel(g.asResource()).add(s.asResource(), RDF.type, clazz);
+					if(sgm.isEmpty())
+						subject_graphs.add(RML.defaultGraph);
+					
+					storeTriplesOfSubjectMaps(sm.classes, subjects, subject_graphs);
+					
+					ds.getDefaultModel().write(System.out);
 				}
 			}
 			
@@ -74,25 +70,54 @@ public class Main {
 		}
 	}
 
-	private static Set<RDFNode> generateTerms(Iteration i, TermMap tm, String baseIRI) {
-		// If the term map is a constant-valued term map, 
-		// then the generated RDF term is the term map's 
-		// constant value.
-		if(tm.expression instanceof Constant) {
-			return tm.expression.values(i);
-		}
+	private static void storeTriplesOfSubjectMaps(Set<Resource> classes, Set<RDFNode> subjects, Set<RDFNode> subject_graphs) {
+		for(RDFNode s : subjects)
+			for(Resource clazz : classes)
+				for(RDFNode g : subject_graphs)
+					if(g == RML.defaultGraph)
+						ds.getDefaultModel().add(s.asResource(), RDF.type, clazz);
+					else
+						ds.getNamedModel(g.asResource()).add(s.asResource(), RDF.type, clazz);
+	}
+
+	private static Set<RDFNode> generateTerms(Iteration i, TermMap tm, String baseIRI) throws Exception {
 		
-		Set<RDFNode> terms = new HashSet<RDFNode>();
-		
-		// If the expression map is not defined, then we
-		// generate a blank node
-		if(tm.expression == null) {
-			terms.add(ds.getDefaultModel().createResource());
-		}
-		
-		Set<String> values = tm.expression.values(i);
-		
-		System.out.println(values);
+		Set<RDFNode> terms = tm.generateTerms(i, baseIRI);		
+
+		//		if(tm.expression instanceof Constant) {
+//			return tm.expression.values(i);
+//		}
+//		
+//		Set<RDFNode> terms = new HashSet<RDFNode>();
+//		
+//		// If the expression map is not defined, then we
+//		// generate a blank node
+//		if(tm.expression == null) {
+//			terms.add(ds.getDefaultModel().createResource());
+//		}
+//		
+//		Set<String> values = tm.expression.values(i);
+//		
+//		if(tm.termType == RML.IRI) {
+//			for(String v : values) {
+//				IRI iri = IRIFactory.iriImplementation().create(v);
+//
+//				if(iri.isAbsolute()) {
+//					terms.add(ResourceFactory.createResource(iri.toString()));
+//				} else {
+//					
+//					iri = IRIFactory.iriImplementation().create(baseIRI + v);
+//					
+//					// iri.isAbsolute allows spaces, use Jena's IRIFactory to check whether the IRI is valid
+//					if(iri.isAbsolute() && !iri.hasViolation(true))
+//						terms.add(ResourceFactory.createResource(iri.toString()));
+//					else
+//						throw new Exception("Data error. " + baseIRI + v + " is not a valid absolute IRI");
+//				}
+//			}
+//		}
+//		
+//		System.out.println(values);
 		
 		return terms;
 	}

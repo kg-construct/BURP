@@ -8,31 +8,57 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.jena.rdf.model.RDFNode;
 
-public abstract class Expression <T> {
+public abstract class Expression {
 
-	abstract protected Set<T> values(Iteration i);
+	abstract protected Set<Object> values(Iteration i);
 
 }
 
-class Constant<T> extends Expression <T> {
+class Constant extends Expression {
 	
-	public T constant = null;
+	public String constant = null;
 	
-	public Constant(T constant) {
+	public Constant(String constant) {
 		this.constant = constant;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
-	protected Set<T> values(Iteration i) {
-		Set<T> set = new HashSet<T>();
+	// If the term map is a constant-valued term map, 
+	// then the generated RDF term is the term map's 
+	// constant value.
+	protected Set<Object> values(Iteration i) {
+		Set<Object> set = new HashSet<Object>();
 		set.add(constant);
 		return set;
 	}
 	
 }
 
-class Template extends Expression <String> {
+class TermConstant extends Expression {
+	
+	public Object constant = null;
+	
+	public TermConstant(RDFNode constant) {
+		this.constant = constant;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	// If the term map is a constant-valued term map, 
+	// then the generated RDF term is the term map's 
+	// constant value.
+	protected Set<Object> values(Iteration i) {
+		Set<Object> set = new HashSet<Object>();
+		set.add(constant);
+		return set;
+	}
+	
+}
+
+class Template extends Expression {
 	
 	public String template = null;
 	
@@ -45,7 +71,7 @@ class Template extends Expression <String> {
 	// If the term map is a template-valued term map, 
 	// then the generated RDF term is determined by applying 
 	// the term generation rules to its template value.
-	protected Set<String> values(Iteration i) {
+	protected Set<Object> values(Iteration i) {
 		Set<String> set = new HashSet<String>();
 		set.add(template);
 		
@@ -57,12 +83,14 @@ class Template extends Expression <String> {
 			
 			for(String s : set)
 				for(String v : valuesForReference)
-					newset.add(s.replace(search, v));
+					if(v != null)
+						newset.add(s.replace(search, v));
 
 			set = newset;
 		}
 		
-		return set;
+		return new HashSet<Object>(set);
+		
 	}
 
 	private List<String> references() {
@@ -77,7 +105,7 @@ class Template extends Expression <String> {
 	
 }
 
-class Reference extends Expression <Object> {
+class Reference extends Expression {
 	
 	public String reference = null;
 	
