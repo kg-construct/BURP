@@ -15,7 +15,8 @@
   ];
 
   rml:subjectMap [ 
-    rml:template "http://example.com/{Name}/{ID}/{Name}" 
+    rml:template "http://example.com/{Name}/{ID}/{Name}" ;
+    rml:class foaf:Person ;
   ]; 
 	
   rml:predicateObjectMap [ 
@@ -25,4 +26,25 @@
     ]
   ].
 
+<TriplesMap2>
+  a rml:TriplesMap;
+    
+  rml:logicalSource [ 
+    rml:source "./test/temp/student.csv";
+    rml:referenceFormulation ql:CSV ;
+  ];
+
+  rml:subjectMap [ 
+    rml:template "http://example.com/{Name}" ;
+    rml:class foaf:Dog, foaf:Cat ;
+  ]; 
+	
+  rml:predicateObjectMap [ 
+    rml:predicate foaf:name; 
+    rml:objectMap [
+      rml:reference "Name"
+    ]
+  ].
+
+										
 										

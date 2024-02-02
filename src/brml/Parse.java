@@ -1,4 +1,4 @@
-package urml;
+package brml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -91,7 +91,7 @@ public class Parse {
 	private static Expression prepareExpression(Resource r) {
 		if (r.hasProperty(RML.constant)) {
 			RDFNode constant = r.getProperty(RML.constant).getObject();
-			return new TermConstant(constant); 
+			return new RDFNodeConstant(constant); 
 		}
 
 		if (r.hasProperty(RML.reference)) {

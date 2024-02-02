@@ -1,4 +1,4 @@
-package urml;
+package brml;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -12,7 +12,7 @@ import org.apache.jena.rdf.model.RDFNode;
 
 public abstract class Expression {
 
-	abstract protected Set<Object> values(Iteration i);
+	//abstract protected Set<Object> values(Iteration i);
 
 }
 
@@ -23,37 +23,15 @@ class Constant extends Expression {
 	public Constant(String constant) {
 		this.constant = constant;
 	}
-
-	@SuppressWarnings("rawtypes")
-	@Override
-	// If the term map is a constant-valued term map, 
-	// then the generated RDF term is the term map's 
-	// constant value.
-	protected Set<Object> values(Iteration i) {
-		Set<Object> set = new HashSet<Object>();
-		set.add(constant);
-		return set;
-	}
 	
 }
 
-class TermConstant extends Expression {
+class RDFNodeConstant extends Expression {
 	
-	public Object constant = null;
+	public RDFNode constant = null;
 	
-	public TermConstant(RDFNode constant) {
+	public RDFNodeConstant(RDFNode constant) {
 		this.constant = constant;
-	}
-
-	@SuppressWarnings("rawtypes")
-	@Override
-	// If the term map is a constant-valued term map, 
-	// then the generated RDF term is the term map's 
-	// constant value.
-	protected Set<Object> values(Iteration i) {
-		Set<Object> set = new HashSet<Object>();
-		set.add(constant);
-		return set;
 	}
 	
 }
@@ -63,15 +41,17 @@ class Template extends Expression {
 	public String template = null;
 	
 	public Template(String template) {
-		// TODO: Validate the template
 		this.template = template;
 	}
 
-	@Override
 	// If the term map is a template-valued term map, 
 	// then the generated RDF term is determined by applying 
 	// the term generation rules to its template value.
-	protected Set<Object> values(Iteration i) {
+	protected Set<String> values(Iteration i) {
+		return values(i, false);
+	}
+	
+	protected Set<String> values(Iteration i, boolean safe) {
 		Set<String> set = new HashSet<String>();
 		set.add(template);
 		
@@ -84,12 +64,12 @@ class Template extends Expression {
 			for(String s : set)
 				for(String v : valuesForReference)
 					if(v != null)
-						newset.add(s.replace(search, v));
+						newset.add(s.replace(search, safe ? IRISafe.toIRISafe(v) : v));
 
 			set = newset;
 		}
 		
-		return new HashSet<Object>(set);
+		return set;
 		
 	}
 
@@ -102,7 +82,7 @@ class Template extends Expression {
 		}
 		return list;
 	}
-	
+
 }
 
 class Reference extends Expression {
@@ -113,7 +93,6 @@ class Reference extends Expression {
 		this.reference = reference;
 	}
 
-	@Override
 	// If the term map is a reference-valued term map, 
 	// then the generated RDF term is determined by applying the 
 	// term generation rules to its reference value.
