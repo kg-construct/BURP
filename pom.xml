@@ -2,10 +2,10 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>URML</groupId>
-	<artifactId>URML</artifactId>
+	<groupId>BRML</groupId>
+	<artifactId>BRML</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Unassuming RML Enginer</name>
+	<name>Basic RML Engine</name>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<plugins>
