@@ -8,9 +8,9 @@ import java.util.Set;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
@@ -110,8 +110,13 @@ public class Main {
 						pogs.addAll(gm.generateTerms(i, baseIRI));
 					}
 
-					storetriples(ds, subjects, predicates, objects, sgm.isEmpty() && pogs.isEmpty() ? def : new HashSet<>(sgs).addAll(pogs));
-
+					Set<RDFNode> graphs = def;
+					if(!sgm.isEmpty() || !pogs.isEmpty()) {
+						pogs.addAll(sgs);
+						graphs = pogs;
+					}
+					
+					storetriples(ds, subjects, predicates, objects, graphs);
 				}
 
 			}
@@ -135,9 +140,9 @@ public class Main {
 				for(RDFNode o : objects)
 					for(RDFNode g : graphs)
 						if(g.equals(RML.defaultGraph))
-							ds.getDefaultModel().add(s.asResource(), (Property) p, o);
+							ds.getDefaultModel().add(s.asResource(), ResourceFactory.createProperty(p.toString()), o);
 						else
-							ds.getNamedModel(g.asResource()).add(s.asResource(), (Property) p, o);
+							ds.getNamedModel(g.asResource()).add(s.asResource(), ResourceFactory.createProperty(p.toString()), o);
 	}
 
 	private static void storeTriplesOfSubjectMaps(

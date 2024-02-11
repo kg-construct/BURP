@@ -26,14 +26,16 @@ class CSVIteration extends Iteration {
 	@Override
 	protected Set<Object> getValuesFor(String reference) {
 		Set<Object> set = new HashSet<Object>();
-		set.add(map.get(reference));
+		if(map.containsKey(reference))
+			set.add(map.get(reference));
 		return set;
 	}
 
 	@Override
 	protected Set<String> getStringsFor(String reference) {
 		Set<String> set = new HashSet<String>();
-		set.add(map.get(reference));
+		if(map.containsKey(reference))
+			set.add(map.get(reference));
 		return set;
 	}
 	

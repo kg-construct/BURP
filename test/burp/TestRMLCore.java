@@ -43,14 +43,20 @@ public class TestRMLCore {
             		Model actual = RDFDataMgr.loadModel(r);
             		
             		if(!expected.isIsomorphicWith(actual)) {
-            			expected.write(System.out);
-            			actual.write(System.out);
+            			expected.write(System.out, "NQ");
+            			System.out.println();
+            			actual.write(System.out, "NQ");
             		}
+            		
+            		System.out.println(expected.isIsomorphicWith(actual) ? "OK" : "NOK");
             		
             		assertTrue(expected.isIsomorphicWith(actual));
             		
             	} else {
             		Main.doMain(new String[] { "-m", m, "-o", r });            		
+
+            		System.out.println(Files.size(Paths.get(r)) == 0 ? "OK" : "NOK");
+            		
             		assertTrue(Files.size(Paths.get(r)) == 0);
             	}
             	

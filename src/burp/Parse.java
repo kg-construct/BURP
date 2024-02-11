@@ -142,7 +142,6 @@ public class Parse {
 		if(termType != null)
 			objectMap.termType = termType;
 		
-		
 		Resource lam = om.getPropertyResourceValue(RML.languageMap);
 		if(lam != null)
 			objectMap.languageMap = prepareLanguageMap(lam);
@@ -151,6 +150,9 @@ public class Parse {
 		if(dtm != null)
 			objectMap.datatypeMap = prepareDatatypeMap(dtm);
 		
+		if(termType == null && (lam != null || dtm != null || objectMap.expression instanceof Reference))
+			objectMap.termType = RML.LITERAL;
+
 		return objectMap;
 	}
 

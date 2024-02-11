@@ -97,7 +97,6 @@ class Reference extends Expression {
 	// then the generated RDF term is determined by applying the 
 	// term generation rules to its reference value.
 	protected Set<Object> values(Iteration i) {
-		//
 		return i.getValuesFor(reference);
 	}
 	
