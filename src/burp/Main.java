@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
@@ -103,6 +104,40 @@ public class Main {
 					Set<RDFNode> objects = new HashSet<RDFNode>();
 					for(ObjectMap om : pom.objectMaps) {
 						objects.addAll(om.generateTerms(i, baseIRI));
+					}
+					for(ReferencingObjectMap rom : pom.refObjectMaps) {
+						TriplesMap parent = rom.parent;
+
+						// If there are no join conditions, then we generate resources
+						// from the child iteration. This is only guaranteed to work
+						// for logical sources of the same type or if the parent triple
+						// map' subject map only uses simple references.
+						if(rom.joinConditions.isEmpty()) {
+							objects.addAll(parent.subjectMap.generateTerms(i, baseIRI));
+						} 
+						else {
+							Iterator<Iteration> iter2 = parent.logicalSource.iterator();
+							while(iter2.hasNext()) {
+								Iteration i2 = iter2.next();
+								
+								// Expression Maps are multi-valued. We thus need
+								// For each join condition at least one match.
+								boolean ok = true;
+								for(JoinCondition jc : rom.joinConditions) {
+									List<String> values1 = jc.childMap.generateValues(i);
+									List<String> values2 = jc.parentMap.generateValues(i2);
+									if(values1.stream().distinct().filter(values2::contains).collect(Collectors.toSet()).isEmpty()) {
+										// No match, break.
+										ok = false;
+										break;
+									}
+								}
+								
+								if(ok) {
+									objects.addAll(parent.subjectMap.generateTerms(i2, baseIRI));									
+								}
+							}
+						}
 					}
 
 					Set<RDFNode> pogs = new HashSet<RDFNode>();

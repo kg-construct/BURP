@@ -30,13 +30,17 @@ public final class RML {
 	
 	// Properties
 	public static final Property clazz = ResourceFactory.createProperty(NS + "class");
+	public static final Property childMap = ResourceFactory.createProperty(NS + "childMap");
 	public static final Property constant = ResourceFactory.createProperty(NS + "constant");
 	public static final Property datatypeMap  = ResourceFactory.createProperty(NS + "datatypeMap");
 	public static final Property graphMap  = ResourceFactory.createProperty(NS + "graphMap");
 	public static final Property iterator  = ResourceFactory.createProperty(NS + "iterator");
+	public static final Property joinCondition  = ResourceFactory.createProperty(NS + "joinCondition");
 	public static final Property languageMap  = ResourceFactory.createProperty(NS + "languageMap");
 	public static final Property logicalSource = ResourceFactory.createProperty(NS + "logicalSource");
 	public static final Property objectMap  = ResourceFactory.createProperty(NS + "objectMap");
+	public static final Property parentMap  = ResourceFactory.createProperty(NS + "parentMap");
+	public static final Property parentTriplesMap  = ResourceFactory.createProperty(NS + "parentTriplesMap");
 	public static final Property predicateMap  = ResourceFactory.createProperty(NS + "predicateMap");
 	public static final Property predicateObjectMap  = ResourceFactory.createProperty(NS + "predicateObjectMap");
 	public static final Property reference = ResourceFactory.createProperty(NS + "reference");

@@ -34,6 +34,7 @@ public class TestRMLCore {
             	System.out.println(String.format("Writing output to %s", r));
             	
             	if(new File("./test/rml-core/" + f, "output.nq").exists()) {
+            		System.out.println("This test should generate a graph.");
                 	String o = new File("./test/rml-core/" + f, "output.nq").getAbsolutePath().toString();
                 	
 
@@ -53,9 +54,15 @@ public class TestRMLCore {
             		assertTrue(expected.isIsomorphicWith(actual));
             		
             	} else {
+            		System.out.println("This test should NOT generate a graph.");
+            		
             		Main.doMain(new String[] { "-m", m, "-o", r });            		
 
             		System.out.println(Files.size(Paths.get(r)) == 0 ? "OK" : "NOK");
+            		
+                	Model actual = RDFDataMgr.loadModel(r);
+            		
+            		actual.write(System.out, "NQ");
             		
             		assertTrue(Files.size(Paths.get(r)) == 0);
             	}

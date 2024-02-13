@@ -1,15 +1,15 @@
 package burp;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public abstract class Iteration {
 
-	protected abstract Set<Object> getValuesFor(String reference);
+	protected abstract List<Object> getValuesFor(String reference);
 
-	protected abstract Set<String> getStringsFor(String reference);
+	protected abstract List<String> getStringsFor(String reference);
 
 }
 
@@ -24,19 +24,19 @@ class CSVIteration extends Iteration {
 	}
 
 	@Override
-	protected Set<Object> getValuesFor(String reference) {
-		Set<Object> set = new HashSet<Object>();
+	protected List<Object> getValuesFor(String reference) {
+		List<Object> l = new ArrayList<Object>();
 		if(map.containsKey(reference))
-			set.add(map.get(reference));
-		return set;
+			l.add(map.get(reference));
+		return l;
 	}
 
 	@Override
-	protected Set<String> getStringsFor(String reference) {
-		Set<String> set = new HashSet<String>();
+	protected List<String> getStringsFor(String reference) {
+		List<String> l = new ArrayList<String>();
 		if(map.containsKey(reference))
-			set.add(map.get(reference));
-		return set;
+			l.add(map.get(reference));
+		return l;
 	}
 	
 }
