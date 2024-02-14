@@ -153,8 +153,6 @@ public abstract class ExpressionMap {
 abstract class TermMap extends ExpressionMap {
 
 	public Resource termType;
-
-	//public abstract Set<RDFNode> generateTerms(Iteration i, String baseIRI);
 	
 }
 
