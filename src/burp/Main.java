@@ -9,16 +9,16 @@ import java.util.stream.Collectors;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
 
 public class Main {
 
-	private static Set<RDFNode> def = Set.of(RML.defaultGraph);
+	private static Set<Resource> def = Set.of(RML.defaultGraph);
 
 	public static void main(String[] args) {
 		System.exit(doMain(args));
@@ -62,11 +62,11 @@ public class Main {
 				Iteration i = iter.next();
 
 				// Let subjects be the generated RDF terms that result from applying sm to i
-				Set<RDFNode> subjects = sm.generateTerms(i, baseIRI);
+				Set<Resource> subjects = sm.generateTerms(i, baseIRI);
 
 				// Let sgs be the set of the generated RDF terms 
 				// that result from applying each term map in sgm to i
-				Set<RDFNode> sgs = new HashSet<RDFNode>();
+				Set<Resource> sgs = new HashSet<Resource>();
 				for(GraphMap gm : sgm) {
 					sgs.addAll(gm.generateTerms(i, baseIRI));
 				}
@@ -96,7 +96,7 @@ public class Main {
 				// union of subject_graphs and predicate-object_graphs
 
 				for(PredicateObjectMap pom : tm.predicateObjectMaps) {
-					Set<RDFNode> predicates = new HashSet<RDFNode>();
+					Set<Property> predicates = new HashSet<Property>();
 					for(PredicateMap pm : pom.predicateMaps) {
 						predicates.addAll(pm.generateTerms(i, baseIRI));
 					}
@@ -140,12 +140,12 @@ public class Main {
 						}
 					}
 
-					Set<RDFNode> pogs = new HashSet<RDFNode>();
+					Set<Resource> pogs = new HashSet<Resource>();
 					for(GraphMap gm : pom.graphMaps) {
 						pogs.addAll(gm.generateTerms(i, baseIRI));
 					}
 
-					Set<RDFNode> graphs = def;
+					Set<Resource> graphs = def;
 					if(!sgm.isEmpty() || !pogs.isEmpty()) {
 						pogs.addAll(sgs);
 						graphs = pogs;
@@ -165,34 +165,34 @@ public class Main {
 
 	private static void storetriples(
 			Dataset ds, 
-			Set<RDFNode> subjects, 
-			Set<RDFNode> predicates, 
+			Set<Resource> subjects, 
+			Set<Property> predicates, 
 			Set<RDFNode> objects,
-			Set<RDFNode> graphs) {
+			Set<Resource> graphs) {
 
-		for(RDFNode s : subjects)
-			for(RDFNode p : predicates)
+		for(Resource s : subjects)
+			for(Property p : predicates)
 				for(RDFNode o : objects)
-					for(RDFNode g : graphs)
+					for(Resource g : graphs)
 						if(g.equals(RML.defaultGraph))
-							ds.getDefaultModel().add(s.asResource(), ResourceFactory.createProperty(p.toString()), o);
+							ds.getDefaultModel().add(s, p, o);
 						else
-							ds.getNamedModel(g.asResource()).add(s.asResource(), ResourceFactory.createProperty(p.toString()), o);
+							ds.getNamedModel(g.asResource()).add(s, p, o);
 	}
 
 	private static void storeTriplesOfSubjectMaps(
 			Dataset ds,
 			Set<Resource> classes, 
-			Set<RDFNode> subjects, 
-			Set<RDFNode> graphs) {
+			Set<Resource> subjects, 
+			Set<Resource> graphs) {
 
-		for(RDFNode s : subjects)
+		for(Resource s : subjects)
 			for(Resource c : classes)
-				for(RDFNode g : graphs)
+				for(Resource g : graphs)
 					if(g.equals(RML.defaultGraph))
-						ds.getDefaultModel().add(s.asResource(), RDF.type, c);
+						ds.getDefaultModel().add(s, RDF.type, c);
 					else
-						ds.getNamedModel(g.asResource()).add(s.asResource(), RDF.type, c);
+						ds.getNamedModel(g).add(s, RDF.type, c);
 	}
 
 }
