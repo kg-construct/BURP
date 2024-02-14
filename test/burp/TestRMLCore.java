@@ -38,7 +38,7 @@ public class TestRMLCore {
                 	String o = new File("./test/rml-core/" + f, "output.nq").getAbsolutePath().toString();
                 	
 
-            		Main.doMain(new String[] { "-m", m, "-o", r });
+            		Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
 
             		Model expected = RDFDataMgr.loadModel(o);
             		Model actual = RDFDataMgr.loadModel(r);

@@ -47,10 +47,13 @@ public abstract class ExpressionMap {
 			for(Object v : ((Reference) expression).values(i)) {
 				String s = v.toString();
 				
+				System.err.println(s);
+				System.err.println(isAbsoluteAndValidIRI(baseIRI + s));
+				
 				if(isAbsoluteAndValidIRI(s))
 					set.add(ResourceFactory.createResource(s));
 				else if(isAbsoluteAndValidIRI(baseIRI + s))
-					set.add(ResourceFactory.createResource(s));
+					set.add(ResourceFactory.createResource(baseIRI + s));
 				else
 					throw new RuntimeException(baseIRI + " and " + s + " do not constitute a valid IRI");
 			}
