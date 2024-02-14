@@ -32,10 +32,11 @@ public abstract class ExpressionMap {
 		
 		if(expression instanceof Template) {
 			for(String v : ((Template) expression).values(i, true)) {
+				
 				if(isAbsoluteAndValidIRI(v))
 					set.add(ResourceFactory.createResource(v));
 				else if(isAbsoluteAndValidIRI(baseIRI + v.toString()))
-					set.add(ResourceFactory.createResource(v));
+					set.add(ResourceFactory.createResource(baseIRI + v.toString()));
 				else
 					throw new RuntimeException(baseIRI + " and " + v + " do not constitute a valid IRI");
 				
@@ -46,9 +47,6 @@ public abstract class ExpressionMap {
 		if(expression instanceof Reference) {
 			for(Object v : ((Reference) expression).values(i)) {
 				String s = v.toString();
-				
-				System.err.println(s);
-				System.err.println(isAbsoluteAndValidIRI(baseIRI + s));
 				
 				if(isAbsoluteAndValidIRI(s))
 					set.add(ResourceFactory.createResource(s));
