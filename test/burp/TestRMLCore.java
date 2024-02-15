@@ -75,5 +75,65 @@ public class TestRMLCore {
         	throw new RuntimeException(e);
         }
     }
+    
+    @Test
+    public void testMappingsJSON() {
+    	try (Stream<Path> stream = Files.list(Paths.get("./test/rml-core/"))) {
+            List<String> files = stream
+              .filter(f -> Files.isDirectory(f) && f.getFileName().toString().contains("JSON"))
+              .map(Path::getFileName)
+              .map(Path::toString)
+              .collect(Collectors.toList());
+              
+            for(String f : files) {
+            	System.out.println(String.format("Now processing %s", f));
+            	
+            	String m = new File("./test/rml-core/" + f, "mapping.ttl").getAbsolutePath().toString();
+            	
+            	String r = Files.createTempFile(null, ".nq").toString();
+            	System.out.println(String.format("Writing output to %s", r));
+            	
+            	if(new File("./test/rml-core/" + f, "output.nq").exists()) {
+            		System.out.println("This test should generate a graph.");
+                	String o = new File("./test/rml-core/" + f, "output.nq").getAbsolutePath().toString();
+                	
+
+            		Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
+
+            		Model expected = RDFDataMgr.loadModel(o);
+            		Model actual = RDFDataMgr.loadModel(r);
+            		
+            		if(!expected.isIsomorphicWith(actual)) {
+            			expected.write(System.out, "NQ");
+            			System.out.println();
+            			actual.write(System.out, "NQ");
+            		}
+            		
+            		System.out.println(expected.isIsomorphicWith(actual) ? "OK" : "NOK");
+            		
+            		assertTrue(expected.isIsomorphicWith(actual));
+            		
+            	} else {
+            		System.out.println("This test should NOT generate a graph.");
+            		
+            		Main.doMain(new String[] { "-m", m, "-o", r });            		
+
+            		System.out.println(Files.size(Paths.get(r)) == 0 ? "OK" : "NOK");
+            		
+                	Model actual = RDFDataMgr.loadModel(r);
+            		
+            		actual.write(System.out, "NQ");
+            		
+            		assertTrue(Files.size(Paths.get(r)) == 0);
+            	}
+            	
+            	System.out.println();	
+            }
+              
+        } catch (Exception e) {
+        	System.err.println(e.getMessage());
+        	throw new RuntimeException(e);
+        }
+    }
 	
 }

@@ -78,8 +78,16 @@ public class Parse {
 			source.file = getAbsoluteOrRelative(file, mpath);
 			return source;
 		}
+		
+		if (QL.JSONPath.equals(referenceFormulation)) {
+			String file = ls.getProperty(RML.source).getLiteral().getString();
+			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+			JSONSource source = new JSONSource();
+			source.file = getAbsoluteOrRelative(file, mpath);
+			source.iterator = iterator;
+			return source;
+		}
 
-		System.err.println(referenceFormulation);
 		throw new Exception("Reference formulation not (yet) supported.");
 	}
 
