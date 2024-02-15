@@ -1,0 +1,123 @@
+@prefix brick: <https://brickschema.org/schema/Brick#> .
+@prefix csvw: <http://www.w3.org/ns/csvw#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcam: <http://purl.org/dc/dcam/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dcmitype: <http://purl.org/dc/dcmitype/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix doap: <http://usefulinc.com/ns/doap#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prof: <http://www.w3.org/ns/dx/prof/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix qb: <http://purl.org/linked-data/cube#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix time: <http://www.w3.org/2006/time#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix wgs: <https://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://w3id.org/rml/shapes/RMLAssertedAndNonTriplesMapPropertiesShape> a sh:NodeShape ;
+    sh:and ( [ sh:maxCount 1 ;
+                sh:message """
+            Exactly one Predicate Object Map must be specified in the
+            Triples Map referenced by rml:quotedTriplesMap.
+            """ ;
+                sh:minCount 1 ;
+                sh:path rml:predicateObjectMap ] [ sh:message """
+            rml:quotedTriplesMap expects either a rml:AssertedTriplesMap 
+            or rml:NonAssertedTriplesMap.
+            """ ;
+                sh:or ( [ sh:node <http://w3id.org/rml/shapes/RMLAssertedTriplesMapShape> ] [ sh:node <http://w3id.org/rml/shapes/RMLNonAssertedTriplesMapShape> ] ) ] [ sh:alternativePath ( rml:AssertedTriplesMap rml:NonAssertedTriplesMap ) ;
+                sh:maxCount 1 ;
+                sh:message """
+            Either a rml:AssertedTriplesMap or rml:NonAssertedTriplesMap,
+            but not both.
+            """ ;
+                sh:minCount 1 ;
+                sh:path rdf:type ] ) ;
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:targetClass rml:AssertedTriplesMap,
+        rml:NonAssertedTriplesMap ;
+    sh:targetObjectsOf rml:quotedTriplesMap .
+
+<http://w3id.org/rml/shapes/RMLStarMapShape> a sh:NodeShape ;
+    sh:and ( <http://w3id.org/rml/shapes/RMLJoinConditionPropertiesShape> [ sh:description """
+            An Quoted Triples Map element to generate a RDF-star triple as 
+            subject or object or another triple from a logical source record.
+            """ ;
+                sh:maxCount 1 ;
+                sh:message """
+            Exactly one rml:quotedTriplesMap is required.
+            """ ;
+                sh:minCount 1 ;
+                sh:name "quotedTriplesMap" ;
+                sh:nodeKind sh:BlankNodeOrIRI ;
+                sh:path rml:quotedTriplesMap ] [ sh:message """
+            An Quoted Triples Map may never be used for generating a predicate.
+            """ ;
+                sh:name "PredicateMap" ;
+                sh:targetObjectsOf rml:predicateObjectMap ;
+                sh:xone ( [ sh:minCount 1 ;
+                            sh:path rml:predicate ] [ sh:minCount 1 ;
+                            sh:path rml:predicateMap ] ) ] ) ;
+    sh:description """
+    Represents a Star Map.
+    """ ;
+    sh:message """
+    Star Map requires exactly one rml:quotedTriplesMap and
+    zero or more rml:joinCondition.
+    """,
+        "StarMap" ;
+    sh:targetClass rml:StarMap .
+
+<http://w3id.org/rml/shapes/RMLAssertedTriplesMapShape> a sh:NodeShape ;
+    sh:and ( <http://w3id.org/rml/shapes/RMLTriplesMapPropertiesShape> [ sh:message """
+            Asserted Triples Map must have a rml:AssertedTriplesMap type.
+            """ ;
+                sh:path rdf:type ;
+                sh:value rml:AssertedTriplesMap ] ) ;
+    sh:description """
+    Represents a Asserted Triples Map.
+    """ ;
+    sh:message """
+    Asserted Triples Map requires exactly one rml:subject or 
+    one rml:subjectMap and zero or more rml:predicateObjectMaps
+    and exactly one rml:logicalSource.
+    """,
+        "AssertedTriplesMap" ;
+    sh:targetClass rml:AssertedTriplesMap .
+
+<http://w3id.org/rml/shapes/RMLJoinConditionPropertiesShape> a sh:NodeShape .
+
+<http://w3id.org/rml/shapes/RMLNonAssertedTriplesMapShape> a sh:NodeShape ;
+    sh:and ( <http://w3id.org/rml/shapes/RMLTriplesMapPropertiesShape> [ sh:message """
+            Non Asserted Triples Map must have a rml:NonAssertedTriplesMap type.
+            """ ;
+                sh:path rdf:type ;
+                sh:value rml:NonAssertedTriplesMap ] ) ;
+    sh:description """
+    Represents a Non Asserted Triples Map.
+    """ ;
+    sh:message """
+    Non Asserted Triples Map requires exactly one rml:subject or 
+    one rml:subjectMap and zero or more rml:predicateObjectMaps
+    and exactly one rml:logicalSource.
+    """,
+        "NonAssertedTriplesMap" ;
+    sh:targetClass rml:NonAssertedTriplesMap .
+
+<http://w3id.org/rml/shapes/RMLTriplesMapPropertiesShape> a sh:NodeShape .
+

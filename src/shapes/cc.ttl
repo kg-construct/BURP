@@ -1,0 +1,97 @@
+@prefix brick: <https://brickschema.org/schema/Brick#> .
+@prefix csvw: <http://www.w3.org/ns/csvw#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcam: <http://purl.org/dc/dcam/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dcmitype: <http://purl.org/dc/dcmitype/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix doap: <http://usefulinc.com/ns/doap#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prof: <http://www.w3.org/ns/dx/prof/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix qb: <http://purl.org/linked-data/cube#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix : <http://w3id.org/rml/shapes/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix time: <http://www.w3.org/2006/time#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix wgs: <https://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://w3id.org/rml/shapes/RMLGatherMapShape> a sh:NodeShape ;
+    sh:and ( <http://w3id.org/rml/shapes/RMLTermMapShape> <http://w3id.org/rml/shapes/RMLLogicalTargetPropertiesShape> [ sh:description """
+            rml:strategy specifies the collection strategy to use: rml:append
+            or rml:cartesianProduct. rml:append is the default strategy.
+            """ ;
+                sh:maxCount 1 ;
+                sh:message """
+            Zero or one rml:strategy is required.
+            """ ;
+                sh:minCount 0 ;
+                sh:name "strategy" ;
+                sh:node <http://w3id.org/rml/shapes/RMLStrategyAppendShape> ;
+                sh:nodeKind sh:IRI ;
+                sh:path rml:strategy ] [ sh:description """
+            rml:gatherAs specifies how to gather the collection e.g. a rdf:Alt,
+            rdf:List, rdf:Bag, or rdf:Seq.
+            """ ;
+                sh:in ( rdf:Alt rdf:List rdf:Bag rdf:Seq ) ;
+                sh:maxCount 1 ;
+                sh:message """
+            One rml:gatherAs is required.
+            """ ;
+                sh:minCount 1 ;
+                sh:name "gatherAs" ;
+                sh:nodeKind sh:IRI ;
+                sh:path rml:gatherAs ] [ sh:datatype xsd:boolean ;
+                sh:description """
+            Defines the behavior when the collection is empty. True will generate
+            a rdf:nil for a RDF collection or a resource with no members for an RDF
+            container. False will not generate any collection or container.
+            Default is false.
+            """ ;
+                sh:maxCount 1 ;
+                sh:message """
+            Zero or one rml:allowEmptyListAndContainer is required with datatype
+            xsd:boolean.
+            """ ;
+                sh:minCount 0 ;
+                sh:name "allowEmptyListAndContainer" ;
+                sh:nodeKind sh:Literal ;
+                sh:path rml:allowEmptyListAndContainer ] [ sh:description """
+            RML Term Maps to gather in the collection or container.
+            """ ;
+                sh:message """
+            one or more rml:gather properties are needed, each pointing to a
+            RML Term Map.
+            """ ;
+                sh:minCount 1 ;
+                sh:name "gather" ;
+                sh:nodeKind sh:BlankNodeOrIRI ;
+                sh:path rml:gather ] ) ;
+    sh:description """
+    Represents a Gather Map.
+    """ ;
+    sh:message """
+    Gather Map requires one rml:strategy, one rml:gatherAs, and a list of
+    Term Map with rml:gather.
+    """ ;
+    sh:name "GatherMap" .
+
+<http://w3id.org/rml/shapes/RMLLogicalTargetPropertiesShape> a sh:NodeShape .
+
+<http://w3id.org/rml/shapes/RMLStrategyAppendShape> a sh:NodeShape .
+
+<http://w3id.org/rml/shapes/RMLTermMapShape> a sh:NodeShape .
+

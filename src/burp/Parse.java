@@ -9,9 +9,14 @@ import java.util.Map;
 
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.shacl.ShaclValidator;
+import org.apache.jena.shacl.ValidationReport;
+import org.apache.jena.shacl.lib.ShLib;
+import org.apache.jena.util.FileUtils;
 
 public class Parse {
 
@@ -23,6 +28,9 @@ public class Parse {
 		triplesmaps = new HashMap<Resource, TriplesMap>();
 
 		Model mapping = RDFDataMgr.loadModel(mappingFile);
+		
+		if(!isValid(mapping))
+			throw new RuntimeException("Mapping did not satisfy shapes.");
 
 		// Replace rml:subject, rml:object, ... with constant expression maps
 		normalizeConstants(mapping);
@@ -47,6 +55,19 @@ public class Parse {
 		}
 
 		return new ArrayList<TriplesMap>(triplesmaps.values());
+	}
+
+	private static boolean isValid(Model mapping) {		
+		Model core = ModelFactory.createDefaultModel();
+		core.read(Parse.class.getResourceAsStream("/shapes/core.ttl"), "urn:dummy", FileUtils.langTurtle); 
+		
+		ValidationReport report = ShaclValidator.get().validate(core.getGraph(), mapping.getGraph());
+	    if(!report.conforms()) {
+	    	ShLib.printReport(report);
+	    	return false;
+	    }
+	 
+		return true;
 	}
 
 	private static void normalizeConstants(Model mapping) {
