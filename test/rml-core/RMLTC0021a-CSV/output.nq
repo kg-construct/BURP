@@ -1,2 +1,7 @@
-<http://example.com/Venus> <http://xmlns.com/foaf/0.1/name> "Venus"^^<http://www.w3.org/2001/XMLSchema#string> .
-<http://example.com/Venus> <http://example.com/age> "21"^^<http://www.w3.org/2001/XMLSchema#int> .
+<http://example.com/Student/10/Venus%20Williams> <http://example.com/sameSportAs> <http://example.com/Student/10/Venus%20Williams> . 
+<http://example.com/Student/10/Venus%20Williams> <http://example.com/sameSportAs> <http://example.com/Student/20/Serena%20Williams> . 
+<http://example.com/Student/20/Serena%20Williams> <http://example.com/sameSportAs> <http://example.com/Student/20/Serena%20Williams> . 
+<http://example.com/Student/20/Serena%20Williams> <http://example.com/sameSportAs> <http://example.com/Student/10/Venus%20Williams> . 
+<http://example.com/Student/30/Loena%20Hendrickx> <http://example.com/sameSportAs> <http://example.com/Student/30/Loena%20Hendrickx> . 
+
+
