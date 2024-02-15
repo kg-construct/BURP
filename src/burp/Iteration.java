@@ -61,7 +61,6 @@ class JSONIteration extends Iteration {
 			;
 	
 	public JSONIteration(String json) {
-		System.err.println(json);
 		doc = JsonPath.using(c).parse(json);
 	}
 

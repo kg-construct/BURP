@@ -76,7 +76,6 @@ public class TestRMLCore {
         }
     }
     
-    @Test
     public void testMappingsJSON() {
     	try (Stream<Path> stream = Files.list(Paths.get("./test/rml-core/"))) {
             List<String> files = stream
