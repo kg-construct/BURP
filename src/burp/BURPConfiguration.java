@@ -5,7 +5,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 @Command(name = "urml")
-public class Configuration {
+public class BURPConfiguration {
 
 	@Option(names = {"-h", "--help" }, usageHelp = true, description = "Display a help message")
 	public boolean help = false;
@@ -19,9 +19,9 @@ public class Configuration {
 	@Option(names = {"-b", "--baseIRI"}, description = "Used in resolving relative IRIs produced by the R2RML mapping" )
 	public String baseIRI = null;
 	
-	public Configuration(String[] args) throws Exception {
+	public BURPConfiguration(String[] args) throws Exception {
 		try {
-			Configuration conf = CommandLine.populateCommand(this, args);
+			BURPConfiguration conf = CommandLine.populateCommand(this, args);
 			if(conf.help) {
 				new CommandLine(this).usage(System.out);
 				System.exit(0);

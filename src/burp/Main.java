@@ -27,7 +27,7 @@ public class Main {
 	public static int doMain(String[] args) {
 		try {
 			// Process the configuration file
-			Configuration conf = new Configuration(args);
+			BURPConfiguration conf = new BURPConfiguration(args);
 
 			// Parse the mapping file
 			List<TriplesMap> triplesmaps = Parse.parseMappingFile(conf.mappingFile);
