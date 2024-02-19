@@ -18,7 +18,7 @@ public class TestRMLCore {
 	
     @Test
     public void testMappingsCSV() {
-    	try (Stream<Path> stream = Files.list(Paths.get("./test/rml-core/"))) {
+    	try (Stream<Path> stream = Files.list(Paths.get("./src/test/burp/rml-core/"))) {
             List<String> files = stream
               .filter(f -> Files.isDirectory(f) && f.getFileName().toString().contains("CSV"))
               .map(Path::getFileName)
@@ -78,7 +78,7 @@ public class TestRMLCore {
     
     @Test
     public void testMappingsJSON() {
-    	try (Stream<Path> stream = Files.list(Paths.get("./test/rml-core/"))) {
+    	try (Stream<Path> stream = Files.list(Paths.get("./src/test/burp/rml-core/"))) {
             List<String> files = stream
               .filter(f -> Files.isDirectory(f) && f.getFileName().toString().contains("JSON"))
               .map(Path::getFileName)

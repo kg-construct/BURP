@@ -1,22 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" output="target/classes" path="src">
-		<attributes>
-			<attribute name="optional" value="true"/>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="src" path="test"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17">
+	<classpathentry kind="src" path="src/java"/>
+	<classpathentry kind="src" path="src/test"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="module" value="true"/>
-			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/info/picocli/picocli/4.7.5/picocli-4.7.5.jar" sourcepath="M2_REPO/info/picocli/picocli/4.7.5/picocli-4.7.5-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-arq/4.10.0/jena-arq-4.10.0.jar" sourcepath="M2_REPO/org/apache/jena/jena-arq/4.10.0/jena-arq-4.10.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-core/4.10.0/jena-core-4.10.0.jar" sourcepath="M2_REPO/org/apache/jena/jena-core/4.10.0/jena-core-4.10.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-base/4.10.0/jena-base-4.10.0.jar" sourcepath="M2_REPO/org/apache/jena/jena-base/4.10.0/jena-base-4.10.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/2.0.11/slf4j-api-2.0.11.jar" sourcepath="M2_REPO/org/slf4j/slf4j-api/2.0.11/slf4j-api-2.0.11-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-csv/1.10.0/commons-csv-1.10.0.jar" sourcepath="M2_REPO/org/apache/commons/commons-csv/1.10.0/commons-csv-1.10.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/2.14.0/commons-io-2.14.0.jar" sourcepath="M2_REPO/commons-io/commons-io/2.14.0/commons-io-2.14.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-lang3/3.13.0/commons-lang3-3.13.0.jar" sourcepath="M2_REPO/org/apache/commons/commons-lang3/3.13.0/commons-lang3-3.13.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.16.0/commons-codec-1.16.0.jar" sourcepath="M2_REPO/commons-codec/commons-codec/1.16.0/commons-codec-1.16.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-compress/1.24.0/commons-compress-1.24.0.jar" sourcepath="M2_REPO/org/apache/commons/commons-compress/1.24.0/commons-compress-1.24.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-collections4/4.4/commons-collections4-4.4.jar" sourcepath="M2_REPO/org/apache/commons/commons-collections4/4.4/commons-collections4-4.4-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/github/ben-manes/caffeine/caffeine/3.1.8/caffeine-3.1.8.jar" sourcepath="M2_REPO/com/github/ben-manes/caffeine/caffeine/3.1.8/caffeine-3.1.8-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/checkerframework/checker-qual/3.37.0/checker-qual-3.37.0.jar" sourcepath="M2_REPO/org/checkerframework/checker-qual/3.37.0/checker-qual-3.37.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1.jar" sourcepath="M2_REPO/com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/github/andrewoma/dexx/collection/0.7/collection-0.7.jar" sourcepath="M2_REPO/com/github/andrewoma/dexx/collection/0.7/collection-0.7-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-iri/4.10.0/jena-iri-4.10.0.jar" sourcepath="M2_REPO/org/apache/jena/jena-iri/4.10.0/jena-iri-4.10.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-cli/commons-cli/1.5.0/commons-cli-1.5.0.jar" sourcepath="M2_REPO/commons-cli/commons-cli/1.5.0/commons-cli-1.5.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/roaringbitmap/RoaringBitmap/1.0.0/RoaringBitmap-1.0.0.jar" sourcepath="M2_REPO/org/roaringbitmap/RoaringBitmap/1.0.0/RoaringBitmap-1.0.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/github/jsonld-java/jsonld-java/0.13.4/jsonld-java-0.13.4.jar" sourcepath="M2_REPO/com/github/jsonld-java/jsonld-java/0.13.4/jsonld-java-0.13.4-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar" sourcepath="M2_REPO/com/google/code/gson/gson/2.10.1/gson-2.10.1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpclient-cache/4.5.14/httpclient-cache-4.5.14.jar" sourcepath="M2_REPO/org/apache/httpcomponents/httpclient-cache/4.5.14/httpclient-cache-4.5.14-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar" sourcepath="M2_REPO/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16.jar" sourcepath="M2_REPO/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/slf4j/jcl-over-slf4j/1.7.36/jcl-over-slf4j-1.7.36.jar" sourcepath="M2_REPO/org/slf4j/jcl-over-slf4j/1.7.36/jcl-over-slf4j-1.7.36-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/fasterxml/jackson/core/jackson-core/2.15.3/jackson-core-2.15.3.jar" sourcepath="M2_REPO/com/fasterxml/jackson/core/jackson-core/2.15.3/jackson-core-2.15.3-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/fasterxml/jackson/core/jackson-databind/2.15.3/jackson-databind-2.15.3.jar" sourcepath="M2_REPO/com/fasterxml/jackson/core/jackson-databind/2.15.3/jackson-databind-2.15.3-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/fasterxml/jackson/core/jackson-annotations/2.15.3/jackson-annotations-2.15.3.jar" sourcepath="M2_REPO/com/fasterxml/jackson/core/jackson-annotations/2.15.3/jackson-annotations-2.15.3-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/apicatalog/titanium-json-ld/1.3.2/titanium-json-ld-1.3.2.jar" sourcepath="M2_REPO/com/apicatalog/titanium-json-ld/1.3.2/titanium-json-ld-1.3.2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/glassfish/jakarta.json/2.0.1/jakarta.json-2.0.1.jar" sourcepath="M2_REPO/org/glassfish/jakarta.json/2.0.1/jakarta.json-2.0.1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/protobuf/protobuf-java/3.24.3/protobuf-java-3.24.3.jar" sourcepath="M2_REPO/com/google/protobuf/protobuf-java/3.24.3/protobuf-java-3.24.3-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/thrift/libthrift/0.19.0/libthrift-0.19.0.jar" sourcepath="M2_REPO/org/apache/thrift/libthrift/0.19.0/libthrift-0.19.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/opencsv/opencsv/5.9/opencsv-5.9.jar" sourcepath="M2_REPO/com/opencsv/opencsv/5.9/opencsv-5.9-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-text/1.11.0/commons-text-1.11.0.jar" sourcepath="M2_REPO/org/apache/commons/commons-text/1.11.0/commons-text-1.11.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.9.4/commons-beanutils-1.9.4.jar" sourcepath="M2_REPO/commons-beanutils/commons-beanutils/1.9.4/commons-beanutils-1.9.4-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.2/commons-logging-1.2.jar" sourcepath="M2_REPO/commons-logging/commons-logging/1.2/commons-logging-1.2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.2.2/commons-collections-3.2.2.jar" sourcepath="M2_REPO/commons-collections/commons-collections/3.2.2/commons-collections-3.2.2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/jayway/jsonpath/json-path/2.9.0/json-path-2.9.0.jar" sourcepath="M2_REPO/com/jayway/jsonpath/json-path/2.9.0/json-path-2.9.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/minidev/json-smart/2.5.0/json-smart-2.5.0.jar" sourcepath="M2_REPO/net/minidev/json-smart/2.5.0/json-smart-2.5.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/minidev/accessors-smart/2.5.0/accessors-smart-2.5.0.jar" sourcepath="M2_REPO/net/minidev/accessors-smart/2.5.0/accessors-smart-2.5.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/ow2/asm/asm/9.3/asm-9.3.jar" sourcepath="M2_REPO/org/ow2/asm/asm/9.3/asm-9.3-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-shacl/4.10.0/jena-shacl-4.10.0.jar" sourcepath="M2_REPO/org/apache/jena/jena-shacl/4.10.0/jena-shacl-4.10.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar" sourcepath="M2_REPO/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar" sourcepath="M2_REPO/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar" sourcepath="M2_REPO/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar" sourcepath="M2_REPO/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar" sourcepath="M2_REPO/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar" sourcepath="M2_REPO/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar" sourcepath="M2_REPO/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/testcontainers/junit-jupiter/1.19.5/junit-jupiter-1.19.5.jar" sourcepath="M2_REPO/org/testcontainers/junit-jupiter/1.19.5/junit-jupiter-1.19.5-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/testcontainers/testcontainers/1.19.5/testcontainers-1.19.5.jar" sourcepath="M2_REPO/org/testcontainers/testcontainers/1.19.5/testcontainers-1.19.5-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/junit/junit/4.13.2/junit-4.13.2.jar" sourcepath="M2_REPO/junit/junit/4.13.2/junit-4.13.2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar" sourcepath="M2_REPO/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8.jar" sourcepath="M2_REPO/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/jetbrains/annotations/17.0.0/annotations-17.0.0.jar" sourcepath="M2_REPO/org/jetbrains/annotations/17.0.0/annotations-17.0.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/github/docker-java/docker-java-api/3.3.4/docker-java-api-3.3.4.jar" sourcepath="M2_REPO/com/github/docker-java/docker-java-api/3.3.4/docker-java-api-3.3.4-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/github/docker-java/docker-java-transport-zerodep/3.3.4/docker-java-transport-zerodep-3.3.4.jar" sourcepath="M2_REPO/com/github/docker-java/docker-java-transport-zerodep/3.3.4/docker-java-transport-zerodep-3.3.4-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/github/docker-java/docker-java-transport/3.3.4/docker-java-transport-3.3.4.jar" sourcepath="M2_REPO/com/github/docker-java/docker-java-transport/3.3.4/docker-java-transport-3.3.4-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/java/dev/jna/jna/5.13.0/jna-5.13.0.jar" sourcepath="M2_REPO/net/java/dev/jna/jna/5.13.0/jna-5.13.0-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/testcontainers/mysql/1.19.5/mysql-1.19.5.jar" sourcepath="M2_REPO/org/testcontainers/mysql/1.19.5/mysql-1.19.5-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/testcontainers/jdbc/1.19.5/jdbc-1.19.5.jar" sourcepath="M2_REPO/org/testcontainers/jdbc/1.19.5/jdbc-1.19.5-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/testcontainers/database-commons/1.19.5/database-commons-1.19.5.jar" sourcepath="M2_REPO/org/testcontainers/database-commons/1.19.5/database-commons-1.19.5-sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
