@@ -131,7 +131,7 @@
         """ ;
             sh:name "child" ;
             sh:node <http://w3id.org/rml/shapes/RMLchildShape> ;
-            sh:nodeKind sh:IRI ;
+            sh:nodeKind sh:Literal ;
             sh:path rml:child ;
             sh:targetSubjectsOf rml:child ],
         [ sh:description """

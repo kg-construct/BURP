@@ -9,6 +9,7 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 
@@ -69,11 +70,16 @@ class JSONIteration extends Iteration {
 		// We need to explicitly convert the objects
 		// to strings because RML has not worked out
 		// "6.6.1 Automatically deriving datatypes" yet
-		List<Object> l = doc.read(reference);
 		List<Object> l2 = new ArrayList<Object>();
-		for(Object o : l)
-			if(o != null)
-				l2.add(o.toString());
+		try {
+			List<Object> l = doc.read(reference);
+			for(Object o : l)
+				if(o != null)
+					l2.add(o.toString());
+		} catch (PathNotFoundException e) {
+			// No data, silently ignore
+			e.printStackTrace();
+		}
 		return l2;
 	}
 
@@ -82,11 +88,16 @@ class JSONIteration extends Iteration {
 		// We need to explicitly convert the objects
 		// to strings (when they are null) because 
 		// this JSONPath library is... difficult.
-		List<Object> l = doc.read(reference);
 		List<String> l2 = new ArrayList<String>();
-		for(Object o : l)
-			if(o != null)
-				l2.add(o.toString());
+		try {
+			List<Object> l = doc.read(reference);
+			for(Object o : l)
+				if(o != null)
+					l2.add(o.toString());
+		} catch (PathNotFoundException e) {
+			// No data, silently ignore
+			e.printStackTrace();
+		}
 		return l2;
 	}
 	
