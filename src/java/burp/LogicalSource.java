@@ -85,3 +85,24 @@ class JSONSource extends LogicalSource {
 	}
 	
 }
+
+class RDBSource extends LogicalSource {
+	
+	private List<Iteration> iterations = null;
+	//public String file;
+
+	@Override
+	protected Iterator<Iteration> iterator() {
+		try {
+			if(iterations == null) {
+				iterations = new ArrayList<Iteration>();
+
+				
+			}
+			return iterations.iterator();
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+}

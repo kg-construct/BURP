@@ -102,3 +102,31 @@ class JSONIteration extends Iteration {
 	}
 	
 }
+
+class RDBIteration extends Iteration {
+
+	private Map<String, String> map = new HashMap<String, String>();
+	
+	public RDBIteration(String[] header, String[] rec) {
+		for(int i = 0; i < header.length; i++) {
+			map.put(header[i], rec[i]);
+		}
+	}
+
+	@Override
+	protected List<Object> getValuesFor(String reference) {
+		List<Object> l = new ArrayList<Object>();
+		if(map.containsKey(reference))
+			l.add(map.get(reference));
+		return l;
+	}
+
+	@Override
+	protected List<String> getStringsFor(String reference) {
+		List<String> l = new ArrayList<String>();
+		if(map.containsKey(reference))
+			l.add(map.get(reference));
+		return l;
+	}
+	
+}
