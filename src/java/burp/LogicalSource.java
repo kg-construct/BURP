@@ -3,10 +3,17 @@ package burp;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
@@ -89,7 +96,12 @@ class JSONSource extends LogicalSource {
 class RDBSource extends LogicalSource {
 	
 	private List<Iteration> iterations = null;
-	//public String file;
+
+	public String jdbcDriver;
+	public String jdbcDSN;
+	public String password;
+	public String username;
+	public String query;
 
 	@Override
 	protected Iterator<Iteration> iterator() {
@@ -97,6 +109,38 @@ class RDBSource extends LogicalSource {
 			if(iterations == null) {
 				iterations = new ArrayList<Iteration>();
 
+				Properties props = new Properties();
+				if(username != null && !"".equals(username))
+					props.setProperty("user", username);
+				if(password != null && !"".equals(password))
+					props.setProperty("password", password);			
+				
+				Connection connection = DriverManager.getConnection(jdbcDSN, props);
+				Statement statement = connection.createStatement();
+				final ResultSet resultset = statement.executeQuery(query);
+				
+				Map<String, Integer> indexMap = new HashMap<String, Integer>();
+				for(int i = 0; i <= resultset.getMetaData().getColumnCount(); i++) {
+					indexMap.put(resultset.getMetaData().getColumnLabel(i), i);
+				}
+				
+				return new Iterator<Iteration>() {
+
+					@Override
+					public boolean hasNext() {
+						try {
+							return resultset.next();
+						} catch (SQLException e) {
+							throw new RuntimeException("Problem querying database while iterating over rows.");
+						}
+					}
+
+					@Override
+					public Iteration next() {
+						return new RDBIteration(resultset, indexMap);
+					}
+					
+				};
 				
 			}
 			return iterations.iterator();

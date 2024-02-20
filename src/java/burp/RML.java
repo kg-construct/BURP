@@ -18,15 +18,6 @@ public final class RML {
 	public static final Resource SQL2008 = ResourceFactory.createResource(NS + "SQL2008");
 
 	// Classes
-//	public static final Resource BaseTableOrView = ResourceFactory.createResource(NS + "BaseTableOrView");
-//	public static final Resource GraphMap = ResourceFactory.createResource(NS + "GraphMap");
-//	public static final Resource LogicalTable = ResourceFactory.createResource(NS + "LogicalTable");
-//	public static final Resource ObjectMap = ResourceFactory.createResource(NS + "ObjectMap");
-//	public static final Resource R2RMLView = ResourceFactory.createResource(NS + "R2RMLView");
-//	public static final Resource RefObjectMap = ResourceFactory.createResource(NS + "RefObjectMap");
-//	public static final Resource SubjectMap = ResourceFactory.createResource(NS + "SubjectMap");
-//	public static final Resource TermMap = ResourceFactory.createResource(NS + "TermMap");
-//	public static final Resource TriplesMap = ResourceFactory.createResource(NS + "TriplesMap");
 	
 	// Properties
 	public static final Property clazz = ResourceFactory.createProperty(NS + "class");
@@ -46,7 +37,10 @@ public final class RML {
 	public static final Property reference = ResourceFactory.createProperty(NS + "reference");
 	public static final Property referenceFormulation = ResourceFactory.createProperty(NS + "referenceFormulation");
 	public static final Property source = ResourceFactory.createProperty(NS + "source");
+	public static final Property sqlQuery = ResourceFactory.createProperty(NS + "sqlQuery");
+	public static final Property sqlVersion = ResourceFactory.createProperty(NS + "sqlVersion");
 	public static final Property subjectMap  = ResourceFactory.createProperty(NS + "subjectMap");
+	public static final Property tableName = ResourceFactory.createProperty(NS + "tableName");
 	public static final Property template = ResourceFactory.createProperty(NS + "template");
 	public static final Property termType = ResourceFactory.createProperty(NS + "termType");
 	

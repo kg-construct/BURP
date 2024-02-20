@@ -37,7 +37,6 @@ public class TestRMLCore {
             	if(new File(base + f, "output.nq").exists()) {
             		System.out.println("This test should generate a graph.");
                 	String o = new File(base + f, "output.nq").getAbsolutePath().toString();
-                	
 
             		Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
 

@@ -1,9 +1,13 @@
 package burp;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.text.StringEscapeUtils;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
@@ -105,27 +109,40 @@ class JSONIteration extends Iteration {
 
 class RDBIteration extends Iteration {
 
-	private Map<String, String> map = new HashMap<String, String>();
-	
-	public RDBIteration(String[] header, String[] rec) {
-		for(int i = 0; i < header.length; i++) {
-			map.put(header[i], rec[i]);
-		}
+	private ResultSet resultSet;
+	private Map<String, Integer> indexMap;
+
+	public RDBIteration(ResultSet resultSet, Map<String, Integer> indexMap) {
+		this.resultSet = resultSet;
+		this.indexMap = indexMap;
 	}
 
 	@Override
 	protected List<Object> getValuesFor(String reference) {
 		List<Object> l = new ArrayList<Object>();
-		if(map.containsKey(reference))
-			l.add(map.get(reference));
+		String columnname = StringEscapeUtils.unescapeJava(reference);		
+		Integer index = indexMap.get(reference);
+		
+		// Check whether the user added the right column names in the mappings
+		if(index == null)
+			// Now try without quotes
+			index = indexMap.get(columnname.replace("\"", ""));
+				
+		try {
+			l.add(resultSet.getObject(index));
+		} catch (SQLException e) {
+			throw new RuntimeException("Error retrieving " + reference + " from table.");
+		}
+		
 		return l;
 	}
 
 	@Override
 	protected List<String> getStringsFor(String reference) {
 		List<String> l = new ArrayList<String>();
-		if(map.containsKey(reference))
-			l.add(map.get(reference));
+		for(Object o : getValuesFor(reference))
+			if(o != null)
+				l.add(o.toString());
 		return l;
 	}
 	

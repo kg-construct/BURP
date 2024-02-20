@@ -12,6 +12,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.ShaclValidator;
 import org.apache.jena.shacl.ValidationReport;
@@ -108,8 +109,43 @@ public class Parse {
 			source.iterator = iterator;
 			return source;
 		}
+		
+		if(isRelationalDatabase(ls)) {
+			Resource s = ls.getPropertyResourceValue(RML.source);
+			String jdbcDSN = s.getProperty(D2RQ.jdbcDSN).getLiteral().getString();
+			String jdbcDriver = s.getProperty(D2RQ.jdbcDriver).getLiteral().getString();
+			String username = s.getProperty(D2RQ.username).getLiteral().getString();
+			String password = s.getProperty(D2RQ.password).getLiteral().getString();
+			
+			String query = null;
+			Statement t = ls.getProperty(RML.tableName);
+			Statement q = ls.getProperty(RML.sqlQuery);
+			if(t != null) {
+				query = "(SELECT * FROM `" + t.getLiteral() + "`)";
+			} else {
+				query = q.getLiteral().toString();
+			}
+			
+			RDBSource source = new RDBSource();
+			source.jdbcDSN = jdbcDSN;
+			source.jdbcDriver = jdbcDriver;
+			source.username = username;
+			source.password = password;
+			source.query = query;
+			return source;
+		}
 
 		throw new Exception("Reference formulation not (yet) supported.");
+	}
+
+	private static boolean isRelationalDatabase(Resource ls) {
+		if(ls.getPropertyResourceValue(RML.sqlVersion) != null)
+			return true;
+		if(ls.getPropertyResourceValue(RML.tableName) != null)
+			return true;
+		if(ls.getPropertyResourceValue(RML.sqlQuery) != null)
+			return true;
+		return false;
 	}
 
 	private static String getAbsoluteOrRelative(String file, String mpath) {

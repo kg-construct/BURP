@@ -23,6 +23,7 @@ public class TestRMLCoreMySQL {
 
 	private static String base = "./src/test/burp/rml-core/";
 
+	@SuppressWarnings({ "resource", "deprecation" })
 	@Test
 	public void testMySQL() {
     	try (Stream<Path> stream = Files.list(Paths.get(base))) {
