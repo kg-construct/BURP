@@ -21,7 +21,9 @@ public class Main {
 	private static Set<Resource> def = Set.of(RML.defaultGraph);
 
 	public static void main(String[] args) {
-		System.exit(doMain(args));
+		int exit = doMain(args);
+		System.out.println("System exiting with code: " + exit);
+		System.exit(exit);
 	}
 
 	public static int doMain(String[] args) {

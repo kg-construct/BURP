@@ -92,8 +92,6 @@ public class Parse {
 		
 		String TERMTYPESTOCONSTANTS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:constant ?y ; r:termType ?z . } WHERE { ?x r:constant ?y. BIND(IF(ISLITERAL(?y), r:Literal, IF(ISIRI(?y), r:IRI, r:BlankNode)) AS ?z)}";
 		mapping.add(QueryExecutionFactory.create(TERMTYPESTOCONSTANTS, mapping).execConstruct());
-		
-		mapping.write(System.out, "Turtle");
 	}
 
 	private static LogicalSource prepareLogicalSource(Resource ls, String mpath) throws Exception {
