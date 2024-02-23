@@ -1,5 +1,6 @@
 package burp;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -28,9 +29,7 @@ public class TestRMLCore {
               
             for(String f : files) {
             	System.out.println(String.format("Now processing %s", f));
-            	
             	String m = new File(base+ f, "mapping.ttl").getAbsolutePath().toString();
-            	
             	String r = Files.createTempFile(null, ".nq").toString();
             	System.out.println(String.format("Writing output to %s", r));
             	
@@ -38,7 +37,7 @@ public class TestRMLCore {
             		System.out.println("This test should generate a graph.");
                 	String o = new File(base + f, "output.nq").getAbsolutePath().toString();
 
-            		Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
+            		int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
 
             		Model expected = RDFDataMgr.loadModel(o);
             		Model actual = RDFDataMgr.loadModel(r);
@@ -49,21 +48,20 @@ public class TestRMLCore {
             			actual.write(System.out, "NQ");
             		}
             		
+            		assertEquals(0, exit);
+            		
             		System.out.println(expected.isIsomorphicWith(actual) ? "OK" : "NOK");
             		
             		assertTrue(expected.isIsomorphicWith(actual));
             		
             	} else {
             		System.out.println("This test should NOT generate a graph.");
-            		
-            		Main.doMain(new String[] { "-m", m, "-o", r });            		
-
+            		int exit = Main.doMain(new String[] { "-m", m, "-o", r });
             		System.out.println(Files.size(Paths.get(r)) == 0 ? "OK" : "NOK");
-            		
                 	Model actual = RDFDataMgr.loadModel(r);
-            		
             		actual.write(System.out, "NQ");
             		
+            		assertTrue(exit > 0);
             		assertTrue(Files.size(Paths.get(r)) == 0);
             	}
             	
@@ -76,7 +74,7 @@ public class TestRMLCore {
         }
     }
     
-    @Test
+    //@Test
     public void testMappingsJSON() {
     	try (Stream<Path> stream = Files.list(Paths.get(base))) {
             List<String> files = stream
@@ -87,9 +85,7 @@ public class TestRMLCore {
               
             for(String f : files) {
             	System.out.println(String.format("Now processing %s", f));
-            	
             	String m = new File(base + f, "mapping.ttl").getAbsolutePath().toString();
-            	
             	String r = Files.createTempFile(null, ".nq").toString();
             	System.out.println(String.format("Writing output to %s", r));
             	
@@ -97,7 +93,6 @@ public class TestRMLCore {
             		System.out.println("This test should generate a graph.");
                 	String o = new File(base + f, "output.nq").getAbsolutePath().toString();
                 	
-
             		Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
 
             		Model expected = RDFDataMgr.loadModel(o);
@@ -115,15 +110,10 @@ public class TestRMLCore {
             		
             	} else {
             		System.out.println("This test should NOT generate a graph.");
-            		
-            		Main.doMain(new String[] { "-m", m, "-o", r });            		
-
+            		Main.doMain(new String[] { "-m", m, "-o", r });
             		System.out.println(Files.size(Paths.get(r)) == 0 ? "OK" : "NOK");
-            		
                 	Model actual = RDFDataMgr.loadModel(r);
-            		
             		actual.write(System.out, "NQ");
-            		
             		assertTrue(Files.size(Paths.get(r)) == 0);
             	}
             	

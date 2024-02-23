@@ -80,7 +80,7 @@ public class Parse {
 		String CONSTRUCTDMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:datatypeMap [ r:constant ?y ]. } WHERE { ?x r:datatype ?y. }";
 		String CONSTRUCTChMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:childMap [ r:reference ?y ]. } WHERE { ?x r:child ?y. }";	
 		String CONSTRUCTPaMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:parentMap [ r:reference ?y ]. } WHERE { ?x r:parent ?y. }";
-
+		
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTSMAPS, mapping).execConstruct());
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTOMAPS, mapping).execConstruct());
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTPMAPS, mapping).execConstruct());
@@ -89,20 +89,27 @@ public class Parse {
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTDMAPS, mapping).execConstruct());
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTChMAPS, mapping).execConstruct());
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTPaMAPS, mapping).execConstruct());
+		
+		String TERMTYPESTOCONSTANTS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:constant ?y ; r:termType ?z . } WHERE { ?x r:constant ?y. BIND(IF(ISLITERAL(?y), r:Literal, IF(ISIRI(?y), r:IRI, r:BlankNode)) AS ?z)}";
+		mapping.add(QueryExecutionFactory.create(TERMTYPESTOCONSTANTS, mapping).execConstruct());
+		
+		mapping.write(System.out, "Turtle");
 	}
 
 	private static LogicalSource prepareLogicalSource(Resource ls, String mpath) throws Exception {
 		Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
 
 		if (QL.CSV.equals(referenceFormulation)) {
-			String file = ls.getProperty(RML.source).getLiteral().getString();
+			// TODO: we currently assume RML-CORE via rml:path with rml:RelativePathSource
+			String file = ls.getProperty(RML.source).getResource().getProperty(RML.path).getLiteral().getString();
 			CSVSource source = new CSVSource();
 			source.file = getAbsoluteOrRelative(file, mpath);
 			return source;
 		}
 		
 		if (QL.JSONPath.equals(referenceFormulation)) {
-			String file = ls.getProperty(RML.source).getLiteral().getString();
+			// TODO: we currently assume RML-CORE via rml:path with rml:RelativePathSource
+			String file = ls.getProperty(RML.source).getResource().getProperty(RML.path).getLiteral().getString();
 			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
 			JSONSource source = new JSONSource();
 			source.file = getAbsoluteOrRelative(file, mpath);
