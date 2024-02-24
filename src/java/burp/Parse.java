@@ -97,7 +97,7 @@ public class Parse {
 	private static LogicalSource prepareLogicalSource(Resource ls, String mpath) throws Exception {
 		Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
 
-		if (QL.CSV.equals(referenceFormulation)) {
+		if (RML.CSV.equals(referenceFormulation)) {
 			// TODO: we currently assume RML-CORE via rml:path with rml:RelativePathSource
 			String file = ls.getProperty(RML.source).getResource().getProperty(RML.path).getLiteral().getString();
 			CSVSource source = new CSVSource();
@@ -105,7 +105,7 @@ public class Parse {
 			return source;
 		}
 		
-		if (QL.JSONPath.equals(referenceFormulation)) {
+		if (RML.JSONPath.equals(referenceFormulation)) {
 			// TODO: we currently assume RML-CORE via rml:path with rml:RelativePathSource
 			String file = ls.getProperty(RML.source).getResource().getProperty(RML.path).getLiteral().getString();
 			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();

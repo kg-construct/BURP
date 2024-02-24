@@ -17,6 +17,10 @@ public final class RML {
 	public static final Resource defaultGraph = ResourceFactory.createResource(NS + "defaultGraph");
 	public static final Resource SQL2008 = ResourceFactory.createResource(NS + "SQL2008");
 
+	public static final Resource CSV = ResourceFactory.createResource(NS + "CSV");
+	public static final Resource JSONPath = ResourceFactory.createResource(NS + "JSONPath");
+	public static final Resource XPath = ResourceFactory.createResource(NS + "XPath");
+	
 	// Classes
 	
 	// Properties

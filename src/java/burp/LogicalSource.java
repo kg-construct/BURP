@@ -120,7 +120,7 @@ class RDBSource extends LogicalSource {
 				final ResultSet resultset = statement.executeQuery(query);
 				
 				Map<String, Integer> indexMap = new HashMap<String, Integer>();
-				for(int i = 0; i <= resultset.getMetaData().getColumnCount(); i++) {
+				for(int i = 1; i <= resultset.getMetaData().getColumnCount(); i++) {
 					indexMap.put(resultset.getMetaData().getColumnLabel(i), i);
 				}
 				
