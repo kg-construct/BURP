@@ -115,7 +115,7 @@ public class Parse {
 			return source;
 		}
 		
-		if(isRelationalDatabase(ls)) {
+		if(RML.SQL2008.equals(referenceFormulation) || isRelationalDatabase(ls)) {
 			Resource s = ls.getPropertyResourceValue(RML.source);
 			String jdbcDSN = s.getProperty(D2RQ.jdbcDSN).getLiteral().getString();
 			String jdbcDriver = s.getProperty(D2RQ.jdbcDriver).getLiteral().getString();
@@ -124,7 +124,12 @@ public class Parse {
 			
 			String query = null;
 			Statement t = ls.getProperty(RML.tableName);
-			Statement q = ls.getProperty(RML.sqlQuery);
+			Statement q = ls.getProperty(RML.query);
+			
+			// TODO: This should be in the shacl shapes
+			if(t != null && q != null)
+				throw new Exception("Logical source cannot have a query and a table name.");
+			
 			if(t != null) {
 				query = "(SELECT * FROM `" + t.getLiteral() + "`)";
 			} else {
@@ -136,7 +141,11 @@ public class Parse {
 			source.jdbcDriver = jdbcDriver;
 			source.username = username;
 			source.password = password;
-			source.query = query;
+			
+			// Apache jena "escapes" double quotes, so "Name" becomes \"Name\"
+			// which is internally stored as \\"Name\\". We thus need to remove
+			// occurrences of \\
+			source.query = query.replace("\\", "");
 			return source;
 		}
 
@@ -148,8 +157,13 @@ public class Parse {
 			return true;
 		if(ls.getPropertyResourceValue(RML.tableName) != null)
 			return true;
-		if(ls.getPropertyResourceValue(RML.sqlQuery) != null)
+		if(ls.getPropertyResourceValue(RML.query) != null)
 			return true;
+		
+		Resource s = ls.getPropertyResourceValue(RML.source);
+		if(s != null && s.getProperty(D2RQ.jdbcDriver) != null)
+			return true;
+		
 		return false;
 	}
 

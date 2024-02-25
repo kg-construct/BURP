@@ -129,6 +129,7 @@ public class Main {
 									
 									List<String> values1 = jc.childMap.generateValues(i);
 									List<String> values2 = jc.parentMap.generateValues(i2);
+
 									if(values1.stream().distinct().filter(values2::contains).collect(Collectors.toSet()).isEmpty()) {
 										// No match, break.
 										ok = false;

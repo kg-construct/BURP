@@ -1,5 +1,9 @@
 package burp;
 
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,8 +13,10 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.jena.datatypes.BaseDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -116,7 +122,7 @@ public abstract class ExpressionMap {
 						set.add(ResourceFactory.createTypedLiteral(v, new BaseDatatype(dturi)));
 					}
 				} else {
-					set.add(ResourceFactory.createTypedLiteral(v));
+					set.add(createTypedLiteral(v));
 				}
 			}
 			return set;
@@ -134,7 +140,7 @@ public abstract class ExpressionMap {
 						set.add(ResourceFactory.createTypedLiteral(v.toString(), new BaseDatatype(dturi)));
 					}
 				} else {
-					set.add(ResourceFactory.createTypedLiteral(v));
+					set.add(createTypedLiteral(v));
 				}
 			}
 			return set;
@@ -143,9 +149,48 @@ public abstract class ExpressionMap {
 		throw new RuntimeException("Error generating literal or value.");
 	}
 	
-	private boolean isAbsoluteAndValidIRI(String string) {
+	private Literal createTypedLiteral(Object o) {
+		if(o instanceof Integer || o instanceof Long)
+			return ResourceFactory.createTypedLiteral(o.toString(), XSDDatatype.XSDinteger);
+		else if(o instanceof Float) {
+			String s = doubleCanonicalMap(Double.valueOf(o.toString()));
+			return ResourceFactory.createTypedLiteral(s, XSDDatatype.XSDdouble);
+		} else if(o instanceof Double) {
+			String s = doubleCanonicalMap(((Double) o));
+			return ResourceFactory.createTypedLiteral(s, XSDDatatype.XSDdouble);
+		} else if(o instanceof Date) {
+			return ResourceFactory.createTypedLiteral(o.toString(), XSDDatatype.XSDdate);
+		} else if(o instanceof Timestamp) {
+			Timestamp t = (Timestamp) o;
+			String s = o.toString().replace(" ", "T");
+			
+			// Ensure canonical xsd:dateTime by removing the ".0" when no fraction
+			if(t.getNanos() == 0)
+				s = s.replace(".0", "");
+			
+			return ResourceFactory.createTypedLiteral(s, XSDDatatype.XSDdateTime);
+		}
+		
+		return ResourceFactory.createTypedLiteral(o);
+	}
+
+	private static boolean isAbsoluteAndValidIRI(String string) {
 		IRI iri = IRIFactory.iriImplementation().create(string.toString());
 		return iri.isAbsolute() && !iri.hasViolation(true);
+	}
+	
+	private static String doubleCanonicalMap(Double d) {
+		BigDecimal f = BigDecimal.valueOf(d);
+		// The number of digits in the unscaled value
+		int p = f.precision();
+		// We start from two digits 
+		StringBuilder x = new StringBuilder("0.0");
+		// Add the remaining digits to the pattern
+		for (int i = 2; i < p; i++)
+            x.append("#");
+		// Let's not forget the e-notation
+		x.append("E0");
+		return new DecimalFormat(x.toString()).format(d);
 	}
 		
 }

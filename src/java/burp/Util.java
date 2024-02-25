@@ -1,6 +1,6 @@
 package burp;
 
-public class IRISafe {
+public class Util {
 
 	/**
 	 * Translate a string into its IRI safe value as per R2RML's steps
@@ -44,6 +44,22 @@ public class IRISafe {
 		else if (c >= 851968 && c <= 917501) return true;
 		else if (c >= 921600 && c <= 983037) return true;
 		return false;
+	}
+
+	/**
+	 * Converts a byte array into a Hex string
+	 * Code based on https://www.programiz.com/java-programming/examples/convert-byte-array-hexadecimal
+	 */
+    private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+	public static String bytesToHexString(byte[] o) {
+		byte[] bytes = (byte[]) o;
+		char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
 	}
 	
 }

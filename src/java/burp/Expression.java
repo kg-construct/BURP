@@ -52,8 +52,9 @@ class Template extends Expression {
 			
 			for(String s : list)
 				for(String v : valuesForReference)
-					if(v != null)
-						newset.add(s.replace(search, safe ? IRISafe.toIRISafe(v) : v));
+					if(v != null) {
+						newset.add(s.replace(search, safe ? Util.toIRISafe(v) : v));
+					}
 
 			list = newset;
 		}

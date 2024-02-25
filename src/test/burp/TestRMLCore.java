@@ -41,7 +41,6 @@ public class TestRMLCore {
 	@Test public void RMLTC0001bCSV() throws IOException { testForOK("RMLTC0001b-CSV"); }
 	@Test public void RMLTC0002aCSV() throws IOException { testForOK("RMLTC0002a-CSV"); }
 	@Test public void RMLTC0002bCSV() throws IOException { testForOK("RMLTC0002b-CSV"); }
-	@Test public void RMLTC0002cCSV() throws IOException { testForOK("RMLTC0002c-CSV"); }
 	@Test public void RMLTC0003cCSV() throws IOException { testForOK("RMLTC0003c-CSV"); }
 	@Test public void RMLTC0004aCSV() throws IOException { testForOK("RMLTC0004a-CSV"); }
 	@Test public void RMLTC0005aCSV() throws IOException { testForOK("RMLTC0005a-CSV"); }
@@ -72,6 +71,7 @@ public class TestRMLCore {
 	@Test public void RMLTC0022bCSV() throws IOException { testForOK("RMLTC0022b-CSV"); }
 	@Test public void RMLTC0022cCSV() throws IOException { testForOK("RMLTC0022c-CSV"); }
 
+	@Test public void RMLTC0002cCSV() throws IOException { testForNotOK("RMLTC0002c-CSV"); }
 	@Test public void RMLTC0002eCSV() throws IOException { testForNotOK("RMLTC0002e-CSV"); }
 	@Test public void RMLTC0004bCSV() throws IOException { testForNotOK("RMLTC0004b-CSV"); }
 	@Test public void RMLTC0007hCSV() throws IOException { testForNotOK("RMLTC0007h-CSV"); }

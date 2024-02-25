@@ -16,7 +16,6 @@ public final class RML {
 	// RML Constants
 	public static final Resource defaultGraph = ResourceFactory.createResource(NS + "defaultGraph");
 	public static final Resource SQL2008 = ResourceFactory.createResource(NS + "SQL2008");
-
 	public static final Resource CSV = ResourceFactory.createResource(NS + "CSV");
 	public static final Resource JSONPath = ResourceFactory.createResource(NS + "JSONPath");
 	public static final Resource XPath = ResourceFactory.createResource(NS + "XPath");
@@ -39,10 +38,10 @@ public final class RML {
 	public static final Property parentTriplesMap  = ResourceFactory.createProperty(NS + "parentTriplesMap");
 	public static final Property predicateMap  = ResourceFactory.createProperty(NS + "predicateMap");
 	public static final Property predicateObjectMap  = ResourceFactory.createProperty(NS + "predicateObjectMap");
+	public static final Property query = ResourceFactory.createProperty(NS + "query");
 	public static final Property reference = ResourceFactory.createProperty(NS + "reference");
 	public static final Property referenceFormulation = ResourceFactory.createProperty(NS + "referenceFormulation");
 	public static final Property source = ResourceFactory.createProperty(NS + "source");
-	public static final Property sqlQuery = ResourceFactory.createProperty(NS + "sqlQuery");
 	public static final Property sqlVersion = ResourceFactory.createProperty(NS + "sqlVersion");
 	public static final Property subjectMap  = ResourceFactory.createProperty(NS + "subjectMap");
 	public static final Property tableName = ResourceFactory.createProperty(NS + "tableName");

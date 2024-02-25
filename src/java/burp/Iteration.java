@@ -1,7 +1,6 @@
 package burp;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,8 +37,9 @@ class CSVIteration extends Iteration {
 	@Override
 	protected List<Object> getValuesFor(String reference) {
 		List<Object> l = new ArrayList<Object>();
-		if(map.containsKey(reference))
-			l.add(map.get(reference));
+		if(!map.containsKey(reference))
+			throw new RuntimeException("Attribute " + reference + " does not exist.");
+		l.add(map.get(reference));
 		return l;
 	}
 
@@ -109,30 +109,42 @@ class JSONIteration extends Iteration {
 
 class RDBIteration extends Iteration {
 
-	private ResultSet resultSet;
-	private Map<String, Integer> indexMap;
+	private Map<String, Object> values = new HashMap<String, Object>();
 
 	public RDBIteration(ResultSet resultSet, Map<String, Integer> indexMap) {
-		this.resultSet = resultSet;
-		this.indexMap = indexMap;
+		for(String ref : indexMap.keySet()) {
+			try {
+				Object o = resultSet.getObject(indexMap.get(ref));
+				if(o != null) {
+					if(o instanceof byte[]) {
+						o = Util.bytesToHexString((byte[]) o);
+					}
+				}
+				
+				values.put(ref, o);
+			} catch (Exception e) {
+				throw new RuntimeException("Error retrieving values from result set.");
+			}
+		}
 	}
-
+	
 	@Override
 	protected List<Object> getValuesFor(String reference) {
 		List<Object> l = new ArrayList<Object>();
 		String columnname = StringEscapeUtils.unescapeJava(reference);		
-		Integer index = indexMap.get(reference);
+		
+		if(!values.containsKey(columnname) && !values.containsKey(columnname.replace("\"", "")))
+			throw new RuntimeException("Attribute " + columnname + " does not exist.");
+		
+		Object value = values.get(columnname);
 		
 		// Check whether the user added the right column names in the mappings
-		if(index == null)
+		if(value == null)
 			// Now try without quotes
-			index = indexMap.get(columnname.replace("\"", ""));
+			value = values.get(columnname.replace("\"", ""));
 				
-		try {
-			l.add(resultSet.getObject(index));
-		} catch (SQLException e) {
-			throw new RuntimeException("Error retrieving " + reference + " from table.");
-		}
+		if(value != null)
+			l.add(value);
 		
 		return l;
 	}

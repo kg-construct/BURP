@@ -31,23 +31,23 @@ public abstract class LogicalSource {
 }
 
 class CSVSource extends LogicalSource {
-	
+
 	private List<Iteration> iterations = null;
 	public String file;
 
 	@Override
 	protected Iterator<Iteration> iterator() {
 		try {
-			if(iterations == null) {
+			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();
-				
-				FileReader fr = new FileReader(file); 
-				CSVReader reader = new CSVReader(fr); 
+
+				FileReader fr = new FileReader(file);
+				CSVReader reader = new CSVReader(fr);
 				List<String[]> all = reader.readAll();
 				reader.close();
-				
+
 				String[] header = all.remove(0);
-				for(String[] rec : all) {
+				for (String[] rec : all) {
 					iterations.add(new CSVIteration(header, rec));
 				}
 			}
@@ -56,32 +56,27 @@ class CSVSource extends LogicalSource {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 }
 
 class JSONSource extends LogicalSource {
-	
+
 	private List<Iteration> iterations = null;
 	public String file;
 	public String iterator;
-	
-	private static Configuration c = Configuration
-			.builder()
-            .mappingProvider(new JacksonMappingProvider())
-            .jsonProvider(new JacksonJsonProvider())
-            .build()
-            .addOptions(Option.ALWAYS_RETURN_LIST)
-			;
+
+	private static Configuration c = Configuration.builder().mappingProvider(new JacksonMappingProvider())
+			.jsonProvider(new JacksonJsonProvider()).build().addOptions(Option.ALWAYS_RETURN_LIST);
 
 	@Override
 	protected Iterator<Iteration> iterator() {
 		try {
-			if(iterations == null) {
+			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();
 				String contents = Files.readString(Paths.get(file));
 
 				List<Map<String, Object>> nodes = JsonPath.using(c).parse(contents).read(iterator);
-				for(Map<String,Object> n: nodes) {
+				for (Map<String, Object> n : nodes) {
 					iterations.add(new JSONIteration(JSONObject.toJSONString(n)));
 				}
 			}
@@ -90,12 +85,12 @@ class JSONSource extends LogicalSource {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 }
 
 class RDBSource extends LogicalSource {
-	
-	private List<Iteration> iterations = null;
+
+	// private List<Iteration> iterations = null;
 
 	public String jdbcDriver;
 	public String jdbcDSN;
@@ -106,47 +101,41 @@ class RDBSource extends LogicalSource {
 	@Override
 	protected Iterator<Iteration> iterator() {
 		try {
-			if(iterations == null) {
-				iterations = new ArrayList<Iteration>();
+			Properties props = new Properties();
+			if (username != null && !"".equals(username))
+				props.setProperty("user", username);
+			if (password != null && !"".equals(password))
+				props.setProperty("password", password);
 
-				Properties props = new Properties();
-				if(username != null && !"".equals(username))
-					props.setProperty("user", username);
-				if(password != null && !"".equals(password))
-					props.setProperty("password", password);			
-				
-				Connection connection = DriverManager.getConnection(jdbcDSN, props);
-				Statement statement = connection.createStatement();
-				final ResultSet resultset = statement.executeQuery(query);
-				
-				Map<String, Integer> indexMap = new HashMap<String, Integer>();
-				for(int i = 1; i <= resultset.getMetaData().getColumnCount(); i++) {
-					indexMap.put(resultset.getMetaData().getColumnLabel(i), i);
-				}
-				
-				return new Iterator<Iteration>() {
+			Connection connection = DriverManager.getConnection(jdbcDSN, props);
+			Statement statement = connection.createStatement();
+			final ResultSet resultset = statement.executeQuery(query);
 
-					@Override
-					public boolean hasNext() {
-						try {
-							return resultset.next();
-						} catch (SQLException e) {
-							throw new RuntimeException("Problem querying database while iterating over rows.");
-						}
-					}
-
-					@Override
-					public Iteration next() {
-						return new RDBIteration(resultset, indexMap);
-					}
-					
-				};
-				
+			Map<String, Integer> indexMap = new HashMap<String, Integer>();
+			for (int i = 1; i <= resultset.getMetaData().getColumnCount(); i++) {
+				indexMap.put(resultset.getMetaData().getColumnLabel(i), i);
 			}
-			return iterations.iterator();
+
+			return new Iterator<Iteration>() {
+
+				@Override
+				public boolean hasNext() {
+					try {
+						return resultset.next();
+					} catch (SQLException e) {
+						throw new RuntimeException("Problem querying database while iterating over rows.");
+					}
+				}
+
+				@Override
+				public Iteration next() {
+					return new RDBIteration(resultset, indexMap);
+				}
+
+			};
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 }
