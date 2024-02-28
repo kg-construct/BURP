@@ -115,6 +115,16 @@ public class Parse {
 			return source;
 		}
 		
+		if (RML.XPath.equals(referenceFormulation)) {
+			// TODO: we currently assume RML-CORE via rml:path with rml:RelativePathSource
+			String file = ls.getProperty(RML.source).getResource().getProperty(RML.path).getLiteral().getString();
+			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+			XMLSource source = new XMLSource();
+			source.file = getAbsoluteOrRelative(file, mpath);
+			source.iterator = iterator;
+			return source;
+		}
+		
 		if(RML.SQL2008.equals(referenceFormulation) || isRelationalDatabase(ls)) {
 			Resource s = ls.getPropertyResourceValue(RML.source);
 			String jdbcDSN = s.getProperty(D2RQ.jdbcDSN).getLiteral().getString();
@@ -125,10 +135,6 @@ public class Parse {
 			String query = null;
 			Statement t = ls.getProperty(RML.tableName);
 			Statement q = ls.getProperty(RML.query);
-			
-			// TODO: This should be in the shacl shapes
-			if(t != null && q != null)
-				throw new Exception("Logical source cannot have a query and a table name.");
 			
 			if(t != null) {
 				query = "(SELECT * FROM `" + t.getLiteral() + "`)";
