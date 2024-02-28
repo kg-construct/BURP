@@ -36,98 +36,101 @@ public class TestRMLCore {
 		}
 	}
 
-//	@Test public void RMLTC0000CSV() throws IOException { testForOK("RMLTC0000-CSV"); }
-//	@Test public void RMLTC0001aCSV() throws IOException { testForOK("RMLTC0001a-CSV"); }
-//	@Test public void RMLTC0001bCSV() throws IOException { testForOK("RMLTC0001b-CSV"); }
-//	@Test public void RMLTC0002aCSV() throws IOException { testForOK("RMLTC0002a-CSV"); }
-//	@Test public void RMLTC0002bCSV() throws IOException { testForOK("RMLTC0002b-CSV"); }
-//	@Test public void RMLTC0003cCSV() throws IOException { testForOK("RMLTC0003c-CSV"); }
-//	@Test public void RMLTC0004aCSV() throws IOException { testForOK("RMLTC0004a-CSV"); }
-//	@Test public void RMLTC0005aCSV() throws IOException { testForOK("RMLTC0005a-CSV"); }
-//	@Test public void RMLTC0006aCSV() throws IOException { testForOK("RMLTC0006a-CSV"); }
-//	@Test public void RMLTC0007aCSV() throws IOException { testForOK("RMLTC0007a-CSV"); }
-//	@Test public void RMLTC0007bCSV() throws IOException { testForOK("RMLTC0007b-CSV"); }
-//	@Test public void RMLTC0007cCSV() throws IOException { testForOK("RMLTC0007c-CSV"); }
-//	@Test public void RMLTC0007dCSV() throws IOException { testForOK("RMLTC0007d-CSV"); }
-//	@Test public void RMLTC0007eCSV() throws IOException { testForOK("RMLTC0007e-CSV"); }
-//	@Test public void RMLTC0007fCSV() throws IOException { testForOK("RMLTC0007f-CSV"); }
-//	@Test public void RMLTC0007gCSV() throws IOException { testForOK("RMLTC0007g-CSV"); }
-//	@Test public void RMLTC0008aCSV() throws IOException { testForOK("RMLTC0008a-CSV"); }
-//	@Test public void RMLTC0008bCSV() throws IOException { testForOK("RMLTC0008b-CSV"); }
-//	@Test public void RMLTC0008cCSV() throws IOException { testForOK("RMLTC0008c-CSV"); }
-//	@Test public void RMLTC0009aCSV() throws IOException { testForOK("RMLTC0009a-CSV"); }
-//	@Test public void RMLTC0009bCSV() throws IOException { testForOK("RMLTC0009b-CSV"); }
-//	@Test public void RMLTC0010aCSV() throws IOException { testForOK("RMLTC0010a-CSV"); }
-//	@Test public void RMLTC0010bCSV() throws IOException { testForOK("RMLTC0010b-CSV"); }
-//	@Test public void RMLTC0010cCSV() throws IOException { testForOK("RMLTC0010c-CSV"); }
-//	@Test public void RMLTC0011bCSV() throws IOException { testForOK("RMLTC0011b-CSV"); }
-//	@Test public void RMLTC0012aCSV() throws IOException { testForOK("RMLTC0012a-CSV"); }
-//	@Test public void RMLTC0012bCSV() throws IOException { testForOK("RMLTC0012b-CSV"); }
-//	@Test public void RMLTC0015aCSV() throws IOException { testForOK("RMLTC0015a-CSV"); }
-//	@Test public void RMLTC0019aCSV() throws IOException { testForOK("RMLTC0019a-CSV"); }
-//	@Test public void RMLTC0020aCSV() throws IOException { testForOK("RMLTC0020a-CSV"); }
-//	@Test public void RMLTC0021aCSV() throws IOException { testForOK("RMLTC0021a-CSV"); }
-//	@Test public void RMLTC0022aCSV() throws IOException { testForOK("RMLTC0022a-CSV"); }
-//	@Test public void RMLTC0022bCSV() throws IOException { testForOK("RMLTC0022b-CSV"); }
-//	@Test public void RMLTC0022cCSV() throws IOException { testForOK("RMLTC0022c-CSV"); }
-//
-//	@Test public void RMLTC0002cCSV() throws IOException { testForNotOK("RMLTC0002c-CSV"); }
-//	@Test public void RMLTC0002eCSV() throws IOException { testForNotOK("RMLTC0002e-CSV"); }
-//	@Test public void RMLTC0004bCSV() throws IOException { testForNotOK("RMLTC0004b-CSV"); }
-//	@Test public void RMLTC0007hCSV() throws IOException { testForNotOK("RMLTC0007h-CSV"); }
-//	@Test public void RMLTC0012cCSV() throws IOException { testForNotOK("RMLTC0012c-CSV"); }
-//	@Test public void RMLTC0012dCSV() throws IOException { testForNotOK("RMLTC0012d-CSV"); }
-//	@Test public void RMLTC0015bCSV() throws IOException { testForNotOK("RMLTC0015b-CSV"); }
-//	@Test public void RMLTC0019bCSV() throws IOException { testForNotOK("RMLTC0019b-CSV"); }
-//	
-//	@Test public void RMLTC0000JSON() throws IOException { testForOK("RMLTC0000-JSON"); }
-//	@Test public void RMLTC0001aJSON() throws IOException { testForOK("RMLTC0001a-JSON"); }
-//	@Test public void RMLTC0001bJSON() throws IOException { testForOK("RMLTC0001b-JSON"); }
-//	@Test public void RMLTC0002aJSON() throws IOException { testForOK("RMLTC0002a-JSON"); }
-//	@Test public void RMLTC0002bJSON() throws IOException { testForOK("RMLTC0002b-JSON"); }
-//	@Test public void RMLTC0002cJSON() throws IOException { testForOK("RMLTC0002c-JSON"); }
-//	@Test public void RMLTC0003cJSON() throws IOException { testForOK("RMLTC0003c-JSON"); }
-//	@Test public void RMLTC0004aJSON() throws IOException { testForOK("RMLTC0004a-JSON"); }
-//	@Test public void RMLTC0005aJSON() throws IOException { testForOK("RMLTC0005a-JSON"); }
-//	@Test public void RMLTC0006aJSON() throws IOException { testForOK("RMLTC0006a-JSON"); }
-//	@Test public void RMLTC0007aJSON() throws IOException { testForOK("RMLTC0007a-JSON"); }
-//	@Test public void RMLTC0007bJSON() throws IOException { testForOK("RMLTC0007b-JSON"); }
-//	@Test public void RMLTC0007cJSON() throws IOException { testForOK("RMLTC0007c-JSON"); }
-//	@Test public void RMLTC0007dJSON() throws IOException { testForOK("RMLTC0007d-JSON"); }
-//	@Test public void RMLTC0007eJSON() throws IOException { testForOK("RMLTC0007e-JSON"); }
-//	@Test public void RMLTC0007fJSON() throws IOException { testForOK("RMLTC0007f-JSON"); }
-//	@Test public void RMLTC0007gJSON() throws IOException { testForOK("RMLTC0007g-JSON"); }
-//	@Test public void RMLTC0008aJSON() throws IOException { testForOK("RMLTC0008a-JSON"); }
-//	@Test public void RMLTC0008bJSON() throws IOException { testForOK("RMLTC0008b-JSON"); }
-//	@Test public void RMLTC0008cJSON() throws IOException { testForOK("RMLTC0008c-JSON"); }
-//	@Test public void RMLTC0009aJSON() throws IOException { testForOK("RMLTC0009a-JSON"); }
-//	@Test public void RMLTC0009bJSON() throws IOException { testForOK("RMLTC0009b-JSON"); }
-//	@Test public void RMLTC0010aJSON() throws IOException { testForOK("RMLTC0010a-JSON"); }
-//	@Test public void RMLTC0010bJSON() throws IOException { testForOK("RMLTC0010b-JSON"); }
-//	@Test public void RMLTC0010cJSON() throws IOException { testForOK("RMLTC0010c-JSON"); }
-//	@Test public void RMLTC0011bJSON() throws IOException { testForOK("RMLTC0011b-JSON"); }
-//	@Test public void RMLTC0012aJSON() throws IOException { testForOK("RMLTC0012a-JSON"); }
-//	@Test public void RMLTC0012bJSON() throws IOException { testForOK("RMLTC0012b-JSON"); }
-//	@Test public void RMLTC0013aJSON() throws IOException { testForOK("RMLTC0013a-JSON"); }
-//	@Test public void RMLTC0015aJSON() throws IOException { testForOK("RMLTC0015a-JSON"); }
-//	@Test public void RMLTC0019aJSON() throws IOException { testForOK("RMLTC0019a-JSON"); }
-//	@Test public void RMLTC0020aJSON() throws IOException { testForOK("RMLTC0020a-JSON"); }
-//	@Test public void RMLTC0021aJSON() throws IOException { testForOK("RMLTC0021a-JSON"); }
-//	
-//	@Test public void RMLTC0002eJSON() throws IOException { testForNotOK("RMLTC0002e-JSON"); }
-//	@Test public void RMLTC0002gJSON() throws IOException { testForNotOK("RMLTC0002g-JSON"); }
-//	@Test public void RMLTC0004bJSON() throws IOException { testForNotOK("RMLTC0004b-JSON"); }
-//	@Test public void RMLTC0007hJSON() throws IOException { testForNotOK("RMLTC0007h-JSON"); }
-//	@Test public void RMLTC0012cJSON() throws IOException { testForNotOK("RMLTC0012c-JSON"); }
-//	@Test public void RMLTC0012dJSON() throws IOException { testForNotOK("RMLTC0012d-JSON"); }
-//	@Test public void RMLTC0015bJSON() throws IOException { testForNotOK("RMLTC0015b-JSON"); }
-//	@Test public void RMLTC0019bJSON() throws IOException { testForNotOK("RMLTC0019b-JSON"); }
+	@Test public void RMLTC0000CSV() throws IOException { testForOK("RMLTC0000-CSV"); }
+	@Test public void RMLTC0001aCSV() throws IOException { testForOK("RMLTC0001a-CSV"); }
+	@Test public void RMLTC0001bCSV() throws IOException { testForOK("RMLTC0001b-CSV"); }
+	@Test public void RMLTC0002aCSV() throws IOException { testForOK("RMLTC0002a-CSV"); }
+	@Test public void RMLTC0002bCSV() throws IOException { testForOK("RMLTC0002b-CSV"); }
+	@Test public void RMLTC0003cCSV() throws IOException { testForOK("RMLTC0003c-CSV"); }
+	@Test public void RMLTC0004aCSV() throws IOException { testForOK("RMLTC0004a-CSV"); }
+	@Test public void RMLTC0005aCSV() throws IOException { testForOK("RMLTC0005a-CSV"); }
+	@Test public void RMLTC0006aCSV() throws IOException { testForOK("RMLTC0006a-CSV"); }
+	@Test public void RMLTC0007aCSV() throws IOException { testForOK("RMLTC0007a-CSV"); }
+	@Test public void RMLTC0007bCSV() throws IOException { testForOK("RMLTC0007b-CSV"); }
+	@Test public void RMLTC0007cCSV() throws IOException { testForOK("RMLTC0007c-CSV"); }
+	@Test public void RMLTC0007dCSV() throws IOException { testForOK("RMLTC0007d-CSV"); }
+	@Test public void RMLTC0007eCSV() throws IOException { testForOK("RMLTC0007e-CSV"); }
+	@Test public void RMLTC0007fCSV() throws IOException { testForOK("RMLTC0007f-CSV"); }
+	@Test public void RMLTC0007gCSV() throws IOException { testForOK("RMLTC0007g-CSV"); }
+	@Test public void RMLTC0008aCSV() throws IOException { testForOK("RMLTC0008a-CSV"); }
+	@Test public void RMLTC0008bCSV() throws IOException { testForOK("RMLTC0008b-CSV"); }
+	@Test public void RMLTC0008cCSV() throws IOException { testForOK("RMLTC0008c-CSV"); }
+	@Test public void RMLTC0009aCSV() throws IOException { testForOK("RMLTC0009a-CSV"); }
+	@Test public void RMLTC0009bCSV() throws IOException { testForOK("RMLTC0009b-CSV"); }
+	@Test public void RMLTC0010aCSV() throws IOException { testForOK("RMLTC0010a-CSV"); }
+	@Test public void RMLTC0010bCSV() throws IOException { testForOK("RMLTC0010b-CSV"); }
+	@Test public void RMLTC0010cCSV() throws IOException { testForOK("RMLTC0010c-CSV"); }
+	@Test public void RMLTC0011bCSV() throws IOException { testForOK("RMLTC0011b-CSV"); }
+	@Test public void RMLTC0012aCSV() throws IOException { testForOK("RMLTC0012a-CSV"); }
+	@Test public void RMLTC0012bCSV() throws IOException { testForOK("RMLTC0012b-CSV"); }
+	@Test public void RMLTC0015aCSV() throws IOException { testForOK("RMLTC0015a-CSV"); }
+	@Test public void RMLTC0019aCSV() throws IOException { testForOK("RMLTC0019a-CSV"); }
+	@Test public void RMLTC0020aCSV() throws IOException { testForOK("RMLTC0020a-CSV"); }
+	@Test public void RMLTC0021aCSV() throws IOException { testForOK("RMLTC0021a-CSV"); }
+	@Test public void RMLTC0022aCSV() throws IOException { testForOK("RMLTC0022a-CSV"); }
+	@Test public void RMLTC0022bCSV() throws IOException { testForOK("RMLTC0022b-CSV"); }
+	@Test public void RMLTC0022cCSV() throws IOException { testForOK("RMLTC0022c-CSV"); }
+
+	@Test public void RMLTC0002cCSV() throws IOException { testForNotOK("RMLTC0002c-CSV"); }
+	@Test public void RMLTC0002eCSV() throws IOException { testForNotOK("RMLTC0002e-CSV"); }
+	@Test public void RMLTC0004bCSV() throws IOException { testForNotOK("RMLTC0004b-CSV"); }
+	@Test public void RMLTC0007hCSV() throws IOException { testForNotOK("RMLTC0007h-CSV"); }
+	@Test public void RMLTC0012cCSV() throws IOException { testForNotOK("RMLTC0012c-CSV"); }
+	@Test public void RMLTC0012dCSV() throws IOException { testForNotOK("RMLTC0012d-CSV"); }
+	@Test public void RMLTC0015bCSV() throws IOException { testForNotOK("RMLTC0015b-CSV"); }
+	@Test public void RMLTC0019bCSV() throws IOException { testForNotOK("RMLTC0019b-CSV"); }
+	
+	@Test public void RMLTC0000JSON() throws IOException { testForOK("RMLTC0000-JSON"); }
+	@Test public void RMLTC0001aJSON() throws IOException { testForOK("RMLTC0001a-JSON"); }
+	@Test public void RMLTC0001bJSON() throws IOException { testForOK("RMLTC0001b-JSON"); }
+	@Test public void RMLTC0002aJSON() throws IOException { testForOK("RMLTC0002a-JSON"); }
+	@Test public void RMLTC0002bJSON() throws IOException { testForOK("RMLTC0002b-JSON"); }
+	// This test should be removed
+	// @Test public void RMLTC0002cJSON() throws IOException { testForOK("RMLTC0002c-JSON"); }
+	@Test public void RMLTC0003cJSON() throws IOException { testForOK("RMLTC0003c-JSON"); }
+	@Test public void RMLTC0004aJSON() throws IOException { testForOK("RMLTC0004a-JSON"); }
+	@Test public void RMLTC0005aJSON() throws IOException { testForOK("RMLTC0005a-JSON"); }
+	@Test public void RMLTC0006aJSON() throws IOException { testForOK("RMLTC0006a-JSON"); }
+	@Test public void RMLTC0007aJSON() throws IOException { testForOK("RMLTC0007a-JSON"); }
+	@Test public void RMLTC0007bJSON() throws IOException { testForOK("RMLTC0007b-JSON"); }
+	@Test public void RMLTC0007cJSON() throws IOException { testForOK("RMLTC0007c-JSON"); }
+	@Test public void RMLTC0007dJSON() throws IOException { testForOK("RMLTC0007d-JSON"); }
+	@Test public void RMLTC0007eJSON() throws IOException { testForOK("RMLTC0007e-JSON"); }
+	@Test public void RMLTC0007fJSON() throws IOException { testForOK("RMLTC0007f-JSON"); }
+	@Test public void RMLTC0007gJSON() throws IOException { testForOK("RMLTC0007g-JSON"); }
+	@Test public void RMLTC0008aJSON() throws IOException { testForOK("RMLTC0008a-JSON"); }
+	@Test public void RMLTC0008bJSON() throws IOException { testForOK("RMLTC0008b-JSON"); }
+	@Test public void RMLTC0008cJSON() throws IOException { testForOK("RMLTC0008c-JSON"); }
+	@Test public void RMLTC0009aJSON() throws IOException { testForOK("RMLTC0009a-JSON"); }
+	@Test public void RMLTC0009bJSON() throws IOException { testForOK("RMLTC0009b-JSON"); }
+	@Test public void RMLTC0010aJSON() throws IOException { testForOK("RMLTC0010a-JSON"); }
+	@Test public void RMLTC0010bJSON() throws IOException { testForOK("RMLTC0010b-JSON"); }
+	@Test public void RMLTC0010cJSON() throws IOException { testForOK("RMLTC0010c-JSON"); }
+	@Test public void RMLTC0011bJSON() throws IOException { testForOK("RMLTC0011b-JSON"); }
+	@Test public void RMLTC0012aJSON() throws IOException { testForOK("RMLTC0012a-JSON"); }
+	@Test public void RMLTC0012bJSON() throws IOException { testForOK("RMLTC0012b-JSON"); }
+	@Test public void RMLTC0013aJSON() throws IOException { testForOK("RMLTC0013a-JSON"); }
+	@Test public void RMLTC0015aJSON() throws IOException { testForOK("RMLTC0015a-JSON"); }
+	@Test public void RMLTC0019aJSON() throws IOException { testForOK("RMLTC0019a-JSON"); }
+	@Test public void RMLTC0020aJSON() throws IOException { testForOK("RMLTC0020a-JSON"); }
+	@Test public void RMLTC0021aJSON() throws IOException { testForOK("RMLTC0021a-JSON"); }
+	
+	@Test public void RMLTC0002eJSON() throws IOException { testForNotOK("RMLTC0002e-JSON"); }
+	@Test public void RMLTC0002gJSON() throws IOException { testForNotOK("RMLTC0002g-JSON"); }
+	@Test public void RMLTC0004bJSON() throws IOException { testForNotOK("RMLTC0004b-JSON"); }
+	@Test public void RMLTC0007hJSON() throws IOException { testForNotOK("RMLTC0007h-JSON"); }
+	@Test public void RMLTC0012cJSON() throws IOException { testForNotOK("RMLTC0012c-JSON"); }
+	@Test public void RMLTC0012dJSON() throws IOException { testForNotOK("RMLTC0012d-JSON"); }
+	@Test public void RMLTC0015bJSON() throws IOException { testForNotOK("RMLTC0015b-JSON"); }
+	@Test public void RMLTC0019bJSON() throws IOException { testForNotOK("RMLTC0019b-JSON"); }
 	
 	@Test public void RMLTC0000XML() throws IOException { testForOK("RMLTC0000-XML"); }
 	@Test public void RMLTC0001aXML() throws IOException { testForOK("RMLTC0001a-XML"); }
 	@Test public void RMLTC0001bXML() throws IOException { testForOK("RMLTC0001b-XML"); }
 	@Test public void RMLTC0002aXML() throws IOException { testForOK("RMLTC0002a-XML"); }
 	@Test public void RMLTC0002bXML() throws IOException { testForOK("RMLTC0002b-XML"); }
+	// This test should be removed
+	//@Test public void RMLTC0002cXML() throws IOException { testForOK("RMLTC0002c-XML"); }
 	@Test public void RMLTC0003cXML() throws IOException { testForOK("RMLTC0003c-XML"); }
 	@Test public void RMLTC0004aXML() throws IOException { testForOK("RMLTC0004a-XML"); }
 	@Test public void RMLTC0005aXML() throws IOException { testForOK("RMLTC0005a-XML"); }
@@ -155,7 +158,6 @@ public class TestRMLCore {
 	@Test public void RMLTC0021aXML() throws IOException { testForOK("RMLTC0021a-XML"); }
 	@Test public void RMLTC0023aXML() throws IOException { testForOK("RMLTC0023a-XML"); }
 	
-	@Test public void RMLTC0002cXML() throws IOException { testForNotOK("RMLTC0002c-XML"); }
 	@Test public void RMLTC0002eXML() throws IOException { testForNotOK("RMLTC0002e-XML"); }
 	@Test public void RMLTC0004bXML() throws IOException { testForNotOK("RMLTC0004b-XML"); }
 	@Test public void RMLTC0007hXML() throws IOException { testForNotOK("RMLTC0007h-XML"); }

@@ -153,8 +153,6 @@ class XMLIteration extends Iteration {
 				Node node = nodes.item(0);
 				if(node.getTextContent() != null)
 					l2.add(node.getTextContent());
-				
-				System.err.println(node.getTextContent());
 			}
 			
 		} catch (Exception e) {
