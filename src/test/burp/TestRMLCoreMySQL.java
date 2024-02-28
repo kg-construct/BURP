@@ -50,6 +50,7 @@ public class TestRMLCoreMySQL {
 	@Test public void RMLTC0002aMySQL() throws Exception { testForOK("RMLTC0002a-MySQL"); }
 	@Test public void RMLTC0002bMySQL() throws Exception { testForOK("RMLTC0002b-MySQL"); }
 	@Test public void RMLTC0002dMySQL() throws Exception { testForOK("RMLTC0002d-MySQL"); }
+	@Test public void RMLTC0003bMySQL() throws Exception { testForOK("RMLTC0003b-MySQL"); }
 	@Test public void RMLTC0003cMySQL() throws Exception { testForOK("RMLTC0003c-MySQL"); }
 	@Test public void RMLTC0004aMySQL() throws Exception { testForOK("RMLTC0004a-MySQL"); }
 	@Test public void RMLTC0005aMySQL() throws Exception { testForOK("RMLTC0005a-MySQL"); }
@@ -100,7 +101,6 @@ public class TestRMLCoreMySQL {
 	@Test public void RMLTC0002iMySQL() throws Exception { testForNotOK("RMLTC0002i-MySQL"); }
 	@Test public void RMLTC0002jMySQL() throws Exception { testForNotOK("RMLTC0002j-MySQL"); }
 	@Test public void RMLTC0003aMySQL() throws Exception { testForNotOK("RMLTC0003a-MySQL"); }
-	@Test public void RMLTC0003bMySQL() throws Exception { testForNotOK("RMLTC0003b-MySQL"); }
 	@Test public void RMLTC0004bMySQL() throws Exception { testForNotOK("RMLTC0004b-MySQL"); }
 	@Test public void RMLTC0007hMySQL() throws Exception { testForNotOK("RMLTC0007h-MySQL"); }
 	@Test public void RMLTC0012cMySQL() throws Exception { testForNotOK("RMLTC0012c-MySQL"); }

@@ -6,11 +6,10 @@
             rml:iterator "$.countries[*]" ;
             rml:referenceFormulation rml:JSONPath ;
             rml:source <_:b559832> ] ;
-    rml:predicateObjectMap [ rml:objectMap [ rml:template "\\{\\{\\{ {$.['ISO 3166']} \\}\\}\\}" ;
-                    rml:termType rml:Literal ] ;
-            rml:predicate ex:code ] ;
+
+    rml:predicateObjectMap [ rml:predicate ex:code ;
+        rml:objectMap [ rml:template "\\{\\{\\{ {$.['ISO 3166']} \\}\\}\\}"; rml:termType rml:Literal] ] ;
     rml:subjectMap [ rml:template "http://example.com/{$.['Country Code']}/{Name}" ] .
 
 <_:b559832> a rml:RelativePathSource ;
     rml:path "country_info.json" .
-
