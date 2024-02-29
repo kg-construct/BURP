@@ -1,9 +1,11 @@
 package burp;
 
 import java.io.FileOutputStream;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,6 +44,7 @@ public class Main {
 			// It all went well, thus return 0
 			return 0;
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println(e.getMessage());
 			return 1;
 		}
@@ -104,8 +107,20 @@ public class Main {
 					}
 
 					Set<RDFNode> objects = new HashSet<RDFNode>();
+					Map<RDFNode, CC> ccMap = new HashMap<RDFNode, CC>();
+					
 					for(ObjectMap om : pom.objectMaps) {
-						objects.addAll(om.generateTerms(i, baseIRI));
+						CC cc = null;
+						
+						if(om.isGatherMap()) {
+							cc = om.gatherMap.generateCC(i);
+						}
+						
+						for(RDFNode n : om.generateTerms(i, baseIRI)) {
+							if(cc != null) ccMap.put(n, cc);
+							objects.add(n);
+						}
+						
 					}
 					for(ReferencingObjectMap rom : pom.refObjectMaps) {
 						TriplesMap parent = rom.parent;

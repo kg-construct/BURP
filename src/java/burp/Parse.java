@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
@@ -18,6 +19,7 @@ import org.apache.jena.shacl.ShaclValidator;
 import org.apache.jena.shacl.ValidationReport;
 import org.apache.jena.shacl.lib.ShLib;
 import org.apache.jena.util.FileUtils;
+import org.apache.jena.util.iterator.ExtendedIterator;
 
 public class Parse {
 
@@ -196,7 +198,12 @@ public class Parse {
 
 		Resource termType = sm.getPropertyResourceValue(RML.termType);
 		if(termType != null)
+			// PROVIDE THE TERM TYPE THAT IS GIVEN
 			subjectMap.termType = termType;
+		else if(hasNoTemplateReferenceOrConstant(sm)) {
+			// IF NO REFERENCE, TEMPLATE, OR CONSTANT, THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
+			subjectMap.termType = RML.BLANKNODE;
+		}
 
 		return subjectMap;
 	}
@@ -241,7 +248,12 @@ public class Parse {
 
 		Resource termType = om.getPropertyResourceValue(RML.termType);
 		if(termType != null)
+			// PROVIDE THE TERM TYPE THAT IS GIVEN
 			objectMap.termType = termType;
+		else if(hasNoTemplateReferenceOrConstant(om)) {
+			// IF NO REFERENCE, TEMPLATE, OR CONSTANT, THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
+			objectMap.termType = RML.BLANKNODE;
+		}
 
 		Resource lam = om.getPropertyResourceValue(RML.languageMap);
 		if(lam != null)
@@ -253,8 +265,43 @@ public class Parse {
 
 		if(termType == null && (lam != null || dtm != null || objectMap.expression instanceof Reference))
 			objectMap.termType = RML.LITERAL;
+		
+		Resource gm = om.getPropertyResourceValue(RML.gather);
+		if(gm != null) {
+			// This object map has a gather, so we process it as a gather map
+			objectMap.gatherMap = prepareGatherMap(om);
+		}
 
 		return objectMap;
+	}
+
+	private static GatherMap prepareGatherMap(Resource gm) {
+		GatherMap gatherMap = new GatherMap();
+		
+		if(gm.hasProperty(RML.allowEmptyListAndContainer)) {
+			boolean empty = gm.getProperty(RML.allowEmptyListAndContainer).getObject().asLiteral().getBoolean();
+			gatherMap.allowEmptyListAndContainer = empty;
+		}
+		
+		if(gm.hasProperty(RML.gatherAs)) {
+			Resource r = gm.getPropertyResourceValue(RML.gatherAs);
+			gatherMap.gatherAs = r;
+		}
+		
+		if(gm.hasProperty(RML.strategy)) {
+			Resource r = gm.getPropertyResourceValue(RML.strategy);
+			gatherMap.strategy = r;
+		}
+		
+		RDFList list = gm.getPropertyResourceValue(RML.gather).as(RDFList.class);
+		ExtendedIterator<RDFNode> iter = list.iterator();
+		while(iter.hasNext()) {
+			Resource r = iter.next().asResource();
+			ObjectMap om = prepareObjectMap(r);
+			gatherMap.maps.add(om);
+		}
+
+		return gatherMap;
 	}
 
 	private static DatatypeMap prepareDatatypeMap(Resource dtm) {
@@ -318,6 +365,13 @@ public class Parse {
 		}
 
 		return null;
+	}
+	
+	private static boolean hasNoTemplateReferenceOrConstant(Resource r) {
+		if (r.hasProperty(RML.constant)) return false;
+		if (r.hasProperty(RML.reference)) return false;
+		if (r.hasProperty(RML.template)) return false;
+		return true;
 	}
 
 }

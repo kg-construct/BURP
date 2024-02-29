@@ -18,7 +18,7 @@
         rml:predicate ex:with ;
         rml:objectMap [
             rml:allowEmptyListAndContainer true ;
-            rml:gather ( [ rml:reference "values.*" ; ] ) ;
+            rml:gather ( [ rml:reference "values.*" ; ][ rml:reference "values.*" ; ] ) ;
             rml:gatherAs rdf:Bag ;
         ] ;
     ] ;

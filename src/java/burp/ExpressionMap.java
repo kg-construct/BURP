@@ -94,6 +94,13 @@ public abstract class ExpressionMap {
 			return set;
 		}
 		
+		if(expression == null) {
+			// IF NO REFERENCE, TEMPLATE, OR CONSTANT, 
+			// THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
+			set.add(ResourceFactory.createResource());
+			return set;
+		}
+		
 		throw new RuntimeException("Error generating blank node.");
 	}
 	
@@ -199,12 +206,15 @@ abstract class TermMap extends ExpressionMap {
 
 	public Resource termType;
 	
+	public abstract boolean isGatherMap();
+	
 }
 
 class SubjectMap extends TermMap {
 
 	public Set<Resource> classes = new HashSet<Resource>();
 	public Set<GraphMap> graphMaps = new HashSet<GraphMap>();
+	public GatherMap gatherMap = null;
 	
 	public SubjectMap() {
 		termType = RML.IRI;
@@ -219,12 +229,18 @@ class SubjectMap extends TermMap {
 		throw new RuntimeException("Incorrect term type for subject map.");
 	}
 
+	@Override
+	public boolean isGatherMap() {
+		return gatherMap != null;
+	}
+
 }
 
 class ObjectMap extends TermMap {
 	
 	public DatatypeMap datatypeMap = null;
 	public LanguageMap languageMap = null;
+	public GatherMap gatherMap = null;
 	
 	public ObjectMap() {
 		termType = RML.IRI;
@@ -241,6 +257,11 @@ class ObjectMap extends TermMap {
 		throw new RuntimeException("Incorrect term type for object map.");
 	}
 
+	@Override
+	public boolean isGatherMap() {
+		return gatherMap != null;
+	}
+	
 }
 
 class PredicateMap extends TermMap {
@@ -260,6 +281,11 @@ class PredicateMap extends TermMap {
 		
 		throw new RuntimeException("Incorrect term type for predicate map.");	
 	}
+
+	@Override
+	public boolean isGatherMap() {
+		return false;
+	}
 	
 }
 
@@ -276,6 +302,11 @@ class GraphMap extends TermMap {
 			return generateBlankNodes(i);
 		
 		throw new RuntimeException("Incorrect term type for graph map.");
+	}
+	
+	@Override
+	public boolean isGatherMap() {
+		return false;
 	}
 	
 }

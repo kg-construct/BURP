@@ -20,13 +20,19 @@ public final class RML {
 	public static final Resource JSONPath = ResourceFactory.createResource(NS + "JSONPath");
 	public static final Resource XPath = ResourceFactory.createResource(NS + "XPath");
 	
+	public static final Resource append = ResourceFactory.createResource(NS + "append");
+	public static final Resource cartesianProduct = ResourceFactory.createResource(NS + "cartesianProduct");
+	
 	// Classes
 	
 	// Properties
+	public static final Property allowEmptyListAndContainer = ResourceFactory.createProperty(NS + "allowEmptyListAndContainer");
 	public static final Property clazz = ResourceFactory.createProperty(NS + "class");
 	public static final Property childMap = ResourceFactory.createProperty(NS + "childMap");
 	public static final Property constant = ResourceFactory.createProperty(NS + "constant");
 	public static final Property datatypeMap  = ResourceFactory.createProperty(NS + "datatypeMap");
+	public static final Property gather  = ResourceFactory.createProperty(NS + "gather");
+	public static final Property gatherAs  = ResourceFactory.createProperty(NS + "gatherAs");
 	public static final Property graphMap  = ResourceFactory.createProperty(NS + "graphMap");
 	public static final Property iterator  = ResourceFactory.createProperty(NS + "iterator");
 	public static final Property joinCondition  = ResourceFactory.createProperty(NS + "joinCondition");
@@ -43,6 +49,7 @@ public final class RML {
 	public static final Property referenceFormulation = ResourceFactory.createProperty(NS + "referenceFormulation");
 	public static final Property source = ResourceFactory.createProperty(NS + "source");
 	public static final Property sqlVersion = ResourceFactory.createProperty(NS + "sqlVersion");
+	public static final Property strategy = ResourceFactory.createProperty(NS + "strategy");
 	public static final Property subjectMap  = ResourceFactory.createProperty(NS + "subjectMap");
 	public static final Property tableName = ResourceFactory.createProperty(NS + "tableName");
 	public static final Property template = ResourceFactory.createProperty(NS + "template");
