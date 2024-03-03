@@ -298,7 +298,7 @@ public class Parse {
 		while(iter.hasNext()) {
 			Resource r = iter.next().asResource();
 			ObjectMap om = prepareObjectMap(r);
-			gatherMap.maps.add(om);
+			gatherMap.termMaps.add(om);
 		}
 
 		return gatherMap;

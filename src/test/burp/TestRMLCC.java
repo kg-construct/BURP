@@ -1,5 +1,5 @@
-package burp;
 
+package burp;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -76,9 +76,9 @@ public class TestRMLCC {
 		Model actual = RDFDataMgr.loadModel(r);
 
 		if (!expected.isIsomorphicWith(actual)) {
-			expected.write(System.out, "NQ");
+			expected.write(System.out, "Turtle");
 			System.out.println();
-			actual.write(System.out, "NQ");
+			actual.write(System.out, "Turtle");
 		}
 
 		assertEquals(0, exit);

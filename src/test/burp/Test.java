@@ -3,24 +3,24 @@ package burp;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFList;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.RDF;
 
 public class Test {
 
 	public static void main(String[] args) {
 		Model m = ModelFactory.createDefaultModel();
 		
-		Model m2 = ModelFactory.createDefaultModel();
-				
-		RDFList r = m2.createList(ResourceFactory.createPlainLiteral("1"));
+		Resource r = m.createResource("http://foo.bar");
 		
-		//Resource r2 = m2.createResource();
+		m.add(r, RDF.type, RDF.List);
+		m.add(r, RDF.first, FOAF.page);
+		m.add(r, RDF.rest, RDF.nil);
 		
-		r.setTail(m2.createList(ResourceFactory.createPlainLiteral("1"), ResourceFactory.createPlainLiteral("2")));
+		RDFList x = m.getList(r);
+		x.add(FOAF.Person);
 		
-		r.with(ResourceFactory.createPlainLiteral("2"));
-		
-		m.add(m2);
 		
 		m.write(System.out, "Turtle");
 

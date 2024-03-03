@@ -6,10 +6,8 @@ import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.jena.datatypes.BaseDatatype;
@@ -17,7 +15,6 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -27,8 +24,8 @@ public abstract class ExpressionMap {
 
 	public Expression expression = null;
 	
-	protected Set<Resource> generateIRIs(Iteration i, String baseIRI) {
-		Set<Resource> set = new HashSet<Resource>();
+	protected List<RDFNode> generateIRIs(Iteration i, String baseIRI) {
+		List<RDFNode> set = new ArrayList<RDFNode>();
 		
 		if(expression instanceof RDFNodeConstant) {
 			// It is assumed to be an IRI, otherwise the shapes
@@ -68,9 +65,9 @@ public abstract class ExpressionMap {
 		throw new RuntimeException("Error generating IRI.");
 	}
 
-	static private Map<Object, Resource> map = new HashMap<Object, Resource>();
-	protected Set<Resource> generateBlankNodes(Iteration i) {
-		Set<Resource> set = new HashSet<Resource>();
+	static private Map<Object, RDFNode> map = new HashMap<Object, RDFNode>();
+	protected List<RDFNode> generateBlankNodes(Iteration i) {
+		List<RDFNode> set = new ArrayList<RDFNode>();
 		
 		if(expression instanceof RDFNodeConstant) {
 			// It is assumed to be a BN, otherwise the shapes
@@ -104,8 +101,8 @@ public abstract class ExpressionMap {
 		throw new RuntimeException("Error generating blank node.");
 	}
 	
-	protected Set<RDFNode> generateLiterals(Iteration i, String baseIRI, DatatypeMap dm, LanguageMap lm) {
-		Set<RDFNode> set = new HashSet<RDFNode>();
+	protected List<RDFNode> generateLiterals(Iteration i, String baseIRI, DatatypeMap dm, LanguageMap lm) {
+		List<RDFNode> set = new ArrayList<RDFNode>();
 		
 		if(expression instanceof RDFNodeConstant) {
 			// It is assumed to be a literal, otherwise the shapes
@@ -114,8 +111,8 @@ public abstract class ExpressionMap {
 			return set;
 		}
 		
-		Set<Resource> datatypes = dm != null ? dm.generateIRIs(i, baseIRI) : null;
-		Set<String> languages = lm != null ? lm.generateStrings(i) : null;
+		List<RDFNode> datatypes = dm != null ? dm.generateIRIs(i, baseIRI) : null;
+		List<String> languages = lm != null ? lm.generateStrings(i) : null;
 		
 		if(expression instanceof Template) {
 			for(String v : ((Template) expression).values(i)) {
@@ -208,19 +205,22 @@ abstract class TermMap extends ExpressionMap {
 	
 	public abstract boolean isGatherMap();
 	
+	public abstract List<RDFNode> generateTerms(Iteration i, String baseIRI);
+	
 }
 
 class SubjectMap extends TermMap {
 
-	public Set<Resource> classes = new HashSet<Resource>();
-	public Set<GraphMap> graphMaps = new HashSet<GraphMap>();
+	public List<Resource> classes = new ArrayList<Resource>();
+	public List<GraphMap> graphMaps = new ArrayList<GraphMap>();
 	public GatherMap gatherMap = null;
 	
 	public SubjectMap() {
 		termType = RML.IRI;
 	}
 
-	public Set<Resource> generateTerms(Iteration i, String baseIRI) {
+	@Override
+	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
 		if(RML.IRI.equals(termType))
 			return generateIRIs(i, baseIRI);
 		if(RML.BLANKNODE.equals(termType))
@@ -246,11 +246,12 @@ class ObjectMap extends TermMap {
 		termType = RML.IRI;
 	}
 	
-	public Set<RDFNode> generateTerms(Iteration i, String baseIRI) {
+	@Override
+	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
 		if(RML.IRI.equals(termType))
-			return new HashSet<RDFNode>(generateIRIs(i, baseIRI));
+			return new ArrayList<RDFNode>(generateIRIs(i, baseIRI));
 		if(RML.BLANKNODE.equals(termType))
-			return new HashSet<RDFNode>(generateBlankNodes(i));
+			return new ArrayList<RDFNode>(generateBlankNodes(i));
 		if(RML.LITERAL.equals(termType))
 			return generateLiterals(i, baseIRI, datatypeMap, languageMap);
 					
@@ -270,13 +271,10 @@ class PredicateMap extends TermMap {
 		termType = RML.IRI;
 	}
 	
-	public Set<Property> generateTerms(Iteration i, String baseIRI) {
+	@Override
+	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
 		if(termType == RML.IRI) {
-			Set<Property> set = new HashSet<>();
-			for(Resource r : generateIRIs(i, baseIRI)) {
-				set.add(ResourceFactory.createProperty(r.getURI()));
-			}
-			return set;			
+			return generateIRIs(i, baseIRI);			
 		}
 		
 		throw new RuntimeException("Incorrect term type for predicate map.");	
@@ -295,7 +293,7 @@ class GraphMap extends TermMap {
 		termType = RML.IRI;
 	}
 
-	public Set<Resource> generateTerms(Iteration i, String baseIRI) {
+	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
 		if(termType == RML.IRI)
 			return generateIRIs(i, baseIRI);
 		if(termType == RML.BLANKNODE)
@@ -313,8 +311,8 @@ class GraphMap extends TermMap {
 
 class LanguageMap extends ExpressionMap {
 
-	public Set<String> generateStrings(Iteration i) {
-		Set<String> set = new HashSet<String>();
+	public List<String> generateStrings(Iteration i) {
+		List<String> set = new ArrayList<String>();
 		
 		if(expression instanceof RDFNodeConstant) {
 			// It is assumed to be a string, otherwise the shapes
