@@ -17,8 +17,11 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Seq;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.RDF;
 
 public class Main {
@@ -55,7 +58,7 @@ public class Main {
 
 	private static Dataset generate(List<TriplesMap> triplesmaps, String baseIRI) {
 		Dataset ds = DatasetFactory.create();
-
+		
 		// Execute the triples maps
 		for(TriplesMap tm : triplesmaps) {
 			// Let sm be the subject map of the triples map
@@ -84,7 +87,6 @@ public class Main {
 					subjects.addAll(sm.generateTerms(i, baseIRI));
 				} else {
 					CCs = sm.gatherMap.generateCC(i, baseIRI);
-					
 					if(sm.expression == null) {
 						for(CC cc: CCs) {
 							RDFNode n = ResourceFactory.createResource();
@@ -101,7 +103,6 @@ public class Main {
 							}
 						}
 					}
-					
 				}
 
 				// For each subject in subjects and each class in classes, 
@@ -209,18 +210,40 @@ public class Main {
 						}
 					}
 
-
-					
-					storetriples(ds, subjects, predicates, objects, graphs);
+					storetriples(ds, subjects, predicates, objects, graphs);			
 				}
 
 			}
 
 		}
 
+		removeJunk(ds);
 		//RDFDataMgr.write(System.out, ds, RDFFormat.NQ);
 
 		return ds;
+	}
+
+	private static void removeJunk(Dataset ds) {
+		removeJunk(ds.getDefaultModel());		
+		Iterator<Resource> iter = ds.listModelNames();
+		while(iter.hasNext())
+			removeJunk(ds.getNamedModel(iter.next()));
+	}
+
+	private static void removeJunk(Model model) {
+		StmtIterator s = model.listStatements(null, RDF.type, RML.list);
+		while(s.hasNext()) {
+			Statement statement = s.next();
+			s.remove();
+
+			Resource l = statement.getSubject();
+			if(!l.hasProperty(RDF.first)) {
+				if(l.isURIResource())
+					throw new RuntimeException("We cannot have another IRI for rdf.List");
+				else
+					ResourceUtils.renameResource(l, RDF.nil.toString());
+			}
+		}
 	}
 
 	private static void storetriples(
@@ -261,37 +284,37 @@ public class Main {
 			Model g = getModel(ds, graph);
 			
 			if(cc instanceof BurpCollection) {
-				for(Node item : cc.nodes) {
+				g.add(n.asResource(), RDF.type, RML.list);
+
+				for(Collectable item : cc.collectables) {
 					try {
 						RDFList l = g.getList(n.asResource());
-						l.add(item.node);
+						if(item instanceof Node)
+							l.add(((Node) item).node);
 					} catch (Exception e) {
-						g.add(n.asResource(), RDF.first, item.node);
 						g.add(n.asResource(), RDF.rest, RDF.nil);
+						if(item instanceof Node)
+							g.add(n.asResource(), RDF.first, ((Node) item).node);
 					}
 				}
-				
 			} else if (cc instanceof BurpBag) {
 				g.add(n.asResource(), RDF.type, RDF.Bag);
 				Bag c = g.getBag(n.asResource());
-				
-				for(Node item : cc.nodes) {
-					c.add(item.node);
-				}
+				for (Collectable item : cc.collectables)
+					if(item instanceof Node)
+						c.add(((Node) item).node);
 			} else if (cc instanceof BurpSeq) {
 				g.add(n.asResource(), RDF.type, RDF.Seq);
 				Seq c = g.getSeq(n.asResource());
-				
-				for(Node item : cc.nodes) {
-					c.add(item.node);
-				}
+				for (Collectable item : cc.collectables)
+					if(item instanceof Node)
+						c.add(((Node) item).node);			
 			} else if (cc instanceof BurpAlt) {
 				g.add(n.asResource(), RDF.type, RDF.Alt);
 				Alt c = g.getAlt(n.asResource());
-				
-				for(Node item : cc.nodes) {
-					c.add(item.node);
-				}
+				for (Collectable item : cc.collectables)
+					if(item instanceof Node)
+						c.add(((Node) item).node);			
 			}
 		}
 	}

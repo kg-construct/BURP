@@ -73,7 +73,7 @@ public class TestRMLCC {
 
 		if (!expected.isIsomorphicWith(actual)) {
 			expected.write(System.out, "Turtle");
-			System.out.println();
+			System.out.println("---");
 			actual.write(System.out, "Turtle");
 		}
 

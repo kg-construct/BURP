@@ -202,18 +202,16 @@ public abstract class ExpressionMap {
 abstract class TermMap extends ExpressionMap {
 
 	public Resource termType;
-	
 	public abstract boolean isGatherMap();
-	
 	public abstract List<RDFNode> generateTerms(Iteration i, String baseIRI);
-	
+	public GatherMap gatherMap = null;
+
 }
 
 class SubjectMap extends TermMap {
 
 	public List<Resource> classes = new ArrayList<Resource>();
 	public List<GraphMap> graphMaps = new ArrayList<GraphMap>();
-	public GatherMap gatherMap = null;
 	
 	public SubjectMap() {
 		termType = RML.IRI;
@@ -240,7 +238,6 @@ class ObjectMap extends TermMap {
 	
 	public DatatypeMap datatypeMap = null;
 	public LanguageMap languageMap = null;
-	public GatherMap gatherMap = null;
 	
 	public ObjectMap() {
 		termType = RML.IRI;

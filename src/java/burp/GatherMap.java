@@ -9,34 +9,12 @@ import org.apache.jena.vocabulary.RDF;
 
 public class GatherMap {
 	
-	public boolean allowEmptyListAndContainer = true;
+	public boolean allowEmptyListAndContainer = false;
 	public Resource gatherAs = null;
 	public Resource strategy = RML.append;
 	public List<TermMap> termMaps = new ArrayList<TermMap>();
 	
 	public List<CC> generateCC(Iteration i, String baseIRI) {
-//		List<CC> ccs = new ArrayList<CC>();
-//		CC cc = null;
-//		
-//		if(gatherAs.equals(RDF.List))
-//			cc = new Collection();
-//		else if(gatherAs.equals(RDF.Alt))
-//			cc = new Alt();
-//		else if(gatherAs.equals(RDF.Bag))
-//			cc = new Bag();
-//		else if(gatherAs.equals(RDF.Seq))
-//			cc = new Seq();
-//		
-//		for(Gatherable g : maps) {
-//			if(g.isGatherMap()) {
-//				cc = om.gatherMap.generateCC(i);
-//			}
-//			
-//			for(RDFNode n : om.generateTerms(i, baseIRI)) {
-//				if(cc != null) ccMap.put(n, cc);
-//				objects.add(n);
-//			}
-//		}
 		
 		if(RML.append.equals(strategy)) {
 			return append(i, baseIRI);
@@ -56,19 +34,21 @@ public class GatherMap {
 		List<CC> ccs = new ArrayList<CC>();
 		
 		CC cc = prepareCC();
+		cc.allowEmptyListAndContainer = allowEmptyListAndContainer;
 		
 		for(TermMap tm : termMaps) {
 			if(tm.isGatherMap()) {
-				throw new RuntimeException("Nested gather maps not yet supported.");
+				cc.collectables.addAll(tm.gatherMap.generateCC(i, baseIRI));
 			} else {
 				for(RDFNode n : tm.generateTerms(i, baseIRI)) {
-					cc.nodes.add(new Node(n));
+					cc.collectables.add(new Node(n));
 				}
 			}
 		}
 		
-		if(cc.nodes.size() > 0 || allowEmptyListAndContainer)
+		if(cc.collectables.size() > 0 || allowEmptyListAndContainer) {
 			ccs.add(cc);
+		}
 		
 		return ccs;
 	}
@@ -99,12 +79,16 @@ class Node implements Collectable {
 
 abstract class CC implements Collectable {
 	
-	public List<Node> nodes = new ArrayList<Node>();
-	//public RDFNode node;
+	public boolean allowEmptyListAndContainer;
+	public List<Collectable> collectables = new ArrayList<Collectable>();
 	
 }
 
 class BurpCollection extends CC {
+	
+}
+
+class BurpEmptpyCollection extends CC {
 	
 }
 
