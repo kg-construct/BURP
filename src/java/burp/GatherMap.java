@@ -100,7 +100,7 @@ class Node implements Collectable {
 abstract class CC implements Collectable {
 	
 	public List<Node> nodes = new ArrayList<Node>();
-	public RDFNode node;
+	//public RDFNode node;
 	
 }
 

@@ -95,6 +95,11 @@ public class Parse {
 		
 		String TERMTYPESTOCONSTANTS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:constant ?y ; r:termType ?z . } WHERE { ?x r:constant ?y. BIND(IF(ISLITERAL(?y), r:Literal, IF(ISIRI(?y), r:IRI, r:BlankNode)) AS ?z)}";
 		mapping.add(QueryExecutionFactory.create(TERMTYPESTOCONSTANTS, mapping).execConstruct());
+		
+		// Graph maps, subject maps, and object maps can have no reference
+		// They will generate blank nodes, thus add term type BN
+		String IMPLICITTERMTYPE = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:termType r:BlankNode } WHERE { [] r:subjectMap ?x . OPTIONAL { ?x r:template ?a } OPTIONAL { ?x r:reference ?b } FILTER(!BOUND(?a) && !BOUND(?b)) }";
+		mapping.add(QueryExecutionFactory.create(IMPLICITTERMTYPE, mapping).execConstruct());
 	}
 
 	private static LogicalSource prepareLogicalSource(Resource ls, String mpath) throws Exception {
@@ -203,6 +208,12 @@ public class Parse {
 		else if(hasNoTemplateReferenceOrConstant(sm)) {
 			// IF NO REFERENCE, TEMPLATE, OR CONSTANT, THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
 			subjectMap.termType = RML.BLANKNODE;
+		}
+		
+		Resource gm = sm.getPropertyResourceValue(RML.gather);
+		if(gm != null) {
+			// This object map has a gather, so we process it as a gather map
+			subjectMap.gatherMap = prepareGatherMap(sm);
 		}
 
 		return subjectMap;

@@ -6,11 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
@@ -19,22 +15,22 @@ import org.junit.jupiter.api.Test;
 public class TestRMLCC {
 	private static String base = "./src/test/burp/rml-cc/";
 
-	public static void main(String[] args) {
-		try (Stream<Path> stream = Files.list(Paths.get(base))) {
-			List<String> files = stream.filter(f -> Files.isDirectory(f))
-					.map(Path::getFileName).map(Path::toString).collect(Collectors.toList());
-
-			for (String f : files) {
-				if (!new File(base + f, "output.nq").exists()) {
-					String f1 = f.replace("-", "");
-					System.out.println("@Test public void " + f1 + "() throws IOException { testForOK(\"" + f + "\"); }");
-				}
-			}
-		} catch (Exception e) {
-			System.err.println(e.getMessage());
-			throw new RuntimeException(e);
-		}
-	}
+//	public static void main(String[] args) {
+//		try (Stream<Path> stream = Files.list(Paths.get(base))) {
+//			List<String> files = stream.filter(f -> Files.isDirectory(f))
+//					.map(Path::getFileName).map(Path::toString).collect(Collectors.toList());
+//
+//			for (String f : files) {
+//				if (!new File(base + f, "output.nq").exists()) {
+//					String f1 = f.replace("-", "");
+//					System.out.println("@Test public void " + f1 + "() throws IOException { testForOK(\"" + f + "\"); }");
+//				}
+//			}
+//		} catch (Exception e) {
+//			System.err.println(e.getMessage());
+//			throw new RuntimeException(e);
+//		}
+//	}
 	
 	@Test public void RMLTCCC0001Alt() throws IOException { testForOK("RMLTC-CC-0001-Alt"); }
 	@Test public void RMLTCCC0001Bag() throws IOException { testForOK("RMLTC-CC-0001-Bag"); }

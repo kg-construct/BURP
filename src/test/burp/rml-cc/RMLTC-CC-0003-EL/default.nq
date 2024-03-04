@@ -6,4 +6,3 @@ _:n302eecc856b44ed5b76965d9be2f5213b3 <http://www.w3.org/1999/02/22-rdf-syntax-n
 _:n302eecc856b44ed5b76965d9be2f5213b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:n302eecc856b44ed5b76965d9be2f5213b2 .
 <http://example.com/base/e/a> <http://example.com/ns#with> _:n302eecc856b44ed5b76965d9be2f5213b1 .
 _:n302eecc856b44ed5b76965d9be2f5213b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "1" .
-_:n302eecc856b44ed5b76965d9be2f5213b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#List> .

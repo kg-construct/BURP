@@ -12,6 +12,7 @@ import org.apache.jena.rdf.model.Alt;
 import org.apache.jena.rdf.model.Bag;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -67,15 +68,40 @@ public class Main {
 			Iterator<Iteration> iter = tm.logicalSource.iterator();
 			while(iter.hasNext()) {
 				Iteration i = iter.next();
-
-				// Let subjects be the generated RDF terms that result from applying sm to i
-				List<RDFNode> subjects = sm.generateTerms(i, baseIRI);
-
+				
 				// Let sgs be the set of the generated RDF terms 
 				// that result from applying each term map in sgm to i
-				List<RDFNode> sgs = new ArrayList<RDFNode>();
+				List<RDFNode> sgs = sgm.isEmpty() ? def : new ArrayList<RDFNode>();
 				for(GraphMap gm : sgm) {
 					sgs.addAll(gm.generateTerms(i, baseIRI));
+				}
+				
+				// Let subjects be the generated RDF terms that result from applying sm to i
+				List<RDFNode> subjects = new ArrayList<RDFNode>();;
+				
+				List<CC> CCs = new ArrayList<>();
+				if(!sm.isGatherMap()) {
+					subjects.addAll(sm.generateTerms(i, baseIRI));
+				} else {
+					CCs = sm.gatherMap.generateCC(i, baseIRI);
+					
+					if(sm.expression == null) {
+						for(CC cc: CCs) {
+							RDFNode n = ResourceFactory.createResource();
+							subjects.add(n);
+							addCCFor(ds, sgs, n, cc);
+						}
+						
+					} else {
+						for(RDFNode n : sm.generateTerms(i, baseIRI)) {
+							subjects.add(n);
+							for(CC cc: CCs) {
+								subjects.add(n);
+								addCCFor(ds, sgs, n, cc);
+							}
+						}
+					}
+					
 				}
 
 				// For each subject in subjects and each class in classes, 
@@ -85,7 +111,7 @@ public class Main {
 				// object:			class
 				// target graphs: 	If sgm is empty: rr:defaultgraph; otherwise: subject_graphs
 
-				storeTriplesOfSubjectMaps(ds, sm.classes, subjects, sgm.isEmpty() ? def : sgs);
+				storeTriplesOfSubjectMaps(ds, sm.classes, subjects, sgs);
 
 				// For each predicate-object map of the triples map, apply the following steps:
 				// Let predicates be the set of generated RDF terms that result 
@@ -122,7 +148,7 @@ public class Main {
 					List<RDFNode> objects = new ArrayList<RDFNode>();
 					
 					for(ObjectMap om : pom.objectMaps) {
-						List<CC> CCs = new ArrayList<>();
+						CCs = new ArrayList<>();
 						if(!om.isGatherMap()) {
 							objects.addAll(om.generateTerms(i, baseIRI));
 						} else {
@@ -145,7 +171,6 @@ public class Main {
 								}
 							}							
 						}
-
 					}
 					
 					for(ReferencingObjectMap rom : pom.refObjectMaps) {
@@ -236,7 +261,16 @@ public class Main {
 			Model g = getModel(ds, graph);
 			
 			if(cc instanceof BurpCollection) {
-				//g.getli
+				for(Node item : cc.nodes) {
+					try {
+						RDFList l = g.getList(n.asResource());
+						l.add(item.node);
+					} catch (Exception e) {
+						g.add(n.asResource(), RDF.first, item.node);
+						g.add(n.asResource(), RDF.rest, RDF.nil);
+					}
+				}
+				
 			} else if (cc instanceof BurpBag) {
 				g.add(n.asResource(), RDF.type, RDF.Bag);
 				Bag c = g.getBag(n.asResource());

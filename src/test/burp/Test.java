@@ -14,7 +14,7 @@ public class Test {
 		
 		Resource r = m.createResource("http://foo.bar");
 		
-		m.add(r, RDF.type, RDF.List);
+		//m.add(r, RDF.type, RDF.List);
 		m.add(r, RDF.first, FOAF.page);
 		m.add(r, RDF.rest, RDF.nil);
 		
