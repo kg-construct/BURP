@@ -15,18 +15,25 @@ public final class RML {
 	
 	// RML Constants
 	public static final Resource defaultGraph = ResourceFactory.createResource(NS + "defaultGraph");
-	public static final Resource SQL2008 = ResourceFactory.createResource(NS + "SQL2008");
+	public static final Resource SQL2008Table = ResourceFactory.createResource(NS + "SQL2008Table");
+	public static final Resource SQL2008Query = ResourceFactory.createResource(NS + "SQL2008Query");
 	public static final Resource CSV = ResourceFactory.createResource(NS + "CSV");
 	public static final Resource JSONPath = ResourceFactory.createResource(NS + "JSONPath");
 	public static final Resource XPath = ResourceFactory.createResource(NS + "XPath");
 	
+	public static final Resource append = ResourceFactory.createResource(NS + "append");
+	public static final Resource cartesianProduct = ResourceFactory.createResource(NS + "cartesianProduct");
+	
 	// Classes
 	
 	// Properties
+	public static final Property allowEmptyListAndContainer = ResourceFactory.createProperty(NS + "allowEmptyListAndContainer");
 	public static final Property clazz = ResourceFactory.createProperty(NS + "class");
 	public static final Property childMap = ResourceFactory.createProperty(NS + "childMap");
 	public static final Property constant = ResourceFactory.createProperty(NS + "constant");
 	public static final Property datatypeMap  = ResourceFactory.createProperty(NS + "datatypeMap");
+	public static final Property gather  = ResourceFactory.createProperty(NS + "gather");
+	public static final Property gatherAs  = ResourceFactory.createProperty(NS + "gatherAs");
 	public static final Property graphMap  = ResourceFactory.createProperty(NS + "graphMap");
 	public static final Property iterator  = ResourceFactory.createProperty(NS + "iterator");
 	public static final Property joinCondition  = ResourceFactory.createProperty(NS + "joinCondition");
@@ -38,14 +45,16 @@ public final class RML {
 	public static final Property parentTriplesMap  = ResourceFactory.createProperty(NS + "parentTriplesMap");
 	public static final Property predicateMap  = ResourceFactory.createProperty(NS + "predicateMap");
 	public static final Property predicateObjectMap  = ResourceFactory.createProperty(NS + "predicateObjectMap");
-	public static final Property query = ResourceFactory.createProperty(NS + "query");
 	public static final Property reference = ResourceFactory.createProperty(NS + "reference");
 	public static final Property referenceFormulation = ResourceFactory.createProperty(NS + "referenceFormulation");
 	public static final Property source = ResourceFactory.createProperty(NS + "source");
-	public static final Property sqlVersion = ResourceFactory.createProperty(NS + "sqlVersion");
+	public static final Property strategy = ResourceFactory.createProperty(NS + "strategy");
 	public static final Property subjectMap  = ResourceFactory.createProperty(NS + "subjectMap");
-	public static final Property tableName = ResourceFactory.createProperty(NS + "tableName");
 	public static final Property template = ResourceFactory.createProperty(NS + "template");
 	public static final Property termType = ResourceFactory.createProperty(NS + "termType");
 	
+	// Utility constants
+	public static final Resource list = ResourceFactory.createResource(NS + "list");
+	public static final Resource noempty = ResourceFactory.createResource(NS + "noEmpty");
+
 }

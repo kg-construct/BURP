@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
@@ -18,6 +19,7 @@ import org.apache.jena.shacl.ShaclValidator;
 import org.apache.jena.shacl.ValidationReport;
 import org.apache.jena.shacl.lib.ShLib;
 import org.apache.jena.util.FileUtils;
+import org.apache.jena.util.iterator.ExtendedIterator;
 
 public class Parse {
 
@@ -93,6 +95,11 @@ public class Parse {
 		
 		String TERMTYPESTOCONSTANTS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:constant ?y ; r:termType ?z . } WHERE { ?x r:constant ?y. BIND(IF(ISLITERAL(?y), r:Literal, IF(ISIRI(?y), r:IRI, r:BlankNode)) AS ?z)}";
 		mapping.add(QueryExecutionFactory.create(TERMTYPESTOCONSTANTS, mapping).execConstruct());
+		
+		// Graph maps, subject maps, and object maps can have no reference
+		// They will generate blank nodes, thus add term type BN
+		String IMPLICITTERMTYPE = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:termType r:BlankNode } WHERE { [] r:subjectMap ?x . OPTIONAL { ?x r:template ?a } OPTIONAL { ?x r:reference ?b } FILTER(!BOUND(?a) && !BOUND(?b)) }";
+		mapping.add(QueryExecutionFactory.create(IMPLICITTERMTYPE, mapping).execConstruct());
 	}
 
 	private static LogicalSource prepareLogicalSource(Resource ls, String mpath) throws Exception {
@@ -126,22 +133,38 @@ public class Parse {
 			return source;
 		}
 		
-		if(RML.SQL2008.equals(referenceFormulation) || isRelationalDatabase(ls)) {
+		if(RML.SQL2008Table.equals(referenceFormulation)) {
 			Resource s = ls.getPropertyResourceValue(RML.source);
 			String jdbcDSN = s.getProperty(D2RQ.jdbcDSN).getLiteral().getString();
 			String jdbcDriver = s.getProperty(D2RQ.jdbcDriver).getLiteral().getString();
 			String username = s.getProperty(D2RQ.username).getLiteral().getString();
 			String password = s.getProperty(D2RQ.password).getLiteral().getString();
 			
-			String query = null;
-			Statement t = ls.getProperty(RML.tableName);
-			Statement q = ls.getProperty(RML.query);
+			Statement t = ls.getProperty(RML.iterator);
+			String query = "(SELECT * FROM `" + t.getLiteral() + "`)";
 			
-			if(t != null) {
-				query = "(SELECT * FROM `" + t.getLiteral() + "`)";
-			} else {
-				query = q.getLiteral().toString();
-			}
+			RDBSource source = new RDBSource();
+			source.jdbcDSN = jdbcDSN;
+			source.jdbcDriver = jdbcDriver;
+			source.username = username;
+			source.password = password;
+			
+			// Apache jena "escapes" double quotes, so "Name" becomes \"Name\"
+			// which is internally stored as \\"Name\\". We thus need to remove
+			// occurrences of \\
+			source.query = query.replace("\\", "");
+			return source;
+		}
+		
+		if(RML.SQL2008Query.equals(referenceFormulation)) {
+			Resource s = ls.getPropertyResourceValue(RML.source);
+			String jdbcDSN = s.getProperty(D2RQ.jdbcDSN).getLiteral().getString();
+			String jdbcDriver = s.getProperty(D2RQ.jdbcDriver).getLiteral().getString();
+			String username = s.getProperty(D2RQ.username).getLiteral().getString();
+			String password = s.getProperty(D2RQ.password).getLiteral().getString();
+			
+			Statement t = ls.getProperty(RML.iterator);
+			String query = t.getLiteral().toString();
 			
 			RDBSource source = new RDBSource();
 			source.jdbcDSN = jdbcDSN;
@@ -157,21 +180,6 @@ public class Parse {
 		}
 
 		throw new Exception("Reference formulation not (yet) supported.");
-	}
-
-	private static boolean isRelationalDatabase(Resource ls) {
-		if(ls.getPropertyResourceValue(RML.sqlVersion) != null)
-			return true;
-		if(ls.getPropertyResourceValue(RML.tableName) != null)
-			return true;
-		if(ls.getPropertyResourceValue(RML.query) != null)
-			return true;
-		
-		Resource s = ls.getPropertyResourceValue(RML.source);
-		if(s != null && s.getProperty(D2RQ.jdbcDriver) != null)
-			return true;
-		
-		return false;
 	}
 
 	private static String getAbsoluteOrRelative(String file, String mpath) {
@@ -196,7 +204,18 @@ public class Parse {
 
 		Resource termType = sm.getPropertyResourceValue(RML.termType);
 		if(termType != null)
+			// PROVIDE THE TERM TYPE THAT IS GIVEN
 			subjectMap.termType = termType;
+		else if(hasNoTemplateReferenceOrConstant(sm)) {
+			// IF NO REFERENCE, TEMPLATE, OR CONSTANT, THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
+			subjectMap.termType = RML.BLANKNODE;
+		}
+		
+		Resource gm = sm.getPropertyResourceValue(RML.gather);
+		if(gm != null) {
+			// This object map has a gather, so we process it as a gather map
+			subjectMap.gatherMap = prepareGatherMap(sm);
+		}
 
 		return subjectMap;
 	}
@@ -241,7 +260,12 @@ public class Parse {
 
 		Resource termType = om.getPropertyResourceValue(RML.termType);
 		if(termType != null)
+			// PROVIDE THE TERM TYPE THAT IS GIVEN
 			objectMap.termType = termType;
+		else if(hasNoTemplateReferenceOrConstant(om)) {
+			// IF NO REFERENCE, TEMPLATE, OR CONSTANT, THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
+			objectMap.termType = RML.BLANKNODE;
+		}
 
 		Resource lam = om.getPropertyResourceValue(RML.languageMap);
 		if(lam != null)
@@ -253,8 +277,43 @@ public class Parse {
 
 		if(termType == null && (lam != null || dtm != null || objectMap.expression instanceof Reference))
 			objectMap.termType = RML.LITERAL;
+		
+		Resource gm = om.getPropertyResourceValue(RML.gather);
+		if(gm != null) {
+			// This object map has a gather, so we process it as a gather map
+			objectMap.gatherMap = prepareGatherMap(om);
+		}
 
 		return objectMap;
+	}
+
+	private static GatherMap prepareGatherMap(Resource gm) {
+		GatherMap gatherMap = new GatherMap();
+		
+		if(gm.hasProperty(RML.allowEmptyListAndContainer)) {
+			boolean empty = gm.getProperty(RML.allowEmptyListAndContainer).getObject().asLiteral().getBoolean();
+			gatherMap.allowEmptyListAndContainer = empty;
+		}
+		
+		if(gm.hasProperty(RML.gatherAs)) {
+			Resource r = gm.getPropertyResourceValue(RML.gatherAs);
+			gatherMap.gatherAs = r;
+		}
+		
+		if(gm.hasProperty(RML.strategy)) {
+			Resource r = gm.getPropertyResourceValue(RML.strategy);
+			gatherMap.strategy = r;
+		}
+		
+		RDFList list = gm.getPropertyResourceValue(RML.gather).as(RDFList.class);
+		ExtendedIterator<RDFNode> iter = list.iterator();
+		while(iter.hasNext()) {
+			Resource r = iter.next().asResource();
+			ObjectMap om = prepareObjectMap(r);
+			gatherMap.termMaps.add(om);
+		}
+
+		return gatherMap;
 	}
 
 	private static DatatypeMap prepareDatatypeMap(Resource dtm) {
@@ -318,6 +377,13 @@ public class Parse {
 		}
 
 		return null;
+	}
+	
+	private static boolean hasNoTemplateReferenceOrConstant(Resource r) {
+		if (r.hasProperty(RML.constant)) return false;
+		if (r.hasProperty(RML.reference)) return false;
+		if (r.hasProperty(RML.template)) return false;
+		return true;
 	}
 
 }
