@@ -6,171 +6,106 @@ import java.util.List;
 import org.apache.jena.rdf.model.Container;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
 
 public class GatherMap {
-	
+
 	public boolean allowEmptyListAndContainer = false;
 	public Resource gatherAs = null;
 	public Resource strategy = RML.append;
 	public List<TermMap> termMaps = new ArrayList<TermMap>();
-	
-//	public List<CC> generateCC(Iteration i, String baseIRI) {
-//		
-//		if(RML.append.equals(strategy)) {
-//			return append(i, baseIRI);
-//		} else if(RML.cartesianProduct.equals(strategy)) {
-//			return cartesianProduct(i, baseIRI);
-//		}
-//		
-//		throw new RuntimeException("Unknown CC strategy.");
-//	}
-//
-//	private List<CC> cartesianProduct(Iteration i, String baseIRI) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-//
-//	private List<CC> append(Iteration i, String baseIRI) {
-//		List<CC> ccs = new ArrayList<CC>();
-//		
-//		CC cc = prepareCC();
-//		cc.allowEmptyListAndContainer = allowEmptyListAndContainer;
-//		
-//		for(TermMap tm : termMaps) {
-//			if(tm.isGatherMap()) {
-//				cc.collectables.addAll(tm.gatherMap.generateCC(i, baseIRI));
-//			} else {
-//				for(RDFNode n : tm.generateTerms(i, baseIRI)) {
-//					cc.collectables.add(new Node(n));
-//				}
-//			}
-//		}
-//		
-//		if(cc.collectables.size() > 0 || allowEmptyListAndContainer) {
-//			ccs.add(cc);
-//		}
-//		
-//		return ccs;
-//	}
 
-//	private CC prepareCC() {
-//		if(gatherAs.equals(RDF.List)) return new BurpCollection();
-//		else if(gatherAs.equals(RDF.Alt)) return new BurpAlt();
-//		else if(gatherAs.equals(RDF.Bag)) return new BurpBag();
-//		else if(gatherAs.equals(RDF.Seq)) return new BurpSeq();
-//		throw new RuntimeException("Unknown CC type.");
-//	}
-
-	public Model generateGraph(RDFNode n, Iteration i, String baseIRI) {
+	public List<SubGraph> generateGraphs(Iteration i, String baseIRI) {
 		if (RML.append.equals(strategy)) {
-			return append(n, i, baseIRI);
+			return append(i, baseIRI);
 		} else if (RML.cartesianProduct.equals(strategy)) {
-			//return cartesianProduct(i, baseIRI);
+			// return cartesianProduct(i, baseIRI);
 			throw new RuntimeException("Cartesian Product not yet implemented.");
 		}
 		throw new RuntimeException("Unknown strategy.");
 	}
 
-	private Model append(RDFNode n, Iteration i, String baseIRI) {
+	private List<SubGraph> append(Iteration i, String baseIRI) {
+		List<SubGraph> graphs = new ArrayList<SubGraph>();
 		Model m = ModelFactory.createDefaultModel();
-		
+
+		// Let's create a node for the list / bag
+		// It may be overwritten if specific names / blank nodes
+		// have to be provided in the term map
+		RDFNode n = m.createResource();
+
 		List<SubGraph> list = new ArrayList<SubGraph>();
-		for(TermMap tm : termMaps) {
-			if(tm.isGatherMap()) {
+		for (TermMap tm : termMaps) {
+			if (tm.isGatherMap()) {
 				throw new RuntimeException("Nested not yet supported");
 			} else {
-				for(RDFNode generated : tm.generateTerms(i, baseIRI)) {
+				for (RDFNode generated : tm.generateTerms(i, baseIRI)) {
 					SubGraph sg = new SubGraph();
 					sg.node = generated;
 					list.add(sg);
 				}
 			}
 		}
-		
-		System.err.println(list);
-		
-		if(gatherAs.equals(RDF.List))
+
+		if (gatherAs.equals(RDF.List))
 			createList(m, n, list);
 		else
 			createContainer(m, n, list);
-		
-		return m;
+
+		SubGraph g = new SubGraph(n, m);
+
+		graphs.add(g);
+		return graphs;
 	}
 
 	private void createList(Model m, RDFNode n, List<SubGraph> list) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	private void createContainer(Model m, RDFNode n, List<SubGraph> list) {
-		if(list.size() > 0 || allowEmptyListAndContainer) {
-			Container c = null;
-			if(gatherAs.equals(RDF.Alt)) {
-				m.add(n.asResource(), RDF.type, RDF.Alt);
-				c = m.getAlt(n.asResource());
-			} else if(gatherAs.equals(RDF.Bag)) {
-				m.add(n.asResource(), RDF.type, RDF.Bag);
-				c = m.getBag(n.asResource());
-				
-			} else if(gatherAs.equals(RDF.Seq)) {
-				m.add(n.asResource(), RDF.type, RDF.Seq);
-				c = m.getSeq(n.asResource());
-			}
-			
-			for(SubGraph sg : list) {
+		if (list.size() > 0 || allowEmptyListAndContainer) {
+			m.add(n.asResource(), RDF.type, RML.list);
+
+			for (SubGraph sg : list) {
 				// Adding the element to the container
-				c.add(sg.node);
-				
+				try {
+					RDFList l = m.getList(n.asResource());
+					l.add(sg.node);
+				} catch (Exception e) {
+					m.add(n.asResource(), RDF.rest, RDF.nil);
+					m.add(n.asResource(), RDF.first, sg.node);
+				}
+
 				// Adding any triples around it into the model
-				if(sg.model != null)
+				if (sg.model != null)
 					m.add(sg.model);
 			}
 		}
 	}
 
-	
-}	
+	private void createContainer(Model m, RDFNode n, List<SubGraph> list) {
+		if (list.size() > 0 || allowEmptyListAndContainer) {
+			Container c = null;
+			if (gatherAs.equals(RDF.Alt)) {
+				m.add(n.asResource(), RDF.type, RDF.Alt);
+				c = m.getAlt(n.asResource());
+			} else if (gatherAs.equals(RDF.Bag)) {
+				m.add(n.asResource(), RDF.type, RDF.Bag);
+				c = m.getBag(n.asResource());
 
-interface Collectable {
-	
-}
+			} else if (gatherAs.equals(RDF.Seq)) {
+				m.add(n.asResource(), RDF.type, RDF.Seq);
+				c = m.getSeq(n.asResource());
+			}
 
-class Node implements Collectable {
-	
-	public RDFNode node = null;
-	
-	public Node(RDFNode node) {
-		this.node = node;
+			for (SubGraph sg : list) {
+				// Adding the element to the container
+				c.add(sg.node);
+
+				// Adding any triples around it into the model
+				if (sg.model != null)
+					m.add(sg.model);
+			}
+		}
 	}
 
-}
-
-abstract class CC implements Collectable {
-	
-	public boolean allowEmptyListAndContainer;
-	public List<Collectable> collectables = new ArrayList<Collectable>();
-	
-}
-
-class BurpCollection extends CC {
-	
-}
-
-class BurpEmptpyCollection extends CC {
-	
-}
-
-class BurpBag extends CC {
-	
-}
-
-class BurpSeq extends CC {
-	
-}
-
-class BurpAlt extends CC {
-	
 }

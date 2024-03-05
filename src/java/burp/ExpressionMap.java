@@ -19,7 +19,6 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 
-
 public abstract class ExpressionMap {
 
 	public Expression expression = null;
@@ -205,6 +204,28 @@ abstract class TermMap extends ExpressionMap {
 	public abstract boolean isGatherMap();
 	public abstract List<RDFNode> generateTerms(Iteration i, String baseIRI);
 	public GatherMap gatherMap = null;
+	
+	public List<SubGraph> generateGatherMapGraphs(Iteration i, String baseIRI) {
+		if(!isGatherMap())
+			throw new RuntimeException("Invalid gathermap");
+		
+		List<SubGraph> g = new ArrayList<SubGraph>();
+		
+		if(expression == null) {
+			for(SubGraph sg : gatherMap.generateGraphs(i, baseIRI)) {
+				g.add(sg);
+			}
+		} else {
+			for(RDFNode n : generateTerms(i, baseIRI)) {
+				for(SubGraph sg : gatherMap.generateGraphs(i, baseIRI)) {
+					sg.updateNode(n);
+					g.add(sg);
+				}
+			}
+		}
+		
+		return g;
+	}
 
 }
 
@@ -258,26 +279,6 @@ class ObjectMap extends TermMap {
 	@Override
 	public boolean isGatherMap() {
 		return gatherMap != null;
-	}
-
-	public List<SubGraph> generateGatherMapGraph(Iteration i, String baseIRI) {
-		if(!isGatherMap())
-			throw new RuntimeException("Invalid gathermap");
-		
-		List<SubGraph> g = new ArrayList<SubGraph>();
-		
-		if(expression == null) {
-			
-		} else {
-			for(RDFNode n : generateTerms(i, baseIRI)) {
-				SubGraph sg = new SubGraph();
-				sg.node = n;
-				sg.model = gatherMap.generateGraph(n, i, baseIRI);
-				g.add(sg);
-			}
-		}
-		
-		return g;
 	}
 	
 }
