@@ -133,22 +133,38 @@ public class Parse {
 			return source;
 		}
 		
-		if(RML.SQL2008.equals(referenceFormulation) || isRelationalDatabase(ls)) {
+		if(RML.SQL2008Table.equals(referenceFormulation)) {
 			Resource s = ls.getPropertyResourceValue(RML.source);
 			String jdbcDSN = s.getProperty(D2RQ.jdbcDSN).getLiteral().getString();
 			String jdbcDriver = s.getProperty(D2RQ.jdbcDriver).getLiteral().getString();
 			String username = s.getProperty(D2RQ.username).getLiteral().getString();
 			String password = s.getProperty(D2RQ.password).getLiteral().getString();
 			
-			String query = null;
-			Statement t = ls.getProperty(RML.tableName);
-			Statement q = ls.getProperty(RML.query);
+			Statement t = ls.getProperty(RML.iterator);
+			String query = "(SELECT * FROM `" + t.getLiteral() + "`)";
 			
-			if(t != null) {
-				query = "(SELECT * FROM `" + t.getLiteral() + "`)";
-			} else {
-				query = q.getLiteral().toString();
-			}
+			RDBSource source = new RDBSource();
+			source.jdbcDSN = jdbcDSN;
+			source.jdbcDriver = jdbcDriver;
+			source.username = username;
+			source.password = password;
+			
+			// Apache jena "escapes" double quotes, so "Name" becomes \"Name\"
+			// which is internally stored as \\"Name\\". We thus need to remove
+			// occurrences of \\
+			source.query = query.replace("\\", "");
+			return source;
+		}
+		
+		if(RML.SQL2008Query.equals(referenceFormulation)) {
+			Resource s = ls.getPropertyResourceValue(RML.source);
+			String jdbcDSN = s.getProperty(D2RQ.jdbcDSN).getLiteral().getString();
+			String jdbcDriver = s.getProperty(D2RQ.jdbcDriver).getLiteral().getString();
+			String username = s.getProperty(D2RQ.username).getLiteral().getString();
+			String password = s.getProperty(D2RQ.password).getLiteral().getString();
+			
+			Statement t = ls.getProperty(RML.iterator);
+			String query = t.getLiteral().toString();
 			
 			RDBSource source = new RDBSource();
 			source.jdbcDSN = jdbcDSN;
@@ -164,21 +180,6 @@ public class Parse {
 		}
 
 		throw new Exception("Reference formulation not (yet) supported.");
-	}
-
-	private static boolean isRelationalDatabase(Resource ls) {
-		if(ls.getPropertyResourceValue(RML.sqlVersion) != null)
-			return true;
-		if(ls.getPropertyResourceValue(RML.tableName) != null)
-			return true;
-		if(ls.getPropertyResourceValue(RML.query) != null)
-			return true;
-		
-		Resource s = ls.getPropertyResourceValue(RML.source);
-		if(s != null && s.getProperty(D2RQ.jdbcDriver) != null)
-			return true;
-		
-		return false;
 	}
 
 	private static String getAbsoluteOrRelative(String file, String mpath) {

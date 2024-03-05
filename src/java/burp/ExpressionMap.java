@@ -259,6 +259,26 @@ class ObjectMap extends TermMap {
 	public boolean isGatherMap() {
 		return gatherMap != null;
 	}
+
+	public List<SubGraph> generateGatherMapGraph(Iteration i, String baseIRI) {
+		if(!isGatherMap())
+			throw new RuntimeException("Invalid gathermap");
+		
+		List<SubGraph> g = new ArrayList<SubGraph>();
+		
+		if(expression == null) {
+			
+		} else {
+			for(RDFNode n : generateTerms(i, baseIRI)) {
+				SubGraph sg = new SubGraph();
+				sg.node = n;
+				sg.model = gatherMap.generateGraph(n, i, baseIRI);
+				g.add(sg);
+			}
+		}
+		
+		return g;
+	}
 	
 }
 

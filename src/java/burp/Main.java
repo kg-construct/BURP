@@ -8,20 +8,13 @@ import java.util.stream.Collectors;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
-import org.apache.jena.rdf.model.Alt;
-import org.apache.jena.rdf.model.Bag;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Seq;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.RDF;
 
 public class Main {
@@ -86,23 +79,23 @@ public class Main {
 				if(!sm.isGatherMap()) {
 					subjects.addAll(sm.generateTerms(i, baseIRI));
 				} else {
-					CCs = sm.gatherMap.generateCC(i, baseIRI);
-					if(sm.expression == null) {
-						for(CC cc: CCs) {
-							RDFNode n = ResourceFactory.createResource();
-							subjects.add(n);
-							addCCFor(ds, sgs, n, cc);
-						}
-						
-					} else {
-						for(RDFNode n : sm.generateTerms(i, baseIRI)) {
-							subjects.add(n);
-							for(CC cc: CCs) {
-								subjects.add(n);
-								addCCFor(ds, sgs, n, cc);
-							}
-						}
-					}
+//					CCs = sm.gatherMap.generateCC(i, baseIRI);
+//					if(sm.expression == null) {
+//						for(CC cc: CCs) {
+//							RDFNode n = ResourceFactory.createResource();
+//							subjects.add(n);
+//							addCCFor(ds, sgs, n, cc);
+//						}
+//						
+//					} else {
+//						for(RDFNode n : sm.generateTerms(i, baseIRI)) {
+//							subjects.add(n);
+//							for(CC cc: CCs) {
+//								subjects.add(n);
+//								addCCFor(ds, sgs, n, cc);
+//							}
+//						}
+//					}
 				}
 
 				// For each subject in subjects and each class in classes, 
@@ -149,28 +142,32 @@ public class Main {
 					List<RDFNode> objects = new ArrayList<RDFNode>();
 					
 					for(ObjectMap om : pom.objectMaps) {
-						CCs = new ArrayList<>();
 						if(!om.isGatherMap()) {
 							objects.addAll(om.generateTerms(i, baseIRI));
 						} else {
-							CCs = om.gatherMap.generateCC(i, baseIRI);
+							for(SubGraph subgraph : om.generateGatherMapGraph(i, baseIRI)) {
+								objects.add(subgraph.node);
+								addToGraphs(ds, graphs, subgraph.model);
+							}
 							
-							if(om.expression == null) {
-								for(CC cc: CCs) {
-									RDFNode n = ResourceFactory.createResource();
-									objects.add(n);
-									addCCFor(ds, graphs, n, cc);
-								}
-								
-							} else {
-								for(RDFNode n : om.generateTerms(i, baseIRI)) {
-									objects.add(n);
-									for(CC cc: CCs) {
-										objects.add(n);
-										addCCFor(ds, graphs, n, cc);
-									}
-								}
-							}							
+//							CCs = om.gatherMap.generateCC(i, baseIRI);
+//							
+//							if(om.expression == null) {
+//								for(CC cc: CCs) {
+//									RDFNode n = ResourceFactory.createResource();
+//									objects.add(n);
+//									addCCFor(ds, graphs, n, cc);
+//								}
+//								
+//							} else {
+//								for(RDFNode n : om.generateTerms(i, baseIRI)) {
+//									objects.add(n);
+//									for(CC cc: CCs) {
+//										objects.add(n);
+//										addCCFor(ds, graphs, n, cc);
+//									}
+//								}
+//							}							
 						}
 					}
 					
@@ -217,34 +214,34 @@ public class Main {
 
 		}
 
-		removeJunk(ds);
+		//removeJunk(ds);
 		//RDFDataMgr.write(System.out, ds, RDFFormat.NQ);
 
 		return ds;
 	}
 
-	private static void removeJunk(Dataset ds) {
-		removeJunk(ds.getDefaultModel());		
-		Iterator<Resource> iter = ds.listModelNames();
-		while(iter.hasNext())
-			removeJunk(ds.getNamedModel(iter.next()));
-	}
-
-	private static void removeJunk(Model model) {
-		StmtIterator s = model.listStatements(null, RDF.type, RML.list);
-		while(s.hasNext()) {
-			Statement statement = s.next();
-			s.remove();
-
-			Resource l = statement.getSubject();
-			if(!l.hasProperty(RDF.first)) {
-				if(l.isURIResource())
-					throw new RuntimeException("We cannot have another IRI for rdf.List");
-				else
-					ResourceUtils.renameResource(l, RDF.nil.toString());
-			}
-		}
-	}
+//	private static void removeJunk(Dataset ds) {
+//		removeJunk(ds.getDefaultModel());		
+//		Iterator<Resource> iter = ds.listModelNames();
+//		while(iter.hasNext())
+//			removeJunk(ds.getNamedModel(iter.next()));
+//	}
+//
+//	private static void removeJunk(Model model) {
+//		StmtIterator s = model.listStatements(null, RDF.type, RML.list);
+//		while(s.hasNext()) {
+//			Statement statement = s.next();
+//			s.remove();
+//
+//			Resource l = statement.getSubject();
+//			if(!l.hasProperty(RDF.first)) {
+//				if(l.isURIResource())
+//					throw new RuntimeException("We cannot have another IRI for rdf.List");
+//				else
+//					ResourceUtils.renameResource(l, RDF.nil.toString());
+//			}
+//		}
+//	}
 
 	private static void storetriples(
 			Dataset ds, 
@@ -279,43 +276,50 @@ public class Main {
 		}	
 	}
 	
-	private static void addCCFor(Dataset ds, List<RDFNode> graphs, RDFNode n, CC cc) {
+//	private static void addCCFor(Dataset ds, List<RDFNode> graphs, RDFNode n, CC cc) {
+//		for(RDFNode graph : graphs) {
+//			Model g = getModel(ds, graph);
+//			
+//			if(cc instanceof BurpCollection) {
+//				g.add(n.asResource(), RDF.type, RML.list);
+//
+//				for(Collectable item : cc.collectables) {
+//					try {
+//						RDFList l = g.getList(n.asResource());
+//						if(item instanceof Node)
+//							l.add(((Node) item).node);
+//					} catch (Exception e) {
+//						g.add(n.asResource(), RDF.rest, RDF.nil);
+//						if(item instanceof Node)
+//							g.add(n.asResource(), RDF.first, ((Node) item).node);
+//					}
+//				}
+//			} else if (cc instanceof BurpBag) {
+//				g.add(n.asResource(), RDF.type, RDF.Bag);
+//				Bag c = g.getBag(n.asResource());
+//				for (Collectable item : cc.collectables)
+//					if(item instanceof Node)
+//						c.add(((Node) item).node);
+//			} else if (cc instanceof BurpSeq) {
+//				g.add(n.asResource(), RDF.type, RDF.Seq);
+//				Seq c = g.getSeq(n.asResource());
+//				for (Collectable item : cc.collectables)
+//					if(item instanceof Node)
+//						c.add(((Node) item).node);			
+//			} else if (cc instanceof BurpAlt) {
+//				g.add(n.asResource(), RDF.type, RDF.Alt);
+//				Alt c = g.getAlt(n.asResource());
+//				for (Collectable item : cc.collectables)
+//					if(item instanceof Node)
+//						c.add(((Node) item).node);			
+//			}
+//		}
+//	}
+	
+	private static void addToGraphs(Dataset ds, List<RDFNode> graphs, Model model) {
 		for(RDFNode graph : graphs) {
 			Model g = getModel(ds, graph);
-			
-			if(cc instanceof BurpCollection) {
-				g.add(n.asResource(), RDF.type, RML.list);
-
-				for(Collectable item : cc.collectables) {
-					try {
-						RDFList l = g.getList(n.asResource());
-						if(item instanceof Node)
-							l.add(((Node) item).node);
-					} catch (Exception e) {
-						g.add(n.asResource(), RDF.rest, RDF.nil);
-						if(item instanceof Node)
-							g.add(n.asResource(), RDF.first, ((Node) item).node);
-					}
-				}
-			} else if (cc instanceof BurpBag) {
-				g.add(n.asResource(), RDF.type, RDF.Bag);
-				Bag c = g.getBag(n.asResource());
-				for (Collectable item : cc.collectables)
-					if(item instanceof Node)
-						c.add(((Node) item).node);
-			} else if (cc instanceof BurpSeq) {
-				g.add(n.asResource(), RDF.type, RDF.Seq);
-				Seq c = g.getSeq(n.asResource());
-				for (Collectable item : cc.collectables)
-					if(item instanceof Node)
-						c.add(((Node) item).node);			
-			} else if (cc instanceof BurpAlt) {
-				g.add(n.asResource(), RDF.type, RDF.Alt);
-				Alt c = g.getAlt(n.asResource());
-				for (Collectable item : cc.collectables)
-					if(item instanceof Node)
-						c.add(((Node) item).node);			
-			}
+			g.add(model);
 		}
 	}
 
