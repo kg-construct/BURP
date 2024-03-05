@@ -43,4 +43,8 @@ public class SubGraph {
 	public boolean isAlt() { return model.contains(node.asResource(), RDF.type, RDF.Alt); }
 	public boolean isBag() { return model.contains(node.asResource(), RDF.type, RDF.Bag); }
 	public boolean isSeq() { return model.contains(node.asResource(), RDF.type, RDF.Seq); }
+	
+	public String toString() {
+		return node == null ? null : node.toString();
+	}
 }

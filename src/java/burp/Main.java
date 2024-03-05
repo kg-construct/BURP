@@ -248,7 +248,7 @@ public class Main {
 		for (RDFNode graph : graphs) {
 			Model g = getModel(ds, graph);
 			Resource r = subgraph.node.asResource();
-			
+						
 			if(subgraph.isList()) {
 				g.add(r, RDF.type, RML.list);
 				

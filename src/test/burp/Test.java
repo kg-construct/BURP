@@ -1,25 +1,19 @@
 package burp;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Seq;
-import org.apache.jena.vocabulary.RDF;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.github.jsonldjava.shaded.com.google.common.collect.Lists;
 
 public class Test {
 
 	public static void main(String[] args) {
-		Model m = ModelFactory.createDefaultModel();
+		List<List<Integer>> list = new ArrayList<List<Integer>>();
+		list.add(List.of(1, 2));
+		list.add(List.of(3, 4));
 		
-		Resource x = ResourceFactory.createResource("http://foo.bar/");
-		m.add(x, RDF.type, RDF.Bag);
+		System.out.println(Lists.cartesianProduct(list));
 		
-		Seq s = m.createSeq(x.getURI());
-		
-		s.add(1.90);
-		
-		m.write(System.err);
 	}
 
 }

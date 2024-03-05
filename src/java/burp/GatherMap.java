@@ -11,6 +11,8 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
 
+import com.github.jsonldjava.shaded.com.google.common.collect.Lists;
+
 public class GatherMap {
 
 	public boolean allowEmptyListAndContainer = false;
@@ -22,10 +24,48 @@ public class GatherMap {
 		if (RML.append.equals(strategy)) {
 			return append(i, baseIRI);
 		} else if (RML.cartesianProduct.equals(strategy)) {
-			// return cartesianProduct(i, baseIRI);
-			throw new RuntimeException("Cartesian Product not yet implemented.");
+			return cartesianProduct(i, baseIRI);
 		}
 		throw new RuntimeException("Unknown strategy.");
+	}
+
+	private List<SubGraph> cartesianProduct(Iteration i, String baseIRI) {
+		List<SubGraph> graphs = new ArrayList<SubGraph>();
+
+		List<List<SubGraph>> superlist = new ArrayList<List<SubGraph>>();
+		for (TermMap tm : termMaps) {
+			List<SubGraph> list = new ArrayList<SubGraph>();
+
+			if (tm.isGatherMap()) {
+				for (SubGraph g : tm.generateGatherMapGraphs(i, baseIRI)) {
+					list.add(g);
+				}
+			} else {
+				for (RDFNode generated : tm.generateTerms(i, baseIRI)) {
+					SubGraph sg = new SubGraph();
+					sg.node = generated;
+					list.add(sg);
+				}
+			}
+			superlist.add(list);		
+		}
+
+		List<List<SubGraph>> sets = Lists.cartesianProduct(superlist);
+		for (List<SubGraph> list : sets) {
+			Model m = ModelFactory.createDefaultModel();
+			RDFNode n = m.createResource();
+			if (gatherAs.equals(RDF.List))
+				createList(m, n, list);
+			else
+				createContainer(m, n, list);
+
+			if (!m.isEmpty()) {
+				SubGraph g = new SubGraph(n, m);
+				graphs.add(g);
+			}
+		}
+		
+		return graphs;
 	}
 
 	private List<SubGraph> append(Iteration i, String baseIRI) {
@@ -57,9 +97,9 @@ public class GatherMap {
 		else
 			createContainer(m, n, list);
 
-		if(!m.isEmpty()) {
+		if (!m.isEmpty()) {
 			SubGraph g = new SubGraph(n, m);
-			graphs.add(g);			
+			graphs.add(g);
 		}
 
 		return graphs;
