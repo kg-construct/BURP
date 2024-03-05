@@ -8,6 +8,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.rdf.model.impl.StatementImpl;
+import org.apache.jena.vocabulary.RDF;
 
 public class SubGraph {
 
@@ -37,4 +38,9 @@ public class SubGraph {
 		
 		node = n;
 	}
+
+	public boolean isList() { return !isBag() && !isSeq() && !isAlt(); }
+	public boolean isAlt() { return model.contains(node.asResource(), RDF.type, RDF.Alt); }
+	public boolean isBag() { return model.contains(node.asResource(), RDF.type, RDF.Bag); }
+	public boolean isSeq() { return model.contains(node.asResource(), RDF.type, RDF.Seq); }
 }

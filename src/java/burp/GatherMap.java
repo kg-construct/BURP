@@ -40,7 +40,9 @@ public class GatherMap {
 		List<SubGraph> list = new ArrayList<SubGraph>();
 		for (TermMap tm : termMaps) {
 			if (tm.isGatherMap()) {
-				throw new RuntimeException("Nested not yet supported");
+				for (SubGraph g : tm.generateGatherMapGraphs(i, baseIRI)) {
+					list.add(g);
+				}
 			} else {
 				for (RDFNode generated : tm.generateTerms(i, baseIRI)) {
 					SubGraph sg = new SubGraph();
@@ -55,9 +57,11 @@ public class GatherMap {
 		else
 			createContainer(m, n, list);
 
-		SubGraph g = new SubGraph(n, m);
+		if(!m.isEmpty()) {
+			SubGraph g = new SubGraph(n, m);
+			graphs.add(g);			
+		}
 
-		graphs.add(g);
 		return graphs;
 	}
 

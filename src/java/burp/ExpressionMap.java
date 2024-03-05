@@ -207,7 +207,7 @@ abstract class TermMap extends ExpressionMap {
 	
 	public List<SubGraph> generateGatherMapGraphs(Iteration i, String baseIRI) {
 		if(!isGatherMap())
-			throw new RuntimeException("Invalid gathermap");
+			throw new RuntimeException("Trying to process a non-gathermap as gathermap");
 		
 		List<SubGraph> g = new ArrayList<SubGraph>();
 		

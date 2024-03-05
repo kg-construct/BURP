@@ -8,8 +8,10 @@ import java.util.stream.Collectors;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.rdf.model.Container;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -83,7 +85,7 @@ public class Main {
 				} else {
 					for (SubGraph subgraph : sm.generateGatherMapGraphs(i, baseIRI)) {
 						subjects.add(subgraph.node);
-						addToGraphs(ds, sgs, subgraph.model);
+						addToGraphs(ds, sgs, subgraph);
 					}
 				}
 
@@ -138,7 +140,7 @@ public class Main {
 						} else {
 							for (SubGraph subgraph : om.generateGatherMapGraphs(i, baseIRI)) {
 								objects.add(subgraph.node);
-								addToGraphs(ds, graphs, subgraph.model);
+								addToGraphs(ds, graphs, subgraph);
 							}
 						}
 					}
@@ -242,11 +244,70 @@ public class Main {
 		}
 	}
 
-	private static void addToGraphs(Dataset ds, List<RDFNode> graphs, Model model) {
-		System.err.println(model);
+	private static void addToGraphs(Dataset ds, List<RDFNode> graphs, SubGraph subgraph) {
 		for (RDFNode graph : graphs) {
 			Model g = getModel(ds, graph);
-			g.add(model);
+			Resource r = subgraph.node.asResource();
+			
+			if(subgraph.isList()) {
+				g.add(r, RDF.type, RML.list);
+				
+				try {
+					RDFList l = g.getList(r);
+					RDFList sub = subgraph.model.getList(r);
+					
+					List<RDFNode> elements = sub.iterator().toList();
+					for(RDFNode e : elements) {
+						l.add(e);
+					}
+					
+					while(true) {
+						if(sub.isEmpty())
+							break;
+						sub = sub.removeHead();
+					}
+					
+					g.add(subgraph.model);
+				} catch (Exception e) {
+					// List did not exist, so we can just add it
+					g.add(subgraph.model);
+				}				
+				
+			} else {
+				Container c = null;
+				Container sub = null;
+				if(subgraph.isAlt()) {
+					g.add(r, RDF.type, RDF.Alt);
+					c = g.getAlt(r);
+					sub = subgraph.model.getAlt(r);
+				} else if(subgraph.isBag()) {
+					g.add(r, RDF.type, RDF.Bag);
+					c = g.getAlt(r);
+					sub = subgraph.model.getBag	(r);
+				} else if(subgraph.isSeq()) {
+					g.add(r, RDF.type, RDF.Seq);
+					c = g.getAlt(r);
+					sub = subgraph.model.getSeq(r);
+				}
+				
+				// Now amend everything so that
+				// we append the containers
+				List<RDFNode> elements = sub.iterator().toList();
+				for(RDFNode e : elements)
+					c.add(e);
+				
+				StmtIterator iter = sub.listProperties();
+				while(iter.hasNext()) {
+					Statement s = iter.next();
+					if(s.getSubject().equals(r))
+						if(s.getPredicate().getURI().startsWith("http://www.w3.org/1999/02/22-rdf-syntax-ns#_"))
+							iter.remove();
+				}
+				
+				// We all all the remaining triples
+				g.add(subgraph.model);
+				
+			}
 		}
 	}
 
