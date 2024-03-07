@@ -1,13 +1,13 @@
 @prefix activity: <http://example.com/activity/> .
 @prefix ex: <http://example.com/> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix formats: <http://www.w3.org/ns/formats/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rml: <http://w3id.org/rml/> .
 @prefix sd: <http://www.w3.org/ns/sparql-service-description#> .
 
 ex:TriplesMap1 a rml:TriplesMap;
   rml:logicalSource [ a rml:LogicalSource;
-      rml:iterator "$.results.bindings[*]";
       rml:iterator """
             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -17,8 +17,9 @@ ex:TriplesMap1 a rml:TriplesMap;
                 ?x  foaf:name ?Name ;
                     rdf:ID    ?ID ;
             } """;
-      rml:referenceFormulation rml:JSONPath;
+      rml:referenceFormulation formats:SPARQL_Results_JSON;
       rml:source [ a rml:RelativePathSource;
+          rml:root rml:MappingDirectory;
           rml:path <http://example.com/base#InputSPARQL>
         ]
     ];
@@ -48,7 +49,6 @@ ex:RefObjectMap1 a rml:RefObjectMap;
 
 ex:TriplesMap2 a rml:TriplesMap;
   rml:logicalSource [ a rml:LogicalSource;
-      rml:iterator "$.results.bindings[*]";
       rml:iterator """
                 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -58,8 +58,9 @@ ex:TriplesMap2 a rml:TriplesMap;
                     ?x a <http://example.com/Sport> .
                     ?x foaf:name ?Sport .
                 } """;
-      rml:referenceFormulation rml:JSONPath;
+      rml:referenceFormulation formats:SPARQL_Results_JSON;
       rml:source [ a rml:RelativePathSource;
+          rml:root rml:MappingDirectory;
           rml:path <http://example.com/base#InputSPARQL>
         ]
     ];
@@ -73,5 +74,4 @@ ex:TriplesMap2 a rml:TriplesMap;
 
 <http://example.com/base#InputSPARQL> a sd:Service;
   sd:endpoint <http://HOST:PORT/ds1/sparql>;
-  sd:resultFormat <http://www.w3.org/ns/formats/SPARQL_Results_JSON>;
   sd:supportedLanguage sd:SPARQL11Query .

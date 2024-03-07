@@ -47,7 +47,6 @@ public class Main {
 			// It all went well, thus return 0
 			return 0;
 		} catch (Exception e) {
-			e.printStackTrace();
 			System.err.println(e.getMessage());
 			return 1;
 		}

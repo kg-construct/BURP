@@ -4,9 +4,11 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -193,7 +195,12 @@ public abstract class ExpressionMap {
             x.append("#");
 		// Let's not forget the e-notation
 		x.append("E0");
-		return new DecimalFormat(x.toString()).format(d);
+		
+		NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
+		DecimalFormat formatter = (DecimalFormat) numberFormat;
+		formatter.applyPattern(x.toString());
+		
+		return formatter.format(d);
 	}
 		
 }

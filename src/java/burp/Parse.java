@@ -141,7 +141,7 @@ public class Parse {
 			String password = s.getProperty(D2RQ.password).getLiteral().getString();
 			
 			Statement t = ls.getProperty(RML.iterator);
-			String query = "(SELECT * FROM `" + t.getLiteral() + "`)";
+			String query = "(SELECT * FROM " + t.getLiteral() + ")";
 			
 			RDBSource source = new RDBSource();
 			source.jdbcDSN = jdbcDSN;

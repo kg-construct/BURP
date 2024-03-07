@@ -150,6 +150,7 @@ class RDBSource extends LogicalSource {
 			if (password != null && !"".equals(password))
 				props.setProperty("password", password);
 
+			Class.forName(jdbcDriver);
 			Connection connection = DriverManager.getConnection(jdbcDSN, props);
 			Statement statement = connection.createStatement();
 			final ResultSet resultset = statement.executeQuery(query);

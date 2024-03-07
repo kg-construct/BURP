@@ -15,11 +15,11 @@
       rml:predicate ex:BirthDay
     ];
   rml:subjectMap [
-      rml:template "http://example.com/Person/{id}/{name}/{DateOfBirth}"
+      rml:template "http://example.com/Person/{ID}/{Name}/{DateOfBirth}"
     ] .
 
 <http://example.com/base/#DB_source> a d2rq:Database;
   d2rq:jdbcDSN "CONNECTIONDSN";
   d2rq:jdbcDriver "org.postgresql.Driver";
-  d2rq:password "password";
+  d2rq:password "";
   d2rq:username "postgres" .

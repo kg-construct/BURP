@@ -6,12 +6,13 @@
       rml:iterator "/countries/country";
       rml:referenceFormulation rml:XPath;
       rml:source [ a rml:RelativePathSource;
+          rml:root rml:MappingDirectory;
           rml:path "country_en.xml"
         ]
     ];
   rml:predicateObjectMap [
       rml:objectMap [
-          rml:language "english";
+          rml:language "a-english";
           rml:reference "Name"
         ];
       rml:predicate rdfs:label
@@ -25,12 +26,13 @@
       rml:iterator "/countries/country";
       rml:referenceFormulation rml:XPath;
       rml:source [ a rml:RelativePathSource;
+          rml:root rml:MappingDirectory;
           rml:path "country_es.xml"
         ]
     ];
   rml:predicateObjectMap [
       rml:objectMap [
-          rml:language "spanish";
+          rml:language "a-spanish";
           rml:reference "Name"
         ];
       rml:predicate rdfs:label

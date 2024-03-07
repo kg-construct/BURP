@@ -66,6 +66,7 @@
 	<classpathentry kind="var" path="M2_REPO/com/github/docker-java/docker-java-transport/3.3.4/docker-java-transport-3.3.4.jar" sourcepath="M2_REPO/com/github/docker-java/docker-java-transport/3.3.4/docker-java-transport-3.3.4-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/java/dev/jna/jna/5.13.0/jna-5.13.0.jar" sourcepath="M2_REPO/net/java/dev/jna/jna/5.13.0/jna-5.13.0-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/testcontainers/mysql/1.19.5/mysql-1.19.5.jar" sourcepath="M2_REPO/org/testcontainers/mysql/1.19.5/mysql-1.19.5-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/testcontainers/postgresql/1.19.5/postgresql-1.19.5.jar" sourcepath="M2_REPO/org/testcontainers/postgresql/1.19.5/postgresql-1.19.5-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/testcontainers/jdbc/1.19.5/jdbc-1.19.5.jar" sourcepath="M2_REPO/org/testcontainers/jdbc/1.19.5/jdbc-1.19.5-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/testcontainers/database-commons/1.19.5/database-commons-1.19.5.jar" sourcepath="M2_REPO/org/testcontainers/database-commons/1.19.5/database-commons-1.19.5-sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
