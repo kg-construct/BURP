@@ -1,6 +1,13 @@
 package burp;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +27,8 @@ import org.apache.jena.shacl.ValidationReport;
 import org.apache.jena.shacl.lib.ShLib;
 import org.apache.jena.util.FileUtils;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.DCAT;
+import org.apache.jena.vocabulary.RDF;
 
 public class Parse {
 
@@ -106,16 +115,14 @@ public class Parse {
 		Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
 
 		if (RML.CSV.equals(referenceFormulation)) {
-			// TODO: we currently assume RML-CORE via rml:path with rml:RelativePathSource
-			String file = ls.getProperty(RML.source).getResource().getProperty(RML.path).getLiteral().getString();
+			String file = getFile(ls);
 			CSVSource source = new CSVSource();
 			source.file = getAbsoluteOrRelative(file, mpath);
 			return source;
 		}
 		
 		if (RML.JSONPath.equals(referenceFormulation)) {
-			// TODO: we currently assume RML-CORE via rml:path with rml:RelativePathSource
-			String file = ls.getProperty(RML.source).getResource().getProperty(RML.path).getLiteral().getString();
+			String file = getFile(ls);
 			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
 			JSONSource source = new JSONSource();
 			source.file = getAbsoluteOrRelative(file, mpath);
@@ -124,8 +131,7 @@ public class Parse {
 		}
 		
 		if (RML.XPath.equals(referenceFormulation)) {
-			// TODO: we currently assume RML-CORE via rml:path with rml:RelativePathSource
-			String file = ls.getProperty(RML.source).getResource().getProperty(RML.path).getLiteral().getString();
+			String file = getFile(ls);
 			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
 			XMLSource source = new XMLSource();
 			source.file = getAbsoluteOrRelative(file, mpath);
@@ -180,6 +186,46 @@ public class Parse {
 		}
 
 		throw new Exception("Reference formulation not (yet) supported.");
+	}
+
+	private static String getFile(Resource ls) {		
+		Resource source = ls.getPropertyResourceValue(RML.source);
+		
+		if(source.hasProperty(RDF.type, RML.RelativePathSource)) {
+			String file = source.getProperty(RML.path).getLiteral().getString();
+			
+			Resource root = source.getPropertyResourceValue(RML.root);
+			if(root != null && !RML.MappingDirectory.equals(root)) {
+				throw new RuntimeException("Root not yet implemented");
+			}
+			
+			// By default BURP treats it relative to mapping.
+			return file;
+		}
+
+		if(source.hasProperty(RDF.type, DCAT.Distribution)) {
+			String url = source.getPropertyResourceValue(DCAT.downloadURL).getURI();
+
+			try {
+				String temp = Files.createTempFile(null, ".download.tmp").toString();
+				
+				HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+				HttpResponse<InputStream> response = HttpClient
+						.newBuilder()
+						.followRedirects(HttpClient.Redirect.ALWAYS)
+						.build()
+						.send(request, HttpResponse.BodyHandlers.ofInputStream());
+				FileOutputStream output = new FileOutputStream(temp);				
+				output.write(response.body().readAllBytes());
+				output.close();
+				
+				return temp;
+			} catch(Exception e) {
+				throw new RuntimeException("Problem downloading " + url);
+			}
+		}
+		
+		throw new RuntimeException("Source from other way not yet implemented");
 	}
 
 	private static String getAbsoluteOrRelative(String file, String mpath) {
