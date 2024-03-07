@@ -56,6 +56,8 @@ public class TestRMLCC {
 	@Test public void RMLTCCC0006IT1() throws IOException { testForOK("RMLTC-CC-0006-IT1"); }
 	@Test public void RMLTCCC0006IT2() throws IOException { testForOK("RMLTC-CC-0006-IT2"); }
 	@Test public void RMLTCCC0007NES() throws IOException { testForOK("RMLTC-CC-0007-NES"); }
+	@Test public void RMLTCCC0008ROMa() throws IOException { testForOK("RMLTC-CC-0008-ROMa"); }
+	@Test public void RMLTCCC0008ROMb() throws IOException { testForOK("RMLTC-CC-0008-ROMb"); }
 	
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));

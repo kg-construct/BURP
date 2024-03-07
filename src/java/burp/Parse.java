@@ -287,8 +287,8 @@ public class Parse {
 		return objectMap;
 	}
 
-	private static GatherMap prepareGatherMap(Resource gm) {
-		GatherMap gatherMap = new GatherMap();
+	private static GatherMapMixin prepareGatherMap(Resource gm) {
+		GatherMapMixin gatherMap = new GatherMapMixin();
 		
 		if(gm.hasProperty(RML.allowEmptyListAndContainer)) {
 			boolean empty = gm.getProperty(RML.allowEmptyListAndContainer).getObject().asLiteral().getBoolean();
@@ -309,8 +309,14 @@ public class Parse {
 		ExtendedIterator<RDFNode> iter = list.iterator();
 		while(iter.hasNext()) {
 			Resource r = iter.next().asResource();
-			ObjectMap om = prepareObjectMap(r);
-			gatherMap.termMaps.add(om);
+			
+			if(r.hasProperty(RML.parentTriplesMap)) {
+				ReferencingObjectMap rom = prepareReferencingObjectMap(r);
+				gatherMap.gatherMaps.add(rom);
+			} else {
+				ObjectMap om = prepareObjectMap(r);
+				gatherMap.gatherMaps.add(om);
+			}
 		}
 
 		return gatherMap;

@@ -337,7 +337,12 @@
     sh:targetObjectsOf rml:predicateObjectMap .
 
 <http://w3id.org/rml/shapes/RMLRefObjectMapShape> a sh:NodeShape ;
-    sh:and ( <http://w3id.org/rml/shapes/RMLJoinConditionPropertiesShape> [ sh:class rml:TriplesMap ;
+    sh:and ( <http://w3id.org/rml/shapes/RMLJoinConditionPropertiesShape> [ 
+    
+    
+    			
+    			sh:class rml:TriplesMap ;
+                
                 sh:description """
             Specifies the Triples Map element corresponding to the parent data
             source of the foreign key constraint.

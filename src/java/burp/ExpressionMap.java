@@ -198,13 +198,13 @@ public abstract class ExpressionMap {
 		
 }
 
-abstract class TermMap extends ExpressionMap {
+abstract class TermMap extends ExpressionMap implements GatherMap {
 
 	public Resource termType;
-	public abstract boolean isGatherMap();
-	public abstract List<RDFNode> generateTerms(Iteration i, String baseIRI);
-	public GatherMap gatherMap = null;
+	//public abstract List<RDFNode> generateTerms(Iteration i, String baseIRI);
+	public GatherMapMixin gatherMap = null;
 	
+	@Override
 	public List<SubGraph> generateGatherMapGraphs(Iteration i, String baseIRI) {
 		if(!isGatherMap())
 			throw new RuntimeException("Trying to process a non-gathermap as gathermap");
