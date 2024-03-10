@@ -26,14 +26,24 @@ public final class RML {
 	public static final Resource append = ResourceFactory.createResource(NS + "append");
 	public static final Resource cartesianProduct = ResourceFactory.createResource(NS + "cartesianProduct");
 	
+	public static final Resource UTF8 = ResourceFactory.createResource(NS + "UTF-8");
+	public static final Resource UTF16 = ResourceFactory.createResource(NS + "UTF-16");
+	public static final Resource none = ResourceFactory.createResource(NS + "none");
+	public static final Resource gzip = ResourceFactory.createResource(NS + "gzip");
+	public static final Resource zip = ResourceFactory.createResource(NS + "zip");
+	public static final Resource tarxz = ResourceFactory.createResource(NS + "tarxz");
+	public static final Resource targz = ResourceFactory.createResource(NS + "targz");
+
 	// Classes
 	
 	// Properties
 	public static final Property allowEmptyListAndContainer = ResourceFactory.createProperty(NS + "allowEmptyListAndContainer");
 	public static final Property clazz = ResourceFactory.createProperty(NS + "class");
 	public static final Property childMap = ResourceFactory.createProperty(NS + "childMap");
+	public static final Property compression = ResourceFactory.createProperty(NS + "compression");
 	public static final Property constant = ResourceFactory.createProperty(NS + "constant");
 	public static final Property datatypeMap  = ResourceFactory.createProperty(NS + "datatypeMap");
+	public static final Property encoding  = ResourceFactory.createProperty(NS + "encoding");
 	public static final Property gather  = ResourceFactory.createProperty(NS + "gather");
 	public static final Property gatherAs  = ResourceFactory.createProperty(NS + "gatherAs");
 	public static final Property graphMap  = ResourceFactory.createProperty(NS + "graphMap");

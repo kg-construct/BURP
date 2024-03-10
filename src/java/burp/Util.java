@@ -1,5 +1,19 @@
 package burp;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipInputStream;
+
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.jena.rdf.model.Resource;
+
 public class Util {
 
 	/**
@@ -60,6 +74,63 @@ public class Util {
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
         return new String(hexChars);
+	}
+
+	public static String downloadFile(String url) {
+		try {
+			String temp = Files.createTempFile(null, ".download.tmp").toString();
+			
+			HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+			HttpResponse<InputStream> response = HttpClient
+					.newBuilder()
+					.followRedirects(HttpClient.Redirect.ALWAYS)
+					.build()
+					.send(request, HttpResponse.BodyHandlers.ofInputStream());
+			FileOutputStream output = new FileOutputStream(temp);				
+			output.write(response.body().readAllBytes());
+			output.close();
+			
+			return temp;		
+		} catch(Exception e) {
+			throw new RuntimeException("Problem downloading " + url);
+		}
+	}
+
+	public static String getDecompressedFile(String file, Resource compression) {
+		try {
+			if(RML.none.equals(compression))
+				return file;
+			
+			String temp = Files.createTempFile(null, ".extracted.tmp").toString();
+			FileInputStream fis = new FileInputStream(file);
+			
+			InputStream in = null;
+			if(RML.zip.equals(compression))
+				in = new ZipInputStream(fis);
+			else if(RML.gzip.equals(compression))
+				in = new GZIPInputStream(fis);
+			else if(RML.targz.equals(compression))
+				in = new TarArchiveInputStream(new GZIPInputStream(fis));
+			else if(RML.tarxz.equals(compression))
+				in = new TarArchiveInputStream(fis);
+			            
+			FileOutputStream out = new FileOutputStream(temp); 
+              
+            byte[] buffer = new byte[1024]; 
+            int size; 
+            while((size = in.read(buffer)) > 0 ) { 
+                out.write(buffer, 0, size); 
+            } 
+              
+            out.close(); 
+            in.close();
+            return temp;
+
+		} catch (Exception e) {
+			System.err.println(compression);
+			throw new RuntimeException("Error decompressing file");
+		}
+		
 	}
 	
 }

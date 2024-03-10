@@ -1,7 +1,8 @@
 package burp;
 
-import java.io.FileInputStream;
 import java.io.FileReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -22,6 +23,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.jena.rdf.model.Resource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -41,10 +44,21 @@ public abstract class LogicalSource {
 
 }
 
-class CSVSource extends LogicalSource {
-
-	private List<Iteration> iterations = null;
+abstract class FileBasedLogicalSource extends LogicalSource {
+	
+	protected List<Iteration> iterations = null;
 	public String file;
+	public String iterator;
+	public Charset encoding = StandardCharsets.UTF_8;
+	public Resource compression = RML.none;
+	
+	public String getDecompressedFile() {
+		return Util.getDecompressedFile(file, compression);
+	}
+	
+}
+
+class CSVSource extends FileBasedLogicalSource {
 
 	@Override
 	protected Iterator<Iteration> iterator() {
@@ -52,7 +66,7 @@ class CSVSource extends LogicalSource {
 			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();
 
-				FileReader fr = new FileReader(file);
+				FileReader fr = new FileReader(getDecompressedFile(), encoding);
 				CSVReader reader = new CSVReader(fr);
 				List<String[]> all = reader.readAll();
 				reader.close();
@@ -70,21 +84,21 @@ class CSVSource extends LogicalSource {
 
 }
 
-class JSONSource extends LogicalSource {
+class JSONSource extends FileBasedLogicalSource {
 
-	private List<Iteration> iterations = null;
-	public String file;
-	public String iterator;
-
-	private static Configuration c = Configuration.builder().mappingProvider(new JacksonMappingProvider())
-			.jsonProvider(new JacksonJsonProvider()).build().addOptions(Option.ALWAYS_RETURN_LIST);
+	private static Configuration c = 
+			Configuration.builder()
+			.mappingProvider(new JacksonMappingProvider())
+			.jsonProvider(new JacksonJsonProvider())
+			.build()
+			.addOptions(Option.ALWAYS_RETURN_LIST);
 
 	@Override
 	protected Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();
-				String contents = Files.readString(Paths.get(file));
+				String contents = Files.readString(Paths.get(getDecompressedFile()), encoding);
 
 				List<Map<String, Object>> nodes = JsonPath.using(c).parse(contents).read(iterator);
 				for (Map<String, Object> n : nodes) {
@@ -99,11 +113,7 @@ class JSONSource extends LogicalSource {
 
 }
 
-class XMLSource extends LogicalSource {
-
-	private List<Iteration> iterations = null;
-	public String file;
-	public String iterator;
+class XMLSource extends FileBasedLogicalSource {
 
 	@Override
 	protected Iterator<Iteration> iterator() {
@@ -111,10 +121,13 @@ class XMLSource extends LogicalSource {
 			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();
 
-				FileInputStream fileIS = new FileInputStream(file);
+				String contents = Files.readString(Paths.get(getDecompressedFile()), encoding);
+				
 				DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder builder = builderFactory.newDocumentBuilder();
-				Document xmlDocument = builder.parse(fileIS);
+				
+				Document xmlDocument = builder.parse(IOUtils.toInputStream(contents, encoding));
+				
 				XPath xPath = XPathFactory.newInstance().newXPath();
 				NodeList nodes = (NodeList) xPath.compile(iterator).evaluate(xmlDocument, XPathConstants.NODESET);
 				
@@ -132,8 +145,6 @@ class XMLSource extends LogicalSource {
 }
 
 class RDBSource extends LogicalSource {
-
-	// private List<Iteration> iterations = null;
 
 	public String jdbcDriver;
 	public String jdbcDSN;

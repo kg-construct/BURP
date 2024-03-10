@@ -1,13 +1,8 @@
 package burp;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.file.Files;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,6 +113,8 @@ public class Parse {
 			String file = getFile(ls);
 			CSVSource source = new CSVSource();
 			source.file = getAbsoluteOrRelative(file, mpath);
+			source.encoding = getEncoding(ls);
+			source.compression = getCompression(ls);
 			return source;
 		}
 		
@@ -127,6 +124,8 @@ public class Parse {
 			JSONSource source = new JSONSource();
 			source.file = getAbsoluteOrRelative(file, mpath);
 			source.iterator = iterator;
+			source.encoding = getEncoding(ls);
+			source.compression = getCompression(ls);
 			return source;
 		}
 		
@@ -136,6 +135,8 @@ public class Parse {
 			XMLSource source = new XMLSource();
 			source.file = getAbsoluteOrRelative(file, mpath);
 			source.iterator = iterator;
+			source.encoding = getEncoding(ls);
+			source.compression = getCompression(ls);
 			return source;
 		}
 		
@@ -188,6 +189,37 @@ public class Parse {
 		throw new Exception("Reference formulation not (yet) supported.");
 	}
 
+	private static Resource getCompression(Resource ls) {
+		Resource r = ls.getPropertyResourceValue(RML.source);
+		
+		if(r == null)
+			return RML.none;
+		
+		r = r.getPropertyResourceValue(RML.compression);
+		
+		if(r == null || RML.none.equals(r)) return RML.none;
+		if(RML.zip.equals(r)) return RML.zip;
+		if(RML.gzip.equals(r)) return RML.gzip;
+		if(RML.targz.equals(r)) return RML.targz;
+		if(RML.tarxz.equals(r)) return RML.tarxz;
+		
+		throw new RuntimeException("Provided compression " + r + " not supported.");
+	}
+
+	private static Charset getEncoding(Resource ls) {
+		Resource r = ls.getPropertyResourceValue(RML.source);
+		
+		if(r == null)
+			return StandardCharsets.UTF_8;
+		
+		r = r.getPropertyResourceValue(RML.encoding);
+		
+		if(r == null || RML.UTF8.equals(r)) return StandardCharsets.UTF_8;
+		if(RML.UTF16.equals(r)) return StandardCharsets.UTF_16;
+		
+		throw new RuntimeException("Provided Character Set " + r + " not supported.");
+	}
+
 	private static String getFile(Resource ls) {		
 		Resource source = ls.getPropertyResourceValue(RML.source);
 		
@@ -205,24 +237,7 @@ public class Parse {
 
 		if(source.hasProperty(RDF.type, DCAT.Distribution)) {
 			String url = source.getPropertyResourceValue(DCAT.downloadURL).getURI();
-
-			try {
-				String temp = Files.createTempFile(null, ".download.tmp").toString();
-				
-				HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
-				HttpResponse<InputStream> response = HttpClient
-						.newBuilder()
-						.followRedirects(HttpClient.Redirect.ALWAYS)
-						.build()
-						.send(request, HttpResponse.BodyHandlers.ofInputStream());
-				FileOutputStream output = new FileOutputStream(temp);				
-				output.write(response.body().readAllBytes());
-				output.close();
-				
-				return temp;
-			} catch(Exception e) {
-				throw new RuntimeException("Problem downloading " + url);
-			}
+			return Util.downloadFile(url);
 		}
 		
 		throw new RuntimeException("Source from other way not yet implemented");
