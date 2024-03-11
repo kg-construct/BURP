@@ -51,17 +51,17 @@ public abstract class LogicalSource {
 }
 
 abstract class FileBasedLogicalSource extends LogicalSource {
-	
+
 	protected List<Iteration> iterations = null;
 	public String file;
 	public String iterator;
 	public Charset encoding = StandardCharsets.UTF_8;
 	public Resource compression = RML.none;
-	
+
 	public String getDecompressedFile() {
 		return Util.getDecompressedFile(file, compression);
 	}
-	
+
 }
 
 class CSVSource extends FileBasedLogicalSource {
@@ -92,12 +92,8 @@ class CSVSource extends FileBasedLogicalSource {
 
 class JSONSource extends FileBasedLogicalSource {
 
-	private static Configuration c = 
-			Configuration.builder()
-			.mappingProvider(new JacksonMappingProvider())
-			.jsonProvider(new JacksonJsonProvider())
-			.build()
-			.addOptions(Option.ALWAYS_RETURN_LIST);
+	private static Configuration c = Configuration.builder().mappingProvider(new JacksonMappingProvider())
+			.jsonProvider(new JacksonJsonProvider()).build().addOptions(Option.ALWAYS_RETURN_LIST);
 
 	@Override
 	protected Iterator<Iteration> iterator() {
@@ -128,16 +124,16 @@ class XMLSource extends FileBasedLogicalSource {
 				iterations = new ArrayList<Iteration>();
 
 				String contents = Files.readString(Paths.get(getDecompressedFile()), encoding);
-				
+
 				DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder builder = builderFactory.newDocumentBuilder();
-				
+
 				Document xmlDocument = builder.parse(IOUtils.toInputStream(contents, encoding));
-				
+
 				XPath xPath = XPathFactory.newInstance().newXPath();
 				NodeList nodes = (NodeList) xPath.compile(iterator).evaluate(xmlDocument, XPathConstants.NODESET);
-				
-				for(int i = 0; i < nodes.getLength(); i++) {
+
+				for (int i = 0; i < nodes.getLength(); i++) {
 					Node node = nodes.item(i);
 					iterations.add(new XMLIteration(node));
 				}
@@ -202,24 +198,24 @@ class RDBSource extends LogicalSource {
 }
 
 class SPARQLCSVSource extends FileBasedLogicalSource {
-	
+
 	@Override
 	protected Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();
-								
+
 				Dataset ds = RDFDataMgr.loadDataset(file);
-				
-				try(QueryExecution exec = QueryExecution.dataset(ds).query(iterator).build()) {
-					org.apache.jena.query.ResultSet results = exec.execSelect() ;
+
+				try (QueryExecution exec = QueryExecution.dataset(ds).query(iterator).build()) {
+					org.apache.jena.query.ResultSet results = exec.execSelect();
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();
 					ResultSetFormatter.outputAsCSV(bout, results);
-					
+
 					CSVReader reader = new CSVReader(new StringReader(bout.toString()));
 					List<String[]> all = reader.readAll();
 					reader.close();
-					
+
 					String[] header = all.remove(0);
 					for (String[] rec : all) {
 						iterations.add(new CSVIteration(header, rec));
@@ -233,3 +229,71 @@ class SPARQLCSVSource extends FileBasedLogicalSource {
 	}
 
 }
+
+//class SPARQLTSVSource extends FileBasedLogicalSource {
+//
+//	@Override
+//	protected Iterator<Iteration> iterator() {
+//		try {
+//			if (iterations == null) {
+//				iterations = new ArrayList<Iteration>();
+//
+//				Dataset ds = RDFDataMgr.loadDataset(file);
+//
+//				try (QueryExecution exec = QueryExecution.dataset(ds).query(iterator).build()) {
+//					org.apache.jena.query.ResultSet results = exec.execSelect();
+//					ByteArrayOutputStream bout = new ByteArrayOutputStream();
+//					ResultSetFormatter.outputAsTSV(bout, results);
+//
+//					TsvParserSettings settings = new TsvParserSettings();
+//					TsvParser parser = new TsvParser(settings);
+//					List<String[]> all = parser.parseAll(new StringReader(bout.toString()));
+//					
+//					System.err.println(bout.toString());
+//					
+//					String[] header = all.remove(0);
+//					for (String[] rec : all) {
+//						iterations.add(new SPARQLTSVIteration(header, rec));
+//					}
+//				}
+//			}
+//			return iterations.iterator();
+//		} catch (Throwable e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
+//
+//}
+
+//class SPARQLJSONSource extends JSONSource {
+//
+//	private static Configuration c = Configuration.builder().mappingProvider(new JacksonMappingProvider())
+//			.jsonProvider(new JacksonJsonProvider()).build().addOptions(Option.ALWAYS_RETURN_LIST);
+//
+//	@Override
+//	protected Iterator<Iteration> iterator() {
+//		try {
+//			if (iterations == null) {
+//				iterations = new ArrayList<Iteration>();
+//
+//				Dataset ds = RDFDataMgr.loadDataset(file);
+//
+//				try (QueryExecution exec = QueryExecution.dataset(ds).query(iterator).build()) {
+//					org.apache.jena.query.ResultSet results = exec.execSelect();
+//					ByteArrayOutputStream bout = new ByteArrayOutputStream();
+//					ResultSetFormatter.outputAsJSON(bout, results);
+//					
+//					List<Map<String, Object>> nodes = JsonPath.using(c).parse(bout.toString()).read(iterator);
+//					for (Map<String, Object> n : nodes) {
+//						iterations.add(new JSONIteration(JSONObject.toJSONString(n)));
+//					}
+//				}
+//
+//			}
+//			return iterations.iterator();
+//		} catch (Throwable e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
+//
+//}

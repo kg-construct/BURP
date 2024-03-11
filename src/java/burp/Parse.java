@@ -200,6 +200,30 @@ public class Parse {
 			source.iterator = iterator;
 			return source;
 		}
+		
+//		if(RML.SPARQL_Results_TSV.equals(referenceFormulation)) {
+//			String file = getFile(ls);
+//			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+//
+//			SPARQLTSVSource source = new SPARQLTSVSource();
+//			source.file = getAbsoluteOrRelativeFromFileProtocol(file, mpath);
+//			source.encoding = getEncoding(ls);
+//			source.compression = getCompression(ls);
+//			source.iterator = iterator;
+//			return source;
+//		}
+		
+//		if(RML.SPARQL_Results_JSON.equals(referenceFormulation)) {
+//			String file = getFile(ls);
+//			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+//
+//			SPARQLJSONSource source = new SPARQLJSONSource();
+//			source.file = getAbsoluteOrRelativeFromFileProtocol(file, mpath);
+//			source.encoding = getEncoding(ls);
+//			source.compression = getCompression(ls);
+//			source.iterator = iterator;
+//			return source;
+//		}
 
 		throw new Exception("Reference formulation not (yet) supported.");
 	}
