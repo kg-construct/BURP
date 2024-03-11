@@ -1,6 +1,8 @@
 package burp;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -24,6 +26,7 @@ import org.apache.jena.util.FileUtils;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.VOID;
 
 public class Parse {
 
@@ -185,8 +188,32 @@ public class Parse {
 			source.query = query.replace("\\", "");
 			return source;
 		}
+		
+		if(RML.SPARQL_Results_CSV.equals(referenceFormulation)) {
+			String file = getFile(ls);
+			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+
+			SPARQLCSVSource source = new SPARQLCSVSource();
+			source.file = getAbsoluteOrRelativeFromFileProtocol(file, mpath);
+			source.encoding = getEncoding(ls);
+			source.compression = getCompression(ls);
+			source.iterator = iterator;
+			return source;
+		}
 
 		throw new Exception("Reference formulation not (yet) supported.");
+	}
+
+	private static String getAbsoluteOrRelativeFromFileProtocol(String file, String mpath) {
+		try {
+			URL url = new URL(file);
+			if(Util.isAbsoluteAndValidIRI(file))
+				return file;
+			String abs = new File(mpath, url.getPath()).toURI().toURL().toString();
+			return abs;
+		} catch (MalformedURLException e) {
+			throw new RuntimeException(file + " is not an URL.");
+		}
 	}
 
 	private static Resource getCompression(Resource ls) {
@@ -238,6 +265,11 @@ public class Parse {
 		if(source.hasProperty(RDF.type, DCAT.Distribution)) {
 			String url = source.getPropertyResourceValue(DCAT.downloadURL).getURI();
 			return Util.downloadFile(url);
+		}
+		
+		if(source.hasProperty(RDF.type, VOID.Dataset)) {
+			String file = source.getPropertyResourceValue(VOID.dataDump).getURI();
+			return file;
 		}
 		
 		throw new RuntimeException("Source from other way not yet implemented");

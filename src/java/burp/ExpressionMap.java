@@ -14,8 +14,6 @@ import java.util.regex.Pattern;
 
 import org.apache.jena.datatypes.BaseDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -38,9 +36,9 @@ public abstract class ExpressionMap {
 		if(expression instanceof Template) {
 			for(String v : ((Template) expression).values(i, true)) {
 				
-				if(isAbsoluteAndValidIRI(v))
+				if(Util.isAbsoluteAndValidIRI(v))
 					set.add(ResourceFactory.createResource(v));
-				else if(isAbsoluteAndValidIRI(baseIRI + v.toString()))
+				else if(Util.isAbsoluteAndValidIRI(baseIRI + v.toString()))
 					set.add(ResourceFactory.createResource(baseIRI + v.toString()));
 				else
 					throw new RuntimeException(baseIRI + " and " + v + " do not constitute a valid IRI");
@@ -53,9 +51,9 @@ public abstract class ExpressionMap {
 			for(Object v : ((Reference) expression).values(i)) {
 				String s = v.toString();
 				
-				if(isAbsoluteAndValidIRI(s))
+				if(Util.isAbsoluteAndValidIRI(s))
 					set.add(ResourceFactory.createResource(s));
-				else if(isAbsoluteAndValidIRI(baseIRI + s))
+				else if(Util.isAbsoluteAndValidIRI(baseIRI + s))
 					set.add(ResourceFactory.createResource(baseIRI + s));
 				else
 					throw new RuntimeException(baseIRI + " and " + s + " do not constitute a valid IRI");
@@ -177,11 +175,6 @@ public abstract class ExpressionMap {
 		}
 		
 		return ResourceFactory.createTypedLiteral(o);
-	}
-
-	private static boolean isAbsoluteAndValidIRI(String string) {
-		IRI iri = IRIFactory.iriImplementation().create(string.toString());
-		return iri.isAbsolute() && !iri.hasViolation(true);
 	}
 	
 	private static String doubleCanonicalMap(Double d) {

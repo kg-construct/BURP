@@ -42,5 +42,5 @@
     void:dataDump <file://./dump1.nq.tar.gz>;
   ];
   rml:serialization formats:N-Quads;
-  rml:compression rml:targzip;
+  rml:compression rml:targz;
 .

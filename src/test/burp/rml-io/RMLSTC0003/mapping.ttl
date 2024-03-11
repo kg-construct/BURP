@@ -14,7 +14,7 @@
     rml:iterator """
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-    SELECT ?name ?age WHERE {
+    SELECT ?person ?name ?age WHERE {
         ?person foaf:name ?name .
         ?person foaf:age ?age .
     }
@@ -22,7 +22,7 @@
     rml:referenceFormulation formats:SPARQL_Results_CSV;
   ];
   rml:subjectMap [ a rml:SubjectMap;
-    rml:template "http://example.org/{id}";
+    rml:reference "person";
   ];
   rml:predicateObjectMap [ a rml:PredicateObjectMap;
     rml:predicateMap [ a rml:PredicateMap;

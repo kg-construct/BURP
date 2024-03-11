@@ -33,6 +33,12 @@ public final class RML {
 	public static final Resource zip = ResourceFactory.createResource(NS + "zip");
 	public static final Resource tarxz = ResourceFactory.createResource(NS + "tarxz");
 	public static final Resource targz = ResourceFactory.createResource(NS + "targz");
+	
+	public static final String FORMATSNS = "https://www.w3.org/ns/formats/";
+	public static final Resource SPARQL_Results_CSV = ResourceFactory.createResource(FORMATSNS + "SPARQL_Results_CSV");
+	public static final Resource SPARQL_Results_TSV = ResourceFactory.createResource(FORMATSNS + "SPARQL_Results_TSV");
+	public static final Resource SPARQL_Results_JSON = ResourceFactory.createResource(FORMATSNS + "SPARQL_Results_JSON");
+	public static final Resource SPARQL_Results_XML = ResourceFactory.createResource(FORMATSNS + "SPARQL_Results_XML");
 
 	// Classes
 	

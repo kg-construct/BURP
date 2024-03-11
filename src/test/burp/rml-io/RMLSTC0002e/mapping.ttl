@@ -5,7 +5,7 @@
 
 <#DCATSourceAccess> a rml:Source, dcat:Distribution;
   dcat:downloadURL <http://w3id.org/rml/resources/Friends.json.tar.gz>;
-  rml:compression rml:targzip;
+  rml:compression rml:targz;
 .
 
 <#TriplesMap> a rml:TriplesMap;

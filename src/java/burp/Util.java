@@ -3,15 +3,19 @@ package burp;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.io.IOUtils;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.Resource;
 
 public class Util {
@@ -75,6 +79,16 @@ public class Util {
         }
         return new String(hexChars);
 	}
+	
+	public static boolean isAbsoluteAndValidIRI(String string) {
+		IRI iri = IRIFactory.iriImplementation().create(string.toString());
+		return iri.isAbsolute() && !iri.hasViolation(true);
+	}
+	
+	public static boolean isAbsolute(String string) {
+		IRI iri = IRIFactory.iriImplementation().create(string.toString());
+		return iri.isAbsolute();
+	}
 
 	public static String downloadFile(String url) {
 		try {
@@ -102,28 +116,29 @@ public class Util {
 				return file;
 			
 			String temp = Files.createTempFile(null, ".extracted.tmp").toString();
-			FileInputStream fis = new FileInputStream(file);
 			
+			OutputStream out = new FileOutputStream(temp);
+			FileInputStream fin = new FileInputStream(file);
 			InputStream in = null;
-			if(RML.zip.equals(compression))
-				in = new ZipInputStream(fis);
-			else if(RML.gzip.equals(compression))
-				in = new GZIPInputStream(fis);
-			else if(RML.targz.equals(compression))
-				in = new TarArchiveInputStream(new GZIPInputStream(fis));
-			else if(RML.tarxz.equals(compression))
-				in = new TarArchiveInputStream(fis);
-			            
-			FileOutputStream out = new FileOutputStream(temp); 
-              
-            byte[] buffer = new byte[1024]; 
-            int size; 
-            while((size = in.read(buffer)) > 0 ) { 
-                out.write(buffer, 0, size); 
-            } 
-              
-            out.close(); 
-            in.close();
+			
+			if(RML.zip.equals(compression)) {
+				in = new ZipInputStream(fin);
+			} else if(RML.gzip.equals(compression)) {
+				in = new GzipCompressorInputStream(fin);
+			} else if(RML.targz.equals(compression)) {
+				TarArchiveInputStream a = new TarArchiveInputStream(fin);
+				a.getNextEntry();
+				in = a;
+			} else if(RML.tarxz.equals(compression)) {
+				TarArchiveInputStream a = new TarArchiveInputStream(fin);
+				a.getNextEntry();
+				in = a;
+			}
+			
+			IOUtils.copy(in, out);
+			in.close();
+			out.close();
+			
             return temp;
 
 		} catch (Exception e) {

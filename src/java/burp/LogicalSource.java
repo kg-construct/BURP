@@ -1,6 +1,8 @@
 package burp;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
+import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -24,7 +26,11 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.RDFDataMgr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -188,6 +194,39 @@ class RDBSource extends LogicalSource {
 				}
 
 			};
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+}
+
+class SPARQLCSVSource extends FileBasedLogicalSource {
+	
+	@Override
+	protected Iterator<Iteration> iterator() {
+		try {
+			if (iterations == null) {
+				iterations = new ArrayList<Iteration>();
+								
+				Dataset ds = RDFDataMgr.loadDataset(file);
+				
+				try(QueryExecution exec = QueryExecution.dataset(ds).query(iterator).build()) {
+					org.apache.jena.query.ResultSet results = exec.execSelect() ;
+					ByteArrayOutputStream bout = new ByteArrayOutputStream();
+					ResultSetFormatter.outputAsCSV(bout, results);
+					
+					CSVReader reader = new CSVReader(new StringReader(bout.toString()));
+					List<String[]> all = reader.readAll();
+					reader.close();
+					
+					String[] header = all.remove(0);
+					for (String[] rec : all) {
+						iterations.add(new CSVIteration(header, rec));
+					}
+				}
+			}
+			return iterations.iterator();
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
