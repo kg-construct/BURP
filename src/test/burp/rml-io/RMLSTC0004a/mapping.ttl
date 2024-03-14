@@ -5,7 +5,7 @@
 @base <http://example.com/rules/> .
 
 <#CSVWSourceAccess> a rml:Source, csvw:Table;
-  csvw:url "http://./Friends-NULL.csv";
+  csvw:url "file://./Friends-NULL.csv";
   csvw:dialect [ a csvw:Dialect;
     csvw:delimiter ";";
     csvw:encoding "UTF-8";

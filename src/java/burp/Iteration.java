@@ -52,8 +52,9 @@ class CSVIteration extends Iteration {
 	@Override
 	protected List<String> getStringsFor(String reference) {
 		List<String> l = new ArrayList<String>();
-		if(map.containsKey(reference))
-			l.add(map.get(reference));
+		if(!map.containsKey(reference))
+			throw new RuntimeException("Attribute " + reference + " does not exist.");
+		l.add(map.get(reference));
 		return l;
 	}
 	
