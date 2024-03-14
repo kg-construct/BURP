@@ -19,7 +19,7 @@
 <#TriplesMap> a rml:TriplesMap;
   rml:logicalSource [ a rml:LogicalSource;
     rml:source <#CSVWSourceAccess>;
-    rml:referenceFormulation rml:JSONPath;
+    rml:referenceFormulation rml:CSV;
     rml:iterator "$.[*]";
   ];
   rml:subjectMap [ a rml:SubjectMap;
