@@ -13,11 +13,12 @@ import org.apache.jena.riot.RDFDataMgr;
 
 import com.opencsv.CSVReader;
 
-import burp.iteration.CSVIteration;
 import burp.model.Iteration;
 
 class SPARQLCSVSource extends FileBasedLogicalSource {
 
+	// TODO: WE SHOULD HAVE A SEPERATE ITERATION FOR SPARQL
+	
 	@Override
 	public Iterator<Iteration> iterator() {
 		try {
