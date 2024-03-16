@@ -172,6 +172,8 @@ public abstract class ExpressionMap {
 				s = s.replace(".0", "");
 			
 			return ResourceFactory.createTypedLiteral(s, XSDDatatype.XSDdateTime);
+		} else if(o instanceof Literal) {
+			return (Literal) o;
 		}
 		
 		return ResourceFactory.createTypedLiteral(o);

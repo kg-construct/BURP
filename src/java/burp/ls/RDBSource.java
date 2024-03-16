@@ -74,7 +74,7 @@ class RDBIteration extends Iteration {
 
 	private Map<String, Object> values = new HashMap<String, Object>();
 
-	public RDBIteration(ResultSet resultSet, Map<String, Integer> indexMap, Set<Object> nulls) {
+	protected RDBIteration(ResultSet resultSet, Map<String, Integer> indexMap, Set<Object> nulls) {
 		super(nulls);
 		
 		for(String ref : indexMap.keySet()) {

@@ -55,7 +55,7 @@ class XMLIteration extends Iteration {
 
 	private Node node;
 
-	public XMLIteration(Node node, Set<Object> nulls) {
+	protected XMLIteration(Node node, Set<Object> nulls) {
 		super(nulls);
 		
 		this.node = node;

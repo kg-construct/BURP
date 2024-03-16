@@ -34,7 +34,7 @@ public class LogicalSourceFactory {
 			// IF IT IS A CSVW TABLE, THEN LOOK FOR THE ENCODING IN THE DIALECT
 			if (s.hasProperty(CSVW.dialect)) {
 				Resource r = s.getPropertyResourceValue(CSVW.dialect);
-				if (r.hasProperty(CSVW.encoding)) {
+				if (r.hasProperty(CSVW.encoding) && !ls.hasProperty(RML.encoding)) {
 					String e = r.getProperty(CSVW.encoding).getString();
 					if ("UTF-8".equals(e))
 						source.encoding = StandardCharsets.UTF_8;
@@ -53,7 +53,19 @@ public class LogicalSourceFactory {
 				if (r.hasProperty(CSVW.header)) {
 					Boolean e = r.getProperty(CSVW.header).getBoolean();
 					source.firstLineIsHeader = e; 
-				}				
+				}	
+				
+				if (r.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.NULL)) {
+					r.listProperties(RML.NULL).forEach(t -> {
+						if(t.getObject().isResource()) {
+							// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR 
+							// SPARQL SOURCES
+							source.nulls.add(t.getObject().asResource());
+						} else {
+							source.nulls.add(t.getObject().asLiteral().getValue());
+						}
+					});
+				}	
 				
 			} else {
 				source.encoding = StandardCharsets.UTF_8;
@@ -65,10 +77,10 @@ public class LogicalSourceFactory {
 			// WE HAVE A SIMPLE CSV FILE (CORE)
 			String file = getFile(ls);
 			source.file = getAbsoluteOrRelative(file, mpath);
-			source.encoding = getEncoding(ls);
 			source.compression = getCompression(ls);
 		}
 
+		source.encoding = getEncoding(ls);
 		source.nulls.addAll(getNullValues(ls));
 		
 		return source;
@@ -150,32 +162,32 @@ public class LogicalSourceFactory {
 		return source;
 	}
 
-	public static LogicalSource createSPARQLCSVSource(Resource ls, String mpath) {
-		SPARQLCSVSource source = new SPARQLCSVSource();
+	public static LogicalSource createSPARQLSource(Resource ls, String mpath, boolean isTSV) {
+		SPARQLSource source = new SPARQLSource(isTSV);
 		String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
 
-		if (ls.hasProperty(RDF.type, VOID.Dataset)) {
-			String file = ls.getPropertyResourceValue(VOID.dataDump).getURI();
-
+		Resource s = ls.getPropertyResourceValue(RML.source);
+		
+		if (s.hasProperty(RDF.type, VOID.Dataset)) {
+			String file = s.getPropertyResourceValue(VOID.dataDump).getURI();
 			source.file = getAbsoluteOrRelativeFromFileProtocol(file, mpath);
-			source.encoding = getEncoding(ls);
-			source.iterator = iterator;
-			source.nulls.addAll(getNullValues(ls));
-			return source;
 		} else {
+			System.err.println("daar");
 			// WE HAVE A SIMPLE SPARQL SOURCE
 			String file = getFile(ls);
 			source.file = getAbsoluteOrRelative(file, mpath);
-			source.encoding = getEncoding(ls);
-			source.iterator = iterator;
-			source.compression = getCompression(ls);
-			source.nulls.addAll(getNullValues(ls));
-			return source;
 		}
+
+		source.compression = getCompression(ls);
+		source.encoding = getEncoding(ls);
+		source.iterator = iterator;
+		source.nulls.addAll(getNullValues(ls));
+		return source;
 	}
 
-	// TODO: RML.SPARQL_Results_JSON
-	// TODO: RML.SPARQL_Results_XML
+	// TODO: Do we really need RML.SPARQL_Results_TSV?
+	// TODO: Do we really need RML.SPARQL_Results_JSON?
+	// TODO: Do we really need RML.SPARQL_Results_XML?
 
 	// *************************************************************************
 	// *

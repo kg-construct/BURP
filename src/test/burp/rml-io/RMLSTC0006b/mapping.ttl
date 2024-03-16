@@ -14,9 +14,10 @@
     rml:iterator """
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-    SELECT ?name ?age WHERE {
+    SELECT ?id ?name ?age WHERE {
         ?person foaf:name ?name .
         ?person foaf:age ?age .
+        BIND(REPLACE(STR(?person),"http://example.org/", "") AS ?id) .
     }
     """;
     rml:referenceFormulation formats:SPARQL_Results_CSV;

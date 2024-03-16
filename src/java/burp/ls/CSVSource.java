@@ -66,9 +66,9 @@ class CSVIteration extends Iteration {
 
 	private Map<String, String> map = new HashMap<String, String>();
 	
-	public CSVIteration(String[] header, String[] rec, Set<Object> nulls) {
+	protected CSVIteration(String[] header, String[] rec, Set<Object> nulls) {
 		super(nulls);
-		
+
 		for(int i = 0; i < header.length; i++) {
 			map.put(header[i], rec[i]);
 		}

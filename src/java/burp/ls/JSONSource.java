@@ -56,7 +56,7 @@ class JSONIteration extends Iteration {
             .addOptions(Option.ALWAYS_RETURN_LIST)
 			;
 	
-	public JSONIteration(String json, Set<Object> nulls) {
+	protected JSONIteration(String json, Set<Object> nulls) {
 		super(nulls);
 		
 		doc = JsonPath.using(c).parse(json);

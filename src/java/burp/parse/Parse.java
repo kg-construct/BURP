@@ -139,7 +139,16 @@ public class Parse {
 			return LogicalSourceFactory.createXMLSource(ls, mpath);
 		
 		if(RML.SPARQL_Results_CSV.equals(referenceFormulation)) 
-			return LogicalSourceFactory.createSPARQLCSVSource(ls, mpath);
+			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
+		
+		if(RML.SPARQL_Results_TSV.equals(referenceFormulation)) 
+			return LogicalSourceFactory.createSPARQLSource(ls, mpath, true);
+		
+		if(RML.SPARQL_Results_XML.equals(referenceFormulation)) 
+			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
+		
+		if(RML.SPARQL_Results_JSON.equals(referenceFormulation)) 
+			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
 
 		throw new Exception("Reference formulation not (yet) supported.");
 	}

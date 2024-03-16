@@ -10,10 +10,11 @@ public class CSVW {
 	
 	public static final Resource Table = ResourceFactory.createResource(NS + "Table");
 
-	public static Property delimiter = ResourceFactory.createProperty(NS + "delimiter");
-	public static Property dialect = ResourceFactory.createProperty(NS + "dialect");
-	public static Property encoding = ResourceFactory.createProperty(NS + "encoding");
-	public static Property header = ResourceFactory.createProperty(NS + "header");
-	public static Property url = ResourceFactory.createProperty(NS + "url");
+	public static final Property delimiter = ResourceFactory.createProperty(NS + "delimiter");
+	public static final Property dialect = ResourceFactory.createProperty(NS + "dialect");
+	public static final Property encoding = ResourceFactory.createProperty(NS + "encoding");
+	public static final Property header = ResourceFactory.createProperty(NS + "header");
+	public static final Property NULL = ResourceFactory.createProperty(NS + "null");
+	public static final Property url = ResourceFactory.createProperty(NS + "url");
 
 }
