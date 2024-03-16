@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.apache.jena.rdf.model.RDFNode;
 
+import burp.iteration.Iteration;
+
 public interface GatherMap {
 
 	public abstract boolean isGatherMap();

@@ -5,6 +5,9 @@ import java.util.List;
 
 import org.apache.jena.query.Dataset;
 
+import burp.em.SubjectMap;
+import burp.ls.LogicalSource;
+
 public class TriplesMap {
 
 	public LogicalSource logicalSource = null;

@@ -1,4 +1,4 @@
-package burp;
+package burp.util;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

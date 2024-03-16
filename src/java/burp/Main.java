@@ -21,6 +21,13 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.RDF;
 
+import burp.em.GraphMap;
+import burp.em.ObjectMap;
+import burp.em.PredicateMap;
+import burp.em.SubjectMap;
+import burp.iteration.Iteration;
+import burp.parse.Parse;
+import burp.util.BURPConfiguration;
 import burp.vocabularies.RML;
 
 public class Main {

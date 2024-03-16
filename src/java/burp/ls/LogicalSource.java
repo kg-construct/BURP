@@ -1,4 +1,4 @@
-package burp;
+package burp.ls;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
@@ -46,6 +46,12 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
+import burp.iteration.CSVIteration;
+import burp.iteration.Iteration;
+import burp.iteration.JSONIteration;
+import burp.iteration.RDBIteration;
+import burp.iteration.XMLIteration;
+import burp.util.Util;
 import burp.vocabularies.RML;
 import net.minidev.json.JSONObject;
 
@@ -53,7 +59,7 @@ public abstract class LogicalSource {
 
 	public Set<Object> nulls = new HashSet<Object>();
 
-	protected abstract Iterator<Iteration> iterator();
+	public abstract Iterator<Iteration> iterator();
 
 }
 
@@ -77,7 +83,7 @@ class CSVSource extends FileBasedLogicalSource {
 	public Boolean firstLineIsHeader = true;
 
 	@Override
-	protected Iterator<Iteration> iterator() {
+	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();
@@ -125,7 +131,7 @@ class JSONSource extends FileBasedLogicalSource {
 			.jsonProvider(new JacksonJsonProvider()).build().addOptions(Option.ALWAYS_RETURN_LIST);
 
 	@Override
-	protected Iterator<Iteration> iterator() {
+	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();
@@ -147,7 +153,7 @@ class JSONSource extends FileBasedLogicalSource {
 class XMLSource extends FileBasedLogicalSource {
 
 	@Override
-	protected Iterator<Iteration> iterator() {
+	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();
@@ -184,7 +190,7 @@ class RDBSource extends LogicalSource {
 	public String query;
 
 	@Override
-	protected Iterator<Iteration> iterator() {
+	public Iterator<Iteration> iterator() {
 		try {
 			Properties props = new Properties();
 			if (username != null && !"".equals(username))
@@ -229,7 +235,7 @@ class RDBSource extends LogicalSource {
 class SPARQLCSVSource extends FileBasedLogicalSource {
 
 	@Override
-	protected Iterator<Iteration> iterator() {
+	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
 				iterations = new ArrayList<Iteration>();

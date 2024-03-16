@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 
+import burp.iteration.Iteration;
+
 public class ReferencingObjectMap implements GatherMap {
 	
 	public TriplesMap parent = null;
@@ -73,12 +75,5 @@ public class ReferencingObjectMap implements GatherMap {
 			return list;
 		}
 	}
-
-}
-
-class JoinCondition {
-	
-	public ConcreteExpressionMap parentMap = null;
-	public ConcreteExpressionMap childMap = null;
 
 }
