@@ -3,6 +3,12 @@ package burp.model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 
+ * A ConcreteExpressionMap is a concrete implementation of the abstract class
+ * ExpressionMap for use in join conditions
+ *
+ */
 public class ConcreteExpressionMap extends ExpressionMap {
 
 	public List<String> generateValues(Iteration i) {
