@@ -46,6 +46,7 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
+import burp.vocabularies.RML;
 import net.minidev.json.JSONObject;
 
 public abstract class LogicalSource {

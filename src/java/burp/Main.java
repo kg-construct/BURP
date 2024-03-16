@@ -21,6 +21,8 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.RDF;
 
+import burp.vocabularies.RML;
+
 public class Main {
 
 	private static List<RDFNode> def = List.of(RML.defaultGraph);

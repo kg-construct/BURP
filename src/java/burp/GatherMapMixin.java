@@ -13,6 +13,8 @@ import org.apache.jena.vocabulary.RDF;
 
 import com.github.jsonldjava.shaded.com.google.common.collect.Lists;
 
+import burp.vocabularies.RML;
+
 public class GatherMapMixin {
 
 	public boolean allowEmptyListAndContainer = false;

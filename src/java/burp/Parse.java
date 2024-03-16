@@ -19,6 +19,8 @@ import org.apache.jena.shacl.lib.ShLib;
 import org.apache.jena.util.FileUtils;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
+import burp.vocabularies.RML;
+
 public class Parse {
 
 	static Map<Resource, TriplesMap> triplesmaps = null;

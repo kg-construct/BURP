@@ -14,6 +14,10 @@ import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.VOID;
 
+import burp.vocabularies.CSVW;
+import burp.vocabularies.D2RQ;
+import burp.vocabularies.RML;
+
 public class LogicalSourceFactory {
 
 	public static LogicalSource createCSVSource(Resource ls, String mpath) {

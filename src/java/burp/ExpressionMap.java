@@ -19,6 +19,8 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 
+import burp.vocabularies.RML;
+
 public abstract class ExpressionMap {
 
 	public Expression expression = null;
