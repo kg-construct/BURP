@@ -57,6 +57,7 @@ public final class RML {
 	public static final Property joinCondition  = ResourceFactory.createProperty(NS + "joinCondition");
 	public static final Property languageMap  = ResourceFactory.createProperty(NS + "languageMap");
 	public static final Property logicalSource = ResourceFactory.createProperty(NS + "logicalSource");
+	public static final Property NULL = ResourceFactory.createProperty(NS + "null");
 	public static final Property objectMap  = ResourceFactory.createProperty(NS + "objectMap");
 	public static final Property path  = ResourceFactory.createProperty(NS + "path");
 	public static final Property parentMap  = ResourceFactory.createProperty(NS + "parentMap");

@@ -5,6 +5,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
@@ -35,6 +37,18 @@ public class LogicalSourceFactory {
 					else
 						throw new RuntimeException("Provided Character Set " + r + " not supported.");
 				}
+				
+				if (r.hasProperty(CSVW.delimiter)) {
+					// TODO: According to CSVW, the delimiter is a string. But all examples are chars.
+					char e = r.getProperty(CSVW.delimiter).getChar();
+					source.delimiter = e; 
+				}
+				
+				if (r.hasProperty(CSVW.header)) {
+					Boolean e = r.getProperty(CSVW.header).getBoolean();
+					source.firstLineIsHeader = e; 
+				}				
+				
 			} else {
 				source.encoding = StandardCharsets.UTF_8;
 			}
@@ -49,6 +63,8 @@ public class LogicalSourceFactory {
 			source.compression = getCompression(ls);
 		}
 
+		source.nulls.addAll(getNullValues(ls));
+		
 		return source;
 	}
 
@@ -60,6 +76,7 @@ public class LogicalSourceFactory {
 		source.iterator = iterator;
 		source.encoding = getEncoding(ls);
 		source.compression = getCompression(ls);
+		source.nulls.addAll(getNullValues(ls));
 		return source;
 	}
 
@@ -71,6 +88,7 @@ public class LogicalSourceFactory {
 		source.iterator = iterator;
 		source.encoding = getEncoding(ls);
 		source.compression = getCompression(ls);
+		source.nulls.addAll(getNullValues(ls));
 		return source;
 	}
 
@@ -94,6 +112,9 @@ public class LogicalSourceFactory {
 		// which is internally stored as \\"Name\\". We thus need to remove
 		// occurrences of \\
 		source.query = query.replace("\\", "");
+		
+		source.nulls.addAll(getNullValues(ls));
+
 		return source;
 	}
 
@@ -117,6 +138,9 @@ public class LogicalSourceFactory {
 		// which is internally stored as \\"Name\\". We thus need to remove
 		// occurrences of \\
 		source.query = query.replace("\\", "");
+		
+		source.nulls.addAll(getNullValues(ls));
+
 		return source;
 	}
 
@@ -130,6 +154,7 @@ public class LogicalSourceFactory {
 			source.file = getAbsoluteOrRelativeFromFileProtocol(file, mpath);
 			source.encoding = getEncoding(ls);
 			source.iterator = iterator;
+			source.nulls.addAll(getNullValues(ls));
 			return source;
 		} else {
 			// WE HAVE A SIMPLE SPARQL SOURCE
@@ -138,6 +163,7 @@ public class LogicalSourceFactory {
 			source.encoding = getEncoding(ls);
 			source.iterator = iterator;
 			source.compression = getCompression(ls);
+			source.nulls.addAll(getNullValues(ls));
 			return source;
 		}
 	}
@@ -220,6 +246,21 @@ public class LogicalSourceFactory {
 		} catch (MalformedURLException e) {
 			throw new RuntimeException(file + " is not an URL.");
 		}
+	}
+	
+	private static List<Object> getNullValues(Resource ls) {
+		Resource r = ls.getPropertyResourceValue(RML.source);
+		List<Object> os = new ArrayList<>();
+		r.listProperties(RML.NULL).forEach(t -> {
+			if(t.getObject().isResource()) {
+				// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR 
+				// SPARQL SOURCES
+				os.add(t.getObject().asResource());
+			} else {
+				os.add(t.getObject().asLiteral().getValue());
+			}
+		});
+		return os;
 	}
 
 }

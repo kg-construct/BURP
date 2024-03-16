@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -23,6 +24,12 @@ import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 
 public abstract class Iteration {
+	
+	public Set<Object> nulls = null;
+	
+	public Iteration(Set<Object> nulls) {
+		this.nulls = nulls;
+	}
 
 	protected abstract List<Object> getValuesFor(String reference);
 
@@ -34,7 +41,9 @@ class CSVIteration extends Iteration {
 
 	private Map<String, String> map = new HashMap<String, String>();
 	
-	public CSVIteration(String[] header, String[] rec) {
+	public CSVIteration(String[] header, String[] rec, Set<Object> nulls) {
+		super(nulls);
+		
 		for(int i = 0; i < header.length; i++) {
 			map.put(header[i], rec[i]);
 		}
@@ -45,7 +54,11 @@ class CSVIteration extends Iteration {
 		List<Object> l = new ArrayList<Object>();
 		if(!map.containsKey(reference))
 			throw new RuntimeException("Attribute " + reference + " does not exist.");
-		l.add(map.get(reference));
+		
+		String o = map.get(reference);
+		if(!nulls.contains(o))
+			l.add(o);
+		
 		return l;
 	}
 
@@ -54,7 +67,11 @@ class CSVIteration extends Iteration {
 		List<String> l = new ArrayList<String>();
 		if(!map.containsKey(reference))
 			throw new RuntimeException("Attribute " + reference + " does not exist.");
-		l.add(map.get(reference));
+		
+		String o = map.get(reference);
+		if(!nulls.contains(o))
+			l.add(o);
+		
 		return l;
 	}
 	
@@ -72,7 +89,9 @@ class JSONIteration extends Iteration {
             .addOptions(Option.ALWAYS_RETURN_LIST)
 			;
 	
-	public JSONIteration(String json) {
+	public JSONIteration(String json, Set<Object> nulls) {
+		super(nulls);
+		
 		doc = JsonPath.using(c).parse(json);
 	}
 
@@ -85,7 +104,7 @@ class JSONIteration extends Iteration {
 		try {
 			List<Object> l = doc.read(reference);
 			for(Object o : l)
-				if(o != null)
+				if(o != null && !nulls.contains(o))
 					l2.add(o.toString());
 		} catch (PathNotFoundException e) {
 			// No data, silently ignore
@@ -103,7 +122,7 @@ class JSONIteration extends Iteration {
 		try {
 			List<Object> l = doc.read(reference);
 			for(Object o : l)
-				if(o != null)
+				if(o != null && !nulls.contains(o))
 					l2.add(o.toString());
 		} catch (PathNotFoundException e) {
 			// No data, silently ignore
@@ -118,7 +137,9 @@ class XMLIteration extends Iteration {
 
 	private Node node;
 
-	public XMLIteration(Node node) {
+	public XMLIteration(Node node, Set<Object> nulls) {
+		super(nulls);
+		
 		this.node = node;
 	}
 
@@ -133,7 +154,7 @@ class XMLIteration extends Iteration {
 			NodeList nodes = (NodeList) xPath.compile(reference).evaluate(node, XPathConstants.NODESET);
 			for(int i = 0; i < nodes.getLength(); i++) {
 				Node node = nodes.item(0);
-				if(node.getTextContent() != null)
+				if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
 					l2.add(node.getTextContent());
 			}
 			
@@ -152,7 +173,7 @@ class XMLIteration extends Iteration {
 			NodeList nodes = (NodeList) xPath.compile(reference).evaluate(node, XPathConstants.NODESET);
 			for(int i = 0; i < nodes.getLength(); i++) {
 				Node node = nodes.item(0);
-				if(node.getTextContent() != null)
+				if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
 					l2.add(node.getTextContent());
 			}
 			
@@ -169,7 +190,9 @@ class RDBIteration extends Iteration {
 
 	private Map<String, Object> values = new HashMap<String, Object>();
 
-	public RDBIteration(ResultSet resultSet, Map<String, Integer> indexMap) {
+	public RDBIteration(ResultSet resultSet, Map<String, Integer> indexMap, Set<Object> nulls) {
+		super(nulls);
+		
 		for(String ref : indexMap.keySet()) {
 			try {
 				Object o = resultSet.getObject(indexMap.get(ref));
@@ -201,7 +224,7 @@ class RDBIteration extends Iteration {
 			// Now try without quotes
 			value = values.get(columnname.replace("\"", ""));
 				
-		if(value != null)
+		if(value != null && !nulls.contains(value))
 			l.add(value);
 		
 		return l;

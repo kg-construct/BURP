@@ -14,10 +14,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,11 +42,15 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 
 import net.minidev.json.JSONObject;
 
 public abstract class LogicalSource {
+
+	public Set<Object> nulls = new HashSet<Object>();
 
 	protected abstract Iterator<Iteration> iterator();
 
@@ -66,6 +72,9 @@ abstract class FileBasedLogicalSource extends LogicalSource {
 
 class CSVSource extends FileBasedLogicalSource {
 
+	public char delimiter = ',';
+	public Boolean firstLineIsHeader = true;
+
 	@Override
 	protected Iterator<Iteration> iterator() {
 		try {
@@ -73,13 +82,32 @@ class CSVSource extends FileBasedLogicalSource {
 				iterations = new ArrayList<Iteration>();
 
 				FileReader fr = new FileReader(getDecompressedFile(), encoding);
-				CSVReader reader = new CSVReader(fr);
+				
+				CSVReader reader = new CSVReaderBuilder(fr)
+			    .withCSVParser(new CSVParserBuilder()
+			        .withSeparator(delimiter)
+			        .build()
+			    ).build();
+				
+				
 				List<String[]> all = reader.readAll();
 				reader.close();
 
-				String[] header = all.remove(0);
+				String[] header = null;
+				
+				// IF THE FIRST LINE IS THE HEADER, REMOVE THE FIRST FROM CSV
+				// OTHERWISE, CREATE A LIST OF NUMBERED COLUMNS STARTING FROM ONE
+				if(firstLineIsHeader)
+					header = all.remove(0);
+				else {
+					int n = all.get(0).length;
+					header = new String[n];
+					for(int i = 0; i < n; i++)
+						header[i] = Integer.toString(i + 1);
+				}
+				
 				for (String[] rec : all) {
-					iterations.add(new CSVIteration(header, rec));
+					iterations.add(new CSVIteration(header, rec, nulls));
 				}
 			}
 			return iterations.iterator();
@@ -104,7 +132,7 @@ class JSONSource extends FileBasedLogicalSource {
 
 				List<Map<String, Object>> nodes = JsonPath.using(c).parse(contents).read(iterator);
 				for (Map<String, Object> n : nodes) {
-					iterations.add(new JSONIteration(JSONObject.toJSONString(n)));
+					iterations.add(new JSONIteration(JSONObject.toJSONString(n), nulls));
 				}
 			}
 			return iterations.iterator();
@@ -135,7 +163,7 @@ class XMLSource extends FileBasedLogicalSource {
 
 				for (int i = 0; i < nodes.getLength(); i++) {
 					Node node = nodes.item(i);
-					iterations.add(new XMLIteration(node));
+					iterations.add(new XMLIteration(node, nulls));
 				}
 			}
 			return iterations.iterator();
@@ -186,7 +214,7 @@ class RDBSource extends LogicalSource {
 
 				@Override
 				public Iteration next() {
-					return new RDBIteration(resultset, indexMap);
+					return new RDBIteration(resultset, indexMap, nulls);
 				}
 
 			};
@@ -218,7 +246,7 @@ class SPARQLCSVSource extends FileBasedLogicalSource {
 
 					String[] header = all.remove(0);
 					for (String[] rec : all) {
-						iterations.add(new CSVIteration(header, rec));
+						iterations.add(new CSVIteration(header, rec, nulls));
 					}
 				}
 			}
