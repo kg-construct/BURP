@@ -1,4 +1,4 @@
-package burp.em;
+package burp.model;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -17,11 +17,6 @@ import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResourceFactory;
 
-import burp.exp.Expression;
-import burp.exp.RDFNodeConstant;
-import burp.exp.Reference;
-import burp.exp.Template;
-import burp.iteration.Iteration;
 import burp.util.Util;
 
 public abstract class ExpressionMap {

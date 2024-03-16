@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import burp.model.Iteration;
+
 public class CSVIteration extends Iteration {
 
 	private Map<String, String> map = new HashMap<String, String>();

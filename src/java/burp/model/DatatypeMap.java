@@ -1,4 +1,4 @@
-package burp.em;
+package burp.model;
 
 public class DatatypeMap extends ExpressionMap {
 

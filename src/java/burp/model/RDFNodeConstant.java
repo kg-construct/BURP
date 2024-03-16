@@ -1,4 +1,4 @@
-package burp.exp;
+package burp.model;
 
 import org.apache.jena.rdf.model.RDFNode;
 

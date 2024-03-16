@@ -11,6 +11,8 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import burp.model.Iteration;
+
 public class XMLIteration extends Iteration {
 
 	private Node node;

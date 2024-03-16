@@ -1,4 +1,4 @@
-package burp.em;
+package burp.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,10 +6,8 @@ import java.util.List;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 
-import burp.GatherMap;
-import burp.GatherMapMixin;
-import burp.SubGraph;
-import burp.iteration.Iteration;
+import burp.model.gathermaputil.GatherMapMixin;
+import burp.model.gathermaputil.SubGraph;
 
 public abstract class TermMap extends ExpressionMap implements GatherMap {
 

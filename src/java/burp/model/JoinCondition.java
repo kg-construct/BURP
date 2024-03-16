@@ -1,6 +1,4 @@
-package burp;
-
-import burp.em.ConcreteExpressionMap;
+package burp.model;
 
 public class JoinCondition {
 	

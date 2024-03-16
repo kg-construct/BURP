@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.apache.commons.text.StringEscapeUtils;
 
+import burp.model.Iteration;
 import burp.util.Util;
 
 public class RDBIteration extends Iteration {

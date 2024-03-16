@@ -1,11 +1,7 @@
-package burp;
+package burp.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import burp.em.GraphMap;
-import burp.em.ObjectMap;
-import burp.em.PredicateMap;
 
 public class PredicateObjectMap {
 

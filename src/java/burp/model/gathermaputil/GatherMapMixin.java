@@ -1,4 +1,4 @@
-package burp;
+package burp.model.gathermaputil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,8 @@ import org.apache.jena.vocabulary.RDF;
 
 import com.github.jsonldjava.shaded.com.google.common.collect.Lists;
 
-import burp.iteration.Iteration;
+import burp.model.GatherMap;
+import burp.model.Iteration;
 import burp.vocabularies.RML;
 
 public class GatherMapMixin {

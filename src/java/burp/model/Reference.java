@@ -1,8 +1,6 @@
-package burp.exp;
+package burp.model;
 
 import java.util.List;
-
-import burp.iteration.Iteration;
 
 public class Reference extends Expression {
 	

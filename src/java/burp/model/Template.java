@@ -1,4 +1,4 @@
-package burp.exp;
+package burp.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.text.StringEscapeUtils;
 
-import burp.iteration.Iteration;
 import burp.util.Util;
 
 public class Template extends Expression {

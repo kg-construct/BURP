@@ -1,13 +1,8 @@
-package burp.em;
+package burp.model;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import burp.exp.RDFNodeConstant;
-import burp.exp.Reference;
-import burp.exp.Template;
-import burp.iteration.Iteration;
 
 public class LanguageMap extends ExpressionMap {
 

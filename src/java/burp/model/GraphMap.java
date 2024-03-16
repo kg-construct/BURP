@@ -1,10 +1,9 @@
-package burp.em;
+package burp.model;
 
 import java.util.List;
 
 import org.apache.jena.rdf.model.RDFNode;
 
-import burp.iteration.Iteration;
 import burp.vocabularies.RML;
 
 public class GraphMap extends TermMap {

@@ -1,12 +1,7 @@
-package burp.em;
+package burp.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import burp.exp.RDFNodeConstant;
-import burp.exp.Reference;
-import burp.exp.Template;
-import burp.iteration.Iteration;
 
 public class ConcreteExpressionMap extends ExpressionMap {
 

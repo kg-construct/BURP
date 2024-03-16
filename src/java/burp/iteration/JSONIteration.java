@@ -12,6 +12,8 @@ import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 
+import burp.model.Iteration;
+
 public class JSONIteration extends Iteration {
 
 	private DocumentContext doc = null;
