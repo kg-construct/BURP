@@ -1,4 +1,4 @@
-package burp;
+package burp.ls;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -13,6 +13,12 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.VOID;
+
+import burp.model.LogicalSource;
+import burp.util.Util;
+import burp.vocabularies.CSVW;
+import burp.vocabularies.D2RQ;
+import burp.vocabularies.RML;
 
 public class LogicalSourceFactory {
 

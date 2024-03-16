@@ -21,6 +21,19 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.RDF;
 
+import burp.model.GraphMap;
+import burp.model.Iteration;
+import burp.model.ObjectMap;
+import burp.model.PredicateMap;
+import burp.model.PredicateObjectMap;
+import burp.model.ReferencingObjectMap;
+import burp.model.SubjectMap;
+import burp.model.TriplesMap;
+import burp.model.gathermaputil.SubGraph;
+import burp.parse.Parse;
+import burp.util.BURPConfiguration;
+import burp.vocabularies.RML;
+
 public class Main {
 
 	private static List<RDFNode> def = List.of(RML.defaultGraph);

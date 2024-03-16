@@ -1,4 +1,4 @@
-package burp;
+package burp.model;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -7,6 +7,9 @@ import java.util.stream.Collectors;
 
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
+
+import burp.model.gathermaputil.GatherMapMixin;
+import burp.model.gathermaputil.SubGraph;
 
 public class ReferencingObjectMap implements GatherMap {
 	
@@ -73,12 +76,5 @@ public class ReferencingObjectMap implements GatherMap {
 			return list;
 		}
 	}
-
-}
-
-class JoinCondition {
-	
-	public ConcreteExpressionMap parentMap = null;
-	public ConcreteExpressionMap childMap = null;
 
 }

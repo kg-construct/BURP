@@ -1,4 +1,4 @@
-package burp;
+package burp.util;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;

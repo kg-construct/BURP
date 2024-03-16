@@ -1,4 +1,4 @@
-package burp;
+package burp.parse;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -18,6 +18,26 @@ import org.apache.jena.shacl.ValidationReport;
 import org.apache.jena.shacl.lib.ShLib;
 import org.apache.jena.util.FileUtils;
 import org.apache.jena.util.iterator.ExtendedIterator;
+
+import burp.ls.LogicalSourceFactory;
+import burp.model.ConcreteExpressionMap;
+import burp.model.DatatypeMap;
+import burp.model.Expression;
+import burp.model.GraphMap;
+import burp.model.JoinCondition;
+import burp.model.LanguageMap;
+import burp.model.LogicalSource;
+import burp.model.ObjectMap;
+import burp.model.PredicateMap;
+import burp.model.PredicateObjectMap;
+import burp.model.RDFNodeConstant;
+import burp.model.Reference;
+import burp.model.ReferencingObjectMap;
+import burp.model.SubjectMap;
+import burp.model.Template;
+import burp.model.TriplesMap;
+import burp.model.gathermaputil.GatherMapMixin;
+import burp.vocabularies.RML;
 
 public class Parse {
 

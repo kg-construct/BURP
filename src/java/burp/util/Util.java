@@ -1,4 +1,4 @@
-package burp;
+package burp.util;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -17,6 +17,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.Resource;
+
+import burp.vocabularies.RML;
 
 public class Util {
 
