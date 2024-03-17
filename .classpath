@@ -9,6 +9,7 @@
 	<classpathentry kind="src" path="src/test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17">
 		<attributes>
+			<attribute name="module" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
@@ -79,5 +80,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-fuseki-server/4.10.0/jena-fuseki-server-4.10.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-fuseki-main/4.10.0/jena-fuseki-main-4.10.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

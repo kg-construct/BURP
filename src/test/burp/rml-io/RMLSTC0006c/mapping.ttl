@@ -5,7 +5,7 @@
 @base <http://example.com/rules/> .
 
 <#SDSourceAccess> a rml:Source, sd:Service;
-  sd:endpoint <http://example.com/sparql/>;
+  sd:endpoint <http://localhost:3030/ds/sparql>;
   sd:supportedLanguage sd:SPARQL11Query;
 .
 
@@ -15,9 +15,10 @@
     rml:iterator """
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-    SELECT ?name ?age WHERE {
+    SELECT ?id ?name ?age WHERE {
         ?person foaf:name ?name .
         ?person foaf:age ?age .
+        BIND(REPLACE(STR(?person),"http://example.org/", "") AS ?id) .
     }
     """;
     rml:referenceFormulation formats:SPARQL_Results_CSV;

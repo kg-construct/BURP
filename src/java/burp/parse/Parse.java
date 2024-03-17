@@ -150,6 +150,8 @@ public class Parse {
 		if(RML.SPARQL_Results_JSON.equals(referenceFormulation)) 
 			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
 
+		System.err.println(referenceFormulation);
+		
 		throw new Exception("Reference formulation not (yet) supported.");
 	}
 
