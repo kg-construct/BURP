@@ -38,8 +38,9 @@ public class TestRMLIOSource {
 	@Test public void RMLSTC0005b() throws IOException { testForOK("RMLSTC0005b"); }
 	@Test public void RMLSTC0006a() throws IOException { testForOK("RMLSTC0006a"); }
 	@Test public void RMLSTC0006b() throws IOException { testForOK("RMLSTC0006b"); }
-	     
-	@Test public void RMLSTC0006c() throws IOException { testForOK("RMLSTC0006c"); }
+	   
+	// This test requires a SPARQL endpoint
+	// @Test public void RMLSTC0006c() throws IOException { testForOK("RMLSTC0006c"); }
 	
 	@Test public void RMLSTC0006d() throws IOException { testForOK("RMLSTC0006d"); }
 	@Test public void RMLSTC0006e() throws IOException { testForOK("RMLSTC0006e"); }
