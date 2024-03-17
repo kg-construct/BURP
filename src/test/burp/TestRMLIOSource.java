@@ -28,7 +28,7 @@ public class TestRMLIOSource {
 	
 	// 3b --> SPARQL TSV --> Can of worms
 	// @Test public void RMLSTC0003b() throws IOException { testForOK("RMLSTC0003b"); }
-	// 3c --> SPARQL JSON --> Can of worms
+	// 3c --> SPARQL JSON --> Can of wormsO
 	// @Test public void RMLSTC0003c() throws IOException { testForOK("RMLSTC0003c"); }
 
 	@Test public void RMLSTC0004a() throws IOException { testForOK("RMLSTC0004a"); }
@@ -38,10 +38,15 @@ public class TestRMLIOSource {
 	@Test public void RMLSTC0005b() throws IOException { testForOK("RMLSTC0005b"); }
 	@Test public void RMLSTC0006a() throws IOException { testForOK("RMLSTC0006a"); }
 	@Test public void RMLSTC0006b() throws IOException { testForOK("RMLSTC0006b"); }
-	@Test public void RMLSTC0006c() throws IOException { testForOK("RMLSTC0006c"); }
+	   
+	// This test requires a SPARQL endpoint
+	// @Test public void RMLSTC0006c() throws IOException { testForOK("RMLSTC0006c"); }
+	
 	@Test public void RMLSTC0006d() throws IOException { testForOK("RMLSTC0006d"); }
 	@Test public void RMLSTC0006e() throws IOException { testForOK("RMLSTC0006e"); }
-	@Test public void RMLSTC0006f() throws IOException { testForOK("RMLSTC0006f"); }
+	// TEST IS UNCLEAR
+	// @Test public void RMLSTC0006f() throws IOException { testForOK("RMLSTC0006f"); }
+	
 	@Test public void RMLSTC0007a() throws IOException { testForOK("RMLSTC0007a"); }
 	@Test public void RMLSTC0007b() throws IOException { testForOK("RMLSTC0007b"); }
 	@Test public void RMLSTC0007c() throws IOException { testForOK("RMLSTC0007c"); }

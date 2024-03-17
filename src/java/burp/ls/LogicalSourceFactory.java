@@ -19,6 +19,7 @@ import burp.util.Util;
 import burp.vocabularies.CSVW;
 import burp.vocabularies.D2RQ;
 import burp.vocabularies.RML;
+import burp.vocabularies.SD;
 
 public class LogicalSourceFactory {
 
@@ -163,26 +164,36 @@ public class LogicalSourceFactory {
 	}
 
 	public static LogicalSource createSPARQLSource(Resource ls, String mpath, boolean isTSV) {
-		SPARQLSource source = new SPARQLSource(isTSV);
 		String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
 
 		Resource s = ls.getPropertyResourceValue(RML.source);
 		
 		if (s.hasProperty(RDF.type, VOID.Dataset)) {
+			SPARQLFileSource source = new SPARQLFileSource(isTSV);
 			String file = s.getPropertyResourceValue(VOID.dataDump).getURI();
 			source.file = getAbsoluteOrRelativeFromFileProtocol(file, mpath);
+			source.compression = getCompression(ls);
+			source.encoding = getEncoding(ls);
+			source.iterator = iterator;
+			source.nulls.addAll(getNullValues(ls));
+			return source;
+		} else if(s.hasProperty(RDF.type, SD.Service)) { 
+			SPARQLServiceSource source = new SPARQLServiceSource(isTSV);
+			source.endpoint = s.getPropertyResourceValue(SD.endpoint).getURI();
+			source.iterator = iterator;
+			source.nulls.addAll(getNullValues(ls));			
+			return source;
 		} else {
-			System.err.println("daar");
 			// WE HAVE A SIMPLE SPARQL SOURCE
+			SPARQLFileSource source = new SPARQLFileSource(isTSV);
 			String file = getFile(ls);
 			source.file = getAbsoluteOrRelative(file, mpath);
+			source.compression = getCompression(ls);
+			source.encoding = getEncoding(ls);
+			source.iterator = iterator;
+			source.nulls.addAll(getNullValues(ls));
+			return source;
 		}
-
-		source.compression = getCompression(ls);
-		source.encoding = getEncoding(ls);
-		source.iterator = iterator;
-		source.nulls.addAll(getNullValues(ls));
-		return source;
 	}
 
 	// TODO: Do we really need RML.SPARQL_Results_TSV?

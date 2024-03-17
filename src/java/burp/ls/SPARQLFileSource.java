@@ -8,16 +8,17 @@ import java.util.Set;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.riot.RDFDataMgr;
 
 import burp.model.Iteration;
 
-class SPARQLSource extends FileBasedLogicalSource {
+class SPARQLFileSource extends FileBasedLogicalSource {
 
 	private boolean isTSV;
 
-	public SPARQLSource(boolean isTSV) {
+	public SPARQLFileSource(boolean isTSV) {
 		this.isTSV = isTSV;
 	}
 
@@ -30,9 +31,7 @@ class SPARQLSource extends FileBasedLogicalSource {
 				Dataset ds = RDFDataMgr.loadDataset(file);
 
 				try (QueryExecution exec = QueryExecution.dataset(ds).query(iterator).build()) {
-					org.apache.jena.query.ResultSet results = exec.execSelect();
-					
-					//System.err.println(ResultSetFormatter.asText(results));
+					ResultSet results = exec.execSelect();
 					
 					while(results.hasNext()) {
 						QuerySolution sol = results.next();
