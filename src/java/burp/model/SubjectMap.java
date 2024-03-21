@@ -22,7 +22,7 @@ public class SubjectMap extends TermMap {
 		if(RML.IRI.equals(termType))
 			return generateIRIs(i, baseIRI);
 		if(RML.BLANKNODE.equals(termType))
-			return generateBlankNodes(i);
+			return generateBlankNodes(i, baseIRI);
 		
 		throw new RuntimeException("Incorrect term type for subject map.");
 	}

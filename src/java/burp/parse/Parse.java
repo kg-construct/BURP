@@ -12,6 +12,8 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.ShaclValidator;
 import org.apache.jena.shacl.ValidationReport;
@@ -23,11 +25,16 @@ import burp.ls.LogicalSourceFactory;
 import burp.model.ConcreteExpressionMap;
 import burp.model.DatatypeMap;
 import burp.model.Expression;
+import burp.model.FunctionExecution;
+import burp.model.FunctionMap;
 import burp.model.GraphMap;
+import burp.model.Input;
+import burp.model.InputValueMap;
 import burp.model.JoinCondition;
 import burp.model.LanguageMap;
 import burp.model.LogicalSource;
 import burp.model.ObjectMap;
+import burp.model.ParameterMap;
 import burp.model.PredicateMap;
 import burp.model.PredicateObjectMap;
 import burp.model.RDFNodeConstant;
@@ -81,7 +88,9 @@ public class Parse {
 	private static boolean isValid(Model mapping) {		
 		Model core = ModelFactory.createDefaultModel();
 		core.read(Parse.class.getResourceAsStream("/shapes/core.ttl"), "urn:dummy", FileUtils.langTurtle); 
-		core.read(Parse.class.getResourceAsStream("/shapes/cc.ttl"), "urn:dummy", FileUtils.langTurtle); 
+		core.read(Parse.class.getResourceAsStream("/shapes/cc.ttl"), "urn:dummy", FileUtils.langTurtle);  
+		core.read(Parse.class.getResourceAsStream("/shapes/io.ttl"), "urn:dummy", FileUtils.langTurtle);  
+		core.read(Parse.class.getResourceAsStream("/shapes/fnml.ttl"), "urn:dummy", FileUtils.langTurtle); 
 		
 		ValidationReport report = ShaclValidator.get().validate(core.getGraph(), mapping.getGraph());
 	    if(!report.conforms()) {
@@ -97,19 +106,33 @@ public class Parse {
 		String CONSTRUCTOMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:objectMap [ r:constant ?y ]. } WHERE { ?x r:object ?y. }";
 		String CONSTRUCTPMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:predicateMap [ r:constant ?y ]. } WHERE { ?x r:predicate ?y. }";
 		String CONSTRUCTGMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:graphMap [ r:constant ?y ]. } WHERE { ?x r:graph ?y. }";
-		String CONSTRUCTLMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:languageMap [ r:constant ?y ]. } WHERE { ?x r:language ?y. }";	
-		String CONSTRUCTDMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:datatypeMap [ r:constant ?y ]. } WHERE { ?x r:datatype ?y. }";
-		String CONSTRUCTChMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:childMap [ r:reference ?y ]. } WHERE { ?x r:child ?y. }";	
-		String CONSTRUCTPaMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:parentMap [ r:reference ?y ]. } WHERE { ?x r:parent ?y. }";
 		
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTSMAPS, mapping).execConstruct());
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTOMAPS, mapping).execConstruct());
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTPMAPS, mapping).execConstruct());
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTGMAPS, mapping).execConstruct());
+		
+		String CONSTRUCTLMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:languageMap [ r:constant ?y ]. } WHERE { ?x r:language ?y. }";	
+		String CONSTRUCTDMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:datatypeMap [ r:constant ?y ]. } WHERE { ?x r:datatype ?y. }";
+		
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTLMAPS, mapping).execConstruct());
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTDMAPS, mapping).execConstruct());
+		
+		String CONSTRUCTChMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:childMap [ r:reference ?y ]. } WHERE { ?x r:child ?y. }";	
+		String CONSTRUCTPaMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:parentMap [ r:reference ?y ]. } WHERE { ?x r:parent ?y. }";
+		
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTChMAPS, mapping).execConstruct());
 		mapping.add(QueryExecutionFactory.create(CONSTRUCTPaMAPS, mapping).execConstruct());
+		
+		String CONSTRUCTRETURNMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:returnMap [ r:constant ?y ]. } WHERE { ?x r:return ?y. }";	
+		String CONSTRUCTFUNCTIONMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:functionMap [ r:constant ?y ]. } WHERE { ?x r:function ?y. }";	
+		String CONSTRUCTPARAMETERMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:parameterMap [ r:constant ?y ]. } WHERE { ?x r:parameter ?y. }";	
+		String INPUTVALUEMAPS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:inputValueMap [ r:constant ?y ]. } WHERE { ?x r:inputValue ?y. }";	
+		
+		mapping.add(QueryExecutionFactory.create(CONSTRUCTRETURNMAPS, mapping).execConstruct());
+		mapping.add(QueryExecutionFactory.create(CONSTRUCTFUNCTIONMAPS, mapping).execConstruct());
+		mapping.add(QueryExecutionFactory.create(CONSTRUCTPARAMETERMAPS, mapping).execConstruct());
+		mapping.add(QueryExecutionFactory.create(INPUTVALUEMAPS, mapping).execConstruct());
 		
 		String TERMTYPESTOCONSTANTS = "PREFIX r: <http://w3id.org/rml/> CONSTRUCT { ?x r:constant ?y ; r:termType ?z . } WHERE { ?x r:constant ?y. BIND(IF(ISLITERAL(?y), r:Literal, IF(ISIRI(?y), r:IRI, r:BlankNode)) AS ?z)}";
 		mapping.add(QueryExecutionFactory.create(TERMTYPESTOCONSTANTS, mapping).execConstruct());
@@ -150,8 +173,6 @@ public class Parse {
 		if(RML.SPARQL_Results_JSON.equals(referenceFormulation)) 
 			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
 
-		System.err.println(referenceFormulation);
-		
 		throw new Exception("Reference formulation not (yet) supported.");
 	}
 
@@ -173,8 +194,9 @@ public class Parse {
 		if(termType != null)
 			// PROVIDE THE TERM TYPE THAT IS GIVEN
 			subjectMap.termType = termType;
-		else if(hasNoTemplateReferenceOrConstant(sm)) {
-			// IF NO REFERENCE, TEMPLATE, OR CONSTANT, THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
+		else if(hasNoTemplateReferenceConstantOrFunction(sm)) {
+			// IF NO REFERENCE, TEMPLATE, CONSTANT, OR FUNCTION
+			// THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
 			subjectMap.termType = RML.BLANKNODE;
 		}
 		
@@ -229,8 +251,9 @@ public class Parse {
 		if(termType != null)
 			// PROVIDE THE TERM TYPE THAT IS GIVEN
 			objectMap.termType = termType;
-		else if(hasNoTemplateReferenceOrConstant(om)) {
-			// IF NO REFERENCE, TEMPLATE, OR CONSTANT, THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
+		else if(hasNoTemplateReferenceConstantOrFunction(om)) {
+			// IF NO REFERENCE, TEMPLATE, CONSTANT, 
+			// OR FUNCTION THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
 			objectMap.termType = RML.BLANKNODE;
 		}
 
@@ -242,7 +265,7 @@ public class Parse {
 		if(dtm != null)
 			objectMap.datatypeMap = prepareDatatypeMap(dtm);
 
-		if(termType == null && (lam != null || dtm != null || objectMap.expression instanceof Reference))
+		if(termType == null && (lam != null || dtm != null || objectMap.expression instanceof Reference || objectMap.expression instanceof FunctionExecution))
 			objectMap.termType = RML.LITERAL;
 		
 		Resource gm = om.getPropertyResourceValue(RML.gather);
@@ -347,15 +370,72 @@ public class Parse {
 		if (r.hasProperty(RML.template)) {
 			String template = r.getProperty(RML.template).getObject().asLiteral().getString();
 			return new Template(template); 
+		}		
+		
+		if (r.hasProperty(RML.functionExecution)) {
+			Resource fer = r.getPropertyResourceValue(RML.functionExecution);
+			
+			FunctionExecution fe = new FunctionExecution();
+			fe.functionMap = prepareFunctionMap(fer.getPropertyResourceValue(RML.functionMap));
+			
+			StmtIterator iter = fer.listProperties(RML.input);
+			while(iter.hasNext()) {
+				Statement x = iter.next();
+				fe.inputs.add(prepareInput(x.getObject().asResource()));
+			}
+			
+			return fe;
 		}
 
 		return null;
 	}
 	
-	private static boolean hasNoTemplateReferenceOrConstant(Resource r) {
+	private static Input prepareInput(Resource r) {
+		Input input = new Input();
+		
+		ParameterMap pm = new ParameterMap();
+		pm.expression = prepareExpression(r.getPropertyResourceValue(RML.parameterMap));
+		input.parameterMap = pm;
+		
+		
+		input.inputValueMap = prepareInputValueMap(r.getPropertyResourceValue(RML.inputValueMap));
+		
+		return input;
+	}
+
+	private static FunctionMap prepareFunctionMap(Resource r) {
+		FunctionMap fm = new FunctionMap();
+		fm.expression = prepareExpression(r);
+		return fm;
+	}
+	
+	private static InputValueMap prepareInputValueMap(Resource om) {
+		InputValueMap im = new InputValueMap();
+		im.expression = prepareExpression(om);
+
+		Resource termType = om.getPropertyResourceValue(RML.termType);
+		if(termType != null)
+			im.termType = termType;
+		
+		Resource lam = om.getPropertyResourceValue(RML.languageMap);
+		if(lam != null)
+			im.languageMap = prepareLanguageMap(lam);
+
+		Resource dtm = om.getPropertyResourceValue(RML.datatypeMap);
+		if(dtm != null)
+			im.datatypeMap = prepareDatatypeMap(dtm);
+
+		if(termType == null && (lam != null || dtm != null || im.expression instanceof Reference || im.expression instanceof FunctionExecution))
+			im.termType = RML.LITERAL;
+		
+		return im;
+	}
+
+	private static boolean hasNoTemplateReferenceConstantOrFunction(Resource r) {
 		if (r.hasProperty(RML.constant)) return false;
 		if (r.hasProperty(RML.reference)) return false;
 		if (r.hasProperty(RML.template)) return false;
+		if (r.hasProperty(RML.functionExecution)) return false;
 		return true;
 	}
 

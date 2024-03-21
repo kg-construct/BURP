@@ -61,7 +61,7 @@ public class Main {
 			return 0;
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
+			//System.err.println(e.getMessage());
 			return 1;
 		}
 	}

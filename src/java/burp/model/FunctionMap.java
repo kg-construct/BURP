@@ -6,21 +6,21 @@ import org.apache.jena.rdf.model.RDFNode;
 
 import burp.vocabularies.RML;
 
-public class GraphMap extends TermMap {
-	
-	public GraphMap() {
+public class FunctionMap extends TermMap {
+
+	public FunctionMap() {
 		termType = RML.IRI;
 	}
-
-	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
-		if(termType == RML.IRI)
-			return generateIRIs(i, baseIRI);
-		if(termType == RML.BLANKNODE)
-			return generateBlankNodes(i, baseIRI);
-		
-		throw new RuntimeException("Incorrect term type for graph map.");
-	}
 	
+	@Override
+	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
+		if(termType == RML.IRI) {
+			return generateIRIs(i, baseIRI);			
+		}
+		
+		throw new RuntimeException("Incorrect term type for return map.");	
+	}
+
 	@Override
 	public boolean isGatherMap() {
 		return false;
