@@ -17,10 +17,22 @@ public class Functions {
 			return executeGrelToUpperCase(map);
 		if("http://users.ugent.be/~bjdmeest/function/grel.ttl#escape".equals(function))
 			return executeGrelEscape(map);
+		if("http://example.com/idlab/function/toUpperCaseURL".equals(function))
+			return executeIDLabToUpperCaseURL(map);
 		
 		throw new RuntimeException(String.format("Function %s not yet supported.", function));
 	}
 	
+	private static List<Object> executeIDLabToUpperCaseURL(Map<String, Object> map) {
+		List<Object> l = new ArrayList<Object>();
+		String str = map.get("http://example.com/idlab/function/str").toString().toUpperCase();
+		if(str.startsWith("HTTP://"))
+			l.add(str);
+		else
+			l.add("http://" + str);
+		return l;
+	}
+
 	// https://openrefine.org/docs/manual/grelfunctions
 	// Escapes s in the given escaping mode. The mode can be one of: "html", "xml", "csv", "url", "javascript". 
 	// Note that quotes are required around your mode. See the recipes for examples of escaping and unescaping.

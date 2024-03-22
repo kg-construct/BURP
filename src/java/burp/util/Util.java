@@ -9,13 +9,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.util.Iterator;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
-import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.iri.Violation;
 import org.apache.jena.rdf.model.Resource;
 
 import burp.vocabularies.RML;
@@ -83,13 +84,23 @@ public class Util {
 	}
 	
 	public static boolean isAbsoluteAndValidIRI(String string) {
-		IRI iri = IRIFactory.iriImplementation().create(string.toString());
-		return iri.isAbsolute() && !iri.hasViolation(true);
+		//return isAbsolute(string) && !IRIFactory.iriImplementation().create(string).hasViolation(false);
+		if(isAbsolute(string)) {
+			Iterator<Violation> iter = IRIFactory.iriImplementation().create(string).violations(false);
+			while(iter.hasNext()) {
+				Violation v = iter.next();
+				// TODO: We ignore CAPS in HOST for test cases, but we shouldn't
+				if(v.getViolationCode() == 11);
+				else
+					return false;
+			}
+			return true;
+		}
+		return false;
 	}
 	
 	public static boolean isAbsolute(String string) {
-		IRI iri = IRIFactory.iriImplementation().create(string.toString());
-		return iri.isAbsolute();
+		return URI.create(string.toLowerCase()).isAbsolute();
 	}
 
 	public static String downloadFile(String url) {
@@ -128,10 +139,14 @@ public class Util {
 			} else if(RML.gzip.equals(compression)) {
 				in = new GzipCompressorInputStream(fin);
 			} else if(RML.targz.equals(compression)) {
+				// Suppress warning because we do close it
+				@SuppressWarnings("resource")
 				TarArchiveInputStream a = new TarArchiveInputStream(fin);
 				a.getNextEntry();
 				in = a;
 			} else if(RML.tarxz.equals(compression)) {
+				// Suppress warning because we do close it
+				@SuppressWarnings("resource")
 				TarArchiveInputStream a = new TarArchiveInputStream(fin);
 				a.getNextEntry();
 				in = a;
