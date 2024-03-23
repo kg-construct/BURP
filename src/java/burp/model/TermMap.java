@@ -12,7 +12,7 @@ import burp.model.gathermaputil.SubGraph;
 public abstract class TermMap extends ExpressionMap implements GatherMap {
 
 	public Resource termType;
-	//public abstract List<RDFNode> generateTerms(Iteration i, String baseIRI);
+
 	public GatherMapMixin gatherMap = null;
 	
 	@Override

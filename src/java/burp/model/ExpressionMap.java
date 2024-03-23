@@ -61,11 +61,25 @@ public abstract class ExpressionMap {
 			return set;
 		}
 		
+		if(expression instanceof FunctionExecution) {
+			for(Object v : ((FunctionExecution) expression).values(i, baseIRI)) {
+				String s = v.toString();
+				
+				if(Util.isAbsoluteAndValidIRI(s))
+					set.add(ResourceFactory.createResource(s));
+				else if(Util.isAbsoluteAndValidIRI(baseIRI + s))
+					set.add(ResourceFactory.createResource(baseIRI + s));
+				else
+					throw new RuntimeException(baseIRI + " and " + s + " do not constitute a valid IRI");
+			}
+			return set;
+		}
+		
 		throw new RuntimeException("Error generating IRI.");
 	}
 
 	static private Map<Object, RDFNode> map = new HashMap<Object, RDFNode>();
-	protected List<RDFNode> generateBlankNodes(Iteration i) {
+	protected List<RDFNode> generateBlankNodes(Iteration i, String baseIRI) {
 		List<RDFNode> set = new ArrayList<RDFNode>();
 		
 		if(expression instanceof RDFNodeConstant) {
@@ -95,6 +109,13 @@ public abstract class ExpressionMap {
 			// THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
 			set.add(ResourceFactory.createResource());
 			return set;
+		}
+		
+		if(expression instanceof FunctionExecution) {
+			for(Object v : ((FunctionExecution) expression).values(i, baseIRI)) {
+				set.add(map.computeIfAbsent(v, (x) -> ResourceFactory.createResource()));
+			}
+			return set;		
 		}
 		
 		throw new RuntimeException("Error generating blank node.");
@@ -149,6 +170,24 @@ public abstract class ExpressionMap {
 			return set;
 		}
 		
+		if(expression instanceof FunctionExecution) {
+			for(Object v : ((FunctionExecution) expression).values(i, baseIRI)) {
+				if(languages != null) {
+					for(String l : languages) {
+						set.add(ResourceFactory.createLangLiteral(v.toString(), l));
+					}
+				} else if(datatypes != null) {
+					for(RDFNode dt : datatypes) {
+						String dturi = dt.asResource().getURI();
+						set.add(ResourceFactory.createTypedLiteral(v.toString(), new BaseDatatype(dturi)));
+					}
+				} else {
+					set.add(createTypedLiteral(v));
+				}
+			}
+			return set;
+		}
+				
 		throw new RuntimeException("Error generating literal or value.");
 	}
 	

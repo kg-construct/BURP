@@ -7,13 +7,13 @@ import org.apache.jena.rdf.model.RDFNode;
 
 import burp.vocabularies.RML;
 
-public class ObjectMap extends TermMap {
+public class InputValueMap extends TermMap {
 	
 	public DatatypeMap datatypeMap = null;
 	public LanguageMap languageMap = null;
 	
-	public ObjectMap() {
-		termType = RML.IRI;
+	public InputValueMap() {
+		termType = RML.LITERAL;
 	}
 	
 	@Override
@@ -25,12 +25,12 @@ public class ObjectMap extends TermMap {
 		if(RML.LITERAL.equals(termType))
 			return generateLiterals(i, baseIRI, datatypeMap, languageMap);
 					
-		throw new RuntimeException("Incorrect term type for object map.");
+		throw new RuntimeException("Incorrect term type for input value map.");
 	}
 
 	@Override
 	public boolean isGatherMap() {
-		return gatherMap != null;
+		return false;
 	}
 	
 }
