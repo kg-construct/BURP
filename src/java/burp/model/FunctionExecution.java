@@ -7,12 +7,13 @@ import java.util.Map;
 
 import org.apache.jena.rdf.model.RDFNode;
 
-import burp.util.Functions;
+import burp.model.fnmlutil.Functions;
 
 public class FunctionExecution extends Expression {
 	
 	public FunctionMap functionMap;
 	public List<Input> inputs = new ArrayList<Input>();
+	public ReturnMap returnMap;
 
 	public List<Object> values(Iteration i, String baseIRI) {
 		List<Object> list = new ArrayList<Object>();
@@ -43,8 +44,22 @@ public class FunctionExecution extends Expression {
 			map.put(parameter, in);
 		}
 		
-		for(Object o : Functions.execute(function, map)) {
-			list.add(o);
+		for(Return o : Functions.execute(function, map)) {
+			// if return map is null, then we return the default return value
+			// Otherwise, look for the value identified by the return map
+			if(returnMap == null) {
+				list.add(o.defaultValue);				
+			} else {
+				List<RDFNode> returns = returnMap.generateIRIs(i, baseIRI);
+				if(returns.size() != 1)
+					throw new RuntimeException("Input value map should generate exactly one value.");
+				
+				Object v = o.get(returns.get(0));
+				if(v == null)
+					throw new RuntimeException("Return value %s no known.".formatted(returns.get(0)));
+				
+				list.add(v);
+			}
 		}
 		
 		return list;	

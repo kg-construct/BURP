@@ -17,6 +17,7 @@ public class TestRMLFNML {
 	
 	@Test public void RMLFNOTC0000CSV() throws IOException { testForOK("RMLFNOTC0000-CSV"); }
 	@Test public void RMLFNOTC0001CSV() throws IOException { testForOK("RMLFNOTC0001-CSV"); }
+	@Test public void RMLFNOTC0001bCSV() throws IOException { testForOK("RMLFNOTC0001b-CSV"); }
 	@Test public void RMLFNOTC0003CSV() throws IOException { testForOK("RMLFNOTC0003-CSV"); }
 	@Test public void RMLFNOTC0004CSV() throws IOException { testForOK("RMLFNOTC0004-CSV"); }
 	@Test public void RMLFNOTC0005CSV() throws IOException { testForOK("RMLFNOTC0005-CSV"); }

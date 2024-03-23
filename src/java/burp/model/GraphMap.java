@@ -13,11 +13,11 @@ public class GraphMap extends TermMap {
 	}
 
 	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
-		if(termType == RML.IRI)
+		if(RML.IRI.equals(termType))
 			return generateIRIs(i, baseIRI);
-		if(termType == RML.BLANKNODE)
+		if(RML.BLANKNODE.equals(termType))
 			return generateBlankNodes(i, baseIRI);
-		
+				
 		throw new RuntimeException("Incorrect term type for graph map.");
 	}
 	

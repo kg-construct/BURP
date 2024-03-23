@@ -71,6 +71,7 @@ public final class RML {
 	public static final Property predicateObjectMap  = ResourceFactory.createProperty(NS + "predicateObjectMap");
 	public static final Property reference = ResourceFactory.createProperty(NS + "reference");
 	public static final Property referenceFormulation = ResourceFactory.createProperty(NS + "referenceFormulation");
+	public static final Property returnMap = ResourceFactory.createProperty(NS + "returnMap");
 	public static final Property root = ResourceFactory.createProperty(NS + "root");
 	public static final Property source = ResourceFactory.createProperty(NS + "source");
 	public static final Property strategy = ResourceFactory.createProperty(NS + "strategy");

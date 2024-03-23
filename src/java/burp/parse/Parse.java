@@ -40,6 +40,7 @@ import burp.model.PredicateObjectMap;
 import burp.model.RDFNodeConstant;
 import burp.model.Reference;
 import burp.model.ReferencingObjectMap;
+import burp.model.ReturnMap;
 import burp.model.SubjectMap;
 import burp.model.Template;
 import burp.model.TriplesMap;
@@ -189,8 +190,7 @@ public class Parse {
 		});
 
 		sm.listProperties(RML.graphMap).forEach(s -> {
-			GraphMap gm = new GraphMap();
-			gm.expression = prepareExpression(s.getObject().asResource());
+			GraphMap gm = prepareGraphMap(s.getObject().asResource());
 			subjectMap.graphMaps.add(gm);
 		});	
 
@@ -217,8 +217,7 @@ public class Parse {
 		PredicateObjectMap predicateObjectMap = new PredicateObjectMap();
 
 		pom.listProperties(RML.graphMap).forEach(s -> {
-			GraphMap gm = new GraphMap();
-			gm.expression = prepareExpression(s.getObject().asResource());
+			GraphMap gm = prepareGraphMap(s.getObject().asResource());			
 			predicateObjectMap.graphMaps.add(gm);
 		});	
 
@@ -235,10 +234,27 @@ public class Parse {
 				ReferencingObjectMap rom = prepareReferencingObjectMap(s.getObject().asResource());
 				predicateObjectMap.refObjectMaps.add(rom);
 			}
-
 		});
 
 		return predicateObjectMap;
+	}
+
+	private static GraphMap prepareGraphMap(Resource r) {
+		GraphMap gm = new GraphMap();
+		
+		gm.expression = prepareExpression(r);
+		
+		Resource termType = r.getPropertyResourceValue(RML.termType);
+		if(termType != null)
+			// PROVIDE THE TERM TYPE THAT IS GIVEN
+			gm.termType = termType;
+		else if(hasNoTemplateReferenceConstantOrFunction(r)) {
+			// IF NO REFERENCE, TEMPLATE, CONSTANT, OR FUNCTION
+			// THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
+			gm.termType = RML.BLANKNODE;
+		}
+		
+		return gm;
 	}
 
 	private static PredicateMap preparePredicateMap(Resource pm) {
@@ -382,6 +398,9 @@ public class Parse {
 			FunctionExecution fe = new FunctionExecution();
 			fe.functionMap = prepareFunctionMap(fer.getPropertyResourceValue(RML.functionMap));
 			
+			if(fer.hasProperty(RML.returnMap))
+				fe.returnMap = prepareReturnMap(fer.getPropertyResourceValue(RML.returnMap));
+			
 			StmtIterator iter = fer.listProperties(RML.input);
 			while(iter.hasNext()) {
 				Statement x = iter.next();
@@ -411,6 +430,12 @@ public class Parse {
 		FunctionMap fm = new FunctionMap();
 		fm.expression = prepareExpression(r);
 		return fm;
+	}
+	
+	private static ReturnMap prepareReturnMap(Resource r) {
+		ReturnMap rm = new ReturnMap();
+		rm.expression = prepareExpression(r);
+		return rm;
 	}
 	
 	private static InputValueMap prepareInputValueMap(Resource om) {

@@ -13,7 +13,6 @@ import java.util.Map;
 
 import org.apache.jena.datatypes.BaseDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -65,10 +64,6 @@ public abstract class ExpressionMap {
 		if(expression instanceof FunctionExecution) {
 			for(Object v : ((FunctionExecution) expression).values(i, baseIRI)) {
 				String s = v.toString();
-				
-				System.err.println(s);
-				System.err.println(Util.isAbsolute(s));
-				IRIFactory.iriImplementation().create(s).violations(true).forEachRemaining(x -> System.err.println(x.getLongMessage()));
 				
 				if(Util.isAbsoluteAndValidIRI(s))
 					set.add(ResourceFactory.createResource(s));
