@@ -11,7 +11,7 @@
     ] ;
 
     rml:subjectMap [
-        rml:template "e/{id}" ;
+        rml:template "e/{$.id}" ;
     ] ;
 
     rml:predicateObjectMap [
@@ -19,11 +19,11 @@
         rml:objectMap [
             rml:gather (
                 [
-                    rml:gather ( [ rml:reference "v1.*" ; ] ) ;
+                    rml:gather ( [ rml:reference "$.v1.*" ; ] ) ;
                     rml:gatherAs rdf:Bag ;
                 ]
                 [
-                    rml:gather ( [ rml:reference "v2.*" ; ] ) ;
+                    rml:gather ( [ rml:reference "$.v2.*" ; ] ) ;
                     rml:gatherAs rdf:Bag ;
                 ]
             ) ;

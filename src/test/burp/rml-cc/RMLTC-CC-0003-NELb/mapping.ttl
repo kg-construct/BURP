@@ -11,14 +11,14 @@
     ] ;
 
     rml:subjectMap [
-        rml:template "e/{id}" ;
+        rml:template "e/{$.id}" ;
     ] ;
 
     rml:predicateObjectMap [
         rml:predicate ex:with ;
         rml:objectMap [
             rml:allowEmptyListAndContainer false ;
-            rml:gather ( [ rml:reference "values.*" ; ] ) ;
+            rml:gather ( [ rml:reference "$.values.*" ; ] ) ;
             rml:gatherAs rdf:List ;
         ] ;
     ] ;

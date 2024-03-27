@@ -11,13 +11,13 @@
     ] ;
 
     rml:subjectMap [
-        rml:template "e/{id}" ;
+        rml:template "e/{$.id}" ;
     ] ;
 
     rml:predicateObjectMap [
         rml:predicate ex:with ;
         rml:objectMap [
-            rml:gather ( [ rml:reference "v1.*" ; ] [ rml:reference "v2.*" ; ] ) ;
+            rml:gather ( [ rml:reference "$.v1.*" ; ] [ rml:reference "$.v2.*" ; ] ) ;
             rml:gatherAs rdf:List ;
         ] ;
     ] ;

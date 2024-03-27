@@ -11,7 +11,7 @@
     ] ;
 
     rml:subjectMap [
-        rml:gather ( [ rml:reference "values.*" ; ] ) ;
+        rml:gather ( [ rml:reference "$.values.*" ; ] ) ;
         rml:gatherAs rdf:Bag ;
     ] ;
 
