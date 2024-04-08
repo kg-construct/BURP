@@ -5,9 +5,11 @@
 To build the project and copy its dependencies, execute
 
 ```bash
-$ mvn package
+$ mvn package 
 $ mvn dependency:copy-dependencies
 ```
+
+You can add `-DskipTests` after `mvn package` to skip the unit tests. The tests do rely on Docker for testing mappings on top of MySQL and PostgreSQL.
 
 The run the R2RML processor, execute the following command:
 
