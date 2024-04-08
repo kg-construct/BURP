@@ -41,7 +41,10 @@ public class TestRMLCC {
 	@Test public void RMLTCCC0007NES() throws IOException { testForOK("RMLTC-CC-0007-NES"); }
 	@Test public void RMLTCCC0008ROMa() throws IOException { testForOK("RMLTC-CC-0008-ROMa"); }
 	@Test public void RMLTCCC0008ROMb() throws IOException { testForOK("RMLTC-CC-0008-ROMb"); }
-	
+	@Test public void RMLTCCC0009DUPLIST() throws IOException { testForOK("RMLTC-CC-0009-DUP-List"); }
+	@Test public void RMLTCCC0009DUPBAG() throws IOException { testForOK("RMLTC-CC-0009-DUP-BAG"); }
+	@Test public void RMLTCCC0010LIST() throws IOException { testForOK("RMLTC-CC-0010-List"); }
+
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));
 		String m = new File(base + f, "mapping.ttl").getAbsolutePath().toString();
@@ -57,9 +60,9 @@ public class TestRMLCC {
 		Model actual = RDFDataMgr.loadModel(r);
 
 		if (!expected.isIsomorphicWith(actual)) {
-			expected.write(System.out, "Turtle");
+			expected.write(System.out, "TRIG");
 			System.out.println("---");
-			actual.write(System.out, "Turtle");
+			actual.write(System.out, "TRIG");
 		}
 
 		assertEquals(0, exit);
