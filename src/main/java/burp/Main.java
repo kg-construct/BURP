@@ -18,6 +18,7 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.RDF;
 
@@ -60,8 +61,8 @@ public class Main {
 			// It all went well, thus return 0
 			return 0;
 		} catch (Exception e) {
-			e.printStackTrace();
-			//System.err.println(e.getMessage());
+			//e.printStackTrace();
+			System.err.println(e.getMessage());
 			return 1;
 		}
 	}
@@ -134,8 +135,12 @@ public class Main {
 					}
 
 					List<RDFNode> graphs = def;
+					// If sgm and pogm are empty: rr:defaultGraph (see line above)
 					if (!sgm.isEmpty() || !pogs.isEmpty()) {
-						pogs.addAll(sgs);
+						// otherwise: union of subject_graphs and predicate-object_graphs
+						// we do an additional test as sgs contains rml:defaultGraph if sgm is empty
+						// we do not want to include that
+						pogs.addAll(!sgm.isEmpty() ? sgs : new ArrayList<>());
 						graphs = pogs;
 					}
 
@@ -169,7 +174,6 @@ public class Main {
 		}
 
 		removeJunk(ds);
-		// RDFDataMgr.write(System.out, ds, RDFFormat.NQ);
 
 		return ds;
 	}
@@ -227,14 +231,14 @@ public class Main {
 		for (RDFNode graph : graphs) {
 			Model g = getModel(ds, graph);
 			Resource r = subgraph.node.asResource();
-						
+
 			if(subgraph.isList()) {
 				g.add(r, RDF.type, RML.list);
 				
 				try {
 					RDFList l = g.getList(r);
 					RDFList sub = subgraph.model.getList(r);
-					
+
 					List<RDFNode> elements = sub.iterator().toList();
 					for(RDFNode e : elements) {
 						l.add(e);
@@ -245,7 +249,7 @@ public class Main {
 							break;
 						sub = sub.removeHead();
 					}
-					
+
 					g.add(subgraph.model);
 				} catch (Exception e) {
 					// List did not exist, so we can just add it

@@ -217,7 +217,7 @@ public class Parse {
 		PredicateObjectMap predicateObjectMap = new PredicateObjectMap();
 
 		pom.listProperties(RML.graphMap).forEach(s -> {
-			GraphMap gm = prepareGraphMap(s.getObject().asResource());			
+			GraphMap gm = prepareGraphMap(s.getObject().asResource());
 			predicateObjectMap.graphMaps.add(gm);
 		});	
 

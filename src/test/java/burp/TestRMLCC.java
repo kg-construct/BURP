@@ -7,9 +7,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Iterator;
 
+import org.apache.jena.query.Dataset;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.junit.jupiter.api.Test;
 
 public class TestRMLCC {
@@ -43,7 +47,7 @@ public class TestRMLCC {
 	@Test public void RMLTCCC0008ROMb() throws IOException { testForOK("RMLTC-CC-0008-ROMb"); }
 	@Test public void RMLTCCC0009DUPLIST() throws IOException { testForOK("RMLTC-CC-0009-DUP-List"); }
 	@Test public void RMLTCCC0009DUPBAG() throws IOException { testForOK("RMLTC-CC-0009-DUP-BAG"); }
-	@Test public void RMLTCCC0010LIST() throws IOException { testForOK("RMLTC-CC-0010-List"); }
+	@Test public void RMLTCCC0010LIST() throws IOException { testForGraphsOK("RMLTC-CC-0010-List"); }
 
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));
@@ -60,9 +64,9 @@ public class TestRMLCC {
 		Model actual = RDFDataMgr.loadModel(r);
 
 		if (!expected.isIsomorphicWith(actual)) {
-			expected.write(System.out, "TRIG");
+			expected.write(System.out, "NQ");
 			System.out.println("---");
-			actual.write(System.out, "TRIG");
+			actual.write(System.out, "NQ");
 		}
 
 		assertEquals(0, exit);
@@ -70,6 +74,39 @@ public class TestRMLCC {
 		System.out.println(expected.isIsomorphicWith(actual) ? "OK" : "NOK");
 
 		assertTrue(expected.isIsomorphicWith(actual));
+	}
+
+	public void testForGraphsOK(String f) throws IOException {
+		System.out.println(String.format("Now processing %s", f));
+		String m = new File(base + f, "mapping.ttl").getAbsolutePath().toString();
+		String r = Files.createTempFile(null, ".nq").toString();
+		System.out.println(String.format("Writing output to %s", r));
+
+		System.out.println("This test should generate a graph.");
+		String o = new File(base + f, "default.nq").getAbsolutePath().toString();
+
+		int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
+
+		Dataset expected = RDFDataMgr.loadDataset(o);
+		Dataset actual = RDFDataMgr.loadDataset(r);
+
+		RDFDataMgr.write(System.out, expected, RDFFormat.TRIG);
+		System.out.println("----");
+		RDFDataMgr.write(System.out, actual, RDFFormat.TRIG);
+
+		assertTrue(expected.getDefaultModel().isIsomorphicWith(actual.getDefaultModel()));
+		Iterator<Resource> names = expected.listModelNames();
+		while(names.hasNext()) {
+			Resource name = names.next();
+			assertTrue(expected.getNamedModel(r).isIsomorphicWith(actual.getNamedModel(r)));
+		}
+		names = actual.listModelNames();
+		while(names.hasNext()) {
+			Resource name = names.next();
+			assertTrue(expected.getNamedModel(r).isIsomorphicWith(actual.getNamedModel(r)));
+		}
+
+		assertEquals(0, exit);
 	}
 
 	public void testForNotOK(String f) throws IOException {

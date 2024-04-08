@@ -1,13 +1,17 @@
 package burp;
 
+import org.apache.jena.query.Dataset;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,20 +45,26 @@ public class TestRMLCoreGM {
 
 		int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
 
-		Model expected = RDFDataMgr.loadModel(o);
-		Model actual = RDFDataMgr.loadModel(r);
+		Dataset expected = RDFDataMgr.loadDataset(o);
+		Dataset actual = RDFDataMgr.loadDataset(r);
 
-		if (!expected.isIsomorphicWith(actual)) {
-			expected.write(System.out, "NQ");
-			System.out.println("----");
-			actual.write(System.out, "NQ");
+		assertTrue(expected.getDefaultModel().isIsomorphicWith(actual.getDefaultModel()));
+		Iterator<Resource> names = expected.listModelNames();
+		while(names.hasNext()) {
+			Resource name = names.next();
+			assertTrue(expected.getNamedModel(r).isIsomorphicWith(actual.getNamedModel(r)));
+		}
+		names = actual.listModelNames();
+		while(names.hasNext()) {
+			Resource name = names.next();
+			assertTrue(expected.getNamedModel(r).isIsomorphicWith(actual.getNamedModel(r)));
 		}
 
+		RDFDataMgr.write(System.out, expected, RDFFormat.NQ);
+		System.out.println("----");
+		RDFDataMgr.write(System.out, actual, RDFFormat.NQ);
+
 		assertEquals(0, exit);
-
-		System.out.println(expected.isIsomorphicWith(actual) ? "OK" : "NOK");
-
-		assertTrue(expected.isIsomorphicWith(actual));
 	}
 
 	public void testForNotOK(String f) throws IOException {

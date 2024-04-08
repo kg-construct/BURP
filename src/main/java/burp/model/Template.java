@@ -30,7 +30,7 @@ public class Template extends Expression {
 		list.add(template);
 		
 		for(String reference : references()) {
-			List<String> valuesForReference = i.getStringsFor(reference);			
+			List<String> valuesForReference = i.getStringsFor(reference);
 			List<String> newset = new ArrayList<String>();
 			
 			String search = "{" + StringEscapeUtils.escapeJava(reference) + "}";
