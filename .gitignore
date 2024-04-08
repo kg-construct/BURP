@@ -27,3 +27,8 @@ replay_pid*
 
 .project
 .settings/
+BURP.iml
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/modules.xml
+.idea/workspace.xml
