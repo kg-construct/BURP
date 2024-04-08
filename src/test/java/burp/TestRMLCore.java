@@ -17,24 +17,24 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.junit.jupiter.api.Test;
 
 public class TestRMLCore {
-	private static String base = "./src/test/burp/rml-core/";
+	private static String base = "./src/test/resources/rml-core/";
 
-	public static void main(String[] args) {
-		try (Stream<Path> stream = Files.list(Paths.get(base))) {
-			List<String> files = stream.filter(f -> Files.isDirectory(f) && f.getFileName().toString().contains("XML"))
-					.map(Path::getFileName).map(Path::toString).collect(Collectors.toList());
-
-			for (String f : files) {
-				if (!new File(base + f, "output.nq").exists()) {
-					String f1 = f.replace("-", "");
-					System.out.println("@Test public void " + f1 + "() throws IOException { testForNotOK(\"" + f + "\"); }");
-				}
-			}
-		} catch (Exception e) {
-			System.err.println(e.getMessage());
-			throw new RuntimeException(e);
-		}
-	}
+//	public static void main(String[] args) {
+//		try (Stream<Path> stream = Files.list(Paths.get(base))) {
+//			List<String> files = stream.filter(f -> Files.isDirectory(f) && f.getFileName().toString().contains("XML"))
+//					.map(Path::getFileName).map(Path::toString).collect(Collectors.toList());
+//
+//			for (String f : files) {
+//				if (!new File(base + f, "output.nq").exists()) {
+//					String f1 = f.replace("-", "");
+//					System.out.println("@Test public void " + f1 + "() throws IOException { testForNotOK(\"" + f + "\"); }");
+//				}
+//			}
+//		} catch (Exception e) {
+//			System.err.println(e.getMessage());
+//			throw new RuntimeException(e);
+//		}
+//	}
 
 	@Test public void RMLTC0000CSV() throws IOException { testForOK("RMLTC0000-CSV"); }
 	@Test public void RMLTC0001aCSV() throws IOException { testForOK("RMLTC0001a-CSV"); }

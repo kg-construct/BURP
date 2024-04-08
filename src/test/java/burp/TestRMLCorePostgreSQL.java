@@ -21,7 +21,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public class TestRMLCorePostgreSQL {
 
-	private static String base = "./src/test/burp/rml-core/";
+	private static String base = "./src/test/resources/rml-core/";
 	
 	@Test public void RMLTC0000PostgreSQL() throws Exception { testForOK("RMLTC0000-PostgreSQL"); }
 	@Test public void RMLTC0001aPostgreSQL() throws Exception { testForOK("RMLTC0001a-PostgreSQL"); }

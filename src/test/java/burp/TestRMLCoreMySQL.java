@@ -25,24 +25,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public class TestRMLCoreMySQL {
 
-	private static String base = "./src/test/burp/rml-core/";
-
-	public static void main(String[] args) {
-		try (Stream<Path> stream = Files.list(Paths.get(base))) {
-			List<String> files = stream.filter(f -> Files.isDirectory(f) && f.getFileName().toString().contains("MySQL"))
-					.map(Path::getFileName).map(Path::toString).collect(Collectors.toList());
-
-			for (String f : files) {
-				if (!new File(base + f, "output.nq").exists()) {
-					String f1 = f.replace("-", "");
-					System.out.println("@Test public void " + f1 + "() throws Exception { testForNotOK(\"" + f + "\"); }");
-				}
-			}
-		} catch (Exception e) {
-			System.err.println(e.getMessage());
-			throw new RuntimeException(e);
-		}
-	}
+	private static String base = "./src/test/resources/rml-core/";
 	
 	@Test public void RMLTC0000MySQL() throws Exception { testForOK("RMLTC0000-MySQL"); }
 	@Test public void RMLTC0001aMySQL() throws Exception { testForOK("RMLTC0001a-MySQL"); }

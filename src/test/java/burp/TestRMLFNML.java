@@ -13,7 +13,7 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.junit.jupiter.api.Test;
 
 public class TestRMLFNML {
-	private static String base = "./src/test/burp/rml-fnml/";
+	private static String base = "./src/test/resources/rml-fnml/";
 	
 	@Test public void RMLFNOTC0000CSV() throws IOException { testForOK("RMLFNOTC0000-CSV"); }
 	@Test public void RMLFNOTC0001CSV() throws IOException { testForOK("RMLFNOTC0001-CSV"); }

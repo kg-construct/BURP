@@ -13,7 +13,7 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.junit.jupiter.api.Test;
 
 public class TestRMLIOSource {
-	private static String base = "./src/test/burp/rml-io/";
+	private static String base = "./src/test/resources/rml-io/";
 
 	@Test public void RMLTTC0000() throws IOException { testForOK("RMLTTC0000"); }
 	@Test public void RMLSTC0001a() throws IOException { testForOK("RMLSTC0001a"); }
