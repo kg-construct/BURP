@@ -5,7 +5,7 @@
 @base <http://example.com/rules/> .
 
 <#SDSourceAccess> a rml:Source, sd:Service;
-  sd:endpoint <http://localhost:3030/ds/sparql>;
+  sd:endpoint <http://example.com/sparql/>;
   sd:supportedLanguage sd:SPARQL11Query;
 .
 

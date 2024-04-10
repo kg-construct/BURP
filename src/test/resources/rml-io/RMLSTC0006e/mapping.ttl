@@ -9,7 +9,7 @@
   td:hasPropertyAffordance [
     td:hasForm [
       # URL and content type
-      hctl:hasTarget "http://w3id.org/rml/resources/Friends.json";
+      hctl:hasTarget "http://w3id.org/rml/resources/rml-io/RMLSTC0006e/Friends.json";
       hctl:forContentType "application/json";
     ];
   ];
