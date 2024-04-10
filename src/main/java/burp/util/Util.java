@@ -116,7 +116,7 @@ public class Util {
 			FileOutputStream output = new FileOutputStream(temp);				
 			output.write(response.body().readAllBytes());
 			output.close();
-			
+
 			return temp;		
 		} catch(Exception e) {
 			throw new RuntimeException("Problem downloading " + url);
@@ -135,7 +135,9 @@ public class Util {
 			InputStream in = null;
 			
 			if(RML.zip.equals(compression)) {
-				in = new ZipInputStream(fin);
+				ZipInputStream a = new ZipInputStream(fin);
+				a.getNextEntry();
+				in = a;
 			} else if(RML.gzip.equals(compression)) {
 				in = new GzipCompressorInputStream(fin);
 			} else if(RML.targz.equals(compression)) {
