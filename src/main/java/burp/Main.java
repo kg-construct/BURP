@@ -57,6 +57,8 @@ public class Main {
 
 			if (conf.outputFile != null)
 				RDFDataMgr.write(new FileOutputStream(conf.outputFile), ds, Lang.NQ);
+			else
+				RDFDataMgr.write(System.out, ds, Lang.NQ);
 
 			// It all went well, thus return 0
 			return 0;
