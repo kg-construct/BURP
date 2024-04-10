@@ -29,8 +29,8 @@ public class LogicalSourceFactory {
 		if (ls.getPropertyResourceValue(RML.source).hasProperty(RDF.type, CSVW.Table)) {
 			Resource s = ls.getPropertyResourceValue(RML.source);
 
-			String file = s.getProperty(CSVW.url).getLiteral().getString();
-			source.file = getAbsoluteOrRelativeFromFileProtocol(file, mpath);
+			String file = getFile(ls);
+			source.file = getAbsoluteOrRelative(file, mpath);
 
 			// IF IT IS A CSVW TABLE, THEN LOOK FOR THE ENCODING IN THE DIALECT
 			if (s.hasProperty(CSVW.dialect)) {
@@ -226,6 +226,11 @@ public class LogicalSourceFactory {
 			return Util.downloadFile(url);
 		}
 
+		if (source.hasProperty(RDF.type, CSVW.Table)) {
+			String url = source.getProperty(CSVW.url).getLiteral().getString();
+			return Util.downloadFile(url);
+		}
+
 		throw new RuntimeException("Source from other way not yet implemented");
 	}
 
@@ -273,7 +278,7 @@ public class LogicalSourceFactory {
 			String abs = new File(mpath, url.getPath()).toURI().toURL().toString();
 			return abs.replaceFirst("file:/", "");
 		} catch (MalformedURLException e) {
-			throw new RuntimeException(file + " is not an URL.");
+			throw new RuntimeException(file + " is not a file URL.");
 		}
 	}
 	

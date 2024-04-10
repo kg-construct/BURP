@@ -6,7 +6,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
 
 public class CSVW {
 	
-	public static final String NS = "http://www.w3.org/ns/dcat#";
+	public static final String NS = "http://www.w3.org/ns/csvw#";
 	
 	public static final Resource Table = ResourceFactory.createResource(NS + "Table");
 
