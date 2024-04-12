@@ -18,7 +18,7 @@ public class FunctionMap extends TermMap {
 			return generateIRIs(i, baseIRI);			
 		}
 		
-		throw new RuntimeException("Incorrect term type for return map.");	
+		throw new RuntimeException("Incorrect term type for function map.");
 	}
 
 	@Override

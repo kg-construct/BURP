@@ -3,6 +3,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rml: <http://w3id.org/rml/> .
 @prefix fno: <https://w3id.org/function/ontology#> .
+@prefix fns: <http://example.com/functions/> .
 @prefix morph-kgc: <https://github.com/morph-kgc/morph-kgc/function/built-in.ttl#> .
 @prefix grel: <http://users.ugent.be/~bjdmeest/function/grel.ttl#> .
 @prefix idlab-fn: <http://example.com/idlab/function/> .
@@ -24,8 +25,16 @@
         rml:predicate foaf:name;
         rml:objectMap [
             rml:functionExecution <#Execution> ;
-        ]
+            rml:termType rml:IRI
+        ];
     ] .
 
 <#Execution>
-    rml:function morph-kgc:uuid .
+    rml:function fns:schema ;
+    rml:input
+        [
+            rml:parameter fns:stringParameter ;
+            rml:inputValueMap [
+                rml:reference "Name"
+            ];
+        ] .

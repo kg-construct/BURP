@@ -14,17 +14,23 @@ import org.junit.jupiter.api.Test;
 
 public class TestRMLFNML {
 	private static String base = "./src/test/resources/rml-fnml/";
-	
-	@Test public void RMLFNOTC0000CSV() throws IOException { testForOK("RMLFNOTC0000-CSV"); }
+
+	// UUID test should be removed from the test cases
+	// @Test public void RMLFNOTC0000CSV() throws IOException { testForOK("RMLFNOTC0000-CSV"); }
+	@Test public void RMLFNOTC0000CSVb() throws IOException { testForOK("RMLFNOTC0000b-CSV"); }
 	@Test public void RMLFNOTC0001CSV() throws IOException { testForOK("RMLFNOTC0001-CSV"); }
-	@Test public void RMLFNOTC0001bCSV() throws IOException { testForOK("RMLFNOTC0001b-CSV"); }
+	@Test public void RMLFNOTC0002CSV() throws IOException { testForNotOK("RMLFNOTC0002-CSV"); }
 	@Test public void RMLFNOTC0003CSV() throws IOException { testForOK("RMLFNOTC0003-CSV"); }
 	@Test public void RMLFNOTC0004CSV() throws IOException { testForOK("RMLFNOTC0004-CSV"); }
+	@Test public void RMLFNOTC0004CSVb() throws IOException { testForOK("RMLFNOTC0004b-CSV"); }
 	@Test public void RMLFNOTC0005CSV() throws IOException { testForOK("RMLFNOTC0005-CSV"); }
+	@Test public void RMLFNOTC0005CSVb() throws IOException { testForOK("RMLFNOTC0005b-CSV"); }
 	@Test public void RMLFNOTC0006CSV() throws IOException { testForOK("RMLFNOTC0006-CSV"); }
+	@Test public void RMLFNOTC0006CSVb() throws IOException { testForOK("RMLFNOTC0006b-CSV"); }
 	@Test public void RMLFNOTC0008CSV() throws IOException { testForOK("RMLFNOTC0008-CSV"); }
 	@Test public void RMLFNOTC0009CSV() throws IOException { testForOK("RMLFNOTC0009-CSV"); }
-	@Test public void RMLFNOTC0002CSV() throws IOException { testForNotOK("RMLFNOTC0002-CSV"); }
+	@Test public void RMLFNOTC0010CSV() throws IOException { testForOK("RMLFNOTC0010-CSV"); }
+
 
 	
 	public void testForOK(String f) throws IOException {

@@ -1,11 +1,9 @@
 package burp.model.fnmlutil;
 
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.text.StringEscapeUtils;
 
@@ -27,14 +25,71 @@ public class Functions {
 	
 	private static Map<String, RMLFunction> prepareFunctions() {
 		Map<String, RMLFunction> functions = new HashMap<String, RMLFunction>();
-		
+
 		// Hello World Function
-		
-		functions.put("http://example.com/base/HelloWorld", new RMLFunction() {
+
+		functions.put("http://example.com/functions/helloworld", new RMLFunction() {
 			@Override
 			public List<Return> apply(Map<String, Object> map) {
 				List<Return> l = new ArrayList<Return>();
 				l.add(new Return("Hello World!"));
+				return l;
+			}
+		});
+
+		// Schema Function
+
+		functions.put("http://example.com/functions/schema", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				String s = map.get("http://example.com/functions/stringParameter").toString();
+
+				String out = "https://schema.org/" + s;
+
+				Return r = new Return(out);
+				r.put("http://example.com/functions/stringOutput", out);
+				l.add(r);
+
+				return l;
+			}
+		});
+
+		// parseURL Function
+
+		functions.put("http://example.com/functions/parseURL", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				String s = map.get("http://example.com/functions/stringParameter").toString();
+
+				try {
+					List<Return> l = new ArrayList<Return>();
+					URL url = new URL(s);
+
+					String protocol = url.getProtocol();
+					String domain = url.getHost();
+					String path = url.getPath();
+
+					Return r = new Return(path);
+					r.put("http://example.com/functions/stringOutput", path);
+					r.put("http://example.com/functions/protocolOutput", protocol);
+					r.put("http://example.com/functions/domainOutput", domain);
+					l.add(r);
+
+					return l;
+				} catch(Exception e) {
+					throw new RuntimeException("Invalid URL given as input" + s, e);
+				}
+			}
+		});
+
+		// UUID Function
+
+		functions.put("https://github.com/morph-kgc/morph-kgc/function/built-in.ttl#uuid", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				l.add(new Return(UUID.randomUUID().toString()));
 				return l;
 			}
 		});

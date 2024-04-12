@@ -390,23 +390,24 @@ public class Parse {
 		if (r.hasProperty(RML.template)) {
 			String template = r.getProperty(RML.template).getObject().asLiteral().getString();
 			return new Template(template); 
-		}		
-		
+		}
+
 		if (r.hasProperty(RML.functionExecution)) {
 			Resource fer = r.getPropertyResourceValue(RML.functionExecution);
-			
+
 			FunctionExecution fe = new FunctionExecution();
 			fe.functionMap = prepareFunctionMap(fer.getPropertyResourceValue(RML.functionMap));
-			
-			if(fer.hasProperty(RML.returnMap))
-				fe.returnMap = prepareReturnMap(fer.getPropertyResourceValue(RML.returnMap));
-			
+
+			// Return Maps are siblings of Function Execution Maps
+			if(r.hasProperty(RML.returnMap))
+				fe.returnMap = prepareReturnMap(r.getPropertyResourceValue(RML.returnMap));
+
 			StmtIterator iter = fer.listProperties(RML.input);
 			while(iter.hasNext()) {
 				Statement x = iter.next();
 				fe.inputs.add(prepareInput(x.getObject().asResource()));
 			}
-			
+
 			return fe;
 		}
 

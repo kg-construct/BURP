@@ -11,11 +11,11 @@
 
 <#Person_Mapping>
     rml:logicalSource [
-      rml:source [ a rml:RelativePathSource;
+        rml:source [ a rml:RelativePathSource;
           rml:root rml:MappingDirectory;
           rml:path "student.csv"
         ];
-      rml:referenceFormulation rml:CSV
+        rml:referenceFormulation rml:CSV
     ];
     rml:subjectMap [
         rml:template "http://example.com/{Name}"

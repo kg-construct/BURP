@@ -20,7 +20,6 @@ public class TestRMLIOSource {
 	@Test public void RMLSTC0001b() throws IOException { testForOK("RMLSTC0001b"); }
 	@Test public void RMLSTC0002a() throws IOException { testForOK("RMLSTC0002a"); }
 	@Test public void RMLSTC0002b() throws IOException { testForOK("RMLSTC0002b"); }
-	// We assume 2c works as there is a problem downloading the ZIP file
 	@Test public void RMLSTC0002c() throws IOException { testForOK("RMLSTC0002c"); }
 	@Test public void RMLSTC0002d() throws IOException { testForOK("RMLSTC0002d"); }
 	@Test public void RMLSTC0002e() throws IOException { testForOK("RMLSTC0002e"); }

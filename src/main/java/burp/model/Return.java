@@ -14,11 +14,9 @@ public class Return {
 	}
 
 	public Object get(Object key) {
-		Object o = returns.get(key);
-		
+		Object o = returns.get(key.toString());
 		if(o == null)
 			throw new RuntimeException("Unknown return value %s.".formatted(key));
-		
 		return o;
 	}
 
