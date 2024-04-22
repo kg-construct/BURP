@@ -1,0 +1,12 @@
+title: "BURPing Through RML Test Cases"
+license: MIT
+authors:
+  - family-names: Van Assche
+    given-names: Dylan
+  - family-names: Debruyne
+    given-names: Christophe
+cff-version: 1.0.0
+version: 1.0.0
+doi: TODO
+date-released: 2024-03-12
+url: "https://w3id.org/kg-construct/BURP"
