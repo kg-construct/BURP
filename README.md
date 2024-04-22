@@ -1,5 +1,8 @@
 # BURP: A Basic and Unassuming RML Processor
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11037712.svg)](https://doi.org/10.5281/zenodo.11037712)
+
+
 BURP (Basic and Unassuming RML Processor) is a reference implementation for the new [RML specification](http://w3id.org/rml/portal) which has been written from scratch to have no influence from prior implementations of RML.
 BURP was created to serve as a reference RML implementation for the Knowledge Graph Construction community and to verify the RML specifications their feasibility and coverage of their test cases.
 
