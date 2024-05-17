@@ -231,7 +231,7 @@ public class LogicalSourceFactory {
 			return Util.downloadFile(url);
 		}
 
-		throw new RuntimeException("Source from other way not yet implemented");
+		throw new RuntimeException("Source from this logical source type not yet implemented");
 	}
 
 	private static Resource getCompression(Resource ls) {
