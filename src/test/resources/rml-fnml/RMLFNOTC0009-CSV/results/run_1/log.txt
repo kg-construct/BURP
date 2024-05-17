@@ -1,0 +1,13 @@
+[2024-04-15 12:06:40,316] ERROR    SLF4J(W): No SLF4J providers were found.
+[2024-04-15 12:06:40,316] ERROR    SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+[2024-04-15 12:06:40,316] ERROR    SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+[2024-04-15 12:06:40,316] ERROR    Node=_:Bf1d2926844344f7645c699402e037b38
+[2024-04-15 12:06:40,316] ERROR    Path=<http://w3id.org/rml/source>
+[2024-04-15 12:06:40,317] ERROR    Value: "test/fno/nested_function/student.csv"
+[2024-04-15 12:06:40,317] ERROR    Message:
+[2024-04-15 12:06:40,317] ERROR    rml:source must be provided to locate the data source.
+[2024-04-15 12:06:40,317] ERROR    rml:source must be provided exactly once as an URI.
+[2024-04-15 12:06:40,317] ERROR    
+[2024-04-15 12:06:40,317] ERROR    Mapping did not satisfy shapes.
+[2024-04-15 12:06:40,317] ERROR    System exiting with code: 1
+[2024-04-15 12:06:40,317] ERROR    Command failed while waiting for exit with status code: 1

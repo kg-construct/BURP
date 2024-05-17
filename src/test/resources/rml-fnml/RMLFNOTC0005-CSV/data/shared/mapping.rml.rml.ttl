@@ -1,0 +1,14 @@
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix idlab-fn: <http://example.com/idlab/function/> .
+@prefix rml: <http://w3id.org/rml/> .
+
+<http://example.com/base/TriplesMap1> rml:logicalSource [ rml:referenceFormulation rml:CSV ;
+            rml:source "student.csv" ] ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:reference "Name" ] ;
+            rml:predicate foaf:name ] ;
+    rml:subjectMap [ rml:functionExecution <http://example.com/base/#Execution> ] .
+
+<http://example.com/base/#Execution> rml:function idlab-fn:toUpperCaseURL ;
+    rml:input [ rml:inputValueMap [ rml:reference "url" ] ;
+            rml:parameter idlab-fn:str ] .
+

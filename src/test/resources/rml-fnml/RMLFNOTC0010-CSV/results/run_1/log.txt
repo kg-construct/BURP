@@ -1,0 +1,12 @@
+[2024-04-15 12:06:42,850] ERROR    SLF4J(W): No SLF4J providers were found.
+[2024-04-15 12:06:42,850] ERROR    SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+[2024-04-15 12:06:42,850] ERROR    SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+[2024-04-15 12:06:42,850] ERROR    Node=_:B699cb2a086d50e642c1b6d3413919bed
+[2024-04-15 12:06:42,850] ERROR    Path=(((<http://w3id.org/rml/template>|<http://w3id.org/rml/constant>)|<http://w3id.org/rml/reference>)|<http://w3id.org/rml/returnMap>)|<http://w3id.org/rml/functionExecution>
+[2024-04-15 12:06:42,850] ERROR    Message:
+[2024-04-15 12:06:42,850] ERROR    Exactly one rml:template, one rml:constant, one rml:reference,
+[2024-04-15 12:06:42,850] ERROR    one rml:returnMap, or one rml:functionExecution is required.
+[2024-04-15 12:06:42,850] ERROR    
+[2024-04-15 12:06:42,850] ERROR    Mapping did not satisfy shapes.
+[2024-04-15 12:06:42,850] ERROR    System exiting with code: 1
+[2024-04-15 12:06:42,851] ERROR    Command failed while waiting for exit with status code: 1
