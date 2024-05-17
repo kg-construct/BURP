@@ -1,0 +1,40 @@
+===> CASE <===
+Name: rml-fnml test-case RMLFNOTC0003-CSV
+Timestamp: 2024-04-15T10:06:19.650271+00:00
+Directory: /home/dylan/Projects/challenge-2024/track1-v6-burp/rml-fnml/RMLFNOTC0003-CSV
+Run: 1
+Number of steps: 2
+
+===> HARDWARE <===
+System
+	Hostname: dell-laptop
+	OS name: Fedora Linux
+	OS version: 39 (Workstation Edition)
+	Kernel: Linux-6.8.5-201.fc39.x86_64-x86_64-with-glibc2.38
+	Architecture: x86_64
+CPU
+	Name: Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz
+	Cores: 8
+	Minimum frequency: 400 Hz
+	Maximum frequency: 4200 Hz
+Memory
+	RAM memory: 16615 MB
+	SWAP memory: 8589 MB
+Storage
+	Disk "/": 510.48 GB
+	Disk "/home": 510.48 GB
+	Disk "/boot": 1.02 GB
+	Disk "/boot/efi": 0.54 GB
+Network
+	Interface "lo"
+	Interface "enp0s31f6"
+	Interface "wlp2s0"
+	Interface "docker0"
+	Interface "br-8b7c5071df4c"
+
+===> DOCKER <===
+Version: 26.0.1
+Root directory: /var/lib/docker
+Drivers:
+	Storage: btrfs
+	CgroupFS: systemd v2

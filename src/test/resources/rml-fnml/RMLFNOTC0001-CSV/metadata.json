@@ -1,0 +1,30 @@
+{
+    "@id": "http://w3id.org/kg-construct/rml-fnml/test-cases/RMLFNOTC0001-CSV",
+    "name": "rml-fnml test-case RMLFNOTC0001-CSV",
+    "description": "Execute test-case RMLFNOTC0001-CSV of rml-fnml",
+    "steps": [
+        {
+            "@id": "http://w3id.org/kg-construct/rml-fnml/test-cases/RMLFNOTC0001-CSV#step1",
+            "name": "Execute RML mapping",
+            "resource": "BURP",
+            "command": "execute_mapping",
+            "parameters": {
+                "mapping_file": "mapping.rml.rml.ttl",
+                "output_file": "output.nq",
+                "serialization": "nquads"
+            },
+            "expect_failure": false
+        },
+        {
+            "@id": "http://w3id.org/kg-construct/rml-fnml/test-cases/RMLFNOTC0001-CSV#step2",
+            "name": "Validate rml-fnml/RMLFNOTC0001-CSV/output.nq",
+            "resource": "Validate",
+            "command": "compare_graphs",
+            "parameters": {
+                "graph_file": "output.nq",
+                "expected_graph_file": "expected/output.nq"
+            },
+            "expect_failure": false
+        }
+    ]
+}

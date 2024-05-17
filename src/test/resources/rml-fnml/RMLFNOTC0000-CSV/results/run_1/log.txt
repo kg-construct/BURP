@@ -1,0 +1,13 @@
+[2024-04-15 12:06:14,699] ERROR    SLF4J(W): No SLF4J providers were found.
+[2024-04-15 12:06:14,699] ERROR    SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+[2024-04-15 12:06:14,699] ERROR    SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+[2024-04-15 12:06:14,699] ERROR    Node=_:B8551d3750e727742b41567f52593bcdf
+[2024-04-15 12:06:14,699] ERROR    Path=<http://w3id.org/rml/source>
+[2024-04-15 12:06:14,699] ERROR    Value: "student.csv"
+[2024-04-15 12:06:14,699] ERROR    Message:
+[2024-04-15 12:06:14,699] ERROR    rml:source must be provided to locate the data source.
+[2024-04-15 12:06:14,699] ERROR    rml:source must be provided exactly once as an URI.
+[2024-04-15 12:06:14,699] ERROR    
+[2024-04-15 12:06:14,700] ERROR    Mapping did not satisfy shapes.
+[2024-04-15 12:06:14,700] ERROR    System exiting with code: 1
+[2024-04-15 12:06:14,700] ERROR    Command failed while waiting for exit with status code: 1
