@@ -14,6 +14,7 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.iri.Violation;
@@ -133,7 +134,7 @@ public class Util {
 			OutputStream out = new FileOutputStream(temp);
 			FileInputStream fin = new FileInputStream(file);
 			InputStream in = null;
-			
+
 			if(RML.zip.equals(compression)) {
 				ZipInputStream a = new ZipInputStream(fin);
 				a.getNextEntry();
@@ -143,17 +144,17 @@ public class Util {
 			} else if(RML.targz.equals(compression)) {
 				// Suppress warning because we do close it
 				@SuppressWarnings("resource")
-				TarArchiveInputStream a = new TarArchiveInputStream(fin);
+				TarArchiveInputStream a = new TarArchiveInputStream(new GzipCompressorInputStream(fin));
 				a.getNextEntry();
 				in = a;
 			} else if(RML.tarxz.equals(compression)) {
 				// Suppress warning because we do close it
 				@SuppressWarnings("resource")
-				TarArchiveInputStream a = new TarArchiveInputStream(fin);
+				TarArchiveInputStream a = new TarArchiveInputStream(new XZCompressorInputStream(fin));
 				a.getNextEntry();
 				in = a;
 			}
-			
+
 			IOUtils.copy(in, out);
 			in.close();
 			out.close();
