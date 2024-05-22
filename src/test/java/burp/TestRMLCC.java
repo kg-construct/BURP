@@ -48,6 +48,7 @@ public class TestRMLCC {
 	@Test public void RMLTCCC0009DUPLIST() throws IOException { testForOK("RMLTC-CC-0009-DUP-List"); }
 	@Test public void RMLTCCC0009DUPBAG() throws IOException { testForOK("RMLTC-CC-0009-DUP-BAG"); }
 	@Test public void RMLTCCC0010LIST() throws IOException { testForGraphsOK("RMLTC-CC-0010-List"); }
+	@Test public void RMLTCCC0010LISTb() throws IOException { testForGraphsOK("RMLTC-CC-0010-Listb"); }
 
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));
