@@ -20,9 +20,9 @@
 - [X] toTitlecase(s)
 
 ## Trimming
-- [ ] trim(s)
-- [ ] strip(s)
-- [ ] chomp(s, sep)
+- [X] trim(s)
+- [X] strip(s)
+- [X] chomp(s, sep)
 
 ## Substring
 - [ ] substring(s, n from, n to (optional))
@@ -66,24 +66,6 @@
 ## Translating
 - [ ] detectLanguage(s)
 
-## Format-based functions (JSON, HTML, XML)
-- [ ] jsonize(o)
-- [ ] parseJson(s)
-
-## Jsoup XML and HTML parsing
-- [ ] parseHtml(s)
-- [ ] parseXml(s)
-- [ ] select(s, element)
-- [ ] htmlAttr(s, element)
-- [ ] xmlAttr(s, element)
-- [ ] htmlText(element)
-- [ ] xmlText(element)
-- [ ] wholeText(element)
-- [ ] innerHtml(element)
-- [ ] innerXml(element)
-- [ ] ownText(element)
-- [ ] parent(element)
-
 ## URI parsing
 - [ ] parseUri(s)
 
@@ -97,7 +79,6 @@
 - [ ] sum(a)
 - [ ] join(a, sep)
 - [ ] uniques(a)
-- [ ] As of OpenRefine 3.4.1, uniques() reorders the array items it returns; in 3.4 beta 644 and onwards, it preserves the original order (in this case, [ "al", "Joe", "Bob", "Al" ]).
 
 ## Date functions
 - [ ] now()

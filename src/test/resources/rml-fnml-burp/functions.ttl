@@ -138,3 +138,24 @@ fns:domainOutput
     rdfs:label    "domain output string" ;
     fno:predicate fns:hasDomainOutput ;
     fno:type      xsd:string .
+
+grel:string_trim
+    a                   fno:Function ;
+    fno:name            "trim" ;
+    dcterms:description "trim" ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:string_strip
+    a                   fno:Function ;
+    fno:name            "strip" ;
+    dcterms:description "strip" ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:string_chomp
+    a                   fno:Function ;
+    fno:name            "chomp" ;
+    dcterms:description "chomp" ;
+    fno:expects         ( grel:valueParam grel:param_string_sep ) ;
+    fno:returns         ( grel:stringOut ) .

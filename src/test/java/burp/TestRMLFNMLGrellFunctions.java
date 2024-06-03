@@ -26,6 +26,10 @@ public class TestRMLFNMLGrellFunctions {
 	@Test public void RMLFNOTC0008() throws IOException { testForOK("string-startswith-false"); }
 	@Test public void RMLFNOTC0009() throws IOException { testForOK("string-endswith-true"); }
 	@Test public void RMLFNOTC0010() throws IOException { testForOK("string-endswith-false"); }
+	@Test public void RMLFNOTC0011() throws IOException { testForOK("string-trim"); }
+	@Test public void RMLFNOTC0012() throws IOException { testForOK("string-strip"); }
+	@Test public void RMLFNOTC0013() throws IOException { testForOK("string-chomp-a"); }
+	@Test public void RMLFNOTC0014() throws IOException { testForOK("string-chomp-b"); }
 
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));

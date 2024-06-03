@@ -97,9 +97,41 @@ public class Functions {
 		});
 		
 		// GREL functions
-		
 		// https://openrefine.org/docs/manual/grelfunctions
-		// Escapes s in the given escaping mode. The mode can be one of: "html", "xml", "csv", "url", "javascript". 
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_chomp", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+				String f = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sep").toString();
+
+				String out = StringUtils.removeEnd(s, f);
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+				l.add(re);
+
+				return l;
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#endsWith", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+				String f = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sub").toString();
+
+				boolean out = s.endsWith(f);
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_bool", out);
+				l.add(re);
+
+				return l;
+			}
+		});
+		
+		// Escapes s in the given escaping mode. The mode can be one of: "html", "xml", "csv", "url", "javascript".
 		// Note that quotes are required around your mode. See the recipes for examples of escaping and unescaping.
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#escape", new RMLFunction() {
 			@Override
@@ -145,6 +177,22 @@ public class Functions {
 			}
 		});
 
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#startsWith", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+				String f = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sub").toString();
+
+				boolean out = s.startsWith(f);
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_bool", out);
+				l.add(re);
+
+				return l;
+			}
+		});
+
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_replace", new RMLFunction() {
 			@Override
 			public List<Return> apply(Map<String, Object> map) {
@@ -162,32 +210,30 @@ public class Functions {
 			}
 		});
 
-		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#startsWith", new RMLFunction() {
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_strip", new RMLFunction() {
 			@Override
 			public List<Return> apply(Map<String, Object> map) {
 				List<Return> l = new ArrayList<Return>();
 				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
-				String f = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sub").toString();
 
-				boolean out = s.startsWith(f);
+				String out = s.trim();
 				Return re = new Return(out);
-				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_bool", out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
 				l.add(re);
 
 				return l;
 			}
 		});
 
-		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#endsWith", new RMLFunction() {
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_trim", new RMLFunction() {
 			@Override
 			public List<Return> apply(Map<String, Object> map) {
 				List<Return> l = new ArrayList<Return>();
 				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
-				String f = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sub").toString();
 
-				boolean out = s.endsWith(f);
+				String out = s.trim();
 				Return re = new Return(out);
-				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_bool", out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
 				l.add(re);
 
 				return l;
