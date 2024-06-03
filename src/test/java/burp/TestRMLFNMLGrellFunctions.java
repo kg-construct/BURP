@@ -16,7 +16,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TestRMLFNMLGrellFunctions {
 	private static String base = "./src/test/resources/rml-fnml-grel/";
 
-	@Test public void RMLFNOTC0010CSV() throws IOException { testForOK("string-length"); }
+	@Test public void RMLFNOTC0001() throws IOException { testForOK("string-length"); }
+	@Test public void RMLFNOTC0002() throws IOException { testForOK("string-touppercase"); }
+	@Test public void RMLFNOTC0003() throws IOException { testForOK("string-tolowercase"); }
+	@Test public void RMLFNOTC0004() throws IOException { testForOK("string-totitlecase-a"); }
+	@Test public void RMLFNOTC0005() throws IOException { testForOK("string-totitlecase-b"); }
 
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));

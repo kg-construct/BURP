@@ -6,11 +6,27 @@
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
 
+grel:toLowerCase
+    a                   fno:Function ;
+    fno:name            "to Lowercase" ;
+    rdfs:label          "to Lowercase" ;
+    dcterms:description "Returns the input with all letters in lower case." ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .
+
 grel:toUpperCase
     a                   fno:Function ;
     fno:name            "to Uppercase" ;
     rdfs:label          "to Uppercase" ;
     dcterms:description "Returns the input with all letters in upper case." ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:toTitleCase
+    a                   fno:Function ;
+    fno:name            "to Titlecase" ;
+    rdfs:label          "to Titlecase" ;
+    dcterms:description "Returns string s converted into titlecase: a capital letter starting each word, and the rest of the letters lowercase." ;
     fno:expects         ( grel:valueParam ) ;
     fno:returns         ( grel:stringOut ) .
 

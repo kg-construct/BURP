@@ -5,10 +5,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
 import burp.model.RMLFunction;
 import burp.model.Return;
+import org.apache.commons.text.WordUtils;
 
 public class Functions {
 	
@@ -160,19 +162,52 @@ public class Functions {
 				return l;
 			}
 		});
-		
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#toLowerCase", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+
+				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+
+				String out = s.toLowerCase();
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+				l.add(re);
+
+				return l;
+			}
+		});
+
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#toUpperCase", new RMLFunction() {
 			@Override
 			public List<Return> apply(Map<String, Object> map) {
 				List<Return> l = new ArrayList<Return>();
-				
+
 				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
 
 				String out = s.toUpperCase();
 				Return re = new Return(out);
 				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
 				l.add(re);
-				
+
+				return l;
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#toTitleCase", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+
+				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+
+				// GREL transforms FOO into Foo
+				String out = WordUtils.capitalize(s.toLowerCase());
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+				l.add(re);
+
 				return l;
 			}
 		});
