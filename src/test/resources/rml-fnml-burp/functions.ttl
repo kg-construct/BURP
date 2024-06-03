@@ -14,6 +14,14 @@ grel:toUpperCase
     fno:expects         ( grel:valueParam ) ;
     fno:returns         ( grel:stringOut ) .
 
+grel:length
+    a                   fno:Function ;
+    fno:name            "length" ;
+    rdfs:label          "length" ;
+    dcterms:description "Returns the length of string s as a number." ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:output_number ) .
+
 grel:valueParam
     a             fno:Parameter ;
     fno:name      "input value" ;

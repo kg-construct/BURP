@@ -127,6 +127,21 @@ public class Functions {
 				return l;
 			}
 		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#length", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+
+				int out = s.length();
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+				l.add(re);
+
+				return l;
+			}
+		});
 		
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_replace", new RMLFunction() {
 			@Override
