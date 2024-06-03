@@ -13,11 +13,11 @@ import java.nio.file.Paths;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestRMLFNMLChallenge {
-	private static String base = "./src/test/resources/rml-fnml/";
+public class TestRMLFNMLGrellFunctions {
+	private static String base = "./src/test/resources/rml-fnml-burp/";
 
 	// UUID test should be removed from the test cases
-	@Test public void RMLFNOTC0000CSV() throws IOException { testForOK("RMLFNOTC0000-CSV"); }
+	// @Test public void RMLFNOTC0000CSV() throws IOException { testForOK("RMLFNOTC0000-CSV"); }
 	@Test public void RMLFNOTC0000CSVb() throws IOException { testForOK("RMLFNOTC0000b-CSV"); }
 	@Test public void RMLFNOTC0001CSV() throws IOException { testForOK("RMLFNOTC0001-CSV"); }
 	@Test public void RMLFNOTC0002CSV() throws IOException { testForNotOK("RMLFNOTC0002-CSV"); }
@@ -36,12 +36,12 @@ public class TestRMLFNMLChallenge {
 	
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));
-		String m = new File(base + f, "data/shared/mapping.ttl").getAbsolutePath().toString();
+		String m = new File(base + f, "mapping.ttl").getAbsolutePath().toString();
 		String r = Files.createTempFile(null, ".nq").toString();
 		System.out.println(String.format("Writing output to %s", r));
 
 		System.out.println("This test should generate a graph.");
-		String o = new File(base + f, "data/shared/expected/output.nq").getAbsolutePath().toString();
+		String o = new File(base + f, "output.nq").getAbsolutePath().toString();
 
 		int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
 
@@ -63,7 +63,7 @@ public class TestRMLFNMLChallenge {
 
 	public void testForNotOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));
-		String m = new File(base + f, "data/shared/mapping.ttl").getAbsolutePath().toString();
+		String m = new File(base + f, "mapping.ttl").getAbsolutePath().toString();
 		String r = Files.createTempFile(null, ".nq").toString();
 		System.out.println(String.format("Writing output to %s", r));
 
