@@ -138,13 +138,13 @@ public class Functions {
 
 				int out = s.length();
 				Return re = new Return(out);
-				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_number", out);
 				l.add(re);
 
 				return l;
 			}
 		});
-		
+
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_replace", new RMLFunction() {
 			@Override
 			public List<Return> apply(Map<String, Object> map) {
@@ -152,13 +152,44 @@ public class Functions {
 				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
 				String f = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_find").toString();
 				String r = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_replace").toString();
-				
-				
+
 				String out = s.replaceAll(f, r);
 				Return re = new Return(out);
 				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
 				l.add(re);
-				
+
+				return l;
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#startsWith", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+				String f = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sub").toString();
+
+				boolean out = s.startsWith(f);
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_bool", out);
+				l.add(re);
+
+				return l;
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#endsWith", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+				String f = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sub").toString();
+
+				boolean out = s.endsWith(f);
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_bool", out);
+				l.add(re);
+
 				return l;
 			}
 		});

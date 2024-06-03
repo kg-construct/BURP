@@ -60,6 +60,20 @@ grel:string_replace
    fno:expects         ( grel:valueParam grel:param_find grel:param_replace ) ;
    fno:returns         ( grel:stringOut ) .
 
+grel:startsWith
+   a                   fno:Function ;
+   fno:name            "starts with" ;
+   dcterms:description "starts with" ;
+   fno:expects         ( grel:valueParam grel:param_string_sub ) ;
+   fno:returns         ( grel:output_bool ) .
+
+grel:endsWith
+   a                   fno:Function ;
+   fno:name            "ends with" ;
+   dcterms:description "ends with" ;
+   fno:expects         ( grel:valueParam grel:param_string_sub ) ;
+   fno:returns         ( grel:output_bool ) .
+
 grel:param_find
     a             fno:Parameter ;
     fno:name      "f" ;
