@@ -159,3 +159,26 @@ grel:string_chomp
     dcterms:description "chomp" ;
     fno:expects         ( grel:valueParam grel:param_string_sep ) ;
     fno:returns         ( grel:stringOut ) .
+
+grel:math_abs
+    a                   fno:Function ;
+    fno:name            "abs" ;
+    dcterms:description "abs" ;
+    fno:expects         ( grel:param_dec_n  );
+    fno:returns         ( grel:output_decimal ) .
+
+grel:math_ceil
+   a                   fno:Function ;
+   fno:name            "ceil" ;
+   dcterms:description "ceil" ;
+   fno:solves          grel:prob_ceil ;
+   fno:expects         ( grel:param_dec_n ) ;
+   fno:returns         ( grel:output_number ) .
+
+grel:math_floor
+   a                   fno:Function ;
+   fno:name            "floor" ;
+   dcterms:description "floor" ;
+   fno:solves          grel:prob_floor ;
+   fno:expects         ( grel:param_dec_n ) ;
+   fno:returns         ( grel:output_number ) .

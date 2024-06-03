@@ -30,6 +30,9 @@ public class TestRMLFNMLGrellFunctions {
 	@Test public void RMLFNOTC0012() throws IOException { testForOK("string-strip"); }
 	@Test public void RMLFNOTC0013() throws IOException { testForOK("string-chomp-a"); }
 	@Test public void RMLFNOTC0014() throws IOException { testForOK("string-chomp-b"); }
+	@Test public void RMLFNOTC0015() throws IOException { testForOK("math-abs"); }
+	@Test public void RMLFNOTC0016() throws IOException { testForOK("math-ceil"); }
+	@Test public void RMLFNOTC0017() throws IOException { testForOK("math-floor"); }
 
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));

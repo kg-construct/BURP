@@ -11,6 +11,8 @@ import org.apache.commons.text.StringEscapeUtils;
 import burp.model.RMLFunction;
 import burp.model.Return;
 import org.apache.commons.text.WordUtils;
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.vocabulary.XSD;
 
 public class Functions {
 	
@@ -169,6 +171,99 @@ public class Functions {
 				String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
 
 				int out = s.length();
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_number", out);
+				l.add(re);
+
+				return l;
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#math_abs", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				Literal s = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_dec_n");
+
+				Object out = null;
+				String duri = s.getDatatypeURI();
+
+				if(XSD.integer.getURI().equals(duri) || XSD.xint.getURI().equals(duri)) {
+					out = Math.abs(Integer.parseInt(s.getLexicalForm()));
+				} else if(XSD.xdouble.getURI().equals(duri)) {
+					out = Math.abs(Double.parseDouble(s.getLexicalForm()));
+				} else if(XSD.xlong.getURI().equals(duri)) {
+					out = Math.abs(Long.parseLong(s.getLexicalForm()));
+				} else if(XSD.xfloat.getURI().equals(duri)) {
+					out = Math.abs(Float.parseFloat(s.getLexicalForm()));
+				} else if(XSD.xshort.getURI().equals(duri)) {
+					out = Math.abs(Short.parseShort(s.getLexicalForm()));
+				} else {
+					throw new RuntimeException(String.format("Mode %s not supported in GREL's abs function.", s));
+				}
+
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_decimal", out);
+				l.add(re);
+
+				return l;
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#math_ceil", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				Literal s = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_dec_n");
+
+				Object out = null;
+				String duri = s.getDatatypeURI();
+
+				if(XSD.integer.getURI().equals(duri) || XSD.xint.getURI().equals(duri)) {
+					out = (int) Math.ceil(Integer.parseInt(s.getLexicalForm()));
+				} else if(XSD.xdouble.getURI().equals(duri)) {
+					out = (int) Math.ceil(Double.parseDouble(s.getLexicalForm()));
+				} else if(XSD.xlong.getURI().equals(duri)) {
+					out = (int) Math.ceil(Long.parseLong(s.getLexicalForm()));
+				} else if(XSD.xfloat.getURI().equals(duri)) {
+					out = (int) Math.ceil(Float.parseFloat(s.getLexicalForm()));
+				} else if(XSD.xshort.getURI().equals(duri)) {
+					out = (int) Math.ceil(Short.parseShort(s.getLexicalForm()));
+				} else {
+					throw new RuntimeException(String.format("Mode %s not supported in GREL's ceil function.", s));
+				}
+
+				Return re = new Return(out);
+				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_number", out);
+				l.add(re);
+
+				return l;
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#math_floor", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				List<Return> l = new ArrayList<Return>();
+				Literal s = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_dec_n");
+
+				Object out = null;
+				String duri = s.getDatatypeURI();
+
+				if(XSD.integer.getURI().equals(duri) || XSD.xint.getURI().equals(duri)) {
+					out = (int) Math.floor(Integer.parseInt(s.getLexicalForm()));
+				} else if(XSD.xdouble.getURI().equals(duri)) {
+					out = (int) Math.floor(Double.parseDouble(s.getLexicalForm()));
+				} else if(XSD.xlong.getURI().equals(duri)) {
+					out = (int) Math.floor(Long.parseLong(s.getLexicalForm()));
+				} else if(XSD.xfloat.getURI().equals(duri)) {
+					out = (int) Math.floor(Float.parseFloat(s.getLexicalForm()));
+				} else if(XSD.xshort.getURI().equals(duri)) {
+					out = (int) Math.floor(Short.parseShort(s.getLexicalForm()));
+				} else {
+					throw new RuntimeException(String.format("Mode %s not supported in GREL's floor function.", s));
+				}
+
 				Return re = new Return(out);
 				re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_number", out);
 				l.add(re);

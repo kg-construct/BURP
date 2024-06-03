@@ -88,12 +88,12 @@
 - [ ] datePart(d, s timeUnit)
 
 ## Math functions
-- [ ] abs(n)	Returns the absolute value of a number.	abs(-6) returns 6.
+- [X] abs(n)	Returns the absolute value of a number.	abs(-6) returns 6.
 - [ ] acos(n)	Returns the arc cosine of an angle, in the range 0 through PI.	acos(0.345) returns 1.218557541697832.
 - [ ] asin(n)	Returns the arc sine of an angle in the range of -PI/2 through PI/2.	asin(0.345) returns 0.35223878509706474.
 - [ ] atan(n)	Returns the arc tangent of an angle in the range of -PI/2 through PI/2.	atan(0.345) returns 0.3322135507465967.
 - [ ] atan2(n1, n2)	Converts rectangular coordinates (n1, n2) to polar (r, theta). Returns number theta.	atan2(0.345,0.6) returns 0.5218342798144103.
-- [ ] ceil(n)	Returns the ceiling of a number.	3.7.ceil() returns 4 and -3.7.ceil() returns -3.
+- [X] ceil(n)	Returns the ceiling of a number.	3.7.ceil() returns 4 and -3.7.ceil() returns -3.
 - [ ] combin(n1, n2)	Returns the number of combinations for n2 elements as divided into n1.	combin(20,2) returns 190.
 - [ ] cos(n)	Returns the trigonometric cosine of a value.	cos(5) returns 0.28366218546322625.
 - [ ] cosh(n)	Returns the hyperbolic cosine of a value.	cosh(5) returns 74.20994852478785.
@@ -102,7 +102,7 @@
 - [ ] exp(n)	Returns e raised to the power of n.	exp(5) returns 148.4131591025766.
 - [ ] fact(n)	Returns the factorial of a number, starting from 1.	fact(5) returns 120.
 - [ ] factn(n1, n2)	Returns the factorial of n1, starting from n2.	factn(10,3) returns 280.
-- [ ] floor(n)	Returns the floor of a number.	3.7.floor() returns 3 and -3.7.floor() returns -4.
+- [X] floor(n)	Returns the floor of a number.	3.7.floor() returns 3 and -3.7.floor() returns -4.
 - [ ] gcd(n1, n2)	Returns the greatest common denominator of two numbers.	gcd(95,135) returns 5.
 - [ ] lcm(n1, n2)	Returns the least common multiple of two numbers.	lcm(95,135) returns 2565.
 - [ ] ln(n)	Returns the natural logarithm of n.	ln(5) returns 1.6094379124341003.
