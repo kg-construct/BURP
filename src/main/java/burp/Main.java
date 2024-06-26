@@ -195,10 +195,7 @@ public class Main {
 
 			Resource l = statement.getSubject();
 			if (!l.hasProperty(RDF.first)) {
-				if (l.isURIResource())
-					throw new RuntimeException("We cannot have another IRI for rdf.List");
-				else
-					ResourceUtils.renameResource(l, RDF.nil.toString());
+				ResourceUtils.renameResource(l, RDF.nil.toString());
 			}
 		}
 	}
