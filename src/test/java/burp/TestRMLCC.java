@@ -27,6 +27,7 @@ public class TestRMLCC {
 	@Test public void RMLTCCC0002List() throws IOException { testForOK("RMLTC-CC-0002-List"); }
 	@Test public void RMLTCCC0003EB() throws IOException { testForOK("RMLTC-CC-0003-EB"); }
 	@Test public void RMLTCCC0003EL() throws IOException { testForOK("RMLTC-CC-0003-EL"); }
+	@Test public void RMLTCCC0003ELNamed() throws IOException { testForOK("RMLTC-CC-0003-EL-Named"); }
 	@Test public void RMLTCCC0003NEB() throws IOException { testForOK("RMLTC-CC-0003-NEB"); }
 	@Test public void RMLTCCC0003NEL() throws IOException { testForOK("RMLTC-CC-0003-NEL"); }
 	@Test public void RMLTCCC0003NELb() throws IOException { testForOK("RMLTC-CC-0003-NELb"); }
