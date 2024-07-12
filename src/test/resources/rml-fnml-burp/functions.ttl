@@ -171,7 +171,6 @@ grel:math_ceil
    a                   fno:Function ;
    fno:name            "ceil" ;
    dcterms:description "ceil" ;
-   fno:solves          grel:prob_ceil ;
    fno:expects         ( grel:param_dec_n ) ;
    fno:returns         ( grel:output_number ) .
 
@@ -179,6 +178,19 @@ grel:math_floor
    a                   fno:Function ;
    fno:name            "floor" ;
    dcterms:description "floor" ;
-   fno:solves          grel:prob_floor ;
    fno:expects         ( grel:param_dec_n ) ;
    fno:returns         ( grel:output_number ) .
+
+grel:string_contains
+    a                   fno:Function ;
+    fno:name            "contains" ;
+    dcterms:description "contains" ;
+    fno:expects         ( grel:valueParam grel:param_string_sub ) ;
+    fno:returns         ( grel:output_bool ) .
+
+grel:string_contains_pattern
+    a                   fno:Function ;
+    fno:name            "contains" ;
+    dcterms:description "contains" ;
+    fno:expects         ( grel:valueParam grel:param_regex ) ;
+    fno:returns         ( grel:output_bool ) .

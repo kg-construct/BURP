@@ -33,6 +33,10 @@ public class TestRMLFNMLGrellFunctions {
 	@Test public void RMLFNOTC0015() throws IOException { testForOK("math-abs"); }
 	@Test public void RMLFNOTC0016() throws IOException { testForOK("math-ceil"); }
 	@Test public void RMLFNOTC0017() throws IOException { testForOK("math-floor"); }
+	@Test public void RMLFNOTC0018() throws IOException { testForOK("string-contains-s-true"); }
+	@Test public void RMLFNOTC0019() throws IOException { testForOK("string-contains-s-false"); }
+	@Test public void RMLFNOTC0020() throws IOException { testForOK("string-contains-p-true"); }
+	@Test public void RMLFNOTC0021() throws IOException { testForOK("string-contains-p-false"); }
 
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));

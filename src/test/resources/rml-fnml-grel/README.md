@@ -7,12 +7,12 @@
 
 ## String functions
 - [X] length(s)
-- [X] toString(o, string format (optional))
+- [ ] toString(o, string format (optional))
 
 ## Testing string characteristics
 - [X] startsWith(s, sub)
 - [X] endsWith(s, sub)
-- [ ] contains(s, sub or p)
+- [X] contains(s, sub or p)
 
 ## Basic string modification
 - [X] toLowercase(s)
