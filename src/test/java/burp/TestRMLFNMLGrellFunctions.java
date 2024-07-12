@@ -37,6 +37,12 @@ public class TestRMLFNMLGrellFunctions {
 	@Test public void RMLFNOTC0019() throws IOException { testForOK("string-contains-s-false"); }
 	@Test public void RMLFNOTC0020() throws IOException { testForOK("string-contains-p-true"); }
 	@Test public void RMLFNOTC0021() throws IOException { testForOK("string-contains-p-false"); }
+	@Test public void RMLFNOTC0022() throws IOException { testForOK("string-substring-a"); }
+	@Test public void RMLFNOTC0023() throws IOException { testForOK("string-substring-b"); }
+	@Test public void RMLFNOTC0024() throws IOException { testForOK("string-substring-c"); }
+	@Test public void RMLFNOTC0025() throws IOException { testForOK("string-get-a"); }
+	@Test public void RMLFNOTC0026() throws IOException { testForOK("string-get-b"); }
+	@Test public void RMLFNOTC0027() throws IOException { testForOK("string-get-c"); }
 
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));

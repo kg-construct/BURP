@@ -194,3 +194,17 @@ grel:string_contains_pattern
     dcterms:description "contains" ;
     fno:expects         ( grel:valueParam grel:param_regex ) ;
     fno:returns         ( grel:output_bool ) .
+
+grel:string_substring
+    a                   fno:Function ;
+    fno:name            "substring" ;
+    dcterms:description "substring" ;
+    fno:expects         ( grel:valueParam grel:p_int_i_from grel:p_int_i_opt_to ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:string_get
+    a                   fno:Function ;
+    fno:name            "get" ;
+    dcterms:description "get" ;
+    fno:expects         ( grel:valueParam grel:p_int_i_from grel:p_int_i_opt_to ) ;
+    fno:returns         ( grel:stringOut ) .

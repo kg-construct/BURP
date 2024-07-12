@@ -25,14 +25,15 @@
 - [X] chomp(s, sep)
 
 ## Substring
-- [ ] substring(s, n from, n to (optional))
-- [ ] slice(s, n from, n to (optional))
-- [ ] get(s, n from, n to (optional))
+- [x] substring(s, n from, n to (optional))
+- [ ] slice(s, n from, n to (optional)) -- same as substring, leave out
+- [x] get(s, n from, n to (optional))
 
 ## Find and replace
 - [ ] indexOf(s, sub)
 - [ ] lastIndexOf(s, sub)
-- [x] replace(s, s or p find, s replace)
+- [x] replace(s, s find, s replace)
+- [ ] replace(s, p find, s replace)
 - [ ] replaceChars(s, s find, s replace)
 - [ ] replaceEach(s, a find, a replace)
 - [ ] find(s, sub or p)

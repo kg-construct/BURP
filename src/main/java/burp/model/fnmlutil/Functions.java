@@ -372,6 +372,42 @@ public class Functions {
 			}
 		});
 
+		// https://openrefine.org/docs/manual/grelfunctions#gets-n-from-n-to-optional
+		// Similar to substring() when used in relation to strings, but when using get in the case
+		// that the second argument n to is omitted a single character will be returned.
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_get", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				try {
+					List<Return> l = new ArrayList<Return>();
+					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+					Literal from = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_int_i_from");
+					Literal to = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_int_i_opt_to");
+
+					String out = null;
+					int f = from.getInt();
+					if(to != null) {
+						int t = to.getInt();
+						if(t > 0)
+							out = s.substring(f, t);
+						else
+							// A negative character index counts from the end of the string.
+							out = s.substring(f, s.length() + t);
+					}
+					else
+						out = s.substring(f, f + 1);
+
+					Return re = new Return(out);
+					re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+					l.add(re);
+
+					return l;
+				} catch (Exception e) {
+					throw new RuntimeException("Problem calling function string_substring.", e);
+				}
+			}
+		});
+
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_replace", new RMLFunction() {
 			@Override
 			public List<Return> apply(Map<String, Object> map) {
@@ -408,6 +444,39 @@ public class Functions {
 					return l;
 				} catch (Exception e) {
 					throw new RuntimeException("Problem calling function string_strip.", e);
+				}
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_substring", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				try {
+					List<Return> l = new ArrayList<Return>();
+					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
+					Literal from = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_int_i_from");
+					Literal to = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_int_i_opt_to");
+
+					String out = null;
+					int f = from.getInt();
+					if(to != null) {
+						int t = to.getInt();
+						if(t > 0)
+							out = s.substring(f, t);
+						else
+							// A negative character index counts from the end of the string.
+							out = s.substring(f, s.length() + t);
+					}
+					else
+						out = s.substring(f);
+
+					Return re = new Return(out);
+					re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+					l.add(re);
+
+					return l;
+				} catch (Exception e) {
+					throw new RuntimeException("Problem calling function string_substring.", e);
 				}
 			}
 		});
