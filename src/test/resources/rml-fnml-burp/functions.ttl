@@ -208,3 +208,24 @@ grel:string_get
     dcterms:description "get" ;
     fno:expects         ( grel:valueParam grel:p_int_i_from grel:p_int_i_opt_to ) ;
     fno:returns         ( grel:stringOut ) .
+
+grel:boolean_and
+    a                   fno:Function ;
+    fno:name            "and" ;
+    dcterms:description "and" ;
+    fno:expects         ( grel:param_bool_a grel:param_bool_b ) ;
+    fno:returns         ( grel:output_bool ) .
+
+grel:boolean_or
+    a                   fno:Function ;
+    fno:name            "or" ;
+    dcterms:description "or" ;
+    fno:expects         ( grel:param_bool_a grel:param_bool_b ) ;
+    fno:returns         ( grel:output_bool ) .
+
+grel:boolean_xor
+    a                   fno:Function ;
+    fno:name            "xor" ;
+    dcterms:description "xor" ;
+    fno:expects         ( grel:param_bool_a grel:param_bool_b ) ;
+    fno:returns         ( grel:output_bool ) .

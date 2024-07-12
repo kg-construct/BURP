@@ -1,9 +1,9 @@
 # GREL functions
 ## Boolean functions
-- [ ] and(b1, b2, ...)
-- [ ] or(b1, b2, ...)
-- [ ] not(b)
-- [ ] xor(b1, b2, ...)
+- [x] and(bool a, bool b)
+- [x] or(bool a, bool b)
+- [x] not(bool a)
+- [x] xor(bool a, bool b)
 
 ## String functions
 - [X] length(s)

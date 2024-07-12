@@ -113,6 +113,85 @@ public class Functions {
 		// GREL functions
 		// https://openrefine.org/docs/manual/grelfunctions
 
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#boolean_and", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				try {
+					List<Return> l = new ArrayList<Return>();
+					Literal a = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_a");
+					Literal b = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_b");
+
+					Boolean out = a.getBoolean() && b.getBoolean();
+					Return re = new Return(out);
+					re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+					l.add(re);
+
+					return l;
+				} catch (Exception e) {
+					throw new RuntimeException("Problem calling function boolean_and.", e);
+				}
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#boolean_not", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				try {
+					List<Return> l = new ArrayList<Return>();
+					Literal a = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool");
+
+					Boolean out = !a.getBoolean();
+					Return re = new Return(out);
+					re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+					l.add(re);
+
+					return l;
+				} catch (Exception e) {
+					throw new RuntimeException("Problem calling function boolean_not.", e);
+				}
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#boolean_or", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				try {
+					List<Return> l = new ArrayList<Return>();
+					Literal a = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_a");
+					Literal b = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_b");
+
+					Boolean out = a.getBoolean() || b.getBoolean();
+					Return re = new Return(out);
+					re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+					l.add(re);
+
+					return l;
+				} catch (Exception e) {
+					throw new RuntimeException("Problem calling function boolean_or.", e);
+				}
+			}
+		});
+
+		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#boolean_xor", new RMLFunction() {
+			@Override
+			public List<Return> apply(Map<String, Object> map) {
+				try {
+					List<Return> l = new ArrayList<Return>();
+					Literal a = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_a");
+					Literal b = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_b");
+
+					Boolean out = a.getBoolean() ^ b.getBoolean();
+					Return re = new Return(out);
+					re.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out);
+					l.add(re);
+
+					return l;
+				} catch (Exception e) {
+					throw new RuntimeException("Problem calling function boolean_xor.", e);
+				}
+			}
+		});
+
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_chomp", new RMLFunction() {
 			@Override
 			public List<Return> apply(Map<String, Object> map) {
@@ -403,7 +482,7 @@ public class Functions {
 
 					return l;
 				} catch (Exception e) {
-					throw new RuntimeException("Problem calling function string_substring.", e);
+					throw new RuntimeException("Problem calling function string_get.", e);
 				}
 			}
 		});

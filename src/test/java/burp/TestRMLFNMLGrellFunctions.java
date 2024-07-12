@@ -43,6 +43,14 @@ public class TestRMLFNMLGrellFunctions {
 	@Test public void RMLFNOTC0025() throws IOException { testForOK("string-get-a"); }
 	@Test public void RMLFNOTC0026() throws IOException { testForOK("string-get-b"); }
 	@Test public void RMLFNOTC0027() throws IOException { testForOK("string-get-c"); }
+	@Test public void RMLFNOTC0028() throws IOException { testForOK("boolean-and-true"); }
+	@Test public void RMLFNOTC0029() throws IOException { testForOK("boolean-and-false"); }
+	@Test public void RMLFNOTC0030() throws IOException { testForOK("boolean-or-true"); }
+	@Test public void RMLFNOTC0031() throws IOException { testForOK("boolean-or-false"); }
+	@Test public void RMLFNOTC0032() throws IOException { testForOK("boolean-xor-false"); }
+	@Test public void RMLFNOTC0033() throws IOException { testForOK("boolean-xor-false"); }
+	@Test public void RMLFNOTC0034() throws IOException { testForOK("boolean-not-false"); }
+	@Test public void RMLFNOTC0035() throws IOException { testForOK("boolean-not-false"); }
 
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));
