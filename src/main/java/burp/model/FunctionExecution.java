@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.RDFNode;
 
 import burp.model.fnmlutil.Functions;
@@ -39,7 +41,7 @@ public class FunctionExecution extends Expression {
 			if(inputs.size() != 1)
 				throw new RuntimeException("Input value map should generate exactly one value.");
 			
-			Object in = inputs.get(0).isResource() ? inputs.get(0) : inputs.get(0).asLiteral().getValue();
+			Object in = inputs.get(0).isResource() ? inputs.get(0) : inputs.get(0).asLiteral();
 			
 			map.put(parameter, in);
 		}

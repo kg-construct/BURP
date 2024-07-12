@@ -6,6 +6,14 @@
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
 
+grel:toLowerCase
+    a                   fno:Function ;
+    fno:name            "to Lowercase" ;
+    rdfs:label          "to Lowercase" ;
+    dcterms:description "Returns the input with all letters in lower case." ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .
+
 grel:toUpperCase
     a                   fno:Function ;
     fno:name            "to Uppercase" ;
@@ -13,6 +21,22 @@ grel:toUpperCase
     dcterms:description "Returns the input with all letters in upper case." ;
     fno:expects         ( grel:valueParam ) ;
     fno:returns         ( grel:stringOut ) .
+
+grel:toTitleCase
+    a                   fno:Function ;
+    fno:name            "to Titlecase" ;
+    rdfs:label          "to Titlecase" ;
+    dcterms:description "Returns string s converted into titlecase: a capital letter starting each word, and the rest of the letters lowercase." ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:length
+    a                   fno:Function ;
+    fno:name            "length" ;
+    rdfs:label          "length" ;
+    dcterms:description "Returns the length of string s as a number." ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:output_number ) .
 
 grel:valueParam
     a             fno:Parameter ;
@@ -35,6 +59,20 @@ grel:string_replace
    dcterms:description "replace" ;
    fno:expects         ( grel:valueParam grel:param_find grel:param_replace ) ;
    fno:returns         ( grel:stringOut ) .
+
+grel:startsWith
+   a                   fno:Function ;
+   fno:name            "starts with" ;
+   dcterms:description "starts with" ;
+   fno:expects         ( grel:valueParam grel:param_string_sub ) ;
+   fno:returns         ( grel:output_bool ) .
+
+grel:endsWith
+   a                   fno:Function ;
+   fno:name            "ends with" ;
+   dcterms:description "ends with" ;
+   fno:expects         ( grel:valueParam grel:param_string_sub ) ;
+   fno:returns         ( grel:output_bool ) .
 
 grel:param_find
     a             fno:Parameter ;
@@ -100,3 +138,94 @@ fns:domainOutput
     rdfs:label    "domain output string" ;
     fno:predicate fns:hasDomainOutput ;
     fno:type      xsd:string .
+
+grel:string_trim
+    a                   fno:Function ;
+    fno:name            "trim" ;
+    dcterms:description "trim" ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:string_strip
+    a                   fno:Function ;
+    fno:name            "strip" ;
+    dcterms:description "strip" ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:string_chomp
+    a                   fno:Function ;
+    fno:name            "chomp" ;
+    dcterms:description "chomp" ;
+    fno:expects         ( grel:valueParam grel:param_string_sep ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:math_abs
+    a                   fno:Function ;
+    fno:name            "abs" ;
+    dcterms:description "abs" ;
+    fno:expects         ( grel:param_dec_n  );
+    fno:returns         ( grel:output_decimal ) .
+
+grel:math_ceil
+   a                   fno:Function ;
+   fno:name            "ceil" ;
+   dcterms:description "ceil" ;
+   fno:expects         ( grel:param_dec_n ) ;
+   fno:returns         ( grel:output_number ) .
+
+grel:math_floor
+   a                   fno:Function ;
+   fno:name            "floor" ;
+   dcterms:description "floor" ;
+   fno:expects         ( grel:param_dec_n ) ;
+   fno:returns         ( grel:output_number ) .
+
+grel:string_contains
+    a                   fno:Function ;
+    fno:name            "contains" ;
+    dcterms:description "contains" ;
+    fno:expects         ( grel:valueParam grel:param_string_sub ) ;
+    fno:returns         ( grel:output_bool ) .
+
+grel:string_contains_pattern
+    a                   fno:Function ;
+    fno:name            "contains" ;
+    dcterms:description "contains" ;
+    fno:expects         ( grel:valueParam grel:param_regex ) ;
+    fno:returns         ( grel:output_bool ) .
+
+grel:string_substring
+    a                   fno:Function ;
+    fno:name            "substring" ;
+    dcterms:description "substring" ;
+    fno:expects         ( grel:valueParam grel:p_int_i_from grel:p_int_i_opt_to ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:string_get
+    a                   fno:Function ;
+    fno:name            "get" ;
+    dcterms:description "get" ;
+    fno:expects         ( grel:valueParam grel:p_int_i_from grel:p_int_i_opt_to ) ;
+    fno:returns         ( grel:stringOut ) .
+
+grel:boolean_and
+    a                   fno:Function ;
+    fno:name            "and" ;
+    dcterms:description "and" ;
+    fno:expects         ( grel:param_bool_a grel:param_bool_b ) ;
+    fno:returns         ( grel:output_bool ) .
+
+grel:boolean_or
+    a                   fno:Function ;
+    fno:name            "or" ;
+    dcterms:description "or" ;
+    fno:expects         ( grel:param_bool_a grel:param_bool_b ) ;
+    fno:returns         ( grel:output_bool ) .
+
+grel:boolean_xor
+    a                   fno:Function ;
+    fno:name            "xor" ;
+    dcterms:description "xor" ;
+    fno:expects         ( grel:param_bool_a grel:param_bool_b ) ;
+    fno:returns         ( grel:output_bool ) .
