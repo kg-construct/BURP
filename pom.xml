@@ -13,6 +13,25 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>gitlab-maven</id>
+			<url>https://gitlab.com/api/v4/projects/39363041/packages/maven</url>
+		</repository>
+	</repositories>
+
+	<distributionManagement>
+		<repository>
+			<id>gitlab-maven</id>
+			<url>https://gitlab.com/api/v4/projects/39363041/packages/maven</url>
+		</repository>
+
+		<snapshotRepository>
+			<id>gitlab-maven</id>
+			<url>https://gitlab.com/api/v4/projects/39363041/packages/maven</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<resources>
@@ -193,7 +212,7 @@
 			<version>4.10.0</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.tukaani</groupId>
 			<artifactId>xz</artifactId>
@@ -203,6 +222,11 @@
 			<groupId>com.univocity</groupId>
 			<artifactId>univocity-parsers</artifactId>
 			<version>2.9.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.tailf.jnc</groupId>
+			<artifactId>JNC</artifactId>
+			<version>1.1.0</version>
 		</dependency>
 	</dependencies>
 </project>
