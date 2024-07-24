@@ -20,6 +20,7 @@ import burp.vocabularies.CSVW;
 import burp.vocabularies.D2RQ;
 import burp.vocabularies.RML;
 import burp.vocabularies.SD;
+import burp.vocabularies.YANG;
 
 public class LogicalSourceFactory {
 
@@ -44,30 +45,30 @@ public class LogicalSourceFactory {
 					else
 						throw new RuntimeException("Provided Character Set " + r + " not supported.");
 				}
-				
+
 				if (r.hasProperty(CSVW.delimiter)) {
 					// TODO: According to CSVW, the delimiter is a string. But all examples are chars.
 					char e = r.getProperty(CSVW.delimiter).getChar();
-					source.delimiter = e; 
+					source.delimiter = e;
 				}
-				
+
 				if (r.hasProperty(CSVW.header)) {
 					Boolean e = r.getProperty(CSVW.header).getBoolean();
-					source.firstLineIsHeader = e; 
-				}	
-				
+					source.firstLineIsHeader = e;
+				}
+
 				if (r.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.NULL)) {
 					r.listProperties(RML.NULL).forEach(t -> {
 						if(t.getObject().isResource()) {
-							// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR 
+							// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR
 							// SPARQL SOURCES
 							source.nulls.add(t.getObject().asResource());
 						} else {
 							source.nulls.add(t.getObject().asLiteral().getValue());
 						}
 					});
-				}	
-				
+				}
+
 			} else {
 				source.encoding = StandardCharsets.UTF_8;
 			}
@@ -83,7 +84,7 @@ public class LogicalSourceFactory {
 
 		source.encoding = getEncoding(ls);
 		source.nulls.addAll(getNullValues(ls));
-		
+
 		return source;
 	}
 
@@ -131,7 +132,7 @@ public class LogicalSourceFactory {
 		// which is internally stored as \\"Name\\". We thus need to remove
 		// occurrences of \\
 		source.query = query.replace("\\", "");
-		
+
 		source.nulls.addAll(getNullValues(ls));
 
 		return source;
@@ -157,7 +158,7 @@ public class LogicalSourceFactory {
 		// which is internally stored as \\"Name\\". We thus need to remove
 		// occurrences of \\
 		source.query = query.replace("\\", "");
-		
+
 		source.nulls.addAll(getNullValues(ls));
 
 		return source;
@@ -167,7 +168,7 @@ public class LogicalSourceFactory {
 		String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
 
 		Resource s = ls.getPropertyResourceValue(RML.source);
-		
+
 		if (s.hasProperty(RDF.type, VOID.Dataset)) {
 			SPARQLFileSource source = new SPARQLFileSource(isTSV);
 			String file = s.getPropertyResourceValue(VOID.dataDump).getURI();
@@ -177,11 +178,11 @@ public class LogicalSourceFactory {
 			source.iterator = iterator;
 			source.nulls.addAll(getNullValues(ls));
 			return source;
-		} else if(s.hasProperty(RDF.type, SD.Service)) { 
+		} else if(s.hasProperty(RDF.type, SD.Service)) {
 			SPARQLServiceSource source = new SPARQLServiceSource(isTSV);
 			source.endpoint = s.getPropertyResourceValue(SD.endpoint).getURI();
 			source.iterator = iterator;
-			source.nulls.addAll(getNullValues(ls));			
+			source.nulls.addAll(getNullValues(ls));
 			return source;
 		} else {
 			// WE HAVE A SIMPLE SPARQL SOURCE
@@ -199,6 +200,37 @@ public class LogicalSourceFactory {
 	// TODO: Do we really need RML.SPARQL_Results_TSV?
 	// TODO: Do we really need RML.SPARQL_Results_JSON?
 	// TODO: Do we really need RML.SPARQL_Results_XML?
+
+	public static LogicalSource createYANGSource(Resource ls, String mpath) {
+
+		// Instatiate YANGSource as logical source
+		YANGSource source = new YANGSource();
+
+		// Get RML source
+		Resource s = ls.getPropertyResourceValue(RML.source);
+
+		// Get YANG server connection details
+		Resource yangServer = s.getPropertyResourceValue(YANG.sourceServer);
+		String endpoint = yangServer.getProperty(YANG.endpoint).getLiteral().getString();
+		String username = yangServer.getProperty(YANG.username).getLiteral().getString();
+		String password = yangServer.getProperty(YANG.password).getLiteral().getString();
+
+		// Set connection detail in YANGSource
+		source.endpoint = endpoint;
+		source.username = username;
+		source.password = password;
+
+		// Get source datastore for the selected YANG server
+		Resource sourceDatastore = s.getPropertyResourceValue(YANG.sourceDatastore);
+
+		// Identify type of YANG operation
+		if (s.hasProperty(RDF.type, YANG.Query)) {
+			throw new RuntimeException("YANG queries are not supported yet.");
+		} else {
+			// TODO: Subscription operations
+			throw new RuntimeException("YANG subscriptions are not supported yet.");
+		}
+	}
 
 	// *************************************************************************
 	// *
@@ -281,13 +313,13 @@ public class LogicalSourceFactory {
 			throw new RuntimeException(file + " is not a file URL.");
 		}
 	}
-	
+
 	private static List<Object> getNullValues(Resource ls) {
 		Resource r = ls.getPropertyResourceValue(RML.source);
 		List<Object> os = new ArrayList<>();
 		r.listProperties(RML.NULL).forEach(t -> {
 			if(t.getObject().isResource()) {
-				// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR 
+				// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR
 				// SPARQL SOURCES
 				os.add(t.getObject().asResource());
 			} else {
