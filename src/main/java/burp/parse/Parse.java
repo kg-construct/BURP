@@ -20,6 +20,7 @@ import org.apache.jena.shacl.ValidationReport;
 import org.apache.jena.shacl.lib.ShLib;
 import org.apache.jena.util.FileUtils;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.RDF;
 
 import burp.ls.LogicalSourceFactory;
 import burp.model.ConcreteExpressionMap;
@@ -160,6 +161,9 @@ public class Parse {
 		if (RML.XPath.equals(referenceFormulation))
 			return LogicalSourceFactory.createXMLSource(ls, mpath);
 
+		if (referenceFormulation.hasProperty(RDF.type, RML.XPathReferenceFormulation))
+			return LogicalSourceFactory.createXMLSource(ls, mpath);
+
 		if (RML.SQL2008Table.equals(referenceFormulation))
 			return LogicalSourceFactory.createSQL2008TableSource(ls, mpath);
 
@@ -177,9 +181,6 @@ public class Parse {
 
 		if(RML.SPARQL_Results_JSON.equals(referenceFormulation))
 			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
-
-		if(RML.YANG_XPath.equals(referenceFormulation))
-			return LogicalSourceFactory.createYANGSource(ls, mpath);
 
 		throw new Exception("Reference formulation not (yet) supported.");
 	}

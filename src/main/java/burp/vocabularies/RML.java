@@ -18,11 +18,12 @@ public final class RML {
 	public static final Resource CSV = ResourceFactory.createResource(NS + "CSV");
 	public static final Resource JSONPath = ResourceFactory.createResource(NS + "JSONPath");
 	public static final Resource MappingDirectory = ResourceFactory.createResource(NS + "MappingDirectory");
+	public static final Resource Namespace = ResourceFactory.createResource(NS + "Namespace");
 	public static final Resource RelativePathSource = ResourceFactory.createResource(NS + "RelativePathSource");
 	public static final Resource SQL2008Table = ResourceFactory.createResource(NS + "SQL2008Table");
 	public static final Resource SQL2008Query = ResourceFactory.createResource(NS + "SQL2008Query");
 	public static final Resource XPath = ResourceFactory.createResource(NS + "XPath");
-	public static final Resource YANG_XPath = ResourceFactory.createResource(NS + "YANG_XPath");
+	public static final Resource XPathReferenceFormulation = ResourceFactory.createResource(NS + "XPathReferenceFormulation");
 
 	public static final Resource append = ResourceFactory.createResource(NS + "append");
 	public static final Resource cartesianProduct = ResourceFactory.createResource(NS + "cartesianProduct");
@@ -62,6 +63,9 @@ public final class RML {
 	public static final Property joinCondition  = ResourceFactory.createProperty(NS + "joinCondition");
 	public static final Property languageMap  = ResourceFactory.createProperty(NS + "languageMap");
 	public static final Property logicalSource = ResourceFactory.createProperty(NS + "logicalSource");
+	public static final Property namespace  = ResourceFactory.createProperty(NS + "namespace");
+	public static final Property namespacePrefix  = ResourceFactory.createProperty(NS + "namespacePrefix");
+	public static final Property namespaceURL  = ResourceFactory.createProperty(NS + "namespaceURL");
 	public static final Property NULL = ResourceFactory.createProperty(NS + "null");
 	public static final Property objectMap  = ResourceFactory.createProperty(NS + "objectMap");
 	public static final Property parameterMap  = ResourceFactory.createProperty(NS + "parameterMap");

@@ -30,5 +30,8 @@ public final class YANG {
     public static final Property sourceServer = ResourceFactory.createProperty(NS + "sourceServer");
     public static final Property sourceDatastore = ResourceFactory.createProperty(NS + "sourceDatastore");
 
-
+    public static final Resource Filter = ResourceFactory.createResource(NS + "Filter");
+    public static final Resource SubtreeFilter = ResourceFactory.createResource(NS + "SubtreeFilter");
+    public static final Property filter = ResourceFactory.createProperty(NS + "filter");
+    public static final Property subtreeValue = ResourceFactory.createProperty(NS + "subtreeValue");
 }

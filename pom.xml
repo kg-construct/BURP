@@ -15,22 +15,13 @@
 
 	<repositories>
 		<repository>
-			<id>gitlab-maven</id>
-			<url>https://gitlab.com/api/v4/projects/39363041/packages/maven</url>
-		</repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/candil-data-fabric/jnc</url>
+			<snapshots>
+			  <enabled>true</enabled>
+			</snapshots>
+		  </repository>
 	</repositories>
-
-	<distributionManagement>
-		<repository>
-			<id>gitlab-maven</id>
-			<url>https://gitlab.com/api/v4/projects/39363041/packages/maven</url>
-		</repository>
-
-		<snapshotRepository>
-			<id>gitlab-maven</id>
-			<url>https://gitlab.com/api/v4/projects/39363041/packages/maven</url>
-		</snapshotRepository>
-	</distributionManagement>
 
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -225,8 +216,8 @@
 		</dependency>
 		<dependency>
 			<groupId>com.tailf.jnc</groupId>
-			<artifactId>JNC</artifactId>
-			<version>1.1.0</version>
-		</dependency>
+			<artifactId>jnc</artifactId>
+			<version>1.2.0-xpath-namespace</version>
+		  </dependency>
 	</dependencies>
 </project>

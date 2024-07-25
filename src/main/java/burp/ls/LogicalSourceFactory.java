@@ -6,10 +6,12 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.VOID;
@@ -101,15 +103,47 @@ public class LogicalSourceFactory {
 	}
 
 	public static LogicalSource createXMLSource(Resource ls, String mpath) {
-		String file = getFile(ls);
-		String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
-		XMLSource source = new XMLSource();
-		source.file = getAbsoluteOrRelative(file, mpath);
-		source.iterator = iterator;
-		source.encoding = getEncoding(ls);
-		source.compression = getCompression(ls);
-		source.nulls.addAll(getNullValues(ls));
-		return source;
+		Resource s = ls.getPropertyResourceValue(RML.source);
+		if (s.hasProperty(RDF.type, YANG.Query)) {
+			// Instatiate YANGSource as logical source
+			YANGSource source = new YANGSource();
+			// Get YANG server connection details
+			Resource yangServer = s.getPropertyResourceValue(YANG.sourceServer);
+			source.endpoint = yangServer.getProperty(YANG.endpoint).getLiteral().getString();
+			source.username = yangServer.getProperty(YANG.username).getLiteral().getString();
+			source.password = yangServer.getProperty(YANG.password).getLiteral().getString();
+			// Get source datastore for the selected YANG server
+			source.datastore = s.getPropertyResourceValue(YANG.sourceDatastore);
+			// Set XPath iterator
+			source.iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+			// Set map of prefixes for XPath iteration
+			source.prefixMap = getPrefixMap(ls);
+			// Set NETCONF subtree filter is specified in the query
+			Resource filter = s.getPropertyResourceValue(YANG.filter);
+			if (filter != null) {
+				if (filter.hasProperty(RDF.type, YANG.SubtreeFilter)) {
+					source.subtreeValue = filter.getProperty(
+						YANG.subtreeValue).getLiteral().getString();
+				}
+			}
+			return source;
+		} else {
+			// Then it's an XML file
+			String file = getFile(ls);
+			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+			XMLSource source = new XMLSource();
+			source.file = getAbsoluteOrRelative(file, mpath);
+			source.iterator = iterator;
+			source.encoding = getEncoding(ls);
+			source.compression = getCompression(ls);
+			source.nulls.addAll(getNullValues(ls));
+			Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
+			if (referenceFormulation.hasProperty(RDF.type, RML.XPathReferenceFormulation)) {
+				source.prefixMap = getPrefixMap(ls);
+			}
+			return source;
+		}
+
 	}
 
 	public static LogicalSource createSQL2008TableSource(Resource ls, String mpath) {
@@ -200,37 +234,6 @@ public class LogicalSourceFactory {
 	// TODO: Do we really need RML.SPARQL_Results_TSV?
 	// TODO: Do we really need RML.SPARQL_Results_JSON?
 	// TODO: Do we really need RML.SPARQL_Results_XML?
-
-	public static LogicalSource createYANGSource(Resource ls, String mpath) {
-
-		// Instatiate YANGSource as logical source
-		YANGSource source = new YANGSource();
-
-		// Get RML source
-		Resource s = ls.getPropertyResourceValue(RML.source);
-
-		// Get YANG server connection details
-		Resource yangServer = s.getPropertyResourceValue(YANG.sourceServer);
-		String endpoint = yangServer.getProperty(YANG.endpoint).getLiteral().getString();
-		String username = yangServer.getProperty(YANG.username).getLiteral().getString();
-		String password = yangServer.getProperty(YANG.password).getLiteral().getString();
-
-		// Set connection detail in YANGSource
-		source.endpoint = endpoint;
-		source.username = username;
-		source.password = password;
-
-		// Get source datastore for the selected YANG server
-		Resource sourceDatastore = s.getPropertyResourceValue(YANG.sourceDatastore);
-
-		// Identify type of YANG operation
-		if (s.hasProperty(RDF.type, YANG.Query)) {
-			throw new RuntimeException("YANG queries are not supported yet.");
-		} else {
-			// TODO: Subscription operations
-			throw new RuntimeException("YANG subscriptions are not supported yet.");
-		}
-	}
 
 	// *************************************************************************
 	// *
@@ -327,6 +330,24 @@ public class LogicalSourceFactory {
 			}
 		});
 		return os;
+	}
+
+	// Generates prefix map from rml:namespace definitions
+	private static HashMap<String, String> getPrefixMap(Resource ls) {
+		// Get XPathRerenceFormulation
+		Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
+		// Set map of namespaces for XPath iteration
+		StmtIterator properties = referenceFormulation.listProperties(RML.namespace);
+		HashMap<String, String> prefixMap = new HashMap<String, String>();
+		while (properties.hasNext()) {
+			Statement statement = properties.next();
+			Resource namespace = statement.getResource();
+			prefixMap.put(
+				namespace.getProperty(RML.namespacePrefix).getLiteral().getString(),
+				namespace.getProperty(RML.namespaceURL).getLiteral().getString()
+			);
+		}
+		return prefixMap;
 	}
 
 }
