@@ -15,7 +15,8 @@ import org.junit.jupiter.api.Test;
 public class TestRMLIOSource {
 	private static String base = "./src/test/resources/rml-io/";
 
-	@Test public void RMLTTC0000() throws IOException { testForOK("RMLTTC0000"); }
+	// This test fails because the remote file has been moved.
+	// @Test public void RMLTTC0000() throws IOException { testForOK("RMLTTC0000"); }
 	@Test public void RMLSTC0001a() throws IOException { testForOK("RMLSTC0001a"); }
 	@Test public void RMLSTC0001b() throws IOException { testForOK("RMLSTC0001b"); }
 	@Test public void RMLSTC0002a() throws IOException { testForOK("RMLSTC0002a"); }
