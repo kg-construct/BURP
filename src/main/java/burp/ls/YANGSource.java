@@ -61,11 +61,13 @@ class YANGSource extends LogicalSource {
 
 	@Override
 	public Iterator<Iteration> iterator() {
-
+		//Element.setDebugLevel(2); # Helpful for debugging
 		SSHConnection c = new SSHConnection();
 		String contents = null;
 		try {
-			c.setHostVerification(null).connect(endpoint.split(":")[0]);
+			String host = endpoint.split(":")[0];
+			int port = Integer.parseInt(endpoint.split(":")[1]);
+			c.setHostVerification(null).connect(host, port);
 			c.authenticateWithPassword(username, password);
 			SSHSession ssh = new SSHSession(c);
 			NetconfSession nc = new NetconfSession(ssh);
