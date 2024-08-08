@@ -13,6 +13,16 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/candil-data-fabric/jnc</url>
+			<snapshots>
+			  <enabled>true</enabled>
+			</snapshots>
+		  </repository>
+	</repositories>
+
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<resources>
@@ -193,7 +203,7 @@
 			<version>4.10.0</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.tukaani</groupId>
 			<artifactId>xz</artifactId>
@@ -204,5 +214,10 @@
 			<artifactId>univocity-parsers</artifactId>
 			<version>2.9.1</version>
 		</dependency>
+		<dependency>
+			<groupId>com.tailf.jnc</groupId>
+			<artifactId>jnc</artifactId>
+			<version>1.2.0-xpath-namespace</version>
+		  </dependency>
 	</dependencies>
 </project>

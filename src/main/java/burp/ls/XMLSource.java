@@ -3,6 +3,7 @@ package burp.ls;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -19,8 +20,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import burp.model.Iteration;
+import burp.util.SimpleNamespaceContext;
 
 class XMLSource extends FileBasedLogicalSource {
+
+	public HashMap<String, String> prefixMap;
 
 	@Override
 	public Iterator<Iteration> iterator() {
@@ -31,16 +35,24 @@ class XMLSource extends FileBasedLogicalSource {
 				String contents = Files.readString(Paths.get(getDecompressedFile()), encoding);
 
 				DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+				if (prefixMap != null) {
+					// Required for prefix evaluation of XPath expression
+					builderFactory.setNamespaceAware(true);
+				}
 				DocumentBuilder builder = builderFactory.newDocumentBuilder();
-
 				Document xmlDocument = builder.parse(IOUtils.toInputStream(contents, encoding));
 
 				XPath xPath = XPathFactory.newInstance().newXPath();
+				if (prefixMap != null) {
+					SimpleNamespaceContext namespaces = new SimpleNamespaceContext(prefixMap);
+					xPath.setNamespaceContext(namespaces);
+				}
+
 				NodeList nodes = (NodeList) xPath.compile(iterator).evaluate(xmlDocument, XPathConstants.NODESET);
 
 				for (int i = 0; i < nodes.getLength(); i++) {
 					Node node = nodes.item(i);
-					iterations.add(new XMLIteration(node, nulls));
+					iterations.add(new XMLIteration(node, nulls, prefixMap));
 				}
 			}
 			return iterations.iterator();
@@ -54,11 +66,13 @@ class XMLSource extends FileBasedLogicalSource {
 class XMLIteration extends Iteration {
 
 	private Node node;
+	private HashMap<String, String> prefixMap;
 
-	protected XMLIteration(Node node, Set<Object> nulls) {
+	protected XMLIteration(Node node, Set<Object> nulls, HashMap<String, String> prefixMap) {
 		super(nulls);
-		
+
 		this.node = node;
+		this.prefixMap = prefixMap;
 	}
 
 	@Override
@@ -69,13 +83,17 @@ class XMLIteration extends Iteration {
 		List<Object> l2 = new ArrayList<Object>();
 		try {
 			XPath xPath = XPathFactory.newInstance().newXPath();
+			if (prefixMap != null) {
+				SimpleNamespaceContext namespaces = new SimpleNamespaceContext(prefixMap);
+				xPath.setNamespaceContext(namespaces);
+			}
 			NodeList nodes = (NodeList) xPath.compile(reference).evaluate(node, XPathConstants.NODESET);
 			for(int i = 0; i < nodes.getLength(); i++) {
 				Node node = nodes.item(0);
 				if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
 					l2.add(node.getTextContent());
 			}
-			
+
 		} catch (Exception e) {
 			// No data, silently ignore
 			e.printStackTrace();
@@ -88,18 +106,22 @@ class XMLIteration extends Iteration {
 		List<String> l2 = new ArrayList<String>();
 		try {
 			XPath xPath = XPathFactory.newInstance().newXPath();
+			if (prefixMap != null) {
+				SimpleNamespaceContext namespaces = new SimpleNamespaceContext(prefixMap);
+				xPath.setNamespaceContext(namespaces);
+			}
 			NodeList nodes = (NodeList) xPath.compile(reference).evaluate(node, XPathConstants.NODESET);
 			for(int i = 0; i < nodes.getLength(); i++) {
 				Node node = nodes.item(0);
 				if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
 					l2.add(node.getTextContent());
 			}
-			
+
 		} catch (Exception e) {
 			// No data, silently ignore
 			e.printStackTrace();
 		}
 		return l2;
 	}
-	
+
 }
