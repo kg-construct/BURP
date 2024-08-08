@@ -7,7 +7,7 @@
 @base <https://interfaces.org/> .
 
 # Basic details for connecting to NETCONF server
-<server-1> a ys:NetconfServer, rml:Source ;
+<netconf-server-1> a ys:NetconfServer ;
     ys:endpoint "192.168.1.10:830" ;
     ys:username "admin" ;
     ys:password "admin" ;
@@ -16,26 +16,26 @@
 
 # In this example the NETCONF server is non-NMDA compatible.
 # Thus, only operational and running datastores are available.
-<datastores/server-1/operational> a ys:OperationalDatastore .
-<datastores/server-1/running> a ys:RunningDatastore .
+<datastores/netconf-server-1/operational> a ys:OperationalDatastore .
+<datastores/netconf-server-1/running> a ys:RunningDatastore .
 
-<server-1> ys:datastore <datastores/server-1/operational> .
-<server-2> ys:datastore <datastores/server-1/running> .
+<netconf-server-1> ys:datastore <datastores/netconf-server-1/operational> .
+<netconf-server-1> ys:datastore <datastores/netconf-server-1/running> .
 
 # Note that ys:Query is processed as part of the RML mapping
 # rml:iterator replaces the ys:Filter in the YANG query
 <#TriplesMap> a rml:TriplesMap;
   rml:logicalSource [ a rml:LogicalSource;
-    rml:source [ a ys:Query ;
-      ys:sourceServer <server-1> ;
-      ys:sourceDatastore <datastores/server-1/operational> ;
+    rml:source [ a ys:Query, rml:Source ;
+      ys:sourceServer <netconf-server-1> ;
+      ys:sourceDatastore <datastores/netconf-server-1/operational> ;
       ys:filter [ a ys:SubtreeFilter ;
-        ys:subtreeValue """
+        ys:subtreeValue '''
         <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
           <interface>
           </interface>
         </interfaces>
-        """;
+        ''';
       ];
     ];
     rml:referenceFormulation [ a rml:XPathReferenceFormulation;

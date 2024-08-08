@@ -2,12 +2,13 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix rml: <http://w3id.org/rml/> .
 @prefix qudt: <http://qudt.org/2.1/schema/qudt#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix ys: <https://w3id.org/yang/server#> .
 @prefix yl: <https://w3id.org/yang/library#> .
 @base <https://example.org/> .
 
 # Basic details for connecting to NETCONF server
-<server-1> a ys:NetconfServer, rml:Source ;
+<server-1> a ys:NetconfServer ;
     ys:endpoint "192.168.1.10:830" ;
     ys:username "admin" ;
     ys:password "admin" ;
@@ -16,19 +17,19 @@
 
 # In this example the NETCONF server is non-NMDA compatible.
 # Thus, only operational and running datastores are available.
-<datastores/server-1/operational> a ys:OperationalDatastore .
-<datastores/server-1/running> a ys:RunningDatastore .
+<datastores/netconf-server-1/operational> a ys:OperationalDatastore .
+<datastores/netconf-server-1/running> a ys:RunningDatastore .
 
-<server-1> ys:datastore <datastores/server-1/operational> .
-<server-2> ys:datastore <datastores/server-1/running> .
+<netconf-server-1> ys:datastore <datastores/netconf-server-1/operational> .
+<netconf-server-1> ys:datastore <datastores/netconf-server-1/running> .
 
 # Note that ys:Query is processed as part of the RML mapping
 # rml:iterator replaces the ys:Filter in the YANG query
 <#TriplesMap> a rml:TriplesMap;
   rml:logicalSource [ a rml:LogicalSource;
-    rml:source [ a ys:Query ;
-      ys:sourceServer <server-1> ;
-      ys:sourceDatastore <datastores/server-1/operational> ;
+    rml:source [ a ys:Query, rml:Source ;
+      ys:sourceServer <netconf-server-1> ;
+      ys:sourceDatastore <datastores/netconf-server-1/operational> ;
     ];
     rml:referenceFormulation [ a rml:XPathReferenceFormulation;
       rml:namespace [ a rml:Namespace;
@@ -48,14 +49,25 @@
     ];
     rml:objectMap [ a rml:ObjectMap;
       rml:reference "yanglib:name/text()";
+      rml:datatype xsd:string;
     ];
   ];
   rml:predicateObjectMap [ a rml:PredicateObjectMap;
     rml:predicateMap [ a rml:PredicateMap;
-      rml:constant yl:revision;
+      rml:constant yl:revisionDate;
     ];
     rml:objectMap [ a rml:ObjectMap;
       rml:reference "yanglib:revision/text()";
+      rml:datatype xsd:date;
+    ];
+  ];
+  rml:predicateObjectMap [ a rml:PredicateObjectMap;
+    rml:predicateMap [ a rml:PredicateMap;
+      rml:constant yl:namespace;
+    ];
+    rml:objectMap [ a rml:ObjectMap;
+      rml:reference "yanglib:namespace/text()";
+      rml:datatype xsd:anyURI;
     ];
   ];
 .
