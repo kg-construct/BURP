@@ -6,10 +6,12 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.VOID;
@@ -20,6 +22,7 @@ import burp.vocabularies.CSVW;
 import burp.vocabularies.D2RQ;
 import burp.vocabularies.RML;
 import burp.vocabularies.SD;
+import burp.vocabularies.YANG;
 
 public class LogicalSourceFactory {
 
@@ -44,30 +47,30 @@ public class LogicalSourceFactory {
 					else
 						throw new RuntimeException("Provided Character Set " + r + " not supported.");
 				}
-				
+
 				if (r.hasProperty(CSVW.delimiter)) {
 					// TODO: According to CSVW, the delimiter is a string. But all examples are chars.
 					char e = r.getProperty(CSVW.delimiter).getChar();
-					source.delimiter = e; 
+					source.delimiter = e;
 				}
-				
+
 				if (r.hasProperty(CSVW.header)) {
 					Boolean e = r.getProperty(CSVW.header).getBoolean();
-					source.firstLineIsHeader = e; 
-				}	
-				
+					source.firstLineIsHeader = e;
+				}
+
 				if (r.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.NULL)) {
 					r.listProperties(RML.NULL).forEach(t -> {
 						if(t.getObject().isResource()) {
-							// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR 
+							// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR
 							// SPARQL SOURCES
 							source.nulls.add(t.getObject().asResource());
 						} else {
 							source.nulls.add(t.getObject().asLiteral().getValue());
 						}
 					});
-				}	
-				
+				}
+
 			} else {
 				source.encoding = StandardCharsets.UTF_8;
 			}
@@ -83,7 +86,7 @@ public class LogicalSourceFactory {
 
 		source.encoding = getEncoding(ls);
 		source.nulls.addAll(getNullValues(ls));
-		
+
 		return source;
 	}
 
@@ -100,15 +103,47 @@ public class LogicalSourceFactory {
 	}
 
 	public static LogicalSource createXMLSource(Resource ls, String mpath) {
-		String file = getFile(ls);
-		String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
-		XMLSource source = new XMLSource();
-		source.file = getAbsoluteOrRelative(file, mpath);
-		source.iterator = iterator;
-		source.encoding = getEncoding(ls);
-		source.compression = getCompression(ls);
-		source.nulls.addAll(getNullValues(ls));
-		return source;
+		Resource s = ls.getPropertyResourceValue(RML.source);
+		if (s.hasProperty(RDF.type, YANG.Query)) {
+			// Instatiate YANGSource as logical source
+			YANGSource source = new YANGSource();
+			// Get YANG server connection details
+			Resource yangServer = s.getPropertyResourceValue(YANG.sourceServer);
+			source.endpoint = yangServer.getProperty(YANG.endpoint).getLiteral().getString();
+			source.username = yangServer.getProperty(YANG.username).getLiteral().getString();
+			source.password = yangServer.getProperty(YANG.password).getLiteral().getString();
+			// Get source datastore for the selected YANG server
+			source.datastore = s.getPropertyResourceValue(YANG.sourceDatastore);
+			// Set XPath iterator
+			source.iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+			// Set map of prefixes for XPath iteration
+			source.prefixMap = getPrefixMap(ls);
+			// Set NETCONF subtree filter is specified in the query
+			Resource filter = s.getPropertyResourceValue(YANG.filter);
+			if (filter != null) {
+				if (filter.hasProperty(RDF.type, YANG.SubtreeFilter)) {
+					source.subtreeValue = filter.getProperty(
+						YANG.subtreeValue).getLiteral().getString();
+				}
+			}
+			return source;
+		} else {
+			// Then it's an XML file
+			String file = getFile(ls);
+			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+			XMLSource source = new XMLSource();
+			source.file = getAbsoluteOrRelative(file, mpath);
+			source.iterator = iterator;
+			source.encoding = getEncoding(ls);
+			source.compression = getCompression(ls);
+			source.nulls.addAll(getNullValues(ls));
+			Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
+			if (referenceFormulation.hasProperty(RDF.type, RML.XPathReferenceFormulation)) {
+				source.prefixMap = getPrefixMap(ls);
+			}
+			return source;
+		}
+
 	}
 
 	public static LogicalSource createSQL2008TableSource(Resource ls, String mpath) {
@@ -131,7 +166,7 @@ public class LogicalSourceFactory {
 		// which is internally stored as \\"Name\\". We thus need to remove
 		// occurrences of \\
 		source.query = query.replace("\\", "");
-		
+
 		source.nulls.addAll(getNullValues(ls));
 
 		return source;
@@ -157,7 +192,7 @@ public class LogicalSourceFactory {
 		// which is internally stored as \\"Name\\". We thus need to remove
 		// occurrences of \\
 		source.query = query.replace("\\", "");
-		
+
 		source.nulls.addAll(getNullValues(ls));
 
 		return source;
@@ -167,7 +202,7 @@ public class LogicalSourceFactory {
 		String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
 
 		Resource s = ls.getPropertyResourceValue(RML.source);
-		
+
 		if (s.hasProperty(RDF.type, VOID.Dataset)) {
 			SPARQLFileSource source = new SPARQLFileSource(isTSV);
 			String file = s.getPropertyResourceValue(VOID.dataDump).getURI();
@@ -177,11 +212,11 @@ public class LogicalSourceFactory {
 			source.iterator = iterator;
 			source.nulls.addAll(getNullValues(ls));
 			return source;
-		} else if(s.hasProperty(RDF.type, SD.Service)) { 
+		} else if(s.hasProperty(RDF.type, SD.Service)) {
 			SPARQLServiceSource source = new SPARQLServiceSource(isTSV);
 			source.endpoint = s.getPropertyResourceValue(SD.endpoint).getURI();
 			source.iterator = iterator;
-			source.nulls.addAll(getNullValues(ls));			
+			source.nulls.addAll(getNullValues(ls));
 			return source;
 		} else {
 			// WE HAVE A SIMPLE SPARQL SOURCE
@@ -281,13 +316,13 @@ public class LogicalSourceFactory {
 			throw new RuntimeException(file + " is not a file URL.");
 		}
 	}
-	
+
 	private static List<Object> getNullValues(Resource ls) {
 		Resource r = ls.getPropertyResourceValue(RML.source);
 		List<Object> os = new ArrayList<>();
 		r.listProperties(RML.NULL).forEach(t -> {
 			if(t.getObject().isResource()) {
-				// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR 
+				// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR
 				// SPARQL SOURCES
 				os.add(t.getObject().asResource());
 			} else {
@@ -295,6 +330,24 @@ public class LogicalSourceFactory {
 			}
 		});
 		return os;
+	}
+
+	// Generates prefix map from rml:namespace definitions
+	private static HashMap<String, String> getPrefixMap(Resource ls) {
+		// Get XPathRerenceFormulation
+		Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
+		// Set map of namespaces for XPath iteration
+		StmtIterator properties = referenceFormulation.listProperties(RML.namespace);
+		HashMap<String, String> prefixMap = new HashMap<String, String>();
+		while (properties.hasNext()) {
+			Statement statement = properties.next();
+			Resource namespace = statement.getResource();
+			prefixMap.put(
+				namespace.getProperty(RML.namespacePrefix).getLiteral().getString(),
+				namespace.getProperty(RML.namespaceURL).getLiteral().getString()
+			);
+		}
+		return prefixMap;
 	}
 
 }
