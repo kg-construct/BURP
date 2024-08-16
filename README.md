@@ -49,15 +49,20 @@ If no outputFile is provided and the RML mapping does not rely on RML-IO for tar
 If you use BURP, please cite our paper:
 
 ```
-@inproceedings{vanassche2024BURP,
-  title={{BURPing Through RML Test Cases}},
-  author={Van Assche, Dylan and Debruyne, Christophe},
-  year={2024},
-  month={may},
-  version={1.0.0},
-  doi={TODO},
-  url={https://github.com/kg-construct/BURP},
-  license={{MIT}},
+@inproceedings{DBLP:conf/kgcw/AsscheD24,
+  author       = {Dylan {Van Assche} and Christophe Debruyne},
+  editor       = {David Chaves{-}Fraga and Anastasia Dimou and
+                  Ana Iglesias{-}Molina and Umutcan Serles and
+                  Dylan {Van Assche}},
+  title        = {BURPing Through {RML} Test Cases},
+  booktitle    = {Proceedings of the 5th International Workshop on Knowledge Graph Construction
+                  co-located with 21th Extended Semantic Web Conference ({ESWC} 2024),
+                  Hersonissos, Greece, May 27, 2024},
+  series       = {{CEUR} Workshop Proceedings},
+  volume       = {3718},
+  publisher    = {CEUR-WS.org},
+  year         = {2024},
+  url          = {https://ceur-ws.org/Vol-3718/paper4.pdf}
 }
 ```
 
