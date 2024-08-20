@@ -23,6 +23,8 @@ $ mvn dependency:copy-dependencies
 
 You can add `-DskipTests` after `mvn package` to skip the unit tests. The tests do rely on Docker for testing mappings on top of MySQL and PostgreSQL.
 
+Some libraries are available on GitHub's maven repository. Add a GitHub authentication token to your Apache Maven `settings.xml` file. More information can be found [here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry).
+
 ## Using BURP
 
 The run the R2RML processor, execute the following command:
