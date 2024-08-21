@@ -8,10 +8,10 @@
 @base <https://example.org/> .
 
 # Basic details for connecting to NETCONF server
-<server-1> a ys:NetconfServer ;
-    ys:endpoint "192.168.1.10:830" ;
-    ys:username "admin" ;
-    ys:password "admin" ;
+<netconf-server-1> a ys:NetconfServer ;
+    ys:endpoint "127.0.0.1:8300" ;
+    ys:username "root" ;
+    ys:password "root" ;
     ys:hostKeyVerification "false" ;
 .
 

@@ -15,12 +15,9 @@
 
 	<repositories>
 		<repository>
-			<id>github</id>
-			<url>https://maven.pkg.github.com/candil-data-fabric/jnc</url>
-			<snapshots>
-			  <enabled>true</enabled>
-			</snapshots>
-		  </repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</repository>
 	</repositories>
 
 	<build>
@@ -215,9 +212,9 @@
 			<version>2.9.1</version>
 		</dependency>
 		<dependency>
-			<groupId>com.tailf.jnc</groupId>
-			<artifactId>jnc</artifactId>
-			<version>1.2.0-xpath-namespace</version>
-		  </dependency>
+			<groupId>com.github.candil-data-fabric</groupId>
+			<artifactId>JNC</artifactId>
+			<version>xpath-namespace-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>
