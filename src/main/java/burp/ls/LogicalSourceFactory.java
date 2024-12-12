@@ -248,8 +248,12 @@ public class LogicalSourceFactory {
 			String file = source.getProperty(RML.path).getLiteral().getString();
 
 			Resource root = source.getPropertyResourceValue(RML.root);
-			if (root != null && !RML.MappingDirectory.equals(root)) {
-				throw new RuntimeException("Root not yet implemented");
+			if (root != null) {
+				if (RML.MappingDirectory.equals(root)) return file;
+				if (RML.CurrentWorkingDirectory.equals(root))
+					return new File(new File(System.getProperty("user.dir")), file).getPath();
+				if (root.isLiteral()) return new File(root.asLiteral().getString(), file).getPath();
+				throw new RuntimeException("RelativePathSource specified root value is not supported. " + root);
 			}
 
 			// By default BURP treats it relative to mapping.
