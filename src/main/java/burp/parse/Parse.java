@@ -47,6 +47,7 @@ import burp.model.Template;
 import burp.model.TriplesMap;
 import burp.model.gathermaputil.GatherMapMixin;
 import burp.vocabularies.RML;
+import burp.vocabularies.YS;
 
 public class Parse {
 
@@ -181,6 +182,9 @@ public class Parse {
 
 		if(RML.SPARQL_Results_JSON.equals(referenceFormulation))
 			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
+
+		if (referenceFormulation.hasProperty(RDF.type, YS.NetconfQuerySource))
+			return LogicalSourceFactory.createNetconfQuerySource(ls);
 
 		throw new Exception("Reference formulation not (yet) supported.");
 	}

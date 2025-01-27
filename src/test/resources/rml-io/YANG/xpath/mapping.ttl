@@ -10,11 +10,11 @@
 <netconf-server-1> a ys:NetconfServer ;
     ys:socketAddress <netconf-server-1/socket-address> ;
     ys:serverAccount <netconf-server-1/account> ;
-    ys:hostKeyVerification "false"
+    ys:hostKeyVerification "false" ;
+    ys:capability ys:XpathCapability ,
+                  ys:YangLibrary1.0
 .
 
-# In this example the NETCONF server is non-NMDA compatible.
-# Thus, only operational and running datastores are available.
 <netconf-server-1/datastores/operational> a ys:OperationalDatastore ;
     ys:server <netconf-server-1>
 .
@@ -36,20 +36,21 @@
     observable:passwordType "plain-text"
 .
 
-<filters/subtree/yang-library> a ys:SubtreeFilter ;
-    ys:subtreeValue '''
-      <modules-state xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-library">
-        <module>
-        </module>
-      </modules-state>
-    ''';
+<filters/xpath/yang-library> a ys:XPathFilter ;
+    ys:xpathValue "/yanglib:modules-state";
+    ys:namespace [ a ys:Namespace ;
+      ys:namespacePrefix "yanglib" ;
+      ys:namespaceURL "urn:ietf:params:xml:ns:yang:ietf-yang-library" ;
+    ];
 .
 
+# Note that ys:Query is processed as part of the RML mapping
+# rml:iterator replaces the ys:Filter in the YANG query
 <#TriplesMap> a rml:TriplesMap;
-  rml:logicalSource [ a rml:LogicalSource ;
+  rml:logicalSource [ a rml:LogicalSource;
     rml:source [ a ys:Query, rml:Source ;
       ys:sourceDatastore <netconf-server-1/datastores/operational> ;
-      ys:filter <filters/subtree/yang-library>
+      ys:filter <filters/xpath/yang-library>
     ];
     rml:referenceFormulation [ a ys:NetconfQuerySource ;
       rml:namespace [ a rml:Namespace ;
@@ -65,7 +66,7 @@
   ];
   rml:predicateObjectMap [ a rml:PredicateObjectMap;
     rml:predicateMap [ a rml:PredicateMap;
-      rml:constant yl:name;
+      rml:constant yl:moduleName;
     ];
     rml:objectMap [ a rml:ObjectMap;
       rml:reference "yanglib:name/text()";
