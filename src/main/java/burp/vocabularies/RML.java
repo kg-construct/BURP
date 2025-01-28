@@ -18,6 +18,7 @@ public final class RML {
 	public static final Resource CSV = ResourceFactory.createResource(NS + "CSV");
 	public static final Resource JSONPath = ResourceFactory.createResource(NS + "JSONPath");
 	public static final Resource MappingDirectory = ResourceFactory.createResource(NS + "MappingDirectory");
+	public static final Resource CurrentWorkingDirectory = ResourceFactory.createResource(NS + "CurrentWorkingDirectory");
 	public static final Resource Namespace = ResourceFactory.createResource(NS + "Namespace");
 	public static final Resource RelativePathSource = ResourceFactory.createResource(NS + "RelativePathSource");
 	public static final Resource SQL2008Table = ResourceFactory.createResource(NS + "SQL2008Table");
