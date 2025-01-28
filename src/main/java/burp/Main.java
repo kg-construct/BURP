@@ -18,7 +18,6 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.RDF;
 
@@ -233,7 +232,7 @@ public class Main {
 
 			if(subgraph.isList()) {
 				g.add(r, RDF.type, RML.list);
-				
+
 				try {
 					RDFList l = g.getList(r);
 					RDFList sub = subgraph.model.getList(r);
@@ -242,7 +241,7 @@ public class Main {
 					for(RDFNode e : elements) {
 						l.add(e);
 					}
-					
+
 					while(true) {
 						if(sub.isEmpty())
 							break;
@@ -253,8 +252,8 @@ public class Main {
 				} catch (Exception e) {
 					// List did not exist, so we can just add it
 					g.add(subgraph.model);
-				}				
-				
+				}
+
 			} else {
 				Container c = null;
 				Container sub = null;
@@ -271,13 +270,13 @@ public class Main {
 					c = g.getAlt(r);
 					sub = subgraph.model.getSeq(r);
 				}
-				
+
 				// Now amend everything so that
 				// we append the containers
 				List<RDFNode> elements = sub.iterator().toList();
 				for(RDFNode e : elements)
 					c.add(e);
-				
+
 				StmtIterator iter = sub.listProperties();
 				while(iter.hasNext()) {
 					Statement s = iter.next();
@@ -285,10 +284,10 @@ public class Main {
 						if(s.getPredicate().getURI().startsWith("http://www.w3.org/1999/02/22-rdf-syntax-ns#_"))
 							iter.remove();
 				}
-				
+
 				// We all all the remaining triples
 				g.add(subgraph.model);
-				
+
 			}
 		}
 	}
