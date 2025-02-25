@@ -44,6 +44,9 @@ public class TestRMLCC {
 	@Test public void RMLTCCC0006IT0() throws IOException { testForOK("RMLTC-CC-0006-IT0"); }
 	@Test public void RMLTCCC0006IT1() throws IOException { testForOK("RMLTC-CC-0006-IT1"); }
 	@Test public void RMLTCCC0006IT2() throws IOException { testForOK("RMLTC-CC-0006-IT2"); }
+	@Test public void RMLTCCC0006IT3() throws IOException { testForOK("RMLTC-CC-0006-IT3"); }
+	@Test public void RMLTCCC0006IT4() throws IOException { testForOK("RMLTC-CC-0006-IT4"); }
+	@Test public void RMLTCCC0006IT5() throws IOException { testForOK("RMLTC-CC-0006-IT5"); }
 	@Test public void RMLTCCC0007NES() throws IOException { testForOK("RMLTC-CC-0007-NES"); }
 	@Test public void RMLTCCC0008ROMa() throws IOException { testForOK("RMLTC-CC-0008-ROMa"); }
 	@Test public void RMLTCCC0008ROMb() throws IOException { testForOK("RMLTC-CC-0008-ROMb"); }
