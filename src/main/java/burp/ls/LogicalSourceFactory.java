@@ -22,7 +22,9 @@ import burp.vocabularies.CSVW;
 import burp.vocabularies.D2RQ;
 import burp.vocabularies.RML;
 import burp.vocabularies.SD;
-import burp.vocabularies.YANG;
+import burp.vocabularies.UCOCore;
+import burp.vocabularies.UCOObservable;
+import burp.vocabularies.YS;
 
 public class LogicalSourceFactory {
 
@@ -103,47 +105,19 @@ public class LogicalSourceFactory {
 	}
 
 	public static LogicalSource createXMLSource(Resource ls, String mpath) {
-		Resource s = ls.getPropertyResourceValue(RML.source);
-		if (s.hasProperty(RDF.type, YANG.Query)) {
-			// Instatiate YANGSource as logical source
-			YANGSource source = new YANGSource();
-			// Get YANG server connection details
-			Resource yangServer = s.getPropertyResourceValue(YANG.sourceServer);
-			source.endpoint = yangServer.getProperty(YANG.endpoint).getLiteral().getString();
-			source.username = yangServer.getProperty(YANG.username).getLiteral().getString();
-			source.password = yangServer.getProperty(YANG.password).getLiteral().getString();
-			// Get source datastore for the selected YANG server
-			source.datastore = s.getPropertyResourceValue(YANG.sourceDatastore);
-			// Set XPath iterator
-			source.iterator = ls.getProperty(RML.iterator).getLiteral().getString();
-			// Set map of prefixes for XPath iteration
+		String file = getFile(ls);
+		String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+		XMLSource source = new XMLSource();
+		source.file = getAbsoluteOrRelative(file, mpath);
+		source.iterator = iterator;
+		source.encoding = getEncoding(ls);
+		source.compression = getCompression(ls);
+		source.nulls.addAll(getNullValues(ls));
+		Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
+		if (referenceFormulation.hasProperty(RDF.type, RML.XPathReferenceFormulation)) {
 			source.prefixMap = getPrefixMap(ls);
-			// Set NETCONF subtree filter is specified in the query
-			Resource filter = s.getPropertyResourceValue(YANG.filter);
-			if (filter != null) {
-				if (filter.hasProperty(RDF.type, YANG.SubtreeFilter)) {
-					source.subtreeValue = filter.getProperty(
-						YANG.subtreeValue).getLiteral().getString();
-				}
-			}
-			return source;
-		} else {
-			// Then it's an XML file
-			String file = getFile(ls);
-			String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
-			XMLSource source = new XMLSource();
-			source.file = getAbsoluteOrRelative(file, mpath);
-			source.iterator = iterator;
-			source.encoding = getEncoding(ls);
-			source.compression = getCompression(ls);
-			source.nulls.addAll(getNullValues(ls));
-			Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
-			if (referenceFormulation.hasProperty(RDF.type, RML.XPathReferenceFormulation)) {
-				source.prefixMap = getPrefixMap(ls);
-			}
-			return source;
 		}
-
+		return source;
 	}
 
 	public static LogicalSource createSQL2008TableSource(Resource ls, String mpath) {
@@ -234,6 +208,30 @@ public class LogicalSourceFactory {
 	// TODO: Do we really need RML.SPARQL_Results_TSV?
 	// TODO: Do we really need RML.SPARQL_Results_JSON?
 	// TODO: Do we really need RML.SPARQL_Results_XML?
+
+	public static LogicalSource createNetconfQuerySource(Resource ls) {
+		Resource s = ls.getPropertyResourceValue(RML.source);
+		// Instantiate Netconf source based on Netconf operation
+		NetconfQuerySource source = new NetconfQuerySource();
+		Resource datastore = s.getPropertyResourceValue(YS.sourceDatastore);
+		source.datastoreType = datastore.getPropertyResourceValue(RDF.type);
+		// Get YANG Server address connection details
+		Resource server = datastore.getPropertyResourceValue(YS.server);
+		Resource socketAddress = server.getPropertyResourceValue(YS.socketAddress);
+		source.endpoint = socketAddress.getProperty(UCOObservable.addressValue).getLiteral().getString();
+		// Get YANG Server authentication details
+		Resource serverAccount = server.getPropertyResourceValue(YS.serverAccount);
+		source.username = serverAccount.getProperty(YS.username).getLiteral().getString();
+		Resource accountAuthentication = serverAccount.getPropertyResourceValue(UCOCore.hasFacet);
+		source.password = accountAuthentication.getProperty(UCOObservable.password).getLiteral().getString();
+		// Get operation filter
+		source.filter = s.getPropertyResourceValue(YS.filter);
+		// Set XPath for RML iterator
+		source.rmlIterator = ls.getProperty(RML.iterator).getLiteral().getString();
+		// Set map of prefixes for RML iterations
+		source.rmlPrefixMap = getPrefixMap(ls);
+		return source;
+	}
 
 	// *************************************************************************
 	// *
