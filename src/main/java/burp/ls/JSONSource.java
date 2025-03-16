@@ -71,18 +71,10 @@ class JSONIteration extends Iteration {
 		try {
 			List<Object> l = doc.read(reference);
 			for(Object o : l) {
-				if(o != null) {
-					if (o instanceof List<?>) {
-						// Processing arrays if asking $.a and we have [ {"a": 2}, {"a": [1,2,3]} ]
-						for(Object o2 : (List<Object>) o) {
-							if(o2 != null && !nulls.contains(o2))
-								l2.add(o2.toString());
-						}
-					} else if(!nulls.contains(o)) {
-						// Processing arrays if asking $.a and we have [ {"a": 2}, {"a": [1,2,3]} ]
-						l2.add(o.toString());
-					}
-				}
+				if (o instanceof List<?>)
+					throw new RuntimeException("Data error: reference retrieved an array");
+				if (o != null && !nulls.contains(o))
+					l2.add(o.toString());
 			}
 		} catch (PathNotFoundException e) {
 			// No data, silently ignore
@@ -100,18 +92,10 @@ class JSONIteration extends Iteration {
 		try {
 			List<Object> l = doc.read(reference);
 			for(Object o : l) {
-				if(o != null) {
-					if (o instanceof List<?>) {
-						// Processing arrays if asking $.a and we have [ {"a": 2}, {"a": [1,2,3]} ]
-						for(Object o2 : (List<Object>) o) {
-							if(o2 != null && !nulls.contains(o2))
-								l2.add(o2.toString());
-						}
-					} else if(!nulls.contains(o)) {
-						// Processing arrays if asking $.a and we have [ {"a": 2}, {"a": [1,2,3]} ]
-						l2.add(o.toString());
-					}
-				}
+				if (o instanceof List<?>)
+					throw new RuntimeException("Data error: reference retrieved an array");
+				if (o != null && !nulls.contains(o))
+					l2.add(o.toString());
 			}
 		} catch (PathNotFoundException e) {
 			// No data, silently ignore

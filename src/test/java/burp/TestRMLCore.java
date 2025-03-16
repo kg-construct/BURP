@@ -166,7 +166,7 @@ public class TestRMLCore {
 	@Test public void RMLTC0015bXML() throws IOException { testForNotOK("RMLTC0015b-XML"); }
 	@Test public void RMLTC0019bXML() throws IOException { testForNotOK("RMLTC0019b-XML"); }
 
-	@Test public void RMLTC0026aJSON() throws IOException { testForOK("RMLTC0026a-JSON"); }
+	@Test public void testForNotOK() throws IOException { testForOK("RMLTC0026a-JSON"); }
 	
 	public void testForOK(String f) throws IOException {
 		System.out.println(String.format("Now processing %s", f));
