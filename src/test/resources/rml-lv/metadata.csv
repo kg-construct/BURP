@@ -1,0 +1,33 @@
+ID,title,description,specification,mapping,input_format1,input_format2,input_format3,output_format1,output_format2,output_format3,input1,input2,input3,output1,output2,output3,error
+RMLLVTC0000a,Logical view on JSON source,Test a view on a hierarchical source,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0000b,Logical view on CSV source,Test a view on a tabular source,http://w3id.org/rml/lv/,mapping.ttl,text/csv,,,application/n-quads,,,people.csv,,,output.nq,,,false
+RMLLVTC0000c,Logical View on Logical View,Test a view on a logical view,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0001a,Expression Field: Reference,Test a reference in an expression field,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0001b,Expression Field: Template,Test a template in an expression field,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0001c,Expression Field: Constant,Test a constant expression in an expression field,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0001d,Expression Field Siblings,Test multiple expression fields with the same parent,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0002a,Iterable Field,Test a nested field construction: iterable field with expression field as child,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0002b,Iterable Field with Multiple Children,Test a nested field construction: iterable field with mulitple expression fields as children,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0002c,Nested Iterable Fields,Test a nested field construction: iterable field with an iterable field as child,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0003a,Index Key: #,Test a reference to the index key #,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0003b,Index Key: Iterable Field,Test a reference to the index key of an iterable field,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0003c,Index Key: Expression field,Test a reference to the index key of an expression field,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0004a,Natural Datatype: Index #,Test the natural datatype mapping for the index #,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0004b,Natural Datatype: Index Expression Field,Test the natural datatype mapping for the index of an expression field,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0004c,Natural Datatype: Index Iterable Field,Test the natural datatype mapping for the index of an iterable field,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0004d,Natural Datatype: Record Expression Field,Test the natural datatype mapping  for a record of an expression field,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0005a,Referencing a Non-Existing Key,Test a reference to a non-existing key,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,,,,people.json,,,,,,true
+RMLLVTC0005b,Referencing the Record Key <it>,Test a reference to the record key <it>,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,,,,people.json,,,,,,true
+RMLLVTC0005c,Referencing the Record Key of an Iterable Field,Test a reference to the record key of an iterable field,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,,,,people.json,,,,,,true
+RMLLVTC0006a,Left Join,Test a left join,http://w3id.org/rml/lv/,mapping.ttl,application/json,text/csv,,application/n-quads,,,people.json,people.csv,,output.nq,,,false
+RMLLVTC0006b,Inner Join,Test an inner join,http://w3id.org/rml/lv/,mapping.ttl,application/json,text/csv,,application/n-quads,,,people.json,people.csv,,output.nq,,,false
+RMLLVTC0006c,Two Left Joins,Test two left joins in one logical view,http://w3id.org/rml/lv/,mapping.ttl,application/json,text/csv,text/csv,application/n-quads,,,people.json,people.csv,people2.csv,output.nq,,,false
+RMLLVTC0006d,Inner Join and Left Join,Test an inner join and a left join in one logical view,http://w3id.org/rml/lv/,mapping.ttl,application/json,text/csv,text/csv,application/n-quads,,,people.json,people.csv,people2.csv,output.nq,,,false
+RMLLVTC0006e,Two Inner Joins,Test two left joins in one logical view,http://w3id.org/rml/lv/,mapping.ttl,application/json,text/csv,text/csv,application/n-quads,,,people.json,people.csv,people2.csv,output.nq,,,false
+RMLLVTC0006f,Index Key of Field in Join,Test references to indexes of fields from a join,http://w3id.org/rml/lv/,mapping.ttl,application/json,text/csv,,application/n-quads,,,people.json,people.csv,,output.nq,,,false
+RMLLVTC0007a,Change Reference Formulations: CSV including JSON array,Test a change of reference formulations: csv source including json array,http://w3id.org/rml/lv/,mapping.ttl,text/csv,,,application/n-quads,,,people.csv,,,output.nq,,,false
+RMLLVTC0007b,Change Reference Formulations: CSV including JSON object,Test a change of reference formulations: csv source including json object,http://w3id.org/rml/lv/,mapping.ttl,text/csv,,,application/n-quads,,,people.csv,,,output.nq,,,false
+RMLLVTC0007c,Change Reference Formulations: JSON including CSV,Test a change of reference formulations: json source including csv data,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
+RMLLVTC0008a,Cycle: Abstract Logical Source,Test a cycle in the abstract logical source of a logical view,http://w3id.org/rml/lv/,mapping.ttl,,,,,,,,,,,,,true
+RMLLVTC0008b,Cycle: Joins,Test a cycle in two joins of two logical views,http://w3id.org/rml/lv/,mapping.ttl,application/json,text/csv,,application/n-quads,,,people.json,people.csv,,output.nq,,,false
+RMLLVTC0008c,Cycle: Self-Join,Test a cycle in a join of a logical view: self-join,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,,,,people.json,,,,,,true

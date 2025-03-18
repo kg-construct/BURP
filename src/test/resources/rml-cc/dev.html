@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>RML-CC: Test Cases</title>
+    <meta charset="utf-8">
+    <script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove" defer></script>
+    <style type="text/css">
+        /* Adapted from R2RML */
+        aside.ex-input,
+        aside.ex-mapping,
+        aside.ex-output {
+            word-wrap:normal;
+            margin-top: 1.5em;
+            padding: 1em;
+            font-size: 80%;
+        }
+        aside.ex-input:before,
+        aside.ex-mapping:before,
+        aside.ex-output:before {
+            background: white;
+            display: block;
+            font-family: sans-serif;
+            font-size: 90%;
+            margin: -1.5em 0 0.5em 0;
+            padding: 0.4em 0.4em;
+            width: 18em;
+        }
+        /* Input data example */
+        aside.ex-input {
+            background: #cee;
+        }
+        aside.ex-input,
+        aside.ex-input:before {
+            border: 1px solid #acc;
+            overflow: auto;
+        }
+        aside.ex-input:before {
+            content: "Example input data";
+        }
+        /* RML mapping example */
+        aside.ex-mapping {
+            background: #eeb;
+        }
+        aside.ex-mapping,
+        aside.ex-mapping:before {
+            border: 1px solid #cc9;
+            overflow: auto;
+        }
+        aside.ex-mapping:before {
+            content: "Example RML mapping";
+        }
+        /* Output RDF example */
+        aside.ex-output {
+            background: #cfc;
+        }
+        aside.ex-output,
+        aside.ex-output:before {
+            border: 1px solid #aca;
+            overflow: auto;
+        }
+        aside.ex-output:before {
+            content: "Example output data";
+        }
+        table, th, td {
+          background: white;
+          border-collapse: collapse;
+          border: 1px solid;
+        }
+        th, td {
+          padding: 5px;
+          text-align: left;
+        }
+        th {
+          font-weight: bold;
+        }
+    </style>
+    <script class="remove">
+        var respecConfig = {
+          localBiblio: {
+            "RDF11-Concepts": {
+              title: "RDF 1.1 Concepts and Abstract Syntax",
+              href: "https://www.w3.org/TR/rdf11-concepts/",
+              status: "W3C Recommendation",
+              publisher: "W3C",
+              date: "25 February 2014",
+            },
+            "Turtle": {
+              title: "RDF 1.1 Turtle",
+              href: "https://www.w3.org/TR/turtle/",
+              status: "W3C Recommendation",
+              publisher: "W3C",
+              date: "25 February 2014",
+            },
+            "RML": {
+              title: "RDF Mapping Language",
+              href: "https://rml.io/specs/rml/",
+              status: "Unofficial draft",
+              publisher: "https://rml.io",
+              date: "06 October 2020",
+            },
+            "R2RML": {
+              title: "R2RML: RDB to RDF Mapping Language",
+              href: "https://www.w3.org/TR/r2rml/",
+              status: "W3C Recommendation",
+              publisher: "W3C",
+              date: "27 September 2012",
+            }
+          },
+          doRdfa: "true",
+          processVersion: 2021,
+          specStatus: "CG-DRAFT",
+          shortName: "rml-cc",
+          copyrightStart: "2022",
+          edDraftURI: "https://w3id.org/rml/cc/spec",
+          authors: [
+          {
+              name: "Christophe Debruyne",
+              company: "Montefiore Institute, University of Liège",
+              url: "http://www.christophedebruyne.be/",
+              orcid: "0000-0003-4734-3847",
+              companyURL: "https://www.montefiore.uliege.be/"
+            },
+            {
+              name: "Franck Michel",
+              company: "Université Côte d'Azur, CNRS, Inria",
+              url: "https://w3id.org/people/franckmichel",
+              orcid: "0000-0001-9064-0463",
+              companyURL: "https://www.cnrs.fr/"
+            }
+          ],
+          editors: [
+          {
+              name: "Christophe Debruyne",
+              company: "Montefiore Institute, University of Liège",
+              url: "http://www.christophedebruyne.be/",
+              orcid: "0000-0003-4734-3847",
+              companyURL: "https://www.montefiore.uliege.be/"
+            },
+            {
+              name: "Franck Michel",
+              company: "Université Côte d'Azur, CNRS, Inria",
+              url: "https://w3id.org/people/franckmichel",
+              orcid: "0000-0001-9064-0463",
+              companyURL: "https://www.cnrs.fr/"
+            }
+          ],
+          // name of the WG
+          group: "kg-construct",
+          latestVersion: null,
+          issueBase: "https://github.com/kg-construct/rml-cc/issues",
+          noRecTrack: "true",
+          otherLinks: [
+            {
+              key: "Website",
+              data: [{
+                value: "https://github.com/kg-construct/rml-cc/",
+                href: "https://github.com/kg-construct/rml-cc/"
+              }]
+            }
+          ],
+        };
+      </script>
+</head>
+
+<body>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
+
+<section id="abstract" data-include="section/abstract.md" data-include-format="markdown"></section>
+
+<section id="sotd"></section>
+
+<section id="introduction" data-include="section/introduction.md" data-include-format="markdown"></section>
+
+<section id="data-model" data-include="section/data-model.md" data-include-format="markdown"></section>
+
+<section id="test-cases" data-include="section/test-cases.md" data-include-format="markdown"></section>
+
+<!-- Generated with list.sh -->
+<section id="RMLTC-CC-0001-Alt" data-include="RMLTC-CC-0001-Alt/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0001-Bag" data-include="RMLTC-CC-0001-Bag/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0001-List" data-include="RMLTC-CC-0001-List/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0001-Seq" data-include="RMLTC-CC-0001-Seq/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0002-Bag" data-include="RMLTC-CC-0002-Bag/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0002-List" data-include="RMLTC-CC-0002-List/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0003-EB" data-include="RMLTC-CC-0003-EB/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0003-EL" data-include="RMLTC-CC-0003-EL/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0003-EL-BN" data-include="RMLTC-CC-0003-EL-BN/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0003-EL-Named" data-include="RMLTC-CC-0003-EL-Named/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0003-NEB" data-include="RMLTC-CC-0003-NEB/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0003-NEL" data-include="RMLTC-CC-0003-NEL/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0003-NELb" data-include="RMLTC-CC-0003-NELb/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0004-SM1" data-include="RMLTC-CC-0004-SM1/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0004-SM2" data-include="RMLTC-CC-0004-SM2/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0004-SM3" data-include="RMLTC-CC-0004-SM3/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0004-SM4" data-include="RMLTC-CC-0004-SM4/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0004-SM5" data-include="RMLTC-CC-0004-SM5/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0005-App1" data-include="RMLTC-CC-0005-App1/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0005-App2" data-include="RMLTC-CC-0005-App2/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0005-Car1" data-include="RMLTC-CC-0005-Car1/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0005-Car2" data-include="RMLTC-CC-0005-Car2/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0006-IT0" data-include="RMLTC-CC-0006-IT0/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0006-IT1" data-include="RMLTC-CC-0006-IT1/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0006-IT2" data-include="RMLTC-CC-0006-IT2/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0006-IT3" data-include="RMLTC-CC-0006-IT3/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0006-IT4" data-include="RMLTC-CC-0006-IT4/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0006-IT5" data-include="RMLTC-CC-0006-IT5/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0007-NES" data-include="RMLTC-CC-0007-NES/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0008-ROMa" data-include="RMLTC-CC-0008-ROMa/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0008-ROMb" data-include="RMLTC-CC-0008-ROMb/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0009-DUP-Bag" data-include="RMLTC-CC-0009-DUP-Bag/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0009-DUP-List" data-include="RMLTC-CC-0009-DUP-List/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0010-Lista" data-include="RMLTC-CC-0010-Lista/README.md" data-include-format=markdown></section>
+<section id="RMLTC-CC-0010-Listb" data-include="RMLTC-CC-0010-Listb/README.md" data-include-format=markdown></section>
+
+</body>
+
+</html>
