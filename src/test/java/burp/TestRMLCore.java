@@ -77,7 +77,7 @@ public class TestRMLCore {
         System.out.println("This test should generate a graph.");
         String o = new File(base + testData.ID, testData.output1).getAbsolutePath().toString();
 
-        int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
+        int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/" });
 
         Model expected = RDFDataMgr.loadModel(o);
         Model actual = RDFDataMgr.loadModel(r);

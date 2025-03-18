@@ -79,6 +79,9 @@ public class Parse {
 			Resource sm = r.getPropertyResourceValue(RML.subjectMap);
 			tm.subjectMap = prepareSubjectMap(sm);
 
+			if(r.hasProperty(RML.baseIRI))
+				tm.baseIRI = r.getPropertyResourceValue(RML.baseIRI).getURI();
+
 			r.listProperties(RML.predicateObjectMap).forEach((s) -> {
 				PredicateObjectMap pom = preparePredicateObjectMap(s.getObject().asResource());
 				tm.predicateObjectMaps.add(pom);

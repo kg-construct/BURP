@@ -68,11 +68,13 @@ public class Main {
 		}
 	}
 
-	private static Dataset generate(List<TriplesMap> triplesmaps, String baseIRI) {
+	private static Dataset generate(List<TriplesMap> triplesmaps, String givenBaseIRI) {
 		Dataset ds = DatasetFactory.create();
 
 		// Execute the triples maps
 		for (TriplesMap tm : triplesmaps) {
+			String baseIRI = tm.baseIRI == null ? givenBaseIRI : tm.baseIRI;
+
 			// Let sm be the subject map of the triples map
 			SubjectMap sm = tm.subjectMap;
 

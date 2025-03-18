@@ -47,6 +47,7 @@ public final class RML {
 
 	// Properties
 	public static final Property allowEmptyListAndContainer = ResourceFactory.createProperty(NS + "allowEmptyListAndContainer");
+	public static final Property baseIRI = ResourceFactory.createProperty(NS + "baseIRI");
 	public static final Property clazz = ResourceFactory.createProperty(NS + "class");
 	public static final Property childMap = ResourceFactory.createProperty(NS + "childMap");
 	public static final Property compression = ResourceFactory.createProperty(NS + "compression");

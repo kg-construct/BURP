@@ -10,6 +10,7 @@ public class TriplesMap {
 	public LogicalSource logicalSource = null;
 	public SubjectMap subjectMap = null;
 	public List<PredicateObjectMap> predicateObjectMaps = new ArrayList<PredicateObjectMap>();
+	public String baseIRI = null;
 
 	public void generateInto(Dataset ds) {
 		// TODO Auto-generated method stub
