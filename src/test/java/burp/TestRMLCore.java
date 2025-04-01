@@ -157,6 +157,7 @@ public class TestRMLCore {
 	@Test public void RMLTC0020aXML() throws IOException { testForOK("RMLTC0020a-XML"); }
 	@Test public void RMLTC0021aXML() throws IOException { testForOK("RMLTC0021a-XML"); }
 	@Test public void RMLTC0023aXML() throws IOException { testForOK("RMLTC0023a-XML"); }
+	@Test public void RMLTC0027XML() throws IOException { testForOK("RMLTC0027-XML"); }
 	
 	@Test public void RMLTC0002eXML() throws IOException { testForNotOK("RMLTC0002e-XML"); }
 	@Test public void RMLTC0004bXML() throws IOException { testForNotOK("RMLTC0004b-XML"); }
