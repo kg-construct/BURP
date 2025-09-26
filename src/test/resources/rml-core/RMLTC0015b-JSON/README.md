@@ -4,14 +4,16 @@
 
 **Description**: "Tests a term map with an invalid rml:language value, which is an error"
 
+**Default Base IRI**: http://example.com/
+
 **Error expected?** Yes
 
 **Input**
 ```
 {
   "countries": [
-    {"Code": "BO", "Name": "Bolivia, Plurinational State of"},
-    {"Code": "IE", "Name": "Ireland"}
+    {"Code": "BO", "Name": "Estado Plurinacional de Bolivia"},
+    {"Code": "IE", "Name": "Irlanda"}
   ]
 }
 

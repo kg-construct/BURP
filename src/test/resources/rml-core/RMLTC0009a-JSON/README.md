@@ -4,6 +4,8 @@
 
 **Description**: "Test foreign key relationships among logical tables"
 
+**Default Base IRI**: http://example.com/
+
 **Error expected?** No
 
 **Input**
@@ -18,6 +20,19 @@
     { 
       "ID": 20,
       "Name": "Demi Moore"
+    }
+  ]
+}
+
+```
+
+**Input 1**
+```
+{
+  "sports": [
+    {
+      "ID": 100,
+      "Name": "Tennis"
     }
   ]
 }

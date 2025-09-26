@@ -4,6 +4,8 @@
 
 **Description**: "Tests, M to M relations, by using an additional Triples Map"
 
+**Default Base IRI**: http://example.com/
+
 **Error expected?** No
 
 **Input**
@@ -13,6 +15,31 @@
     {"ID":10, "FirstName":"Venus", "LastName":"Williams"},
     {"ID":11, "FirstName":"Fernando", "LastName":"Alonso"},
     {"ID":12, "FirstName":"David", "LastName":"Villa"}
+  ]
+}
+
+```
+
+**Input 1**
+```
+{
+  "sports": [
+    {"ID":110, "Description":"Tennis"},
+    {"ID":111, "Description":"Football"},
+    {"ID":112, "Description":"Formula1"}
+  ]
+}
+
+```
+
+**Input 2**
+```
+{
+  "links": [
+    {"ID_Student":10, "ID_Sport":110},
+    {"ID_Student":11, "ID_Sport":111},
+    {"ID_Student":11, "ID_Sport":112},
+    {"ID_Student":12, "ID_Sport":111}
   ]
 }
 

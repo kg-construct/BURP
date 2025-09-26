@@ -29,5 +29,5 @@ RMLLVTC0007a,Change Reference Formulations: CSV including JSON array,Test a chan
 RMLLVTC0007b,Change Reference Formulations: CSV including JSON object,Test a change of reference formulations: csv source including json object,http://w3id.org/rml/lv/,mapping.ttl,text/csv,,,application/n-quads,,,people.csv,,,output.nq,,,false
 RMLLVTC0007c,Change Reference Formulations: JSON including CSV,Test a change of reference formulations: json source including csv data,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,application/n-quads,,,people.json,,,output.nq,,,false
 RMLLVTC0008a,Cycle: Abstract Logical Source,Test a cycle in the abstract logical source of a logical view,http://w3id.org/rml/lv/,mapping.ttl,,,,,,,,,,,,,true
-RMLLVTC0008b,Cycle: Joins,Test a cycle in two joins of two logical views,http://w3id.org/rml/lv/,mapping.ttl,application/json,text/csv,,application/n-quads,,,people.json,people.csv,,output.nq,,,false
+RMLLVTC0008b,Cycle: Joins,Test a cycle in two joins of two logical views,http://w3id.org/rml/lv/,mapping.ttl,application/json,text/csv,,,,,people.json,people.csv,,,,,true
 RMLLVTC0008c,Cycle: Self-Join,Test a cycle in a join of a logical view: self-join,http://w3id.org/rml/lv/,mapping.ttl,application/json,,,,,,people.json,,,,,,true

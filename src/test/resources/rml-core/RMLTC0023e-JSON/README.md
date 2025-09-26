@@ -4,7 +4,9 @@
 
 **Description**: "Test handling of invalid IRI template"
 
-**Error expected?** No
+**Default Base IRI**: http://example.com/
+
+**Error expected?** Yes
 
 **Input**
 ```
@@ -32,16 +34,10 @@
         ]
     ];
   rml:subjectMap [
-      rml:template "http://example.com/{\\{Name\\}}";
+      rml:template "http://example.com/{\\\\{Name\\\\}}";
       rml:class foaf:Person;
     ] .
 
-
-```
-
-**Output**
-```
-<http://example.com/Venus> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
 
 ```
 

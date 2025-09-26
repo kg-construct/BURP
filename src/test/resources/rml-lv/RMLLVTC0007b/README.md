@@ -43,7 +43,7 @@ bob,"{""type"":""flower"",""weight"":15}"
     rml:field [
       a rml:IterableField ;
       rml:referenceFormulation rml:JSONPath ;
-      rml:iterator "$[*]" ;
+      rml:iterator "$" ;
       rml:fieldName "itemJson" ;
       rml:field [
         a rml:ExpressionField;
