@@ -12,7 +12,7 @@ import java.util.List;
 public class ConcreteExpressionMap extends ExpressionMap {
 
 	public List<String> generateValues(Iteration i) {
-		List<String> l = new ArrayList<String>();
+		List<String> l = new ArrayList<>();
 		
 		if(expression instanceof RDFNodeConstant) {
 			// It is assumed to be a string, otherwise the shapes

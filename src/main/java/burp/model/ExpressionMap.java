@@ -1,6 +1,7 @@
 package burp.model;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
@@ -15,6 +16,7 @@ import org.apache.jena.datatypes.BaseDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 
 import burp.util.Util;
@@ -24,7 +26,7 @@ public abstract class ExpressionMap {
 	public Expression expression = null;
 	
 	protected List<RDFNode> generateIRIs(Iteration i, String baseIRI) {
-		List<RDFNode> set = new ArrayList<RDFNode>();
+		List<RDFNode> set = new ArrayList<>();
 		
 		if(expression instanceof RDFNodeConstant) {
 			// It is assumed to be an IRI, otherwise the shapes
@@ -38,8 +40,8 @@ public abstract class ExpressionMap {
 				
 				if(Util.isAbsoluteAndValidIRI(v))
 					set.add(ResourceFactory.createResource(v));
-				else if(Util.isAbsoluteAndValidIRI(baseIRI + v.toString()))
-					set.add(ResourceFactory.createResource(baseIRI + v.toString()));
+				else if(Util.isAbsoluteAndValidIRI(baseIRI + v))
+					set.add(ResourceFactory.createResource(baseIRI + v));
 				else
 					throw new RuntimeException(baseIRI + " and " + v + " do not constitute a valid IRI");
 				
@@ -78,9 +80,74 @@ public abstract class ExpressionMap {
 		throw new RuntimeException("Error generating IRI.");
 	}
 
-	static private Map<Object, RDFNode> map = new HashMap<Object, RDFNode>();
+    protected List<RDFNode> generateURIs(Iteration i, String baseIRI) {
+        List<RDFNode> set = new ArrayList<>();
+
+        if(expression instanceof RDFNodeConstant) {
+            // It is assumed to be an IRI, otherwise the shapes
+            // Would have caught the error. But we need to test whether it is
+            // a URI.
+
+            Resource r = ((RDFNodeConstant) expression).constant.asResource();
+
+            try {
+                new URI(r.getURI());
+            } catch (Exception e) {
+                throw new RuntimeException("This is not a valid URI.");
+            }
+
+            set.add(((RDFNodeConstant) expression).constant.asResource());
+            return set;
+        }
+
+        if(expression instanceof Template) {
+            for(String v : ((Template) expression).values(i, true)) {
+
+                if(Util.isAbsoluteAndValidURI(v))
+                    set.add(ResourceFactory.createResource(v));
+                else if(Util.isAbsoluteAndValidURI(baseIRI + v))
+                    set.add(ResourceFactory.createResource(baseIRI + v));
+                else
+                    throw new RuntimeException(baseIRI + " and " + v + " do not constitute a valid URI");
+
+            }
+            return set;
+        }
+
+        if(expression instanceof Reference) {
+            for(Object v : ((Reference) expression).values(i)) {
+                String s = v.toString();
+
+                if(Util.isAbsoluteAndValidURI(s))
+                    set.add(ResourceFactory.createResource(s));
+                else if(Util.isAbsoluteAndValidURI(baseIRI + s))
+                    set.add(ResourceFactory.createResource(baseIRI + s));
+                else
+                    throw new RuntimeException(baseIRI + " and " + s + " do not constitute a valid URI");
+            }
+            return set;
+        }
+
+        if(expression instanceof FunctionExecution) {
+            for(Object v : ((FunctionExecution) expression).values(i, baseIRI)) {
+                String s = v.toString();
+
+                if(Util.isAbsoluteAndValidURI(s))
+                    set.add(ResourceFactory.createResource(s));
+                else if(Util.isAbsoluteAndValidURI(baseIRI + s))
+                    set.add(ResourceFactory.createResource(baseIRI + s));
+                else
+                    throw new RuntimeException(baseIRI + " and " + s + " do not constitute a valid IRI");
+            }
+            return set;
+        }
+
+        throw new RuntimeException("Error generating IRI.");
+    }
+
+	static private final Map<Object, RDFNode> map = new HashMap<>();
 	protected List<RDFNode> generateBlankNodes(Iteration i, String baseIRI) {
-		List<RDFNode> set = new ArrayList<RDFNode>();
+		List<RDFNode> set = new ArrayList<>();
 		
 		if(expression instanceof RDFNodeConstant) {
 			// It is assumed to be a BN, otherwise the shapes
@@ -122,7 +189,7 @@ public abstract class ExpressionMap {
 	}
 	
 	protected List<RDFNode> generateLiterals(Iteration i, String baseIRI, DatatypeMap dm, LanguageMap lm) {
-		List<RDFNode> set = new ArrayList<RDFNode>();
+		List<RDFNode> set = new ArrayList<>();
 		
 		if(expression instanceof RDFNodeConstant) {
 			// It is assumed to be a literal, otherwise the shapes
@@ -202,9 +269,8 @@ public abstract class ExpressionMap {
 			return ResourceFactory.createTypedLiteral(s, XSDDatatype.XSDdouble);
 		} else if(o instanceof Date) {
 			return ResourceFactory.createTypedLiteral(o.toString(), XSDDatatype.XSDdate);
-		} else if(o instanceof Timestamp) {
-			Timestamp t = (Timestamp) o;
-			String s = o.toString().replace(" ", "T");
+		} else if(o instanceof Timestamp t) {
+            String s = o.toString().replace(" ", "T");
 			
 			// Ensure canonical xsd:dateTime by removing the ".0" when no fraction
 			if(t.getNanos() == 0)
@@ -223,16 +289,14 @@ public abstract class ExpressionMap {
 		// The number of digits in the unscaled value
 		int p = f.precision();
 		// We start from two digits 
-		StringBuilder x = new StringBuilder("0.0");
-		// Add the remaining digits to the pattern
-		for (int i = 2; i < p; i++)
-            x.append("#");
-		// Let's not forget the e-notation
-		x.append("E0");
+        // Add the remaining digits to the pattern
+        String x = "0.0" + "#".repeat(Math.max(0, p - 2)) +
+                // Let's not forget the e-notation
+                "E0";
 		
 		NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
 		DecimalFormat formatter = (DecimalFormat) numberFormat;
-		formatter.applyPattern(x.toString());
+		formatter.applyPattern(x);
 		
 		return formatter.format(d);
 	}

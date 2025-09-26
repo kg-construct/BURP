@@ -6,7 +6,7 @@ import java.util.Set;
 
 public abstract class LogicalSource {
 
-	public Set<Object> nulls = new HashSet<Object>();
+	public Set<Object> nulls = new HashSet<>();
 
 	public abstract Iterator<Iteration> iterator();
 

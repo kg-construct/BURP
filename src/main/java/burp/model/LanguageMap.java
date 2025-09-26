@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 public class LanguageMap extends ExpressionMap {
 
 	public List<String> generateStrings(Iteration i) {
-		List<String> set = new ArrayList<String>();
+		List<String> set = new ArrayList<>();
 		
 		if(expression instanceof RDFNodeConstant) {
 			// It is assumed to be a string, otherwise the shapes

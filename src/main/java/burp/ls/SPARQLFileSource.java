@@ -16,7 +16,7 @@ import burp.model.Iteration;
 
 class SPARQLFileSource extends FileBasedLogicalSource {
 
-	private boolean isTSV;
+	private final boolean isTSV;
 
 	public SPARQLFileSource(boolean isTSV) {
 		this.isTSV = isTSV;
@@ -26,7 +26,7 @@ class SPARQLFileSource extends FileBasedLogicalSource {
 	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+				iterations = new ArrayList<>();
 
 				Dataset ds = RDFDataMgr.loadDataset(file);
 
@@ -63,7 +63,7 @@ class SPARQLIteratation extends Iteration {
 
 	@Override
 	public List<Object> getValuesFor(String reference) {
-		List<Object> l = new ArrayList<Object>();
+		List<Object> l = new ArrayList<>();
 		RDFNode n = sol.get(reference);
 		if(n != null && !nulls.contains(n))
 			l.add(n);
@@ -72,7 +72,7 @@ class SPARQLIteratation extends Iteration {
 
 	@Override
 	public List<String> getStringsFor(String reference) {
-		List<String> l = new ArrayList<String>();
+		List<String> l = new ArrayList<>();
 		RDFNode n = sol.get(reference);
 		if(n != null && !nulls.contains(n))
 			l.add(n.toString());
@@ -93,7 +93,7 @@ class SPARQLTSVIteratation extends Iteration {
 
 	@Override
 	public List<Object> getValuesFor(String reference) {
-		List<Object> l = new ArrayList<Object>();
+		List<Object> l = new ArrayList<>();
 		// REMOVE THE ? FROM THE REFERENCE
 		RDFNode n = sol.get(reference.substring(1));
 		if(n != null && !nulls.contains(n))
@@ -103,7 +103,7 @@ class SPARQLTSVIteratation extends Iteration {
 
 	@Override
 	public List<String> getStringsFor(String reference) {
-		List<String> l = new ArrayList<String>();
+		List<String> l = new ArrayList<>();
 		// REMOVE THE ? FROM THE REFERENCE
 		RDFNode n = sol.get(reference.substring(1));
 		if(n != null && !nulls.contains(n))

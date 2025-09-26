@@ -14,10 +14,11 @@ public class FunctionMap extends TermMap {
 	
 	@Override
 	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
-		if(termType == RML.IRI) {
-			return generateIRIs(i, baseIRI);			
-		}
-		
+        if(termType == RML.IRI)
+            return generateIRIs(i, baseIRI);
+        if(termType == RML.URI)
+            return generateURIs(i, baseIRI);
+
 		throw new RuntimeException("Incorrect term type for function map.");
 	}
 

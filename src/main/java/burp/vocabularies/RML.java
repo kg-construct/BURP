@@ -10,7 +10,8 @@ public final class RML {
 	public static final String NS = "http://w3id.org/rml/";
 
 	public static final Resource BLANKNODE = ResourceFactory.createResource(NS + "BlankNode");
-	public static final Resource IRI = ResourceFactory.createResource(NS + "IRI");
+    public static final Resource IRI = ResourceFactory.createResource(NS + "IRI");
+    public static final Resource URI = ResourceFactory.createResource(NS + "URI");
 	public static final Resource LITERAL = ResourceFactory.createResource(NS + "Literal");
 
 	// RML Constants

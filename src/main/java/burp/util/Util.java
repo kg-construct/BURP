@@ -83,22 +83,45 @@ public class Util {
         }
         return new String(hexChars);
 	}
-	
-	public static boolean isAbsoluteAndValidIRI(String string) {
-		//return isAbsolute(string) && !IRIFactory.iriImplementation().create(string).hasViolation(false);
-		if(isAbsolute(string)) {
-			Iterator<Violation> iter = IRIFactory.iriImplementation().create(string).violations(false);
-			while(iter.hasNext()) {
-				Violation v = iter.next();
-				// TODO: We ignore CAPS in HOST for test cases, but we shouldn't
-				if(v.getViolationCode() == 11);
-				else
-					return false;
-			}
-			return true;
-		}
-		return false;
-	}
+
+    public static boolean isAbsoluteAndValidIRI(String string) {
+        //return isAbsolute(string) && !IRIFactory.iriImplementation().create(string).hasViolation(false);
+        if(isAbsolute(string)) {
+            Iterator<Violation> iter = IRIFactory.iriImplementation().create(string).violations(false);
+            while(iter.hasNext()) {
+                Violation v = iter.next();
+                // TODO: We ignore CAPS in HOST for test cases, but we shouldn't
+                if(v.getViolationCode() == 11);
+                else
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isAbsoluteAndValidURI(String string) {
+        //return isAbsolute(string) && !IRIFactory.iriImplementation().create(string).hasViolation(false);
+        if(isAbsolute(string)) {
+            Iterator<Violation> iter = IRIFactory.iriImplementation().create(string).violations(false);
+            while(iter.hasNext()) {
+                Violation v = iter.next();
+                // TODO: We ignore CAPS in HOST for test cases, but we shouldn't
+                if(v.getViolationCode() == 11);
+                else
+                    return false;
+            }
+
+            try {
+                URI uri = new URI(string);
+            } catch (Exception e) {
+                return false;
+            }
+
+            return true;
+        }
+        return false;
+    }
 	
 	public static boolean isAbsolute(String string) {
 		return URI.create(string.toLowerCase()).isAbsolute();

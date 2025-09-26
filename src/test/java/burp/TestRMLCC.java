@@ -36,7 +36,7 @@ public class TestRMLCC {
         for (int i = 1; i < records.size(); i++) {
             String[] record = records.get(i);
             testDataList.add(new TestData(
-                    record[0], record[1], record[2], record[3],
+                    record[0], record[1], record[2], record[3], "http://www.example.org/",
                     record[4], record[5], record[6], record[7],
                     record[8], record[9], record[10], record[11],
                     record[12], record[13], record[14], record[15],

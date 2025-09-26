@@ -4,7 +4,10 @@
  [
     a rml:TriplesMap;
     rml:logicalSource [
-      rml:source "data.json" ;
+        rml:source [ a rml:RelativePathSource;
+            rml:root rml:MappingDirectory;
+            rml:path "data.json"
+          ] ;
       rml:referenceFormulation rml:JSONPath ;
       rml:iterator "$[*]";
     ];

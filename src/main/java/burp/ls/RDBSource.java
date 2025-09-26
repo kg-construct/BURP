@@ -31,9 +31,9 @@ class RDBSource extends LogicalSource {
 	public Iterator<Iteration> iterator() {
 		try {
 			Properties props = new Properties();
-			if (username != null && !"".equals(username))
+			if (username != null && !username.isEmpty())
 				props.setProperty("user", username);
-			if (password != null && !"".equals(password))
+			if (password != null && !password.isEmpty())
 				props.setProperty("password", password);
 
 			Class.forName(jdbcDriver);
@@ -41,12 +41,12 @@ class RDBSource extends LogicalSource {
 			Statement statement = connection.createStatement();
 			final ResultSet resultset = statement.executeQuery(query);
 
-			Map<String, Integer> indexMap = new HashMap<String, Integer>();
+			Map<String, Integer> indexMap = new HashMap<>();
 			for (int i = 1; i <= resultset.getMetaData().getColumnCount(); i++) {
 				indexMap.put(resultset.getMetaData().getColumnLabel(i), i);
 			}
 
-			return new Iterator<Iteration>() {
+			return new Iterator<>() {
 
 				@Override
 				public boolean hasNext() {
@@ -72,7 +72,7 @@ class RDBSource extends LogicalSource {
 
 class RDBIteration extends Iteration {
 
-	private Map<String, Object> values = new HashMap<String, Object>();
+	private final Map<String, Object> values = new HashMap<>();
 
 	protected RDBIteration(ResultSet resultSet, Map<String, Integer> indexMap, Set<Object> nulls) {
 		super(nulls);
@@ -95,7 +95,7 @@ class RDBIteration extends Iteration {
 	
 	@Override
 	public List<Object> getValuesFor(String reference) {
-		List<Object> l = new ArrayList<Object>();
+		List<Object> l = new ArrayList<>();
 		String columnname = StringEscapeUtils.unescapeJava(reference);		
 		
 		if(!values.containsKey(columnname) && !values.containsKey(columnname.replace("\"", "")))
@@ -116,7 +116,7 @@ class RDBIteration extends Iteration {
 
 	@Override
 	public List<String> getStringsFor(String reference) {
-		List<String> l = new ArrayList<String>();
+		List<String> l = new ArrayList<>();
 		for(Object o : getValuesFor(reference))
 			if(o != null)
 				l.add(o.toString());

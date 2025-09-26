@@ -30,7 +30,7 @@ class XMLSource extends FileBasedLogicalSource {
 	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+				iterations = new ArrayList<>();
 
 				String contents = Files.readString(Paths.get(getDecompressedFile()), encoding);
 
@@ -65,8 +65,8 @@ class XMLSource extends FileBasedLogicalSource {
 
 class XMLIteration extends Iteration {
 
-	private Node node;
-	private HashMap<String, String> prefixMap;
+	private final Node node;
+	private final HashMap<String, String> prefixMap;
 
 	protected XMLIteration(Node node, Set<Object> nulls, HashMap<String, String> prefixMap) {
 		super(nulls);
@@ -80,7 +80,7 @@ class XMLIteration extends Iteration {
 		// We need to explicitly convert the objects
 		// to strings because RML has not worked out
 		// "6.6.1 Automatically deriving datatypes" yet
-		List<Object> l2 = new ArrayList<Object>();
+		List<Object> l2 = new ArrayList<>();
 		try {
 			XPath xPath = XPathFactory.newInstance().newXPath();
 			if (prefixMap != null) {
@@ -103,7 +103,7 @@ class XMLIteration extends Iteration {
 
 	@Override
 	public List<String> getStringsFor(String reference) {
-		List<String> l2 = new ArrayList<String>();
+		List<String> l2 = new ArrayList<>();
 		try {
 			XPath xPath = XPathFactory.newInstance().newXPath();
 			if (prefixMap != null) {

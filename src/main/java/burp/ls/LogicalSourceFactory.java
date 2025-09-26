@@ -52,13 +52,11 @@ public class LogicalSourceFactory {
 
 				if (r.hasProperty(CSVW.delimiter)) {
 					// TODO: According to CSVW, the delimiter is a string. But all examples are chars.
-					char e = r.getProperty(CSVW.delimiter).getChar();
-					source.delimiter = e;
+                    source.delimiter = r.getProperty(CSVW.delimiter).getChar();
 				}
 
 				if (r.hasProperty(CSVW.header)) {
-					Boolean e = r.getProperty(CSVW.header).getBoolean();
-					source.firstLineIsHeader = e;
+                    source.firstLineIsHeader = r.getProperty(CSVW.header).getBoolean();
 				}
 
 				if (r.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.NULL)) {
@@ -340,7 +338,7 @@ public class LogicalSourceFactory {
 		Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
 		// Set map of namespaces for XPath iteration
 		StmtIterator properties = referenceFormulation.listProperties(RML.namespace);
-		HashMap<String, String> prefixMap = new HashMap<String, String>();
+		HashMap<String, String> prefixMap = new HashMap<>();
 		while (properties.hasNext()) {
 			Statement statement = properties.next();
 			Resource namespace = statement.getResource();
