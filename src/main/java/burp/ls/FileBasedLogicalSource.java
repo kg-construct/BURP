@@ -15,7 +15,6 @@ abstract class FileBasedLogicalSource extends LogicalSource {
 
 	protected List<Iteration> iterations = null;
 	public String file;
-	public String iterator;
 	public Charset encoding = StandardCharsets.UTF_8;
 	public Resource compression = RML.none;
 

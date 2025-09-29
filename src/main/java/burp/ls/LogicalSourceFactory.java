@@ -225,7 +225,7 @@ public class LogicalSourceFactory {
 		// Get operation filter
 		source.filter = s.getPropertyResourceValue(YS.filter);
 		// Set XPath for RML iterator
-		source.rmlIterator = ls.getProperty(RML.iterator).getLiteral().getString();
+		source.iterator = ls.getProperty(RML.iterator).getLiteral().getString();
 		// Set map of prefixes for RML iterations
 		source.rmlPrefixMap = getPrefixMap(ls);
 		return source;

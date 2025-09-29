@@ -49,7 +49,6 @@ class NetconfQuerySource extends LogicalSource {
 	public Resource datastoreType;
 	public Resource filter;
 
-	public String rmlIterator;
 	public HashMap<String, String> rmlPrefixMap;
 
 	protected List<Iteration> iterations = null;
@@ -145,7 +144,7 @@ class NetconfQuerySource extends LogicalSource {
 					xPath.setNamespaceContext(namespaces);
 				}
 
-				NodeList nodes = (NodeList) xPath.compile(rmlIterator).evaluate(xmlDocument, XPathConstants.NODESET);
+				NodeList nodes = (NodeList) xPath.compile(iterator).evaluate(xmlDocument, XPathConstants.NODESET);
 
 				for (int i = 0; i < nodes.getLength(); i++) {
 					Node node = nodes.item(i);

@@ -51,7 +51,9 @@
             sh:name "rml:source" ;
             sh:node <http://w3id.org/rml/shapes/RMLSourceShape> ;
             sh:nodeKind sh:BlankNodeOrIRI ;
-            sh:path rml:source ],
+            # sh:path rml:source
+            sh:path [ sh:alternativePath ( rml:source rml:viewOn  ) ] ;
+           ],
         [ sh:datatype xsd:string ;
             sh:description """
         The logical iterator (rml:iterator) defines the iteration loop used to 

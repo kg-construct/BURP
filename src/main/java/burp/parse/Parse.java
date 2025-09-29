@@ -6,14 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import burp.model.*;
 import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFList;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.ShaclValidator;
 import org.apache.jena.shacl.ValidationReport;
@@ -23,28 +18,6 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.RDF;
 
 import burp.ls.LogicalSourceFactory;
-import burp.model.ConcreteExpressionMap;
-import burp.model.DatatypeMap;
-import burp.model.Expression;
-import burp.model.FunctionExecution;
-import burp.model.FunctionMap;
-import burp.model.GraphMap;
-import burp.model.Input;
-import burp.model.InputValueMap;
-import burp.model.JoinCondition;
-import burp.model.LanguageMap;
-import burp.model.LogicalSource;
-import burp.model.ObjectMap;
-import burp.model.ParameterMap;
-import burp.model.PredicateMap;
-import burp.model.PredicateObjectMap;
-import burp.model.RDFNodeConstant;
-import burp.model.Reference;
-import burp.model.ReferencingObjectMap;
-import burp.model.ReturnMap;
-import burp.model.SubjectMap;
-import burp.model.Template;
-import burp.model.TriplesMap;
 import burp.model.gathermaputil.GatherMapMixin;
 import burp.vocabularies.RML;
 import burp.vocabularies.YS;
@@ -56,7 +29,7 @@ public class Parse {
 	public static List<TriplesMap> parseMappingFile(String mappingFile) throws Exception {
 		String mpath = Paths.get(mappingFile).toAbsolutePath().getParent().toString();
 
-		triplesmaps = new HashMap<Resource, TriplesMap>();
+		triplesmaps = new HashMap<>();
 
 		Model mapping = RDFDataMgr.loadModel(mappingFile);
 
@@ -88,7 +61,7 @@ public class Parse {
 			});
 		}
 
-		return new ArrayList<TriplesMap>(triplesmaps.values());
+		return new ArrayList<>(triplesmaps.values());
 	}
 
 	private static boolean isValid(Model mapping) {
@@ -96,7 +69,9 @@ public class Parse {
 		core.read(Parse.class.getResourceAsStream("/shapes/core.ttl"), "urn:dummy", FileUtils.langTurtle);
 		core.read(Parse.class.getResourceAsStream("/shapes/cc.ttl"), "urn:dummy", FileUtils.langTurtle);
 		core.read(Parse.class.getResourceAsStream("/shapes/io.ttl"), "urn:dummy", FileUtils.langTurtle);
-		core.read(Parse.class.getResourceAsStream("/shapes/fnml.ttl"), "urn:dummy", FileUtils.langTurtle);
+        core.read(Parse.class.getResourceAsStream("/shapes/fnml.ttl"), "urn:dummy", FileUtils.langTurtle);
+        core.read(Parse.class.getResourceAsStream("/shapes/lv.ttl"), "urn:dummy", FileUtils.langTurtle);
+        core.read(Parse.class.getResourceAsStream("/shapes/star.ttl"), "urn:dummy", FileUtils.langTurtle);
 
 		ValidationReport report = ShaclValidator.get().validate(core.getGraph(), mapping.getGraph());
 	    if(!report.conforms()) {
@@ -154,40 +129,52 @@ public class Parse {
 	}
 
 	private static LogicalSource prepareLogicalSource(Resource ls, String mpath) throws Exception {
-		Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
+        // This is RML-LV
+        if(ls.hasProperty(RML.viewOn)) {
+            Resource view = ls.getPropertyResourceValue(RML.viewOn);
+            LogicalView lv = new LogicalView();
+            lv.logicalSource = LogicalSourceFactory.createJSONSource(view, mpath);
 
-		if (RML.CSV.equals(referenceFormulation))
-			return LogicalSourceFactory.createCSVSource(ls, mpath);
+            ls.listProperties(RML.field).forEach(s -> {
+                lv.fields.add(prepareField(s.getObject().asResource()));
+            });
 
-		if (RML.JSONPath.equals(referenceFormulation))
-			return LogicalSourceFactory.createJSONSource(ls, mpath);
+            return lv;
+        }
 
-		if (RML.XPath.equals(referenceFormulation))
-			return LogicalSourceFactory.createXMLSource(ls, mpath);
+        // This is RML-CORE
+        Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
 
-		if (referenceFormulation.hasProperty(RDF.type, RML.XPathReferenceFormulation))
-			return LogicalSourceFactory.createXMLSource(ls, mpath);
+        LogicalSource s = null;
+        if (RML.JSONPath.equals(referenceFormulation))
+            s = LogicalSourceFactory.createJSONSource(ls, mpath);
 
-		if (RML.SQL2008Table.equals(referenceFormulation))
-			return LogicalSourceFactory.createSQL2008TableSource(ls, mpath);
-
-		if (RML.SQL2008Query.equals(referenceFormulation))
-			return LogicalSourceFactory.createSQL2008QuerySource(ls, mpath);
-
-		if(RML.SPARQL_Results_CSV.equals(referenceFormulation))
-			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
-
-		if(RML.SPARQL_Results_TSV.equals(referenceFormulation))
-			return LogicalSourceFactory.createSPARQLSource(ls, mpath, true);
-
-		if(RML.SPARQL_Results_XML.equals(referenceFormulation))
-			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
-
-		if(RML.SPARQL_Results_JSON.equals(referenceFormulation))
-			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
-
+        // This is RML-IO
+        else if (RML.CSV.equals(referenceFormulation))
+            s =  LogicalSourceFactory.createCSVSource(ls, mpath);
+		else if (RML.XPath.equals(referenceFormulation))
+            s =  LogicalSourceFactory.createXMLSource(ls, mpath);
+        else if (referenceFormulation.hasProperty(RDF.type, RML.XPathReferenceFormulation))
+            s =  LogicalSourceFactory.createXMLSource(ls, mpath);
+        else if (RML.SQL2008Table.equals(referenceFormulation))
+            s =  LogicalSourceFactory.createSQL2008TableSource(ls, mpath);
+        else if (RML.SQL2008Query.equals(referenceFormulation))
+            s =  LogicalSourceFactory.createSQL2008QuerySource(ls, mpath);
+        else if (RML.SPARQL_Results_CSV.equals(referenceFormulation))
+            s =  LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
+        else if (RML.SPARQL_Results_TSV.equals(referenceFormulation))
+            s =  LogicalSourceFactory.createSPARQLSource(ls, mpath, true);
+        else if (RML.SPARQL_Results_XML.equals(referenceFormulation))
+            s =  LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
+        else if (RML.SPARQL_Results_JSON.equals(referenceFormulation))
+            s =  LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
 		if (referenceFormulation.hasProperty(RDF.type, YS.NetconfQuerySource))
-			return LogicalSourceFactory.createNetconfQuerySource(ls);
+            s =  LogicalSourceFactory.createNetconfQuerySource(ls);
+
+        if(s != null) {
+            s.referenceFormulation = referenceFormulation;
+            return s;
+        }
 
 		throw new Exception("Reference formulation not (yet) supported.");
 	}
@@ -312,18 +299,15 @@ public class Parse {
 		GatherMapMixin gatherMap = new GatherMapMixin();
 
 		if(gm.hasProperty(RML.allowEmptyListAndContainer)) {
-			boolean empty = gm.getProperty(RML.allowEmptyListAndContainer).getObject().asLiteral().getBoolean();
-			gatherMap.allowEmptyListAndContainer = empty;
+            gatherMap.allowEmptyListAndContainer = gm.getProperty(RML.allowEmptyListAndContainer).getObject().asLiteral().getBoolean();
 		}
 
 		if(gm.hasProperty(RML.gatherAs)) {
-			Resource r = gm.getPropertyResourceValue(RML.gatherAs);
-			gatherMap.gatherAs = r;
+            gatherMap.gatherAs = gm.getPropertyResourceValue(RML.gatherAs);
 		}
 
 		if(gm.hasProperty(RML.strategy)) {
-			Resource r = gm.getPropertyResourceValue(RML.strategy);
-			gatherMap.strategy = r;
+            gatherMap.strategy = gm.getPropertyResourceValue(RML.strategy);
 		}
 
 		RDFList list = gm.getPropertyResourceValue(RML.gather).as(RDFList.class);
@@ -354,6 +338,25 @@ public class Parse {
 		x.expression = prepareExpression(lam);
 		return x;
 	}
+
+    private static Field prepareField(Resource p) {
+        // ExpressionField and IterableField are mutually exclusive
+        // If we have an rml:field, property, then we have an IterableField
+        if(p.hasProperty(RML.field)) {
+            // Create IterableField
+            IterableField f = new IterableField();
+            // TODO
+            f.fieldName = p.getRequiredProperty(RML.fieldName).getObject().asLiteral().getString();
+            return f;
+        } else {
+            ExpressionField f = new ExpressionField();
+            FieldExpressionMap fem = new FieldExpressionMap();
+            fem.expression = prepareExpression(p);
+            f.fieldExpressionMap = fem;
+            f.fieldName = p.getRequiredProperty(RML.fieldName).getObject().asLiteral().getString();
+            return f;
+        }
+    }
 
 	private static ReferencingObjectMap prepareReferencingObjectMap(Resource rom) {
 		ReferencingObjectMap referencingObjectMap = new ReferencingObjectMap();
@@ -432,7 +435,6 @@ public class Parse {
 		pm.expression = prepareExpression(r.getPropertyResourceValue(RML.parameterMap));
 		input.parameterMap = pm;
 
-
 		input.inputValueMap = prepareInputValueMap(r.getPropertyResourceValue(RML.inputValueMap));
 
 		return input;
@@ -476,8 +478,7 @@ public class Parse {
 		if (r.hasProperty(RML.constant)) return false;
 		if (r.hasProperty(RML.reference)) return false;
 		if (r.hasProperty(RML.template)) return false;
-		if (r.hasProperty(RML.functionExecution)) return false;
-		return true;
-	}
+        return !r.hasProperty(RML.functionExecution);
+    }
 
 }
