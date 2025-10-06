@@ -67,7 +67,7 @@
             """ ;
                 sh:path rml:termType ] ) ;
     sh:message """
-    rml:GraphMap must specify an rml:template, rml:reference or rml:constant
+    rml:GraphMap must specify an rml:template, rml:reference or rml:constant 
     with the IRI of the Named Graph.
     """ ;
     sh:targetClass rml:GraphMap ;
@@ -79,12 +79,12 @@
     Represents a Join.
     """ ;
     sh:message """
-    rml:Join must specify exactly one rml:parent/rml:parentMap
+    rml:Join must specify exactly one rml:parent/rml:parentMap 
     and rml:child/rml:childMap.
     """ ;
     sh:property [ rdfs:label "parentMap/parent" ;
             rdfs:comment """
-        rml:parent/rml:parentMap may only be provided once and
+        rml:parent/rml:parentMap may only be provided once and 
         not at the same time.
         """ ;
             sh:maxCount 1 ;
@@ -113,7 +113,7 @@
         Specifies the parent of the object component for joining.
         """ ;
             sh:message """
-        rml:parentMap must point to a rml:ParentMap specifying the
+        rml:parentMap must point to a rml:ParentMap specifying the 
         parent tag of the string Literal.
         """ ;
             sh:nodeKind sh:BlankNodeOrIRI ;
@@ -128,7 +128,7 @@
             sh:targetSubjectsOf rml:parent ],
         [ rdfs:label "childMap/child" ;
             rdfs:comment """
-        rml:child/rml:childMap may only be provided once and
+        rml:child/rml:childMap may only be provided once and 
         not at the same time.
         """ ;
             sh:maxCount 1 ;
@@ -176,7 +176,7 @@
             """ ;
                 sh:path rml:termType ] ) ;
     sh:message """
-    Predicate Object Map must generate an IRI representing the predicate of an
+    Predicate Object Map must generate an IRI representing the predicate of an 
     RDF triple.
     """ ;
     sh:targetClass rml:PredicateMap ;
@@ -199,7 +199,7 @@
                 sh:targetSubjectsOf rml:predicate,
                     rml:predicateMap ] [ rdfs:label "predicateMap" ;
                 rdfs:comment """
-            A PredicateMap element to generate the predicate component of the
+            A PredicateMap element to generate the predicate component of the 
             (predicate, object) pair from a logical table row or iterator.
             """ ;
                 sh:message """
@@ -209,7 +209,7 @@
                 sh:path rml:predicateMap ;
                 sh:targetSubjectsOf rml:predicateMap ] [ rdfs:label "predicate" ;
                 rdfs:comment """
-            Specifies the predicate for the generated triple from the logical table
+            Specifies the predicate for the generated triple from the logical table 
             row or iterator.
             """ ;
                 sh:message """
@@ -230,7 +230,7 @@
                     rml:objectMap,
                     rml:quotedTriplesMap ] [ rdfs:label "objectMap" ;
                 rdfs:comment """
-            An ObjectMap element to generate the object component of the
+            An ObjectMap element to generate the object component of the 
             (predicate, object) pair from a logical table row or iterator.
             """ ;
                 sh:message """
@@ -290,7 +290,7 @@
 <http://w3id.org/rml/shapes/RMLdatatypeShape> a sh:NodeShape ;
     rdfs:label "datatype" ;
     rdfs:comment """
-    An IRI reference for use as the graph name of all triples generated with
+    An IRI reference for use as the graph name of all triples generated with 
     the datatype.
     """ ;
     sh:message """
@@ -302,8 +302,8 @@
 <http://w3id.org/rml/shapes/RMLgraphShape> a sh:NodeShape ;
     rdfs:label "graph" ;
     rdfs:comment """
-    An IRI reference for use as the graph name of all triples generated with
-    the Graph Map.
+    An IRI reference for use as the graph name of all triples generated with 
+    the Graph Map. 
     """ ;
     sh:message """
     rml:graph must be an IRI or blank node.
@@ -330,7 +330,7 @@
     An IRI, Blank Node, or Literal to use as object for all the RDF triples.
     """ ;
     sh:message """
-    rml:object shortcut for rml:objectMap must be an IRI, Blank Node,
+    rml:object shortcut for rml:objectMap must be an IRI, Blank Node, 
     or Literal.
     """ ;
     sh:targetObjectsOf rml:object .
@@ -378,7 +378,8 @@
     rml:AbstractLogicalSource must specify how to generate logical iterations on a data source for a triples map.
     """ ;
     sh:node <http://w3id.org/rml/shapes/RMLIterableShape> ;
-    sh:targetClass rml:AbstractLogicalSource .
+    sh:targetClass rml:AbstractLogicalSource ;
+    sh:targetObjectsOf rml:logicalSource .
 
 <http://w3id.org/rml/shapes/RMLIterableShape> a sh:NodeShape ;
     rdfs:label "Iterable" ;
@@ -390,12 +391,12 @@
     """ ;
     sh:property [ rdfs:label "rml:referenceFormulation" ;
             rdfs:comment """
-        The reference formulation (rml:referenceFormulation) defines how to
+        The reference formulation (rml:referenceFormulation) defines how to 
         reference to elements of the data of the input source.
         """ ;
             sh:maxCount 1 ;
             sh:message """
-        rml:referenceFormulation must be a blank node or IRI specifying the
+        rml:referenceFormulation must be a blank node or IRI specifying the 
         reference formulation on how to reference elements of a data source,
         and may be provided at most once.
         """ ;
@@ -403,24 +404,22 @@
             sh:path rml:referenceFormulation ],
         [ rdfs:label "rml:iterator" ;
             rdfs:comment """
-        The logical iterator (rml:iterator) defines the iteration loop used to
+        The logical iterator (rml:iterator) defines the iteration loop used to 
         map the data of the input source. Depends on the reference formulation
-        if an iterator is necessary.
+        if an iterator is necessary.  
         """ ;
-            sh:datatype xsd:string ;
             sh:maxCount 1 ;
             sh:message """
-        rml:iterator must be a Literal specifying the iterator to iterate over
+        rml:iterator specifies the iterator to iterate over
         the data source, and may be provided at most once.
         """ ;
-            sh:nodeKind sh:Literal ;
             sh:path rml:iterator ] ;
     sh:targetClass rml:Iterable .
 
 <http://w3id.org/rml/shapes/RMLJoinConditionPropertiesShape> a sh:PropertyShape ;
     rdfs:label "joinCondition" ;
     rdfs:comment """
-    Specifies the join condition for joining a child data source with
+    Specifies the join condition for joining a child data source with 
     a parent data source of the foreign key constraint.
     """ ;
     sh:message """
@@ -444,18 +443,18 @@
                 sh:minCount 0 ;
                 sh:path [ sh:alternativePath ( rml:languageMap rml:datatypeMap rml:language rml:datatype ) ] ] [ rdfs:label "languageMap" ;
                 rdfs:comment """
-            Specified the language map for the object component for the
+            Specified the language map for the object component for the 
             generated RDF triples.
             """ ;
                 sh:message """
-            rml:languageMap must point to a rml:LanguageMap specifying the
+            rml:languageMap must point to a rml:LanguageMap specifying the 
             language tag of the string Literal.
             """ ;
                 sh:nodeKind sh:BlankNodeOrIRI ;
                 sh:path rml:languageMap ;
                 sh:targetSubjectsOf rml:languageMap ] [ rdfs:label "datatypeMap" ;
                 rdfs:comment """
-            Specifies the datatype of the object component for the generated
+            Specifies the datatype of the object component for the generated 
             RDF triples.
             """ ;
                 sh:message """
@@ -503,7 +502,7 @@
                 sh:path rml:parentTriplesMap ;
                 sh:targetSubjectsOf rml:parentTriplesMap ] ) ;
     sh:message """
-    rml:RefObjectMap must specify a rml:parentTriplesMap and zero or more
+    rml:RefObjectMap must specify a rml:parentTriplesMap and zero or more 
     rml:joinConditions.
     """ ;
     sh:targetClass rml:RefObjectMap .
@@ -625,11 +624,11 @@
             rdfs:comment """
         Specifies a Graph Map. When used with a Subject Map element, all the
         RDF triples generated will be stored in the specified named graph.
-        Otherwise, the RDF triple generated using the (predicate, object)
+        Otherwise, the RDF triple generated using the (predicate, object) 
         pair will be stored in the specified named graph.
         """ ;
             sh:message """
-        rml:graphMap must be either an IRI or blank node.
+        rml:graphMap must be either an IRI or blank node. 
         """ ;
             sh:nodeKind sh:BlankNodeOrIRI ;
             sh:path rml:graphMap ],
@@ -638,7 +637,7 @@
         An IRI reference to use as the named graph of all generated triples.
         """ ;
             sh:message """
-        rml:graphMap must be an IRI.
+        rml:graphMap must be an IRI. 
         """ ;
             sh:nodeKind sh:IRI ;
             sh:path rml:graph ] ;
@@ -654,7 +653,7 @@
     """ ;
     sh:and ( <http://w3id.org/rml/shapes/RMLExpressionMapShape> [ rdfs:label "termType" ;
                 rdfs:comment """
-            An IRI indicating whether a generated term should be an IRI,
+            An IRI indicating whether a generated term should be an IRI, 
             Blank Node, or a Literal.
             """ ;
                 sh:in ( rml:IRI rml:UnsafeIRI rml:URI rml:UnsafeURI rml:Literal rml:BlankNode ) ;
@@ -690,7 +689,6 @@
         Exactly one rml:template, one rml:constant, one rml:reference,
         one rml:returnMap, or one rml:functionExecution is required.
         """ ;
-            sh:minCount 0 ;
             sh:path [ sh:alternativePath ( rml:template rml:constant rml:reference rml:returnMap rml:functionExecution ) ] ;
             sh:targetSubjectsOf rml:constant,
                 rml:functionExecution,
@@ -699,14 +697,14 @@
                 rml:template ],
         [ rdfs:label "reference" ;
             rdfs:comment """
-        A reference rml:reference is used to refer to a column in case of
-        databases, a record in case of CSV or TSV data source, an element in
+        A reference rml:reference is used to refer to a column in case of 
+        databases, a record in case of CSV or TSV data source, an element in 
         case of XML data source, an object in case of a JSON data source, etc.
 
-        A reference must be a valid identifier, considering the reference
+        A reference must be a valid identifier, considering the reference 
         formulation (rml:referenceFormulation) specified. The reference can be
-        an absolute path, or a path relative to the iterator specified at the
-        logical source.
+        an absolute path, or a path relative to the iterator specified at the 
+        logical source. 
         """ ;
             sh:datatype xsd:string ;
             sh:message """
@@ -730,8 +728,8 @@
             sh:targetSubjectsOf rml:returnMap ],
         [ rdfs:label "functionExecution" ;
             rdfs:comment """
-        A Function Execution rml:functionExecution is used to define the FnO
-        function to execute from the RML-FNML specification. RML Core only
+        A Function Execution rml:functionExecution is used to define the FnO 
+        function to execute from the RML-FNML specification. RML Core only 
         validates if the property is present and has the right node kind.
         The actual validation happens with RML-FNML SHACL shapes.
         """ ;
@@ -743,7 +741,7 @@
             sh:targetSubjectsOf rml:functionExecution ],
         [ rdfs:label "template" ;
             rdfs:comment """
-        A template (format string) to specify how to generate a value for a
+        A template (format string) to specify how to generate a value for a 
         subject, predicate, or object, using one or more columns from a logical
         table row or iterator.
         """ ;
@@ -755,7 +753,7 @@
             sh:path rml:template ],
         [ rdfs:label "constant" ;
             rdfs:comment """
-        A property for indicating whether a term map is a constant-valued term
+        A property for indicating whether a term map is a constant-valued term 
         map.
         """ ;
             sh:message """
@@ -777,3 +775,4 @@
     sh:nodeKind sh:BlankNodeOrIRI ;
     sh:path rml:logicalTarget ;
     sh:targetSubjectsOf rml:logicalTarget .
+

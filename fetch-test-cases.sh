@@ -4,6 +4,7 @@ set -Eeuo pipefail
 # --- config ---
 target_dir="target"
 resources_dir="src/test/resources"
+shapes_resources_dir="src/main/resources/shapes"
 repos=(
   "rml-core"
   "rml-cc"
@@ -44,6 +45,21 @@ for repo in "${repos[@]}"; do
     echo "• Copied $src -> $dest"
   else
     echo "• Skipped $repo (no test-cases directory found)"
+  fi
+done
+
+# Copy shapes into ../src/main/resources/<repo>
+echo "Copying shapes directories to ../$shapes_resources_dir ..."
+for repo in "${repos[@]}"; do
+  src="$repo/shapes"
+  dest="../$shapes_resources_dir/$repo"
+  if [[ -d "$src" ]]; then
+    mkdir -p "$dest"
+    # -a to preserve attrs; -r for recursive; --no-target-directory not needed here
+    cp -a "$src/." "$dest/"
+    echo "• Copied $src -> $dest"
+  else
+    echo "• Skipped $repo (no shapes directory found)"
   fi
 done
 

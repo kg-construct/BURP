@@ -1,11 +1,5 @@
 package burp.model;
 
-import burp.ls.CSVIteration;
-import com.opencsv.CSVIterator;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-
 import java.io.FileReader;
 import java.util.*;
 

@@ -54,7 +54,7 @@
     sh:targetObjectsOf rml:quotedTriplesMap .
 
 <http://w3id.org/rml/shapes/RMLStarMapShape> a sh:NodeShape ;
-    sh:and ( <http://w3id.org/rml/shapes/RMLJoinConditionPropertiesShape> [ sh:description """
+    sh:and ( <http://w3id.org/rml/shapes/RMLJoinConditionPropertiesShape> [ rdfs:comment """
             An Quoted Triples Map element to generate a RDF-star triple as 
             subject or object or another triple from a logical source record.
             """ ;
@@ -73,7 +73,7 @@
                 sh:xone ( [ sh:minCount 1 ;
                             sh:path rml:predicate ] [ sh:minCount 1 ;
                             sh:path rml:predicateMap ] ) ] ) ;
-    sh:description """
+    rdfs:comment """
     Represents a Star Map.
     """ ;
     sh:message """
@@ -89,7 +89,7 @@
             """ ;
                 sh:path rdf:type ;
                 sh:value rml:AssertedTriplesMap ] ) ;
-    sh:description """
+    rdfs:comment """
     Represents a Asserted Triples Map.
     """ ;
     sh:message """
@@ -108,7 +108,7 @@
             """ ;
                 sh:path rdf:type ;
                 sh:value rml:NonAssertedTriplesMap ] ) ;
-    sh:description """
+    rdfs:comment """
     Represents a Non Asserted Triples Map.
     """ ;
     sh:message """

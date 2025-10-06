@@ -1,0 +1,44 @@
+###############################################################################
+# RML Logical Target shape                                                    #
+# Copyright Dylan Van Assche, IDLab - UGent - imec (2023 - 2024)              #
+###############################################################################
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix : <http://w3id.org/rml/shapes/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+
+:RMLLogicalTargetShape
+    a sh:NodeShape ;
+    sh:targetObjectsOf rml:logicalTarget ;  # Object of rml:TriplesMap
+    sh:targetClass rml:LogicalTarget ;  # Used as a class
+    # Already targets 'rml:logicalTarget'
+    rdfs:label "RML Logical Target" ;
+    rdfs:comment """
+    A logical target is any target to where generated RDF triples are exported
+    to.
+    """ ;
+    sh:message """
+    RML Logical Target requires one rml:target.
+    """ ;
+
+    # rml:target
+    sh:property [
+        sh:path rml:target ;
+        rdfs:label "rml:target" ;
+        rdfs:comment """
+        The target (rml:target) locates the output target. It is a URI
+        that represents the target where it must export generated RDF triples
+        to.
+        """ ;
+        sh:message """
+        rml:target must be provided to locate the target. rml:target must 
+        be provided exactly once as an URI.
+        """ ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:BlankNodeOrIRI;
+        sh:node :RMLTargetShape;
+    ] ; 
+.
