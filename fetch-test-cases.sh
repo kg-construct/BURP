@@ -12,6 +12,7 @@ repos=(
   "rml-fnml"
   "rml-lv"
   "rml-star"
+  "rml-io-registry"
 )
 
 trap 'echo; echo "Error occurred."; echo "• Check the repository URLs and your internet connection."; echo "• Verify you have permissions to create/write to \"$target_dir\"."; exit 1' ERR
