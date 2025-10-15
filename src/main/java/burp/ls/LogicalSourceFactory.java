@@ -254,7 +254,8 @@ public class LogicalSourceFactory {
 	private static String getFile(Resource ls) {
 		Resource source = ls.getPropertyResourceValue(RML.source);
 
-		if (source.hasProperty(RDF.type, RML.RelativePathSource)) {
+        if (source.hasProperty(RDF.type, RML.RelativePathSource)
+                || source.hasProperty(RDF.type, RML.FilePath)) {
 			String file = source.getProperty(RML.path).getLiteral().getString();
 
 			Resource root = source.getPropertyResourceValue(RML.root);

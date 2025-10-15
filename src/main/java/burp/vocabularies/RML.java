@@ -22,6 +22,7 @@ public final class RML {
     public static final Resource CurrentWorkingDirectory = ResourceFactory.createResource(NS + "CurrentWorkingDirectory");
 	public static final Resource Namespace = ResourceFactory.createResource(NS + "Namespace");
 	public static final Resource RelativePathSource = ResourceFactory.createResource(NS + "RelativePathSource");
+    public static final Resource FilePath = ResourceFactory.createResource(NS + "FilePath");
 	public static final Resource SQL2008Table = ResourceFactory.createResource(NS + "SQL2008Table");
 	public static final Resource SQL2008Query = ResourceFactory.createResource(NS + "SQL2008Query");
     public static final Resource XPath = ResourceFactory.createResource(NS + "XPath");
@@ -97,5 +98,4 @@ public final class RML {
 	// Utility constants
 	public static final Resource list = ResourceFactory.createResource(NS + "list");
 	public static final Resource noempty = ResourceFactory.createResource(NS + "noEmpty");
-
 }
