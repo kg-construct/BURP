@@ -120,21 +120,39 @@ public class LogicalSourceFactory {
 		return source;
 	}
 
+    private static RDBSource createRDBSource(Resource sourceNode) {
+        Statement jdbcDSNStmt = sourceNode.getProperty(D2RQ.jdbcDSN);
+        if (jdbcDSNStmt == null) {
+            throw new RuntimeException("RDB source must have a d2rq:jdbcDSN property");
+        }
+        String jdbcDSN = jdbcDSNStmt.getLiteral().getString();
+
+        Statement jdbcDriverStmt = sourceNode.getProperty(D2RQ.jdbcDriver);
+        String jdbcDriver = jdbcDriverStmt != null ? jdbcDriverStmt.getLiteral().getString() : null;
+
+        Statement usernameStmt = sourceNode.getProperty(D2RQ.username);
+        String username = usernameStmt != null ? usernameStmt.getLiteral().getString() : null;
+
+        Statement passwordStmt = sourceNode.getProperty(D2RQ.password);
+        String password = passwordStmt != null ? passwordStmt.getLiteral().getString() : null;
+
+        RDBSource source = new RDBSource();
+        source.jdbcDSN = jdbcDSN;
+        source.jdbcDriver = jdbcDriver;
+        source.username = username;
+        source.password = password;
+        // If getNullValuesSource does not exist, use getNullValues or implement accordingly
+        source.nulls.addAll(getNullValuesSource(sourceNode));
+        return source;
+    }
+
 	public static LogicalSource createSQL2008TableSource(Resource ls, String mpath) {
 		Resource s = ls.getPropertyResourceValue(RML.source);
-		String jdbcDSN = s.getProperty(D2RQ.jdbcDSN).getLiteral().getString();
-		String jdbcDriver = s.getProperty(D2RQ.jdbcDriver).getLiteral().getString();
-		String username = s.getProperty(D2RQ.username).getLiteral().getString();
-		String password = s.getProperty(D2RQ.password).getLiteral().getString();
 
 		Statement t = ls.getProperty(RML.iterator);
 		String query = "(SELECT * FROM " + t.getLiteral() + ")";
 
-		RDBSource source = new RDBSource();
-		source.jdbcDSN = jdbcDSN;
-		source.jdbcDriver = jdbcDriver;
-		source.username = username;
-		source.password = password;
+		RDBSource source = createRDBSource(s);
 
 		// Apache jena "escapes" double quotes, so "Name" becomes \"Name\"
 		// which is internally stored as \\"Name\\". We thus need to remove
@@ -148,19 +166,11 @@ public class LogicalSourceFactory {
 
 	public static LogicalSource createSQL2008QuerySource(Resource ls, String mpath) {
 		Resource s = ls.getPropertyResourceValue(RML.source);
-		String jdbcDSN = s.getProperty(D2RQ.jdbcDSN).getLiteral().getString();
-		String jdbcDriver = s.getProperty(D2RQ.jdbcDriver).getLiteral().getString();
-		String username = s.getProperty(D2RQ.username).getLiteral().getString();
-		String password = s.getProperty(D2RQ.password).getLiteral().getString();
 
 		Statement t = ls.getProperty(RML.iterator);
 		String query = t.getLiteral().toString();
 
-		RDBSource source = new RDBSource();
-		source.jdbcDSN = jdbcDSN;
-		source.jdbcDriver = jdbcDriver;
-		source.username = username;
-		source.password = password;
+		RDBSource source = createRDBSource(s);
 
 		// Apache jena "escapes" double quotes, so "Name" becomes \"Name\"
 		// which is internally stored as \\"Name\\". We thus need to remove
@@ -319,20 +329,22 @@ public class LogicalSourceFactory {
 		}
 	}
 
-	private static List<Object> getNullValues(Resource ls) {
-		Resource r = ls.getPropertyResourceValue(RML.source);
-		List<Object> os = new ArrayList<>();
-		r.listProperties(RML.NULL).forEach(t -> {
-			if(t.getObject().isResource()) {
-				// WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR
-				// SPARQL SOURCES
-				os.add(t.getObject().asResource());
-			} else {
-				os.add(t.getObject().asLiteral().getValue());
-			}
-		});
-		return os;
-	}
+    private static List<Object> getNullValuesSource(Resource sourceNode) {
+        List<Object> nullValues = new ArrayList<>();
+        sourceNode.listProperties(RML.NULL).forEach(stmt -> {
+            if (stmt.getObject().isResource()) {
+                // WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR SPARQL SOURCES
+                nullValues.add(stmt.getObject().asResource());
+            } else {
+                nullValues.add(stmt.getObject().asLiteral().getValue());
+            }
+        });
+        return nullValues;
+    }
+
+    private static List<Object> getNullValues(Resource ls) {
+        return getNullValuesSource(ls.getPropertyResourceValue(RML.source));
+    }
 
 	// Generates prefix map from rml:namespace definitions
 	private static HashMap<String, String> getPrefixMap(Resource ls) {
