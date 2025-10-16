@@ -36,7 +36,11 @@ class RDBSource extends LogicalSource {
 			if (password != null && !"".equals(password))
 				props.setProperty("password", password);
 
-			Class.forName(jdbcDriver);
+            // This is not needed as they transitioned to Java Service Provider,
+            // but still, it will panic if the driver class is not found.
+            if (jdbcDriver != null && !jdbcDriver.isBlank())
+                Class.forName(jdbcDriver);
+
 			Connection connection = DriverManager.getConnection(jdbcDSN, props);
 			Statement statement = connection.createStatement();
 			final ResultSet resultset = statement.executeQuery(query);
