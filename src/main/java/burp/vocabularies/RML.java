@@ -22,7 +22,9 @@ public final class RML {
 	public static final Resource Namespace = ResourceFactory.createResource(NS + "Namespace");
 	public static final Resource RelativePathSource = ResourceFactory.createResource(NS + "RelativePathSource");
 	public static final Resource SQL2008Table = ResourceFactory.createResource(NS + "SQL2008Table");
+	public static final Resource SQLTable = ResourceFactory.createResource(NS + "SQLTable");
 	public static final Resource SQL2008Query = ResourceFactory.createResource(NS + "SQL2008Query");
+	public static final Resource SQLQuery = ResourceFactory.createResource(NS + "SQLQuery");
 	public static final Resource XPath = ResourceFactory.createResource(NS + "XPath");
 	public static final Resource XPathReferenceFormulation = ResourceFactory.createResource(NS + "XPathReferenceFormulation");
 

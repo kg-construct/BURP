@@ -165,11 +165,11 @@ public class Parse {
 		if (referenceFormulation.hasProperty(RDF.type, RML.XPathReferenceFormulation))
 			return LogicalSourceFactory.createXMLSource(ls, mpath);
 
-		if (RML.SQL2008Table.equals(referenceFormulation))
-			return LogicalSourceFactory.createSQL2008TableSource(ls, mpath);
+        if (RML.SQL2008Table.equals(referenceFormulation) || RML.SQLTable.equals(referenceFormulation))
+            return LogicalSourceFactory.createSQL2008TableSource(ls, mpath);
 
-		if (RML.SQL2008Query.equals(referenceFormulation))
-			return LogicalSourceFactory.createSQL2008QuerySource(ls, mpath);
+        if (RML.SQL2008Query.equals(referenceFormulation) || RML.SQLQuery.equals(referenceFormulation))
+            return LogicalSourceFactory.createSQL2008QuerySource(ls, mpath);
 
 		if(RML.SPARQL_Results_CSV.equals(referenceFormulation))
 			return LogicalSourceFactory.createSPARQLSource(ls, mpath, false);
