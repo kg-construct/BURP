@@ -92,5 +92,10 @@ class CSVIteration extends Iteration {
 	public List<String> getStringsFor(String reference) {
 		return getValuesFor(reference).stream().map(Object::toString).collect(Collectors.toList());
 	}
-	
+
+    @Override
+    public List<Iteration> changeIterator(String iterator) {
+        throw new RuntimeException("We cannot change the iterator of a CSV iteration.");
+    }
+
 }

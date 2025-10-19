@@ -7,7 +7,7 @@ public class ExpressionField extends Field {
 
     public ConcreteExpressionMap fieldExpressionMap;
 
-    public List<LogicalIteration> enRich(String parentIteration, LogicalIteration underlying){
+    public List<LogicalIteration> enrich(String parentIteration, LogicalIteration underlying){
         List<LogicalIteration>  result = new ArrayList<>();
 
         int i = 0;

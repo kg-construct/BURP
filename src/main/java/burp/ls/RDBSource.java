@@ -122,5 +122,10 @@ class RDBIteration extends Iteration {
 				l.add(o.toString());
 		return l;
 	}
-	
+
+    @Override
+    public List<Iteration> changeIterator(String iterator) {
+        throw new RuntimeException("We cannot change the iterator of an RDB iteration.");
+    }
+
 }

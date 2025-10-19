@@ -78,7 +78,12 @@ class SPARQLIteratation extends Iteration {
 			l.add(n.toString());
 		return l;
 	}
-	
+
+    @Override
+    public List<Iteration> changeIterator(String iterator) {
+        throw new RuntimeException("We cannot change the iterator of a SPARQL iteration.");
+    }
+
 }
 
 class SPARQLTSVIteratation extends Iteration {
@@ -110,5 +115,10 @@ class SPARQLTSVIteratation extends Iteration {
 			l.add(n.toString());
 		return l;
 	}
-	
+
+    @Override
+    public List<Iteration> changeIterator(String iterator) {
+        throw new RuntimeException("We cannot change the iterator of an SPARQL TSV iteration.");
+    }
+
 }

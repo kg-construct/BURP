@@ -345,7 +345,20 @@ public class Parse {
         if(p.hasProperty(RML.field)) {
             // Create IterableField
             IterableField f = new IterableField();
-            // TODO
+
+            // Add the subfields
+            p.listProperties(RML.field).forEach(s -> {
+                f.addField(prepareField(s.getObject().asResource()));
+            });
+
+            if(p.hasProperty(RML.iterator)) {
+                f.iterator = p.getProperty(RML.iterator).getObject().asLiteral().getString();
+            }
+
+            if(p.hasProperty(RML.referenceFormulation)) {
+                f.referenceFormulation = p.getProperty(RML.referenceFormulation).getObject().asResource();
+            }
+
             f.fieldName = p.getRequiredProperty(RML.fieldName).getObject().asLiteral().getString();
             return f;
         } else {

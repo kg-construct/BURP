@@ -100,5 +100,20 @@ class JSONIteration extends Iteration {
 		}
 		return l2;
 	}
-	
+
+    @Override
+    public List<Iteration> changeIterator(String iterator) {
+        try {
+            List<Iteration> iterations = new ArrayList<>();
+            String contents = doc.jsonString();
+            List<Map<String, Object>> nodes = JsonPath.using(c).parse(contents).read(iterator);
+            for (Map<String, Object> n : nodes) {
+                iterations.add(new JSONIteration(JSONObject.toJSONString(n), nulls));
+            }
+            return iterations;
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

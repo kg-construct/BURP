@@ -16,4 +16,5 @@ public abstract class Iteration {
 
 	public abstract List<String> getStringsFor(String reference);
 
+    public abstract List<Iteration> changeIterator(String iterator);
 }

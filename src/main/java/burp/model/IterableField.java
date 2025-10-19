@@ -16,12 +16,22 @@ public class IterableField extends Field {
     public List<ExpressionField> expressionFields = new ArrayList<>();
     public List<IterableField> iterableFields = new ArrayList<>();
 
-    public List<LogicalIteration> enrich(Iterator<Iteration> iterations, Resource referenceFormulation, String iterator, Set<Object> nulls) {
-        // Inherit if null
-        if (this.iterator == null) this.iterator = iterator;
-        if (this.referenceFormulation == null) this.referenceFormulation = referenceFormulation;
+    public void addField(Field field) {
+        if (field instanceof IterableField) {
+            iterableFields.add((IterableField) field);
+        } else if (field instanceof ExpressionField) {
+            expressionFields.add((ExpressionField) field);
+        }
+        else
+            throw new RuntimeException("Unknown field type.");
+    }
 
+    public List<LogicalIteration> enrich(Iterator<Iteration> iterations, Set<Object> nulls) {
         List<LogicalIteration> list = new ArrayList<>();
+
+        // TODO TO REMINDER
+        // HIER BEGINNEN WE MET DE ROOT
+        // DE RECURSIEVE CALLM OET ANDERS
 
         int index = 0;
         while(iterations.hasNext()) {
@@ -33,14 +43,34 @@ public class IterableField extends Field {
             list.add(li);
         }
 
-        List<LogicalIteration> eslist = new ArrayList<>();
+        // Let's process the expression fields
+        List<LogicalIteration> nlist = new ArrayList<>();
         for(LogicalIteration li : list) {
             for(ExpressionField es : expressionFields) {
-                eslist.addAll(es.enRich(fieldName, li));
+                nlist.addAll(es.enrich(fieldName, li));
             }
         }
-        list = eslist;
+        list = nlist;
 
+        // Let's process the iterable fields
+        nlist = new ArrayList<>();
+        for(LogicalIteration li : list) {
+            for(IterableField iterableField : iterableFields) {
+                if(iterableField.referenceFormulation == null && iterableField.iterator == null) {
+                    throw new RuntimeException("An Iterable Field has not been set with a new reference formulation or new iterator.");
+                }
+
+                if(iterableField.referenceFormulation != null) {
+                    // TODO: implement changing of reference formulation (with iterator)
+                } else {
+                    // The iterator has changed
+                    Iteration i = li.getIteration(fieldName);
+                    List<Iteration> newiterations = i.changeIterator(iterableField.iterator);
+                    nlist.addAll(iterableField.enrich(newiterations.iterator(), nulls));
+                }
+            }
+        }
+        list = nlist;
 
         return  list;
     }

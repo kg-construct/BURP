@@ -124,4 +124,10 @@ class XMLIteration extends Iteration {
 		return l2;
 	}
 
+    @Override
+    public List<Iteration> changeIterator(String iterator) {
+        // TODO: to implement
+        throw new RuntimeException("Not yet implemented.");
+    }
+
 }

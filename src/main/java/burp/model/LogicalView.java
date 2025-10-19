@@ -24,7 +24,7 @@ public class LogicalView extends AbstractLogicalSource {
                 root.expressionFields.addAll(expressionFields);
                 root.iterableFields.addAll(iterableFields);
                 root.fieldName = "<i>";
-                iterations = root.enrich(logicalSource.iterator(), logicalSource.referenceFormulation, logicalSource.iterator, logicalSource.nulls);
+                iterations = root.enrich(logicalSource.iterator(), logicalSource.nulls);
 
                 iterations.iterator();
             }
@@ -50,7 +50,6 @@ public class LogicalView extends AbstractLogicalSource {
     }
 
     public void addField(Field field) {
-        System.out.println(field);
         if (field instanceof IterableField) {
             iterableFields.add((IterableField) field);
         } else if (field instanceof ExpressionField) {
@@ -90,6 +89,11 @@ class LogicalIteration extends Iteration {
     @Override
     public List<String> getStringsFor(String reference) {
         return getValuesFor(reference).stream().map(Object::toString).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Iteration> changeIterator(String iterator) {
+        throw new RuntimeException("We cannot change the iterator of a logical iteration.");
     }
 
     public String toString() {
