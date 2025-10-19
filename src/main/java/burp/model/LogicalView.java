@@ -1,14 +1,13 @@
 package burp.model;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class LogicalView extends AbstractLogicalSource {
 
     private List<LogicalIteration> iterations = null;
 
-    public LogicalSource logicalSource;
+    public AbstractLogicalSource logicalSource;
     public List<ExpressionField> expressionFields = new ArrayList<>();
     public List<IterableField> iterableFields = new ArrayList<>();
 

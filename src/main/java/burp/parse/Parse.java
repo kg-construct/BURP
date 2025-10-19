@@ -133,7 +133,7 @@ public class Parse {
         if(ls.hasProperty(RML.viewOn)) {
             Resource view = ls.getPropertyResourceValue(RML.viewOn);
             LogicalView lv = new LogicalView();
-            lv.logicalSource = LogicalSourceFactory.createJSONSource(view, mpath);
+            lv.logicalSource = prepareLogicalSource(view, mpath);
 
             ls.listProperties(RML.field).forEach(s -> {
                 lv.addField(prepareField(s.getObject().asResource()));
