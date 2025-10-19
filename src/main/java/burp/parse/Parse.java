@@ -128,7 +128,7 @@ public class Parse {
 		mapping.add(QueryExecutionFactory.create(IMPLICITTERMTYPE, mapping).execConstruct());
 	}
 
-	private static LogicalSource prepareLogicalSource(Resource ls, String mpath) throws Exception {
+	private static AbstractLogicalSource prepareLogicalSource(Resource ls, String mpath) throws Exception {
         // This is RML-LV
         if(ls.hasProperty(RML.viewOn)) {
             Resource view = ls.getPropertyResourceValue(RML.viewOn);
@@ -136,7 +136,7 @@ public class Parse {
             lv.logicalSource = LogicalSourceFactory.createJSONSource(view, mpath);
 
             ls.listProperties(RML.field).forEach(s -> {
-                lv.fields.add(prepareField(s.getObject().asResource()));
+                lv.addField(prepareField(s.getObject().asResource()));
             });
 
             return lv;
@@ -350,7 +350,7 @@ public class Parse {
             return f;
         } else {
             ExpressionField f = new ExpressionField();
-            FieldExpressionMap fem = new FieldExpressionMap();
+            ConcreteExpressionMap fem = new ConcreteExpressionMap();
             fem.expression = prepareExpression(p);
             f.fieldExpressionMap = fem;
             f.fieldName = p.getRequiredProperty(RML.fieldName).getObject().asLiteral().getString();

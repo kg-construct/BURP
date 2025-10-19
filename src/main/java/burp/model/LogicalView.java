@@ -1,43 +1,78 @@
 package burp.model;
 
-import java.io.FileReader;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
-public class LogicalView extends LogicalSource {
+public class LogicalView extends AbstractLogicalSource {
 
-    protected List<Iteration> iterations = null;
+    private List<LogicalIteration> iterations = null;
+
     public LogicalSource logicalSource;
-    public List<Field> fields = new ArrayList<>();
+    public List<ExpressionField> expressionFields = new ArrayList<>();
+    public List<IterableField> iterableFields = new ArrayList<>();
 
     @Override
 	public Iterator<Iteration> iterator() {
         try {
             if (iterations == null) {
-//                iterations = new ArrayList<>();
-//
-//                List<Map<String, Object>> l = new ArrayList<>();
-//                int i = 0;
-//                logicalSource.iterator().forEachRemaining(x-> {
-//                    Map<String, Object> m = new HashMap<>();
-//                    m.put("#", i++);
-//                    m.put("<i>", x);
-//                });
+                iterations = new ArrayList<>();
 
-                // TODO
+                // The logical view acts like the root
+                IterableField root = new IterableField();
+                root.referenceFormulation = logicalSource.referenceFormulation;
+                root.iterator = logicalSource.iterator;
+                root.expressionFields.addAll(expressionFields);
+                root.iterableFields.addAll(iterableFields);
+                root.fieldName = "<i>";
+                iterations = root.enrich(logicalSource.iterator(), logicalSource.referenceFormulation, logicalSource.iterator, logicalSource.nulls);
+
+                iterations.iterator();
             }
-            return iterations.iterator();
+
+            // Create wrapper to safely treat LogicalIterations as Iterations...
+            return new Iterator<>() {
+                private final Iterator<LogicalIteration> inner = iterations.iterator();
+
+                @Override
+                public boolean hasNext() {
+                    return inner.hasNext();
+                }
+
+                @Override
+                public Iteration next() {
+                    return inner.next();
+                }
+            };
+
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void addField(Field field) {
+        System.out.println(field);
+        if (field instanceof IterableField) {
+            iterableFields.add((IterableField) field);
+        } else if (field instanceof ExpressionField) {
+            expressionFields.add((ExpressionField) field);
+        }
+        else
+            throw new RuntimeException("Unknown field type.");
     }
 }
 
 class LogicalIteration extends Iteration {
 
-    public final Map<String, String> map = new HashMap<>();
+    public Map<String, Object> map = new HashMap<>();
 
     public LogicalIteration(Set<Object> nulls) {
         super(nulls);
+    }
+
+    public LogicalIteration(Map<String, Object> map, Set<Object> nulls) {
+        super(nulls);
+        this.map = map;
     }
 
     @Override
@@ -46,8 +81,8 @@ class LogicalIteration extends Iteration {
         if(!map.containsKey(reference))
             throw new RuntimeException("Attribute " + reference + " does not exist.");
 
-        String o = map.get(reference);
-        if(!nulls.contains(o))
+        Object o = map.get(reference);
+        if(nulls == null || !nulls.contains(o))
             l.add(o);
 
         return l;
@@ -55,15 +90,51 @@ class LogicalIteration extends Iteration {
 
     @Override
     public List<String> getStringsFor(String reference) {
-        List<String> l = new ArrayList<>();
-        if(!map.containsKey(reference))
-            throw new RuntimeException("Attribute " + reference + " does not exist.");
-
-        String o = map.get(reference);
-        if(!nulls.contains(o))
-            l.add(o);
-
-        return l;
+        return getValuesFor(reference).stream().map(Object::toString).collect(Collectors.toList());
     }
 
+    public String toString() {
+        Map<String, Integer> widths = new LinkedHashMap<>();
+        for (var e : map.entrySet()) {
+            int width = Math.max(e.getKey().length(), String.valueOf(e.getValue()).length());
+            widths.put(e.getKey(), width);
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        // Build horizontal line
+        String line = "+" + widths.values().stream()
+                .map(w -> "-".repeat(w + 2))
+                .reduce("", (a, b) -> a + "+" + b)
+                .substring(1) + "+";
+
+        // Header row (keys)
+        sb.append(line).append("\n");
+        sb.append("|");
+        for (var e : map.entrySet()) {
+            sb.append(" ").append(String.format("%-" + widths.get(e.getKey()) + "s", e.getKey())).append(" |");
+        }
+        sb.append("\n").append(line).append("\n");
+
+        // Value row
+        sb.append("|");
+        for (var e : map.entrySet()) {
+            sb.append(" ").append(String.format("%-" + widths.get(e.getKey()) + "s", e.getValue())).append(" |");
+        }
+        sb.append("\n").append(line);
+
+        return sb.toString();
+    }
+
+    public LogicalIteration copy() {
+        return new LogicalIteration(map,null);
+    }
+
+    public void put(String key, Object o) {
+        map.put(key, o);
+    }
+
+    public Iteration getIteration(String fieldName) {
+        return (Iteration) map.get(fieldName);
+    }
 }

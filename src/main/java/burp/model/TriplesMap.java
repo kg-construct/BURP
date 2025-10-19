@@ -3,18 +3,11 @@ package burp.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.jena.query.Dataset;
-
 public class TriplesMap {
 
-	public LogicalSource logicalSource = null;
+	public AbstractLogicalSource logicalSource = null;
 	public SubjectMap subjectMap = null;
 	public List<PredicateObjectMap> predicateObjectMaps = new ArrayList<>();
 	public String baseIRI = null;
-
-	public void generateInto(Dataset ds) {
-		// TODO Auto-generated method stub
-		
-	}
 
 }

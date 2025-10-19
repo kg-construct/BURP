@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
@@ -81,7 +82,7 @@ class CSVIteration extends Iteration {
 			throw new RuntimeException("Attribute " + reference + " does not exist.");
 		
 		String o = map.get(reference);
-		if(!nulls.contains(o))
+		if(nulls == null || !nulls.contains(o))
 			l.add(o);
 		
 		return l;
@@ -89,15 +90,7 @@ class CSVIteration extends Iteration {
 
 	@Override
 	public List<String> getStringsFor(String reference) {
-		List<String> l = new ArrayList<>();
-		if(!map.containsKey(reference))
-			throw new RuntimeException("Attribute " + reference + " does not exist.");
-		
-		String o = map.get(reference);
-		if(!nulls.contains(o))
-			l.add(o);
-		
-		return l;
+		return getValuesFor(reference).stream().map(Object::toString).collect(Collectors.toList());
 	}
 	
 }

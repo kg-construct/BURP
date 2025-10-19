@@ -57,8 +57,8 @@ public class ReferencingObjectMap implements GatherMap {
 				boolean ok = true;
 				for (JoinCondition jc : joinConditions) {
 
-					List<String> values1 = jc.childMap.generateValues(i);
-					List<String> values2 = jc.parentMap.generateValues(i2);
+					List<Object> values1 = jc.childMap.generateValues(i);
+					List<Object> values2 = jc.parentMap.generateValues(i2);
 
 					if (values1.stream().distinct().filter(values2::contains)
 							.collect(Collectors.toSet()).isEmpty()) {

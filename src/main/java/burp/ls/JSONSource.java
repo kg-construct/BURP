@@ -73,7 +73,7 @@ class JSONIteration extends Iteration {
 			for(Object o : l) {
 				if (o instanceof List<?>)
 					throw new RuntimeException("Data error: reference retrieved an array");
-				if (o != null && !nulls.contains(o))
+				if (o != null && (nulls == null || !nulls.contains(o)))
 					l2.add(o);
 			}
 		} catch (PathNotFoundException e) {
@@ -91,7 +91,7 @@ class JSONIteration extends Iteration {
 			for(Object o : l) {
 				if (o instanceof List<?>)
 					throw new RuntimeException("Data error: reference retrieved an array");
-				if (o != null && !nulls.contains(o))
+                if (o != null && (nulls == null || !nulls.contains(o)))
 					l2.add(o.toString());
 			}
 		} catch (PathNotFoundException e) {

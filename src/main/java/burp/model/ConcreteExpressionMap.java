@@ -1,39 +1,32 @@
 package burp.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * 
  * A ConcreteExpressionMap is a concrete implementation of the abstract class
- * ExpressionMap for use in join conditions
+ * ExpressionMap for use in join conditions and logical views
  *
  */
 public class ConcreteExpressionMap extends ExpressionMap {
 
-	public List<String> generateValues(Iteration i) {
-		List<String> l = new ArrayList<>();
+	public List<Object> generateValues(Iteration i) {
+
+		if(expression instanceof RDFNodeConstant)
+			return Collections.singletonList(((RDFNodeConstant) expression).constant);
 		
-		if(expression instanceof RDFNodeConstant) {
-			// It is assumed to be a string, otherwise the shapes
-			// Would have caught the error.
-			l.add(((RDFNodeConstant) expression).constant.toString());
-			return l;
-		}
+		if(expression instanceof Template)
+            return new ArrayList<>(((Template) expression).values(i));
 		
-		if(expression instanceof Template) {
-			l.addAll(((Template) expression).values(i));
-			return l;
-		}
+		if(expression instanceof Reference)
+			return ((Reference) expression).values(i);
+
+        if(expression instanceof FunctionExecution)
+            return ((FunctionExecution) expression).values(i, null);
 		
-		if(expression instanceof Reference) {
-			List<Object> values = ((Reference) expression).values(i);
-			for(Object o : values)
-				l.add(o.toString());
-			return l;
-		}
-		
-		throw new RuntimeException("Error generating language string.");
+		throw new RuntimeException("Error generating values.");
 	}
 
 }
