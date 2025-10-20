@@ -11,7 +11,36 @@ public abstract class Field implements ContainsFields, FieldParent {
     public List<ExpressionField> expressionFields = new ArrayList<>();
     public List<IterableField> iterableFields = new ArrayList<>();
 
-    protected String getAbsoluteFieldName() {
+    public static List<LogicalIteration> expand(List<LogicalIteration> list, List<ExpressionField> expressionFields, List<IterableField> iterableFields) {
+        List<LogicalIteration> result = new ArrayList<>(list);
+
+        if (expressionFields != null && !expressionFields.isEmpty()) {
+            // Let's process the expression fields
+            for (ExpressionField expressionField : expressionFields) {
+                List<LogicalIteration> nlist = new ArrayList<>();
+                for (LogicalIteration li : result) {
+                    nlist.addAll(expressionField.enrich(li));
+                }
+                result = nlist;
+            }
+        }
+
+        if (iterableFields != null && !iterableFields.isEmpty()) {
+            // Let's process the iterable fields
+            List<LogicalIteration> nlist = new ArrayList<>();
+            for (LogicalIteration li : result) {
+                for (IterableField iterableField : iterableFields) {
+                    nlist.addAll(iterableField.enrich(li));
+                }
+            }
+            result = nlist;
+        }
+
+        return result;
+    }
+
+    @Override
+    public String getAbsoluteFieldName() {
         if (parent instanceof AbstractLogicalSource)
             return fieldName;
 

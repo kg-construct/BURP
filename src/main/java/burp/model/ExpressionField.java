@@ -12,7 +12,7 @@ public class ExpressionField extends Field {
         List<LogicalIteration>  result = new ArrayList<>();
 
         int i = 0;
-        for(Object o : fieldExpressionMap.generateValues(underlying.getIteration(getParentIteration()))){
+        for(Object o : fieldExpressionMap.generateValues(underlying.getIteration(parent.getAbsoluteFieldName()))){
             LogicalIteration e = underlying.copy();
             e.put(getAbsoluteFieldName() + ".#", i++);
             e.put(getAbsoluteFieldName(), o);
@@ -22,16 +22,4 @@ public class ExpressionField extends Field {
         return result;
     }
 
-    private String getParentIteration() {
-        if(parent instanceof AbstractLogicalSource)
-            return  "<i>";
-
-        Field parent = (Field) this.parent;
-        return parent.fieldName;
-    }
-
-    @Override
-    public Iterator<Iteration> iterator() {
-        return parent.iterator();
-    }
 }

@@ -18,13 +18,18 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
             if (iterations == null) {
                 iterations = new ArrayList<>();
 
-                // The logical view acts like a field that is the root
-                IterableField root = new IterableField();
-                root.expressionFields.addAll(expressionFields);
-                root.iterableFields.addAll(iterableFields);
-                root.fieldName = "<i>";
-                root.parent = logicalSource;
-                iterations = root.enrich();
+                List<LogicalIteration> list = new ArrayList<>();
+                Iterator<Iteration> iterator = logicalSource.iterator();
+                int index = 0;
+                while(iterator.hasNext()) {
+                    Iteration i = iterator.next();
+                    LogicalIteration li = new LogicalIteration(logicalSource.nulls);
+                    li.put("#", index++);
+                    li.put("<i>", i);
+                    list.add(li);
+                }
+
+                iterations = Field.expand(list, expressionFields, iterableFields);
 
                 iterations.iterator();
             }
@@ -72,6 +77,7 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
         else
             throw new RuntimeException("Unknown field type.");
     }
+
 }
 
 class LogicalIteration extends Iteration {
@@ -144,7 +150,7 @@ class LogicalIteration extends Iteration {
     }
 
     public LogicalIteration copy() {
-        return new LogicalIteration(map,null);
+        return new LogicalIteration(new HashMap<>(map),null);
     }
 
     public void put(String key, Object o) {

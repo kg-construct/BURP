@@ -9,4 +9,8 @@ public abstract class AbstractLogicalSource extends Iterable implements FieldPar
     public Set<Object> nulls = new HashSet<>();
     public abstract Iterator<Iteration> iterator();
 
+    @Override
+    public String getAbsoluteFieldName() {
+        return "<i>";
+    }
 }

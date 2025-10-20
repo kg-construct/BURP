@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface FieldParent {
 
-    Iterator<Iteration> iterator();
+    String getAbsoluteFieldName();
 }
