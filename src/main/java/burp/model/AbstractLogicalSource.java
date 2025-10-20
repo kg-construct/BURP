@@ -2,11 +2,9 @@ package burp.model;
 
 import org.apache.jena.rdf.model.Resource;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
-public abstract class AbstractLogicalSource extends Iterable {
+public abstract class AbstractLogicalSource extends Iterable implements FieldParent {
 
     public Set<Object> nulls = new HashSet<>();
     public abstract Iterator<Iteration> iterator();

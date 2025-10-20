@@ -1,5 +1,6 @@
 package burp.model;
 
+import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.ArrayList;
@@ -13,41 +14,48 @@ public class IterableField extends Field {
     public String iterator;
     public Resource referenceFormulation;
 
-    public List<ExpressionField> expressionFields = new ArrayList<>();
-    public List<IterableField> iterableFields = new ArrayList<>();
-
-    public void addField(Field field) {
-        if (field instanceof IterableField) {
-            iterableFields.add((IterableField) field);
-        } else if (field instanceof ExpressionField) {
-            expressionFields.add((ExpressionField) field);
-        }
-        else
-            throw new RuntimeException("Unknown field type.");
-    }
-
-    public List<LogicalIteration> enrich(Iterator<Iteration> iterations, Set<Object> nulls) {
+    public List<LogicalIteration> enrich() {
         List<LogicalIteration> list = new ArrayList<>();
 
-        // TODO TO REMINDER
-        // HIER BEGINNEN WE MET DE ROOT
-        // DE RECURSIEVE CALLM OET ANDERS
+        if(iterator == null && referenceFormulation == null) {
+            if(parent instanceof AbstractLogicalSource) {
+                // We have the root
+                Iterator<Iteration> iterator = parent.iterator();
+                int index = 0;
+                while(iterator.hasNext()) {
+                    Iteration i = iterator.next();
+                    LogicalIteration li = new LogicalIteration(((AbstractLogicalSource) parent).nulls);
+                    li.put("#", index++);
+                    li.put("<i>", i);
+                    list.add(li);
+                }
 
-        int index = 0;
-        while(iterations.hasNext()) {
-            Iteration i = iterations.next();
-            LogicalIteration li = new LogicalIteration(nulls);
-            li.put(fieldName + ".#", index++);
-            li.put(fieldName, i);
+            } else {
+                throw new RuntimeException("No iterator or reference formulation for iterable field.");
+            }
+        } else if (referenceFormulation == null) {
+            // The iterator has chanced
+            // We take the iterator from the parent
+            Iterator<Iteration> iter = parent.iterator();
+            int index = 0;
+            while(iter.hasNext()) {
+                Iteration i = iter.next();
+                for(Iteration newIteration : i.changeIterator(iterator)) {
+                    LogicalIteration li = new LogicalIteration(((AbstractLogicalSource) parent).nulls);
+                    li.put(getAbsoluteFieldName(), index++);
+                    li.put(getAbsoluteFieldName() + ".#", newIteration);
+                }
+            }
 
-            list.add(li);
+        } else {
+            // The reference formulation (and iterator) have changed.
         }
 
         // Let's process the expression fields
         List<LogicalIteration> nlist = new ArrayList<>();
         for(LogicalIteration li : list) {
-            for(ExpressionField es : expressionFields) {
-                nlist.addAll(es.enrich(fieldName, li));
+            for(ExpressionField expressionField : expressionFields) {
+                nlist.addAll(expressionField.enrich(li));
             }
         }
         list = nlist;
@@ -56,18 +64,7 @@ public class IterableField extends Field {
         nlist = new ArrayList<>();
         for(LogicalIteration li : list) {
             for(IterableField iterableField : iterableFields) {
-                if(iterableField.referenceFormulation == null && iterableField.iterator == null) {
-                    throw new RuntimeException("An Iterable Field has not been set with a new reference formulation or new iterator.");
-                }
-
-                if(iterableField.referenceFormulation != null) {
-                    // TODO: implement changing of reference formulation (with iterator)
-                } else {
-                    // The iterator has changed
-                    Iteration i = li.getIteration(fieldName);
-                    List<Iteration> newiterations = i.changeIterator(iterableField.iterator);
-                    nlist.addAll(iterableField.enrich(newiterations.iterator(), nulls));
-                }
+                nlist.addAll(iterableField.enrich());
             }
         }
         list = nlist;
@@ -75,6 +72,9 @@ public class IterableField extends Field {
         return  list;
     }
 
-    // TODO
+    @Override
+    public Iterator<Iteration> iterator() {
+        return parent.iterator();
+    }
 
 }

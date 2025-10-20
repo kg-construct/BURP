@@ -3,11 +3,12 @@ package burp.model;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class LogicalView extends AbstractLogicalSource {
+public class LogicalView extends AbstractLogicalSource implements ContainsFields {
 
     private List<LogicalIteration> iterations = null;
 
     public AbstractLogicalSource logicalSource;
+
     public List<ExpressionField> expressionFields = new ArrayList<>();
     public List<IterableField> iterableFields = new ArrayList<>();
 
@@ -17,14 +18,13 @@ public class LogicalView extends AbstractLogicalSource {
             if (iterations == null) {
                 iterations = new ArrayList<>();
 
-                // The logical view acts like the root
+                // The logical view acts like a field that is the root
                 IterableField root = new IterableField();
-                root.referenceFormulation = logicalSource.referenceFormulation;
-                root.iterator = logicalSource.iterator;
                 root.expressionFields.addAll(expressionFields);
                 root.iterableFields.addAll(iterableFields);
                 root.fieldName = "<i>";
-                iterations = root.enrich(logicalSource.iterator(), logicalSource.nulls);
+                root.parent = logicalSource;
+                iterations = root.enrich();
 
                 iterations.iterator();
             }
@@ -49,7 +49,21 @@ public class LogicalView extends AbstractLogicalSource {
         }
     }
 
+    @Override
+    public List<IterableField> getIterableFields() {
+        return iterableFields;
+    }
+
+    @Override
+    public List<ExpressionField> getExpressionFields() {
+        return expressionFields;
+    }
+
+    @Override
     public void addField(Field field) {
+        // The parent of a logical view's fields is its logical source.
+        field.parent = this.logicalSource;
+
         if (field instanceof IterableField) {
             iterableFields.add((IterableField) field);
         } else if (field instanceof ExpressionField) {
