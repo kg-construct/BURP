@@ -21,7 +21,7 @@ import net.minidev.json.JSONObject;
 
 class JSONSource extends FileBasedLogicalSource {
 
-	private static final Configuration c = Configuration.builder()
+	public static final Configuration configuration = Configuration.builder()
             .mappingProvider(new JacksonMappingProvider())
 			.jsonProvider(new JacksonJsonProvider())
             .build()
@@ -34,7 +34,7 @@ class JSONSource extends FileBasedLogicalSource {
 				iterations = new ArrayList<>();
 				String contents = Files.readString(Paths.get(getDecompressedFile()), encoding);
 
-				List<Map<String, Object>> nodes = JsonPath.using(c).parse(contents).read(iterator);
+				List<Map<String, Object>> nodes = JsonPath.using(configuration).parse(contents).read(iterator);
 				for (Map<String, Object> n : nodes) {
 					iterations.add(new JSONIteration(JSONObject.toJSONString(n), nulls));
 				}
@@ -50,19 +50,10 @@ class JSONSource extends FileBasedLogicalSource {
 class JSONIteration extends Iteration {
 
 	private DocumentContext doc = null;
-	
-	private static final Configuration c = Configuration
-			.builder()
-            .mappingProvider(new JacksonMappingProvider())
-            .jsonProvider(new JacksonJsonProvider())
-            .build()
-            .addOptions(Option.ALWAYS_RETURN_LIST)
-			;
-	
+
 	protected JSONIteration(String json, Set<Object> nulls) {
 		super(nulls);
-		
-		doc = JsonPath.using(c).parse(json);
+		doc = JsonPath.using(JSONSource.configuration).parse(json);
 	}
 
 	@Override
@@ -102,18 +93,8 @@ class JSONIteration extends Iteration {
 	}
 
     @Override
-    public List<Iteration> changeIterator(String iterator) {
-        try {
-            List<Iteration> iterations = new ArrayList<>();
-            String contents = doc.jsonString();
-            List<Map<String, Object>> nodes = JsonPath.using(c).parse(contents).read(iterator);
-            for (Map<String, Object> n : nodes) {
-                iterations.add(new JSONIteration(JSONObject.toJSONString(n), nulls));
-            }
-            return iterations;
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+    public String asString() {
+        return doc.jsonString();
     }
 
 }

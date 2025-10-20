@@ -1,5 +1,6 @@
 package burp.ls;
 
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -10,6 +11,11 @@ import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -125,9 +131,16 @@ class XMLIteration extends Iteration {
 	}
 
     @Override
-    public List<Iteration> changeIterator(String iterator) {
-        // TODO: to implement
-        throw new RuntimeException("Not yet implemented.");
+    public String asString() {
+        try {
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(node), new StreamResult(writer));
+            return writer.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting Node to String", e);
+        }
     }
 
 }

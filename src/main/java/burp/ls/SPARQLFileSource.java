@@ -80,8 +80,8 @@ class SPARQLIteratation extends Iteration {
 	}
 
     @Override
-    public List<Iteration> changeIterator(String iterator) {
-        throw new RuntimeException("We cannot change the iterator of a SPARQL iteration.");
+    public String asString() {
+        throw new RuntimeException("Not implemented. Does this make sense in the context of LV?");
     }
 
 }
@@ -117,8 +117,7 @@ class SPARQLTSVIteratation extends Iteration {
 	}
 
     @Override
-    public List<Iteration> changeIterator(String iterator) {
-        throw new RuntimeException("We cannot change the iterator of an SPARQL TSV iteration.");
+    public String asString() {
+        throw new RuntimeException("Not implemented. Does this make sense in the context of LV?");
     }
-
 }

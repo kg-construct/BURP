@@ -1,5 +1,8 @@
 package burp.model;
 
+import com.opencsv.CSVWriter;
+
+import java.io.StringWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -100,6 +103,10 @@ class LogicalIteration extends Iteration {
             throw new RuntimeException("Attribute " + reference + " does not exist.");
 
         Object o = map.get(reference);
+
+        if(o instanceof Iteration)
+            throw new RuntimeException("Attribute " + reference + " refers to a record key.");
+
         if(nulls == null || !nulls.contains(o))
             l.add(o);
 
@@ -112,8 +119,17 @@ class LogicalIteration extends Iteration {
     }
 
     @Override
-    public List<Iteration> changeIterator(String iterator) {
-        throw new RuntimeException("We cannot change the iterator of a logical iteration.");
+    public String asString() {
+        StringWriter stringWriter = new StringWriter();
+        try (CSVWriter writer = new CSVWriter(stringWriter)) {
+            String[] header = map.keySet().toArray(new String[0]);
+            writer.writeNext(header);
+            String[] rec = map.values().toArray(new String[0]);
+            writer.writeNext(rec);
+        } catch(Exception e) {
+            throw new RuntimeException("Error representing logical iteration as String/CSV.");
+        }
+        return stringWriter.toString();
     }
 
     public String toString() {
@@ -157,7 +173,16 @@ class LogicalIteration extends Iteration {
         map.put(key, o);
     }
 
+    // Used by ExpressionField
     public Iteration getIteration(String fieldName) {
         return (Iteration) map.get(fieldName);
+    }
+
+    // Used by IterableField
+    public String getIterationString(String fieldName) {
+        Object o = map.get(fieldName);
+        if(o instanceof Iteration)
+            return ((Iteration) o).asString();
+        return o.toString();
     }
 }

@@ -9,17 +9,17 @@ public class ExpressionField extends Field {
     public ConcreteExpressionMap fieldExpressionMap;
 
     public List<LogicalIteration> enrich(LogicalIteration underlying){
-        List<LogicalIteration>  result = new ArrayList<>();
+        List<LogicalIteration>  list = new ArrayList<>();
 
         int i = 0;
         for(Object o : fieldExpressionMap.generateValues(underlying.getIteration(parent.getAbsoluteFieldName()))){
             LogicalIteration e = underlying.copy();
             e.put(getAbsoluteFieldName() + ".#", i++);
             e.put(getAbsoluteFieldName(), o);
-            result.add(e);
+            list.add(e);
         }
 
-        return result;
+        return Field.expand(list, expressionFields, iterableFields);
     }
 
 }

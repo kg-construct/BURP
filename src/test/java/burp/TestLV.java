@@ -10,7 +10,7 @@ import java.nio.file.Files;
 public class TestLV {
 
     public static void main(String[] args) throws Exception {
-        String m = new File("./src/test/resources/rml-lv/RMLLVTC0002a/", "mapping.ttl").getAbsolutePath();
+        String m = new File("./src/test/resources/rml-lv/RMLLVTC0007a/", "mapping.ttl").getAbsolutePath();
         String r = Files.createTempFile(null, ".nq").toString();
         args = new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" };
         BURPConfiguration conf = new BURPConfiguration(args);

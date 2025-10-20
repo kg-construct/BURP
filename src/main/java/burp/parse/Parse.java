@@ -340,35 +340,36 @@ public class Parse {
 	}
 
     private static Field prepareField(Resource p) {
-        // ExpressionField and IterableField are mutually exclusive
-        // If we have an rml:field, property, then we have an IterableField
-        if(p.hasProperty(RML.field)) {
+        Expression e =  prepareExpression(p);
+        Field field = null;
+        if(e == null) {
             // Create IterableField
             IterableField f = new IterableField();
 
-            // Add the subfields
-            p.listProperties(RML.field).forEach(s -> {
-                f.addField(prepareField(s.getObject().asResource()));
-            });
-
-            if(p.hasProperty(RML.iterator)) {
+            if(p.hasProperty(RML.iterator))
                 f.iterator = p.getProperty(RML.iterator).getObject().asLiteral().getString();
-            }
 
-            if(p.hasProperty(RML.referenceFormulation)) {
+            if(p.hasProperty(RML.referenceFormulation))
                 f.referenceFormulation = p.getProperty(RML.referenceFormulation).getObject().asResource();
-            }
 
-            f.fieldName = p.getRequiredProperty(RML.fieldName).getObject().asLiteral().getString();
-            return f;
+            field = f;
         } else {
             ExpressionField f = new ExpressionField();
             ConcreteExpressionMap fem = new ConcreteExpressionMap();
             fem.expression = prepareExpression(p);
             f.fieldExpressionMap = fem;
-            f.fieldName = p.getRequiredProperty(RML.fieldName).getObject().asLiteral().getString();
-            return f;
+            field = f;
         }
+
+        field.fieldName = p.getRequiredProperty(RML.fieldName).getObject().asLiteral().getString();
+
+        // Add the subfields
+        Field finalField = field;
+        p.listProperties(RML.field).forEach(s -> {
+            finalField.addField(prepareField(s.getObject().asResource()));
+        });
+
+        return finalField;
     }
 
 	private static ReferencingObjectMap prepareReferencingObjectMap(Resource rom) {

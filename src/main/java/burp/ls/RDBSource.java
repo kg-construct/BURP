@@ -1,18 +1,14 @@
 package burp.ls;
 
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
+import com.opencsv.CSVWriter;
 import org.apache.commons.text.StringEscapeUtils;
 
 import burp.model.Iteration;
@@ -72,7 +68,7 @@ class RDBSource extends LogicalSource {
 
 class RDBIteration extends Iteration {
 
-	private final Map<String, Object> values = new HashMap<>();
+	private final Map<String, Object> values = new LinkedHashMap<>();
 
 	protected RDBIteration(ResultSet resultSet, Map<String, Integer> indexMap, Set<Object> nulls) {
 		super(nulls);
@@ -124,8 +120,8 @@ class RDBIteration extends Iteration {
 	}
 
     @Override
-    public List<Iteration> changeIterator(String iterator) {
-        throw new RuntimeException("We cannot change the iterator of an RDB iteration.");
+    public String asString() {
+        throw new RuntimeException("Not implemented. Does this make sense in the context of LV?");
     }
 
 }
