@@ -1,0 +1,43 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix rmlsh: <http://w3id.org/rml/shapes/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://w3id.org/rml/lv/shapes> a owl:Ontology ;
+    owl:imports <http://w3id.org/rml/core/shapes> ;
+.
+
+rmlsh:parentCyclesShape a sh:NodeShape ;
+    sh:targetSubjectsOf rml:viewOn ;
+    sh:targetSubjectsOf rml:field ;
+
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "There must be no cycles via rml:viewOn or rml:Field." ;
+        sh:select """
+            PREFIX rml: <http://w3id.org/rml/>
+            SELECT ?this
+            WHERE {
+              ?this a rml:LogicalView .
+              ?this (rml:viewOn|rml:field)+ ?this .
+            }
+        """ ;
+    ] .
+
+rmlsh:joinCyclesShape a sh:NodeShape ;
+    sh:targetSubjectsOf rml:viewOn ;
+
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "There must be no cycles via rml:viewOn and rml:leftJoin." ;
+        sh:select """
+            PREFIX rml: <http://w3id.org/rml/>
+            SELECT ?this
+            WHERE {
+              ?this a rml:LogicalView .
+              ?this (rml:leftJoin/rml:parentLogicalView)+ ?this .
+            }
+        """ ;
+    ] .
