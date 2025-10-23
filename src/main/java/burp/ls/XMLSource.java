@@ -1,5 +1,6 @@
 package burp.ls;
 
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -10,6 +11,11 @@ import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -30,7 +36,7 @@ class XMLSource extends FileBasedLogicalSource {
 	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+				iterations = new ArrayList<>();
 
 				String contents = Files.readString(Paths.get(getDecompressedFile()), encoding);
 
@@ -65,8 +71,8 @@ class XMLSource extends FileBasedLogicalSource {
 
 class XMLIteration extends Iteration {
 
-	private Node node;
-	private HashMap<String, String> prefixMap;
+	private final Node node;
+	private final HashMap<String, String> prefixMap;
 
 	protected XMLIteration(Node node, Set<Object> nulls, HashMap<String, String> prefixMap) {
 		super(nulls);
@@ -80,7 +86,7 @@ class XMLIteration extends Iteration {
 		// We need to explicitly convert the objects
 		// to strings because RML has not worked out
 		// "6.6.1 Automatically deriving datatypes" yet
-		List<Object> l2 = new ArrayList<Object>();
+		List<Object> l2 = new ArrayList<>();
 		try {
 			XPath xPath = XPathFactory.newInstance().newXPath();
 			if (prefixMap != null) {
@@ -103,7 +109,7 @@ class XMLIteration extends Iteration {
 
 	@Override
 	public List<String> getStringsFor(String reference) {
-		List<String> l2 = new ArrayList<String>();
+		List<String> l2 = new ArrayList<>();
 		try {
 			XPath xPath = XPathFactory.newInstance().newXPath();
 			if (prefixMap != null) {
@@ -123,5 +129,18 @@ class XMLIteration extends Iteration {
 		}
 		return l2;
 	}
+
+    @Override
+    public String asString() {
+        try {
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(node), new StreamResult(writer));
+            return writer.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting Node to String", e);
+        }
+    }
 
 }

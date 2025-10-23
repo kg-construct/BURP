@@ -1,6 +1,6 @@
 RML ID,Title,Purpose,"Error
-expected?","Input 
-1","Input 
+expected?","Input
+1","Input
 2","Input
 3","Output
 default","Output
@@ -37,5 +37,5 @@ RMLLVTC0007a,Change Reference Formulations: CSV including JSON array,Test a chan
 RMLLVTC0007b,Change Reference Formulations: CSV including JSON object,Test a change of reference formulations: csv source including json object,no,people.csv,,,output.nq,,,,
 RMLLVTC0007c,Change Reference Formulations: JSON including CSV,Test a change of reference formulations: json source including csv data,no,people.json,,,output.nq,,,,
 RMLLVTC0008a,Cycle: Abstract Logical Source,Test a cycle in the abstract logical source of a logical view,yes,,,,,,,,
-RMLLVTC0008b,Cycle: Joins,Test a cycle in two joins of two logical views,yes,people.json,,,,,,,
+RMLLVTC0008b,Cycle: Joins,Test a cycle in two joins of two logical views,yes,people.json,people.csv,,,,,,
 RMLLVTC0008c,Cycle: Self-Join,Test a cycle in a join of a logical view: self-join,yes,people.json,people.csv,,,,,,

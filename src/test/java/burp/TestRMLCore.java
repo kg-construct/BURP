@@ -2,13 +2,8 @@ package burp;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
-import org.eclipse.jetty.util.IO;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -18,7 +13,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Stream;
@@ -34,7 +28,7 @@ public class TestRMLCore {
 
         Path testCaseDir = Paths.get(base);
 
-        List<TestData> testDataList = new ArrayList<TestData>();
+        List<TestData> testDataList = new ArrayList<>();
         Path csvFilePath = testCaseDir.resolve("./metadata.csv");
         CSVReader reader = new CSVReader(new FileReader(csvFilePath.toFile()));
         List<String[]> records = reader.readAll();
@@ -46,7 +40,7 @@ public class TestRMLCore {
                     record[4], record[5], record[6], record[7],
                     record[8], record[9], record[10], record[11],
                     record[12], record[13], record[14], record[15],
-                    record[16], record[17]));
+                    record[16], record[17], record[18]));
         }
         return testDataList.stream();
     }
@@ -55,7 +49,7 @@ public class TestRMLCore {
     @MethodSource("testDataProvider")
     void testDirectoryBasedCases(TestData testData) throws IOException {
         System.out.println("--------------------------------------------------------------------------------");
-        System.out.println(String.format("Processing test %s", testData.ID));
+        System.out.printf("Processing test %s%n", testData.ID);
         System.out.println("--------------------------------------------------------------------------------");
 
         System.out.println(testData.mapping);
@@ -70,12 +64,12 @@ public class TestRMLCore {
     }
 
     public void testForOK(TestData testData) throws IOException {
-        String m = new File(base + testData.ID, testData.mapping).getAbsolutePath().toString();
+        String m = new File(base + testData.ID, testData.mapping).getAbsolutePath();
         String r = Files.createTempFile(null, ".nq").toString();
-        System.out.println(String.format("Writing output to %s", r));
+        System.out.printf("Writing output to %s%n", r);
 
         System.out.println("This test should generate a graph.");
-        String o = new File(base + testData.ID, testData.output1).getAbsolutePath().toString();
+        String o = new File(base + testData.ID, testData.output1).getAbsolutePath();
 
         int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/" });
 
@@ -96,18 +90,19 @@ public class TestRMLCore {
     }
 
     public void testForNotOK(TestData testData) throws IOException {
-        String m = new File(base + testData.ID, testData.mapping).getAbsolutePath().toString();
+        String m = new File(base + testData.ID, testData.mapping).getAbsolutePath();
         String r = Files.createTempFile(null, ".nq").toString();
-        System.out.println(String.format("Writing output to %s", r));
+        System.out.printf("Writing output to %s%n", r);
 
         System.out.println("This test should NOT generate a graph.");
         int exit = Main.doMain(new String[] { "-m", m, "-o", r });
-        System.out.println(Files.size(Paths.get(r)) == 0 ? "OK" : "NOK");
+        Path path = Paths.get(r);
+        System.out.println(Files.size(path) == 0 ? "OK" : "NOK");
         Model actual = RDFDataMgr.loadModel(r);
         actual.write(System.out, "NQ");
 
         assertTrue(exit > 0);
-        assertTrue(Files.size(Paths.get(r)) == 0);
+        assertEquals(0, Files.size(path));
 
         System.out.println();
     }

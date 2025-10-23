@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.RDFNode;
 
 import burp.model.fnmlutil.Functions;
@@ -14,11 +12,11 @@ import burp.model.fnmlutil.Functions;
 public class FunctionExecution extends Expression {
 	
 	public FunctionMap functionMap;
-	public List<Input> inputs = new ArrayList<Input>();
+	public List<Input> inputs = new ArrayList<>();
 	public ReturnMap returnMap;
 
 	public List<Object> values(Iteration i, String baseIRI) {
-		List<Object> list = new ArrayList<Object>();
+		List<Object> list = new ArrayList<>();
 		
 		// TODO: We assume that function maps, parameter maps, and input value maps only yield one value
 		List<RDFNode> functions = functionMap.generateIRIs(i, baseIRI);
@@ -28,7 +26,7 @@ public class FunctionExecution extends Expression {
 		String function = functions.get(0).asResource().getURI();
 		
 		// Bind parameters via a map
-		Map<String, Object> map = new HashMap<String, Object>();
+		Map<String, Object> map = new HashMap<>();
 		
 		for(Input input : inputs) {
 			List<RDFNode> parameters = input.parameterMap.generateIRIs(i, baseIRI);

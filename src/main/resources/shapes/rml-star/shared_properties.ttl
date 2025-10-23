@@ -1,0 +1,48 @@
+###############################################################################
+# RML shared properties among resources shapes                                #
+# Copyright Dylan Van Assche, IDLab - UGent - imec (2023)                     #
+###############################################################################
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix : <http://w3id.org/rml/shapes/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+
+
+:RMLAssertedAndNonTriplesMapPropertiesShape
+    a sh:NodeShape;   
+    sh:targetObjectsOf rml:quotedTriplesMap ;
+    sh:targetClass rml:AssertedTriplesMap ;
+    sh:targetClass rml:NonAssertedTriplesMap ;
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:and ( 
+        [
+            sh:path rml:predicateObjectMap ;
+            sh:message """
+            Exactly one Predicate Object Map must be specified in the
+            Triples Map referenced by rml:quotedTriplesMap.
+            """ ;
+            sh:minCount 1 ;
+            sh:maxCount 1 ;
+        ]
+        [
+            sh:message """
+            rml:quotedTriplesMap expects either a rml:AssertedTriplesMap 
+            or rml:NonAssertedTriplesMap.
+            """ ;
+            sh:or ([sh:node :RMLAssertedTriplesMapShape]
+                   [sh:node :RMLNonAssertedTriplesMapShape]) ;
+        ]
+        [
+            sh:message """
+            Either a rml:AssertedTriplesMap or rml:NonAssertedTriplesMap,
+            but not both.
+            """ ;
+            sh:path rdf:type ;
+            sh:alternativePath (rml:AssertedTriplesMap
+                                rml:NonAssertedTriplesMap );
+            sh:minCount 1 ;
+            sh:maxCount 1 ;
+        ]
+    );
+.

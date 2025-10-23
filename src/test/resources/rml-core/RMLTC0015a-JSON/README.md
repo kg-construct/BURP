@@ -4,14 +4,16 @@
 
 **Description**: "Generation of language tags from a table with language information"
 
+**Default Base IRI**: http://example.com/
+
 **Error expected?** No
 
 **Input**
 ```
 {
   "countries": [
-    {"Code": "BO", "Name": "Bolivia, Plurinational State of"},
-    {"Code": "IE", "Name": "Ireland"}
+    {"Code": "BO", "Name": "Estado Plurinacional de Bolivia"},
+    {"Code": "IE", "Name": "Irlanda"}
   ]
 }
 

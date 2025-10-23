@@ -6,6 +6,7 @@ public class TestData {
     public String title;
     public String description;
     public String specification;
+    public String baseIRI;
     public String mapping;
     public String input_format1;
     public String input_format2;
@@ -25,6 +26,7 @@ public class TestData {
              String title,
              String description,
              String specification,
+             String baseIRI,
              String mapping,
              String input_format1,
              String input_format2,
@@ -43,6 +45,7 @@ public class TestData {
         this.title = title;
         this.description = description;
         this.specification = specification;
+        this.baseIRI = baseIRI;
         this.mapping = mapping;
         this.input_format1 = input_format1;
         this.input_format2 = input_format2;

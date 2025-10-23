@@ -26,15 +26,15 @@ public class Template extends Expression {
 	}
 	
 	public List<String> values(Iteration i, boolean safe) {
-		List<String> list = new ArrayList<String>();
+		List<String> list = new ArrayList<>();
 		list.add(template);
 		
 		for(String reference : references()) {
 			List<String> valuesForReference = i.getStringsFor(reference);
-			List<String> newset = new ArrayList<String>();
+			List<String> newset = new ArrayList<>();
 			
-			String search = "{" + StringEscapeUtils.escapeJava(reference) + "}";
-			
+			String search = "{" + StringEscapeUtils.escapeJava(reference).replaceAll("([{}])", "\\\\$1") + "}";
+
 			for(String s : list)
 				for(String v : valuesForReference)
 					if(v != null) {
@@ -52,9 +52,9 @@ public class Template extends Expression {
 		
 	}
 
-	private static Pattern p = Pattern.compile("(?<!\\\\)\\{(.+?)(?<!\\\\)\\}");
-	private List<String> references() {
-		List<String> list = new ArrayList<String>();
+	private static final Pattern p = Pattern.compile("(?<!\\\\)\\{(.+?)(?<!\\\\)\\}");
+	public List<String> references() {
+		List<String> list = new ArrayList<>();
 		Matcher m = p.matcher(template);
 		while(m.find()) {
 			String temp = template.substring(m.start(1), m.end(1));

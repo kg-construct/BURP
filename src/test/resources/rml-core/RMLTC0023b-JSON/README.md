@@ -4,6 +4,8 @@
 
 **Description**: "Test handling of invalid IRI template"
 
+**Default Base IRI**: http://example.com/
+
 **Error expected?** Yes
 
 **Input**
@@ -11,7 +13,7 @@
 {
   "students": [{
     "ID": 10,
-    "{Name}":"Venus"
+    "N\ame":"Venus"
   }]
 }
 
@@ -32,9 +34,10 @@
         ]
     ];
   rml:subjectMap [
-      rml:template "http://example.com/{{Name}}";
+      rml:template "http://example.com/{N\ame}";
       rml:class foaf:Person;
     ] .
+
 
 ```
 

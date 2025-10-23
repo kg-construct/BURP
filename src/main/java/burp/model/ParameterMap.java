@@ -14,10 +14,11 @@ public class ParameterMap extends TermMap {
 	
 	@Override
 	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
-		if(termType == RML.IRI) {
-			return generateIRIs(i, baseIRI);			
-		}
-		
+        if(RML.IRI.equals(termType))
+            return generateIRIs(i, baseIRI);
+        if(RML.URI.equals(termType))
+            return generateURIs(i, baseIRI);
+
 		throw new RuntimeException("Incorrect term type for parameter map.");	
 	}
 

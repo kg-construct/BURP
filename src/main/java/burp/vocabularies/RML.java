@@ -10,7 +10,8 @@ public final class RML {
 	public static final String NS = "http://w3id.org/rml/";
 
 	public static final Resource BLANKNODE = ResourceFactory.createResource(NS + "BlankNode");
-	public static final Resource IRI = ResourceFactory.createResource(NS + "IRI");
+    public static final Resource IRI = ResourceFactory.createResource(NS + "IRI");
+    public static final Resource URI = ResourceFactory.createResource(NS + "URI");
 	public static final Resource LITERAL = ResourceFactory.createResource(NS + "Literal");
 
 	// RML Constants
@@ -44,8 +45,9 @@ public final class RML {
 	public static final Resource SPARQL_Results_XML = ResourceFactory.createResource(FORMATSNS + "SPARQL_Results_XML");
 
 	// Classes
+    // We currently have no need for classes and that limits the memory footprint
 
-	// Properties
+    // Properties
 	public static final Property allowEmptyListAndContainer = ResourceFactory.createProperty(NS + "allowEmptyListAndContainer");
 	public static final Property baseIRI = ResourceFactory.createProperty(NS + "baseIRI");
 	public static final Property clazz = ResourceFactory.createProperty(NS + "class");
@@ -56,8 +58,10 @@ public final class RML {
 	public static final Property encoding  = ResourceFactory.createProperty(NS + "encoding");
 	public static final Property functionExecution  = ResourceFactory.createProperty(NS + "functionExecution");
 	public static final Property functionMap  = ResourceFactory.createProperty(NS + "functionMap");
-	public static final Property gather  = ResourceFactory.createProperty(NS + "gather");
-	public static final Property gatherAs  = ResourceFactory.createProperty(NS + "gatherAs");
+    public static final Property field  = ResourceFactory.createProperty(NS + "field");
+    public static final Property fieldName  = ResourceFactory.createProperty(NS + "fieldName");
+    public static final Property gather  = ResourceFactory.createProperty(NS + "gather");
+    public static final Property gatherAs  = ResourceFactory.createProperty(NS + "gatherAs");
 	public static final Property graphMap  = ResourceFactory.createProperty(NS + "graphMap");
 	public static final Property input  = ResourceFactory.createProperty(NS + "input");
 	public static final Property inputValueMap  = ResourceFactory.createProperty(NS + "inputValueMap");
@@ -84,7 +88,8 @@ public final class RML {
 	public static final Property strategy = ResourceFactory.createProperty(NS + "strategy");
 	public static final Property subjectMap  = ResourceFactory.createProperty(NS + "subjectMap");
 	public static final Property template = ResourceFactory.createProperty(NS + "template");
-	public static final Property termType = ResourceFactory.createProperty(NS + "termType");
+    public static final Property termType = ResourceFactory.createProperty(NS + "termType");
+    public static final Property viewOn = ResourceFactory.createProperty(NS + "viewOn");
 
 	// Utility constants
 	public static final Resource list = ResourceFactory.createResource(NS + "list");

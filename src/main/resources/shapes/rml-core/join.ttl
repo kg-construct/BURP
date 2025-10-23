@@ -1,0 +1,93 @@
+###############################################################################
+# RML Join shape                                                              #
+# Copyright Dylan Van Assche, IDLab - UGent - imec (2023i - 2024)             #
+###############################################################################
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix : <http://w3id.org/rml/shapes/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+
+:RMLJoinShape
+    a sh:NodeShape ;
+    sh:targetClass rml:Join ;
+    sh:targetObjectsOf rml:joinCondition ;
+    rdfs:label "Join" ;
+    rdfs:comment """
+    Represents a Join.
+    """ ;
+    sh:message """
+    rml:Join must specify exactly one rml:parent/rml:parentMap 
+    and rml:child/rml:childMap.
+    """ ;
+
+    sh:property [
+        sh:path [ sh:alternativePath ( rml:parentMap rml:parent ) ];
+        rdfs:label "parentMap/parent" ;
+        rdfs:comment """
+        rml:parent/rml:parentMap may only be provided once and 
+        not at the same time.
+        """ ;
+        sh:maxCount 1 ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:targetSubjectsOf rml:parentMap ;
+        sh:path rml:parentMap ;
+        rdfs:label "parentMap" ;
+        rdfs:comment """
+        Specifies the parent of the object component for joining.
+        """ ;
+        sh:message """
+        rml:parentMap must point to a rml:ParentMap specifying the 
+        parent tag of the string Literal.
+        """ ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+    ] ;
+
+    sh:property [
+        sh:targetSubjectsOf rml:parent ;
+        sh:path rml:parent ;
+        rdfs:label "parent" ;
+        rdfs:comment """
+        Specifies the parent of the object component for joining.
+        """ ;
+        sh:nodeKind sh:Literal ;
+    ] ;
+
+    sh:property [
+        sh:path [ sh:alternativePath ( rml:childMap rml:child ) ];
+        rdfs:label "childMap/child" ;
+        rdfs:comment """
+        rml:child/rml:childMap may only be provided once and 
+        not at the same time.
+        """ ;
+        sh:maxCount 1 ;
+        sh:minCount 1 ;
+    ] ;
+
+    sh:property [
+        sh:targetSubjectsOf rml:childMap ;
+        sh:path rml:childMap ;
+        rdfs:label "childMap" ;
+        rdfs:comment """
+        Specifies the child of the object component for joining.
+        """ ;
+        sh:message """
+        rml:childMap must point to a rml:ChildMap specifying the
+        child of the Literal.
+        """ ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+    ] ;
+
+    sh:property [
+        sh:targetSubjectsOf rml:child ;
+        sh:path rml:child ;
+        rdfs:label "child" ;
+        rdfs:comment """
+        Specifies the child of the object component for joining.
+        """ ;
+        sh:nodeKind sh:Literal ;
+    ] ;
+.

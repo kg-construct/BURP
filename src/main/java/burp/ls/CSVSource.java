@@ -1,18 +1,16 @@
 package burp.ls;
 
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.StringWriter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
 import burp.model.Iteration;
+import com.opencsv.CSVWriter;
 
 class CSVSource extends FileBasedLogicalSource {
 
@@ -23,7 +21,7 @@ class CSVSource extends FileBasedLogicalSource {
 	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+				iterations = new ArrayList<>();
 
 				FileReader fr = new FileReader(getDecompressedFile(), encoding);
 				
@@ -64,7 +62,8 @@ class CSVSource extends FileBasedLogicalSource {
 
 class CSVIteration extends Iteration {
 
-	private Map<String, String> map = new HashMap<String, String>();
+    // Use a LinkedHashMap to preserve a correspondence between keys and values
+	private final Map<String, String> map = new LinkedHashMap<>();
 	
 	protected CSVIteration(String[] header, String[] rec, Set<Object> nulls) {
 		super(nulls);
@@ -76,12 +75,12 @@ class CSVIteration extends Iteration {
 
 	@Override
 	public List<Object> getValuesFor(String reference) {
-		List<Object> l = new ArrayList<Object>();
+		List<Object> l = new ArrayList<>();
 		if(!map.containsKey(reference))
 			throw new RuntimeException("Attribute " + reference + " does not exist.");
 		
 		String o = map.get(reference);
-		if(!nulls.contains(o))
+		if(nulls == null || !nulls.contains(o))
 			l.add(o);
 		
 		return l;
@@ -89,15 +88,21 @@ class CSVIteration extends Iteration {
 
 	@Override
 	public List<String> getStringsFor(String reference) {
-		List<String> l = new ArrayList<String>();
-		if(!map.containsKey(reference))
-			throw new RuntimeException("Attribute " + reference + " does not exist.");
-		
-		String o = map.get(reference);
-		if(!nulls.contains(o))
-			l.add(o);
-		
-		return l;
+		return getValuesFor(reference).stream().map(Object::toString).collect(Collectors.toList());
 	}
-	
+
+    @Override
+    public String asString() {
+        StringWriter stringWriter = new StringWriter();
+        try (CSVWriter writer = new CSVWriter(stringWriter)) {
+            String[] header = map.keySet().toArray(new String[0]);
+            writer.writeNext(header);
+            String[] rec = map.values().toArray(new String[0]);
+            writer.writeNext(rec);
+        } catch(Exception e) {
+            throw new RuntimeException("Error representing CSV iteration as CSV.");
+        }
+        return stringWriter.toString();
+    }
+
 }

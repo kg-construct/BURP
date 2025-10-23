@@ -84,11 +84,6 @@
         rml:fieldName "weight" ;
         rml:reference "$.weight" ;
         ];
-      rml:field [
-        a rml:ExpressionField ;
-        rml:fieldName "length" ;
-        rml:reference "$.length" ;
-      ]
     ] ;
   ] .
 

@@ -4,6 +4,8 @@
 
 **Description**: "Tests, M to M relations, by using an additional Triples Map"
 
+**Default Base IRI**: http://example.com/
+
 **Error expected?** No
 
 **Input**
@@ -13,6 +15,31 @@
     {"ID":10, "FirstName":"Venus", "LastName":"Williams"},
     {"ID":11, "FirstName":"Fernando", "LastName":"Alonso"},
     {"ID":12, "FirstName":"David", "LastName":"Villa"}
+  ]
+}
+
+```
+
+**Input 1**
+```
+{
+  "sports": [
+    {"ID":110, "Description":"Tennis"},
+    {"ID":111, "Description":"Football"},
+    {"ID":112, "Description":"Formula1"}
+  ]
+}
+
+```
+
+**Input 2**
+```
+{
+  "links": [
+    {"ID_Student":10, "ID_Sport":110},
+    {"ID_Student":11, "ID_Sport":111},
+    {"ID_Student":11, "ID_Sport":112},
+    {"ID_Student":12, "ID_Sport":111}
   ]
 }
 
@@ -101,11 +128,11 @@
 <http://example.com/student/11> <http://example.com/lastName> "Alonso" .
 <http://example.com/student/11> <http://example.com/firstName> "Fernando" .
 <http://example.com/sport/110> <http://example.com/description> "Tennis" .
-<http://example.com/sport/110> <http://example.com/id> "110" .
+<http://example.com/sport/110> <http://example.com/id> "110"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <http://example.com/sport/111> <http://example.com/description> "Football" .
-<http://example.com/sport/111> <http://example.com/id> "111" .
+<http://example.com/sport/111> <http://example.com/id> "111"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <http://example.com/sport/112> <http://example.com/description> "Formula1" .
-<http://example.com/sport/112> <http://example.com/id> "112" .
+<http://example.com/sport/112> <http://example.com/id> "112"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <http://example.com/student/10> <http://example.com/plays> <http://example.com/sport/110> .
 <http://example.com/student/12> <http://example.com/plays> <http://example.com/sport/111> .
 <http://example.com/student/11> <http://example.com/plays> <http://example.com/sport/112> .

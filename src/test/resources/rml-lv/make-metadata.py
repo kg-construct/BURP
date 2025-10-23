@@ -13,7 +13,7 @@ def get_title_description(testcase: str):
                 return row[1], row[2]
 
 def main(spec: str):
-    with open ('metadata.csv', 'w') as csvfile:
+    with open ('metadata.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['ID', 'title', 'description', 'specification',
                          'mapping', 'input_format1', 'input_format2',
@@ -41,7 +41,7 @@ def main(spec: str):
             if os.path.exists(os.path.join(testcase, 'people.json')):
                 input1 = 'people.json'
                 input_format1 = 'application/json'
-            
+
             if os.path.exists(os.path.join(testcase, 'people.csv')):
                 if input1 == '':
                     input1 = 'people.csv'
@@ -49,7 +49,7 @@ def main(spec: str):
                 else:
                     input2 = 'people.csv'
                     input_format2 = 'text/csv'
-            
+
             if os.path.exists(os.path.join(testcase, 'people2.csv')):
                 input3 = 'people2.csv'
                 input_format3 = 'text/csv'

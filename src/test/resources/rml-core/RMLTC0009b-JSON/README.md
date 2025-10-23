@@ -4,6 +4,8 @@
 
 **Description**: "Test that results from distinct parts of the mapping can be directed to different target graphs."
 
+**Default Base IRI**: http://example.com/
+
 **Error expected?** No
 
 **Input**
@@ -18,6 +20,19 @@
     { 
       "ID": 20,
       "Name": "Demi Moore"
+    }
+  ]
+}
+
+```
+
+**Input 1**
+```
+{
+  "sports": [
+    {
+      "ID": 100,
+      "Name": "Tennis"
     }
   ]
 }
