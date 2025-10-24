@@ -15,6 +15,9 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
     public List<ExpressionField> expressionFields = new ArrayList<>();
     public List<IterableField> iterableFields = new ArrayList<>();
 
+    public List<ViewLeftJoin> leftJoins = new ArrayList<>();
+    public List<ViewInnerJoin> innerJoins = new ArrayList<>();
+
     @Override
 	public Iterator<Iteration> iterator() {
         try {
@@ -81,6 +84,13 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
             throw new RuntimeException("Unknown field type.");
     }
 
+    public void addLeftJoin(ViewLeftJoin leftJoin) {
+        leftJoins.add(leftJoin);
+    }
+
+    public void addInnerJoin(ViewInnerJoin innerJoin) {
+        innerJoins.add(innerJoin);
+    }
 }
 
 class LogicalIteration extends Iteration {

@@ -24,12 +24,14 @@ import burp.vocabularies.YS;
 
 public class Parse {
 
-	static Map<Resource, TriplesMap> triplesmaps = null;
+    static Map<Resource, TriplesMap> triplesmaps = null;
+    static Map<Resource, LogicalView> logicalviews = null;
 
 	public static List<TriplesMap> parseMappingFile(String mappingFile) throws Exception {
 		String mpath = Paths.get(mappingFile).toAbsolutePath().getParent().toString();
 
 		triplesmaps = new HashMap<>();
+        logicalviews = new HashMap<>();
 
 		Model mapping = RDFDataMgr.loadModel(mappingFile);
 
@@ -133,15 +135,7 @@ public class Parse {
 	private static AbstractLogicalSource prepareLogicalSource(Resource ls, String mpath) throws Exception {
         // This is RML-LV
         if(ls.hasProperty(RML.viewOn)) {
-            Resource view = ls.getPropertyResourceValue(RML.viewOn);
-            LogicalView lv = new LogicalView();
-            lv.logicalSource = prepareLogicalSource(view, mpath);
-
-            ls.listProperties(RML.field).forEach(s -> {
-                lv.addField(prepareField(s.getObject().asResource()));
-            });
-
-            return lv;
+            return prepareLogicalView(ls, mpath);
         }
 
         // This is RML-CORE
@@ -181,7 +175,69 @@ public class Parse {
 		throw new Exception("Reference formulation not (yet) supported.");
 	}
 
-	private static SubjectMap prepareSubjectMap(Resource sm) {
+    private static LogicalView prepareLogicalView(Resource ls, String mpath) {
+        try {
+            Resource view = ls.getPropertyResourceValue(RML.viewOn);
+            LogicalView lv = logicalviews.computeIfAbsent(ls, (x) -> new LogicalView());
+
+            lv.logicalSource = prepareLogicalSource(view, mpath);
+
+            ls.listProperties(RML.field).forEach(s -> {
+                lv.addField(prepareField(s.getObject().asResource()));
+            });
+
+            ls.listProperties(RML.leftJoin).forEach(s -> {
+                lv.addLeftJoin(prepareLeftJoin(s.getObject().asResource()));
+            });
+
+            ls.listProperties(RML.innerJoin).forEach(s -> {
+                lv.addInnerJoin(prepareInnerJoin(s.getObject().asResource()));
+            });
+
+            return lv;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static ViewLeftJoin prepareLeftJoin(Resource resource) {
+        ViewLeftJoin join = new ViewLeftJoin();
+        prepareViewJoin(join, resource);
+        return join;
+    }
+
+    private static ViewInnerJoin prepareInnerJoin(Resource resource) {
+        ViewInnerJoin join = new ViewInnerJoin();
+        prepareViewJoin(join, resource);
+        return join;    }
+
+    private static void prepareViewJoin(ViewJoin viewJoin, Resource resource) {
+        Resource plv = resource.getRequiredProperty(RML.parentLogicalView).getObject().asResource();
+        viewJoin.parentLogicalView = prepareLogicalView(plv, null);
+
+        plv.listProperties(RML.joinCondition).forEach((s) -> {
+            JoinCondition jc = new JoinCondition();
+
+            Resource jcr = s.getObject().asResource();
+
+            Resource r = jcr.getPropertyResourceValue(RML.parentMap);
+            if(r != null)
+                jc.parentMap = prepareExpressionMap(r);
+
+            r = jcr.getPropertyResourceValue(RML.childMap);
+            if(r != null)
+                jc.childMap = prepareExpressionMap(r);
+
+            viewJoin.joinConditions.add(jc);
+        });
+
+        plv.listProperties(RML.field).forEach(s -> {
+            viewJoin.addField(prepareField(s.getObject().asResource()));
+        });
+
+    }
+
+    private static SubjectMap prepareSubjectMap(Resource sm) {
 		SubjectMap subjectMap = new SubjectMap();
 		subjectMap.expression = prepareExpression(sm);
 
