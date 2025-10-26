@@ -15,11 +15,10 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
     public List<ExpressionField> expressionFields = new ArrayList<>();
     public List<IterableField> iterableFields = new ArrayList<>();
 
-    public List<ViewLeftJoin> leftJoins = new ArrayList<>();
-    public List<ViewInnerJoin> innerJoins = new ArrayList<>();
+    public List<ViewJoin> joins = new ArrayList<>();
 
     @Override
-	public Iterator<Iteration> iterator() {
+    public Iterator<Iteration> iterator() {
         try {
             if (iterations == null) {
                 iterations = new ArrayList<>();
@@ -27,7 +26,7 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
                 List<LogicalIteration> list = new ArrayList<>();
                 Iterator<Iteration> iterator = logicalSource.iterator();
                 int index = 0;
-                while(iterator.hasNext()) {
+                while (iterator.hasNext()) {
                     Iteration i = iterator.next();
                     LogicalIteration li = new LogicalIteration(logicalSource.nulls);
                     li.put("#", index++);
@@ -36,6 +35,11 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
                 }
 
                 iterations = Field.expand(list, expressionFields, iterableFields);
+
+                for(ViewJoin join : joins) {
+                    // Compute the join.
+
+                }
 
                 iterations.iterator();
             }
@@ -79,18 +83,14 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
             iterableFields.add((IterableField) field);
         } else if (field instanceof ExpressionField) {
             expressionFields.add((ExpressionField) field);
-        }
-        else
+        } else
             throw new RuntimeException("Unknown field type.");
     }
 
-    public void addLeftJoin(ViewLeftJoin leftJoin) {
-        leftJoins.add(leftJoin);
+    public void addJoin(ViewJoin join) {
+        joins.add(join);
     }
 
-    public void addInnerJoin(ViewInnerJoin innerJoin) {
-        innerJoins.add(innerJoin);
-    }
 }
 
 class LogicalIteration extends Iteration {

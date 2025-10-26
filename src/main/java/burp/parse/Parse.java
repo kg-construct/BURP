@@ -187,11 +187,11 @@ public class Parse {
             });
 
             ls.listProperties(RML.leftJoin).forEach(s -> {
-                lv.addLeftJoin(prepareLeftJoin(s.getObject().asResource()));
+                lv.addJoin(prepareLeftJoin(s.getObject().asResource()));
             });
 
             ls.listProperties(RML.innerJoin).forEach(s -> {
-                lv.addInnerJoin(prepareInnerJoin(s.getObject().asResource()));
+                lv.addJoin(prepareInnerJoin(s.getObject().asResource()));
             });
 
             return lv;
