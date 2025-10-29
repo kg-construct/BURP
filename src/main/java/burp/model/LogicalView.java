@@ -37,11 +37,8 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
                 iterations = Field.expand(list, expressionFields, iterableFields);
 
                 for(ViewJoin join : joins) {
-                    // Compute the join.
-
+                    iterations = join.expand(iterations);
                 }
-
-                iterations.iterator();
             }
 
             // Create wrapper to safely treat LogicalIterations as Iterations...
@@ -125,7 +122,11 @@ class LogicalIteration extends Iteration {
 
     @Override
     public List<String> getStringsFor(String reference) {
-        return getValuesFor(reference).stream().map(Object::toString).collect(Collectors.toList());
+        return getValuesFor(reference)
+                .stream()
+                .filter(x -> x != null)
+                .map(Object::toString)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -180,6 +181,9 @@ class LogicalIteration extends Iteration {
     }
 
     public void put(String key, Object o) {
+        if (map.containsKey(key)) {
+            throw new RuntimeException("Attribute " + key + " already exists in logical iteration (duplicate names in fields or joins).");
+        }
         map.put(key, o);
     }
 
@@ -194,5 +198,17 @@ class LogicalIteration extends Iteration {
         if(o instanceof Iteration)
             return ((Iteration) o).asString();
         return o.toString();
+    }
+
+    public void retainKeys(List<String> keys) {
+        // remove all the keys in the map.
+        map.keySet().retainAll(keys);
+    }
+
+    public void add(LogicalIteration iteration) {
+        for(String k : iteration.map.keySet()) {
+            // Use the Iteration's put instead of the maps to ensure not duplicate fields.
+            put(k, iteration.map.get(k));
+        }
     }
 }

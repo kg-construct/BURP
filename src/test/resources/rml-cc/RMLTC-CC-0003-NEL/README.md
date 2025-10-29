@@ -20,6 +20,7 @@
     rml:logicalSource [
         rml:source _:b738439 ;
         rml:referenceFormulation rml:JSONPath ;
+        rml:root rml:MappingDirectory;
         rml:iterator "$.*" ;
     ] ;
 

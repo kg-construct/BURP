@@ -312,3 +312,33 @@ rmlsh:InclusionAnnotationShape a sh:NodeShape;
         sh:maxCount 1 ;
         sh:nodeKind sh:BlankNodeOrIRI ;
     ] .
+
+rmlsh:parentCyclesShape a sh:NodeShape ;
+    sh:targetSubjectsOf rml:viewOn ;
+    sh:targetSubjectsOf rml:field ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "There must be no cycles via rml:viewOn or rml:Field." ;
+        sh:select """
+            PREFIX rml: <http://w3id.org/rml/>
+            SELECT ?this
+            WHERE {
+              ?this (rml:viewOn|rml:field)+ ?this .
+            }
+        """ ;
+    ] .
+
+rmlsh:joinCyclesShape a sh:NodeShape ;
+    sh:targetSubjectsOf rml:viewOn ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "There must be no cycles via rml:viewOn and rml:leftJoin or rml:innerJoin." ;
+        sh:select """
+            PREFIX rml: <http://w3id.org/rml/>
+            SELECT ?this
+            WHERE {
+              ?this a rml:LogicalView .
+              ?this ((rml:leftJoin|rml:innerJoin)/rml:parentLogicalView)+ ?this .
+            }
+        """ ;
+    ] .

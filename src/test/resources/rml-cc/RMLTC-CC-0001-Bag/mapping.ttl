@@ -7,7 +7,7 @@
     rml:logicalSource [
         rml:source _:b738439 ;
         rml:referenceFormulation rml:JSONPath ;
-        rml:iterator "$.*" ;
+       rml:iterator "$.*" ;
     ] ;
 
     rml:subjectMap [
@@ -24,4 +24,5 @@
 .
 
 _:b738439 a rml:RelativePathSource ;
+    rml:root rml:MappingDirectory ;
     rml:path "data.json" .

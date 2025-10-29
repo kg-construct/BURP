@@ -37,6 +37,7 @@
 .
 
 _:b738439 a rml:RelativePathSource ;
+    rml:root rml:MappingDirectory ;
     rml:path "data.json" .
 ```
 
