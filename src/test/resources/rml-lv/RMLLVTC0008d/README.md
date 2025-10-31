@@ -1,10 +1,41 @@
-## RMLLVTC0008a
+## RMLLVTC0008d
 
 **Title**: Cycle: Fields
 
 **Description**: Test a cycle in nested fields
 
 **Error expected?** Yes
+
+**Input**
+```
+{
+  "people": [
+    {
+      "name": "alice",
+      "items": [
+        {
+          "type": "sword",
+          "weight": 1500
+        },
+        {
+          "type": "shield",
+          "weight": 2500
+        }
+      ]
+    },
+    {
+      "name": "bob",
+      "items": [
+        {
+          "type": "flower",
+          "weight": 15
+        }
+      ]
+    }
+  ]
+}
+
+```
 
 **Mapping**
 ```

@@ -9,4 +9,4 @@ The test cases publication (html pages) can be generated as followed:
 4. Download burp: `curl -LO https://github.com/kg-construct/BURP/releases/download/v0.1.1/burp.jar`
 5. Generate the manifest with [Burp](https://github.com/kg-construct/BURP): `java -jar burp.jar -m manifest.rml.ttl -o manifest.ttl -b http://w3id.org/rml/lv/test/`
 6. Run list.sh and insert output in dev.html
-7. To publish the new HTML verson of the test cases, export `dev.html` as `index.html` in ./docs and in a subfolder with the date of the publication (maybe adapt the publication date)
+7. To publish the new HTML verson of the test cases, run with `python3 -m http.server`, export `dev.html` as `index.html` in ./docs and in a subfolder with the date of the publication (maybe adapt the publication date)  
