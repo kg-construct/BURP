@@ -47,7 +47,13 @@ class RDBSource extends LogicalSource {
 				@Override
 				public boolean hasNext() {
 					try {
-						return resultset.next();
+                        boolean goNext = resultset.next();
+                        if (!goNext) {
+                            resultset.close();
+                            statement.close();
+                            connection.close();
+                        }
+                        return goNext;
 					} catch (SQLException e) {
 						throw new RuntimeException("Problem querying database while iterating over rows.");
 					}
