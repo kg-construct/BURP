@@ -11,7 +11,6 @@ repos=(
   "rml-io"
   "rml-fnml"
   "rml-lv"
-  "rml-star"
   "rml-io-registry"
 )
 

@@ -1,8 +1,6 @@
 package burp;
 
 import burp.vocabularies.D2RQ;
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
@@ -17,14 +15,10 @@ import org.testcontainers.containers.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -32,28 +26,12 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestRMLIORegistry {
+public class TestRMLIORegistry extends TestRMLModule {
     public static String base = "./src/test/resources/rml-io-registry/";
 
-    static Stream<TestData> testDataProvider() throws IOException, CsvException {
-
-        Path testCaseDir = Paths.get(base);
-
-        List<TestData> testDataList = new ArrayList<TestData>();
-        Path csvFilePath = testCaseDir.resolve("./metadata.csv");
-        CSVReader reader = new CSVReader(new FileReader(csvFilePath.toFile()));
-        List<String[]> records = reader.readAll();
-        //skip the header
-        for (int i = 1; i < records.size(); i++) {
-            String[] record = records.get(i);
-            testDataList.add(new TestData(
-                    record[0], record[1], record[2], record[3], "http://www.example.org/",
-                    record[4], record[5], record[6], record[7],
-                    record[8], record[9], record[10], record[11],
-                    record[12], record[13], record[14], record[15],
-                    record[16], record[17]));
-        }
-        return testDataList.stream();
+    @Override
+    public String getBase() {
+        return base;
     }
 
     static PostgreSQLContainer<?> PGSQL_CONTAINER = new PostgreSQLContainer<>("postgres:latest")
@@ -84,7 +62,7 @@ public class TestRMLIORegistry {
 
     @ParameterizedTest
     @MethodSource("testDataProvider")
-    void testDirectoryBasedCases(TestData testData) throws IOException, SQLException {
+    void testDirectoryBasedCases(TestData testData) throws Exception {
         System.out.println("--------------------------------------------------------------------------------");
         System.out.printf("Processing test %s%n", testData.ID);
         System.out.println("--------------------------------------------------------------------------------");
@@ -96,11 +74,13 @@ public class TestRMLIORegistry {
             System.out.println("Preparing mapping for database connection...");
             Model model = RDFDataMgr.loadModel(mappingPath);
             String jdbcDriver = model.listObjectsOfProperty(D2RQ.jdbcDriver).next().asLiteral().getString();
-            String mappingContent = new String(Files.readAllBytes(Paths.get(mappingPath)));
 
+            String queryString = "";
             JdbcDatabaseContainer<?> db = switch (jdbcDriver) {
                 case "com.mysql.cj.jdbc.Driver" -> {
                     MYSQL_CONTAINER_FUTURE.join();
+                    queryString = "?allowMultiQueries=true";
+                    MYSQL_CONTAINER.addParameter("allowMultiQueries", "true");
                     yield MYSQL_CONTAINER;
                 }
                 case "org.postgresql.Driver" -> {
@@ -109,13 +89,14 @@ public class TestRMLIORegistry {
                 }
                 case "com.microsoft.sqlserver.jdbc.SQLServerDriver" -> {
                     MSSQL_CONTAINER_FUTURE.join();
-                    MSSQL_CONTAINER.addParameter("databaseName", "master");
+                    MSSQL_CONTAINER.withUrlParam("databaseName", "master");
                     try (var conn = MSSQL_CONTAINER.createConnection("");
                          var stmt = conn.createStatement()) {
+                        stmt.executeUpdate("IF EXISTS (SELECT name FROM sys.databases WHERE name = N'TestDB') ALTER DATABASE [TestDB] SET  SINGLE_USER WITH ROLLBACK IMMEDIATE");
                         stmt.executeUpdate("IF EXISTS (SELECT name FROM sys.databases WHERE name = N'TestDB') DROP DATABASE [TestDB]");
                         stmt.executeUpdate("CREATE DATABASE [TestDB]");
                     }
-                    MSSQL_CONTAINER.addParameter("databaseName", "TestDB");
+                    MSSQL_CONTAINER.withUrlParam("databaseName", "TestDB");
                     yield MSSQL_CONTAINER;
                 }
                 default -> throw new IllegalArgumentException("Unsupported JDBC driver: " + jdbcDriver);
@@ -140,13 +121,11 @@ public class TestRMLIORegistry {
             System.out.println("Populating database...");
             String sqlFilePath = new File(base + testData.ID, testData.input1).getAbsolutePath();
             String sql = new String(Files.readAllBytes(Paths.get(sqlFilePath)));
-            try (var conn = MSSQL_CONTAINER.createConnection("");
+            try (var conn = db.createConnection(queryString);
                  var stmt = conn.createStatement()) {
                 int update = stmt.executeUpdate(sql);
                 if (update > 0) {
                     System.out.println("SQL update successfully.");
-                } else {
-                    throw new SQLException("SQL update failed.");
                 }
             }
 

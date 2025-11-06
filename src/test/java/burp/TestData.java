@@ -1,5 +1,7 @@
 package burp;
 
+import java.util.Map;
+
 public class TestData {
 
     public String ID;
@@ -22,43 +24,26 @@ public class TestData {
     public String output3;
     public boolean error;
 
-    TestData(String ID,
-             String title,
-             String description,
-             String specification,
-             String baseIRI,
-             String mapping,
-             String input_format1,
-             String input_format2,
-             String input_format3,
-             String output_format1,
-             String output_format2,
-             String output_format3,
-             String input1,
-             String input2,
-             String input3,
-             String output1,
-             String output2,
-             String output3,
-             String error) {
-        this.ID = ID;
-        this.title = title;
-        this.description = description;
-        this.specification = specification;
-        this.baseIRI = baseIRI;
-        this.mapping = mapping;
-        this.input_format1 = input_format1;
-        this.input_format2 = input_format2;
-        this.input_format3 = input_format3;
-        this.output_format1 = output_format1;
-        this.output_format2 = output_format2;
-        this.output_format3 = output_format3;
-        this.input1 = input1;
-        this.input2 = input2;
-        this.input3 = input3;
-        this.output1 = output1;
-        this.output2 = output2;
-        this.output3 = output3;
+    TestData(Map<String, String> data) {
+        this.ID = data.get("ID");
+        this.title = data.get("title");
+        this.description = data.get("description");
+        this.specification = data.get("specification");
+        this.baseIRI = data.getOrDefault("baseIRI", null);
+        this.mapping = data.get("mapping");
+        this.input_format1 = data.getOrDefault("input_format1", null);
+        this.input_format2 = data.getOrDefault("input_format2", null);
+        this.input_format3 = data.getOrDefault("input_format3", null);
+        this.output_format1 = data.getOrDefault("output_format1", null);
+        this.output_format2 = data.getOrDefault("output_format2", null);
+        this.output_format3 = data.getOrDefault("output_format3", null);
+        this.input1 = data.getOrDefault("input1", null);
+        this.input2 = data.getOrDefault("input2", null);
+        this.input3 = data.getOrDefault("input3", null);
+        this.output1 = data.getOrDefault("output1", null);
+        this.output2 = data.getOrDefault("output2", null);
+        this.output3 = data.getOrDefault("output3", null);
+        String error = data.get("error");
         this.error = "true".equalsIgnoreCase(error);
     }
 

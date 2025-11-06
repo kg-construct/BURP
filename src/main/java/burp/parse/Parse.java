@@ -31,9 +31,9 @@ public class Parse {
     private static String mappingPath = null;
     private static String currentDirectory = null;
 
-	public static List<TriplesMap> parseMappingFile(String mappingFile) throws Exception {
-		mappingPath = Paths.get(mappingFile).toAbsolutePath().getParent().toString();
-        currentDirectory = Paths.get("").toAbsolutePath().toString();
+	public static List<TriplesMap> parseMappingFile(String mappingFile, String currentDirectory) throws Exception {
+		mappingPath = Paths.get(mappingFile).toAbsolutePath().getParent().normalize().toString();
+        Parse.currentDirectory = currentDirectory;
 
 		triplesmaps = new HashMap<>();
         logicalviews = new HashMap<>();

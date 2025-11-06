@@ -1,6 +1,8 @@
 package burp;
 
 import java.io.FileOutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -39,18 +41,24 @@ public class Main {
 	private static List<RDFNode> def = List.of(RML.defaultGraph);
 
 	public static void main(String[] args) {
-		int exit = doMain(args);
+        Path cwd = Paths.get("").toAbsolutePath();
+		int exit = doMain(args, cwd);
 		System.out.println("System exiting with code: " + exit);
 		System.exit(exit);
 	}
 
-	public static int doMain(String[] args) {
+    public static int doMain(String[] args) {
+        Path cwd = Paths.get("").toAbsolutePath();
+        return doMain(args, cwd);
+    }
+
+	public static int doMain(String[] args, Path currentWorkingDirectory) {
 		try {
 			// Process the configuration file
 			BURPConfiguration conf = new BURPConfiguration(args);
 
 			// Parse the mapping file
-			List<TriplesMap> triplesmaps = Parse.parseMappingFile(conf.mappingFile);
+			List<TriplesMap> triplesmaps = Parse.parseMappingFile(conf.mappingFile, currentWorkingDirectory.toString());
 
 			Dataset ds = generate(triplesmaps, conf.baseIRI);
 
