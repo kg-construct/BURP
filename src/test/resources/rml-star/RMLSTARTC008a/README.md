@@ -10,6 +10,7 @@
 ```
 c1,c2,c3,c4,c5,c6,c7,c8
 s1,o1,s2,o2,s3,o3,s4,o4
+
 ```
 
 **Mapping**
@@ -145,5 +146,6 @@ s1,o1,s2,o2,s3,o3,s4,o4
 **Output**
 ```
 <<<<<http://example/s1><http://example/p1><http://example/o1>>><http://example/q1><<<http://example/s2><http://example/p2><http://example/o2>>>>><http://example/q2><<<<<http://example/s3><http://example/p3><http://example/o3>>><http://example/q3><<<http://example/s4><http://example/p4><http://example/o4>>>>>.
+
 ```
 

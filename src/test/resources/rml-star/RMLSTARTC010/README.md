@@ -1,8 +1,8 @@
 ## RMLSTARTC010
 
-**Title**: 
+**Title**: Quoted triples as object without object map
 
-**Description**: 
+**Description**: Test the use quoted triples for generating the object maps but without defining the object map, which is not possible
 
 **Error expected?** Yes
 
@@ -10,6 +10,7 @@
 ```
 c1,c2,c3,c4
 a,s,o,z
+
 ```
 
 **Mapping**

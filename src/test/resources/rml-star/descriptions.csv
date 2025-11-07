@@ -15,5 +15,5 @@ RMLSTARTC007a,"non-asserted quoted triples in subject and object, one source","T
 RMLSTARTC007b,"non-asserted quoted triples in subject and object, two sources","Tests the creation of a two non-asserted quoted triples, one in the position of subject and other in object with data from two sources",,CSV,CSV,no,data1.csv,data2.csv,,
 RMLSTARTC008a,"two-level non-asserted quoted triple  in subject and object two-fold, one source","Tests the creation of a triple with non-asserted quoted triples as subject and object, both triples have in turn non-asserted quoted triples in subject and object with data form one source",,CSV,CSV,no,data.csv,,,
 RMLSTARTC008b,"two-level non-asserted quoted triple in subject and object two-fold, two sources","Tests the creation of a triple with non-asserted quoted triples as subject and object, both triples have in turn non-asserted quoted triples in subject and object with data form two sources",,CSV,CSV,no,data1.csv,data2.csv,,
-RMLSTARTC009,,,,,,yes,,,,
-RMLSTARTC010,,,,,,yes,,,,
+RMLSTARTC009,"Quoted triples as predicate map","Test the use quoted triples for generating the predicates, which is not possible",,CSV,CSV,yes,data.csv,,,
+RMLSTARTC010,"Quoted triples as object without object map","Test the use quoted triples for generating the object maps but without defining the object map, which is not possible",,CSV,CSV,yes,data.csv,,,
