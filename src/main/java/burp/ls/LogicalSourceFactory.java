@@ -107,7 +107,7 @@ public class LogicalSourceFactory {
 	public static LogicalSource createJSONSource(Resource ls, String mpath) {
 		String file = getFile(ls);
 		String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
-		JSONSource source = new JSONSource();
+		var source = new JSONSourceRFC();
 		source.file = getAbsoluteOrRelative(file, mpath);
 		source.iterator = iterator;
 		source.encoding = getEncoding(ls);

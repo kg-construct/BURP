@@ -30,10 +30,10 @@ abstract class TestRMLModule {
 
     Stream<TestData> testDataProvider() throws IOException, CsvException {
 
-        Path testCaseDir = Paths.get(getBase());
+        Path testCaseDir = Paths.get(getBase()).toAbsolutePath().normalize();
 
         List<TestData> testDataList = new ArrayList<TestData>();
-        Path csvFilePath = testCaseDir.resolve("./metadata.csv");
+        Path csvFilePath = testCaseDir.resolve("./metadata.csv").normalize();
         var reader = new CSVReaderHeaderAware(new FileReader(csvFilePath.toFile()));
 
         Map<String, String> record;
@@ -71,15 +71,16 @@ abstract class TestRMLModule {
         String expectedOutputPath = Path.of(getBase(), testData.ID, testData.output1).toAbsolutePath().normalize().toString();
 
         Path cwd = Path.of(getBase(), testData.ID).toAbsolutePath().normalize();
-        int exit = Main.doMain(new String[]{"-m", m, "-o", r, "-b", "http://example.com/base/"}, cwd);
+        int exit = Main.doMain(new String[]{"-m", m, "-o", r, "-b", "http://example.com/"}, cwd);
 
         Model expected = RDFDataMgr.loadModel(expectedOutputPath);
         Model actual = RDFDataMgr.loadModel(r);
 
         boolean isIsomorphic = expected.isIsomorphicWith(actual);
         if (!isIsomorphic) {
+            System.out.println("--- Expected");
             expected.write(System.out, "Turtle");
-            System.out.println("---");
+            System.out.println("--- Actual");
             actual.write(System.out, "Turtle");
         }
 
