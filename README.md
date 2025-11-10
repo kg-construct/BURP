@@ -25,6 +25,16 @@ You can add `-DskipTests` after `mvn package` to skip the unit tests. The tests 
 
 Some libraries are available on GitHub's maven repository. Add a GitHub authentication token to your Apache Maven `settings.xml` file. More information can be found [here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry).
 
+### Updating shapes and test-cases
+
+
+To update shapes and test cases from the specifications, use `FetchTestCases`.
+
+You can run it with 
+```
+mvn -Dexec.mainClass=burp.tools.FetchTestCases exec:java
+```
+
 ## Using BURP
 
 The run the R2RML processor, execute the following command:

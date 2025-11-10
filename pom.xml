@@ -15,6 +15,7 @@
         <serialization.version>1.9.0</serialization.version>
         <jena.version>5.5.0</jena.version>
         <auto-service.version>1.1.1</auto-service.version>
+        <testcontainers.version>2.0.1</testcontainers.version>
     </properties>
 
 	<repositories>
@@ -193,6 +194,11 @@
 				</executions>
 			</plugin>
 
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+            </plugin>
         </plugins>
 	</build>
 
@@ -324,26 +330,26 @@
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<version>1.19.5</version>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>1.19.5</version>
+			<artifactId>testcontainers-postgresql</artifactId>
+			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
-			<artifactId>mysql</artifactId>
-			<version>1.19.5</version>
+			<artifactId>testcontainers-mysql</artifactId>
+			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>mssqlserver</artifactId>
-            <version>1.19.5</version>
+            <artifactId>testcontainers-mssqlserver</artifactId>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
 		<dependency>
