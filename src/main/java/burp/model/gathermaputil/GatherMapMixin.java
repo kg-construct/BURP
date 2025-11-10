@@ -11,7 +11,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
 
-import com.github.jsonldjava.shaded.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 import burp.model.GatherMap;
 import burp.model.Iteration;
@@ -110,7 +110,7 @@ public class GatherMapMixin {
 	}
 
 	private void createList(Model m, RDFNode n, List<SubGraph> list) {
-		if (list.size() > 0 || allowEmptyListAndContainer) {
+		if (!list.isEmpty() || allowEmptyListAndContainer) {
 			m.add(n.asResource(), RDF.type, RML.list);
 
 			for (SubGraph sg : list) {
@@ -131,7 +131,7 @@ public class GatherMapMixin {
 	}
 
 	private void createContainer(Model m, RDFNode n, List<SubGraph> list) {
-		if (list.size() > 0 || allowEmptyListAndContainer) {
+		if (!list.isEmpty() || allowEmptyListAndContainer) {
 			Container c = null;
 			if (gatherAs.equals(RDF.Alt)) {
 				m.add(n.asResource(), RDF.type, RDF.Alt);

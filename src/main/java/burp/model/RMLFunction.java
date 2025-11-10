@@ -1,5 +1,7 @@
 package burp.model;
 
+import burp.model.fnmlutil.Return;
+
 import java.util.List;
 import java.util.Map;
 
