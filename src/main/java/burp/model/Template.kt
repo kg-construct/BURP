@@ -1,66 +1,68 @@
-package burp.model;
+package burp.model
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import burp.util.Util
+import com.google.common.collect.Lists.cartesianProduct
+import java.util.regex.Pattern
 
-import org.apache.commons.text.StringEscapeUtils;
+class Template(var template: String) : Expression() {
 
-import burp.util.Util;
+    // If the term map is a template-valued term map,
+    // then the generated RDF term is determined by applying
+    // the term generation rules to its template value.
+    fun values(i: Iteration): List<String> {
+        return values(i, false)
+    }
 
-public class Template extends Expression {
-	
-	public String template = null;
-	
-	public Template(String template) {
-		this.template = template;
-	}
+    fun values(i: Iteration, safe: Boolean): List<String> {
+        val segments = parseTemplate()
+        val evaluatedSegments = segments.map { segment ->
+            when (segment) {
+                is ReferenceSegment -> {
+                    val refVals = i.getStringsFor(segment.rawInside)
+                    val refValsSafe = if (safe) refVals.map { Util.toIRISafe(it) } else refVals
+                    refValsSafe
+                }
+                is LiteralSegment -> {
+                    listOf(segment.literal)
+                }
+            }
+        }
+        val product = cartesianProduct(evaluatedSegments).map { it.joinToString("") }
+        return product
+    }
 
-	// If the term map is a template-valued term map, 
-	// then the generated RDF term is determined by applying 
-	// the term generation rules to its template value.
-	public List<String> values(Iteration i) {
-		return values(i, false);
-	}
-	
-	public List<String> values(Iteration i, boolean safe) {
-		List<String> list = new ArrayList<>();
-		list.add(template);
-		
-		for(String reference : references()) {
-			List<String> valuesForReference = i.getStringsFor(reference);
-			List<String> newset = new ArrayList<>();
-			
-			String search = "{" + StringEscapeUtils.escapeJava(reference).replaceAll("([{}])", "\\\\$1") + "}";
+    private sealed class Segment
+    private class LiteralSegment(val literal: String) : Segment()
+    private class ReferenceSegment(val rawInside: String) : Segment()
 
-			for(String s : list)
-				for(String v : valuesForReference)
-					if(v != null) {
-						newset.add(s.replace(search, safe ? Util.toIRISafe(v) : v));
-					}
+    private fun parseTemplate(): List<Segment> {
+        var rest = template
+        val segments = mutableListOf<Segment>()
+        while (rest.isNotEmpty()) {
+            val m = bracesPattern.matcher(rest)
+            if (m.find()) {
+                if (m.start() > 0) {
+                    val literal = rest.take(m.start(1) - 1)
+                    val escapeLiteral = escape(literal)
+                    segments.add(LiteralSegment(escapeLiteral))
+                }
+                val reference = m.group(1)
+                val escapeReference = escape(reference)
+                segments.add(ReferenceSegment(escapeReference))
+                rest = rest.substring(m.end())
+            } else {
+                segments.add(LiteralSegment(escape(rest)))
+                rest = ""
+            }
+        }
+        return segments
+    }
 
-			list = newset;
-		}
-		
-		list = list.stream().
-				map((s)-> s.replace("\\{", "{").replace("\\}", "}")).
-				collect(Collectors.toList());
-		
-		return list;
-		
-	}
+    private fun escape(s: String): String {
+        return s.replace("""\\{""", "{").replace("""\\}""", "}")
+    }
 
-	private static final Pattern p = Pattern.compile("(?<!\\\\)\\{(.+?)(?<!\\\\)\\}");
-	public List<String> references() {
-		List<String> list = new ArrayList<>();
-		Matcher m = p.matcher(template);
-		while(m.find()) {
-			String temp = template.substring(m.start(1), m.end(1));
-			list.add(StringEscapeUtils.unescapeJava(temp));
-		}
-		return list;
-	}
-
+    companion object {
+        private val bracesPattern: Pattern = Pattern.compile("""(?<!\\)\{(.+?)(?<!\\)\}""")
+    }
 }
