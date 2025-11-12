@@ -8,11 +8,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -84,16 +88,40 @@ public class TestRMLCorePostgreSQL {
 	@Test public void RMLTC0012dPostgreSQL() throws Exception { testForNotOK("RMLTC0012d-PostgreSQL"); }
 	@Test public void RMLTC0015bPostgreSQL() throws Exception { testForNotOK("RMLTC0015b-PostgreSQL"); }
 	@Test public void RMLTC0019bPostgreSQL() throws Exception { testForNotOK("RMLTC0019b-PostgreSQL"); }
-	
-	@SuppressWarnings({ "resource", "deprecation" })
+
+    static PostgreSQLContainer<?> CONTAINER = new PostgreSQLContainer<>("postgres:latest")
+            .withUsername("postgres")
+            .withPassword("test");
+
+    @BeforeAll
+    static void startContainers() {
+        CONTAINER.start();
+    }
+
+    @AfterAll
+    static void stopContainers() {
+        CONTAINER.stop();
+    }
+
+    @BeforeEach
+    void setUp() throws SQLException {
+        // drop all tables in the database
+        CONTAINER.createConnection("").createStatement().execute(
+                """
+                        DROP SCHEMA public CASCADE;
+                        CREATE SCHEMA public;
+                        GRANT ALL ON SCHEMA public TO postgres;
+                        GRANT ALL ON SCHEMA public TO public;
+                        COMMENT ON SCHEMA public IS 'standard public schema';
+                        """
+        );
+    }
+
+
 	public void testForOK(String f) throws Exception {
 		System.out.println(String.format("Now processing %s", f));
 		
 		System.out.println("Loading the database");
-        PostgreSQLContainer<?> CONTAINER = new PostgreSQLContainer<>("postgres:latest")
-                .withUsername("postgres")
-                .withPassword("test");
-        CONTAINER.start();
 		String jdbcurl = CONTAINER.getJdbcUrl();
     	String ddl = FileUtils.readFileToString(new File(base + f, "resource.sql"));
     	Statement statement = CONTAINER.createConnection("?allowMultiQueries=true").createStatement();
@@ -131,20 +159,15 @@ public class TestRMLCorePostgreSQL {
 
 		assertTrue(expected.isIsomorphicWith(actual));
 		
-    	m2.delete();    	
-    	CONTAINER.stop();
+    	m2.delete();
 		
 		System.out.println();
 	}
 
-	@SuppressWarnings({ "resource", "deprecation" })
 	public void testForNotOK(String f) throws Exception {
 		System.out.println(String.format("Now processing %s", f));
 		
     	System.out.println("Loading the database");
-        PostgreSQLContainer<?> CONTAINER = new PostgreSQLContainer<>("postgres:latest")
-                .withUsername("postgres")
-                .withPassword("test");    	CONTAINER.start();
 		String jdbcurl = CONTAINER.getJdbcUrl();
     	String ddl = FileUtils.readFileToString(new File(base + f, "resource.sql"));
     	Statement statement = CONTAINER.createConnection("?allowMultiQueries=true").createStatement();
@@ -171,8 +194,7 @@ public class TestRMLCorePostgreSQL {
 		assertTrue(exit > 0);
 		assertTrue(Files.size(Paths.get(r)) == 0);
 
-    	m2.delete();    	
-    	CONTAINER.stop();
+    	m2.delete();
 		
 		System.out.println();
 	}
