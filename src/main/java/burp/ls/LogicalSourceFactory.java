@@ -1,21 +1,5 @@
 package burp.ls;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.vocabulary.DCAT;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.VOID;
-
 import burp.model.LogicalSource;
 import burp.util.Util;
 import burp.vocabularies.CSVW;
@@ -25,6 +9,20 @@ import burp.vocabularies.SD;
 import burp.vocabularies.UCOCore;
 import burp.vocabularies.UCOObservable;
 import burp.vocabularies.YS;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.vocabulary.DCAT;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.VOID;
 
 public class LogicalSourceFactory {
 
@@ -241,6 +239,11 @@ public class LogicalSourceFactory {
 
 	private static String getFile(Resource ls) {
 		Resource source = ls.getPropertyResourceValue(RML.source);
+                
+                if (source.hasProperty(RDF.type, RML.FilePath)) {
+                    String file = source.getProperty(RML.path).getLiteral().getString();
+                    return file;
+                }
 
 		if (source.hasProperty(RDF.type, RML.RelativePathSource)) {
 			String file = source.getProperty(RML.path).getLiteral().getString();
