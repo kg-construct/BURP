@@ -9,6 +9,7 @@ import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.DatasetGraphFactory;
+import org.apache.jena.sparql.core.Quad;
 import org.junit.jupiter.api.Assertions;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -136,7 +137,7 @@ public class TestGenerator {
         Generator generator = new Generator();
         
         try {
-            generator.generate(triplesmaps, baseIRI, quad -> {
+            generator.generate(triplesmaps, baseIRI, Quad.defaultGraphIRI, quad -> {
                 actual.add(quad);
             });
         } catch(Exception e) {

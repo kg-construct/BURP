@@ -36,10 +36,12 @@ public class Generator {
      *
      * @param triplesmaps the triples maps to execute
      * @param baseIRI base IRI used to resolve relative IRIs produced by the mapping
+     * @param defaultGraph the default graph to be used
      * @param consumer callback invoked once for every generated quad
      */
     public void generate(List<TriplesMap> triplesmaps,
             String baseIRI,
+            Node defaultGraph,
             Consumer<Quad> consumer) {
 
         for (TriplesMap tm : triplesmaps) {
@@ -69,12 +71,12 @@ public class Generator {
                 } else {
                     for (SubGraph subgraph : sm.generateGatherMapGraphs(i, baseIRI)) {
                         subjects.add(subgraph.node);
-                        emitSubGraph(subgraph, sgs, consumer);
+                        emitSubGraph(subgraph, sgs, defaultGraph, consumer);
                     }
                 }
 
                 // rdf:type from subject map
-                emitSubjectTypes(sm.classes, subjects, sgs, consumer);
+                emitSubjectTypes(sm.classes, subjects, sgs, defaultGraph, consumer);
 
                 // predicate-object maps
                 for (PredicateObjectMap pom : tm.predicateObjectMaps) {
@@ -104,7 +106,7 @@ public class Generator {
                         } else {
                             for (SubGraph subgraph : om.generateGatherMapGraphs(i, baseIRI)) {
                                 objects.add(subgraph.node);
-                                emitSubGraph(subgraph, graphs, consumer);
+                                emitSubGraph(subgraph, graphs, defaultGraph, consumer);
                             }
                         }
                     }
@@ -113,7 +115,7 @@ public class Generator {
                         objects.addAll(rom.generateTerms(i, baseIRI));
                     }
 
-                    emitTriples(subjects, predicates, objects, graphs, consumer);
+                    emitTriples(subjects, predicates, objects, graphs, defaultGraph, consumer);
                 }
             }
         }
@@ -124,6 +126,7 @@ public class Generator {
             List<RDFNode> predicates,
             List<RDFNode> objects,
             List<RDFNode> graphs,
+            Node defaultGraph,
             Consumer<Quad> consumer) {
 
         for (RDFNode s : subjects) {
@@ -136,7 +139,7 @@ public class Generator {
                     Node on = o.asNode();
 
                     for (RDFNode g : graphs) {
-                        Node gn = toGraphNode(g);
+                        Node gn = toGraphNode(g, defaultGraph);
                         consumer.accept(Quad.create(gn, sn, pn, on));
                     }
                 }
@@ -147,6 +150,7 @@ public class Generator {
     private void emitSubjectTypes(List<Resource> classes,
             List<RDFNode> subjects,
             List<RDFNode> graphs,
+            Node defaultGraph,
             Consumer<Quad> consumer) {
 
         Node rdfType = RDF.type.asNode();
@@ -158,7 +162,7 @@ public class Generator {
                 Node cn = c.asNode();
 
                 for (RDFNode g : graphs) {
-                    Node gn = toGraphNode(g);
+                    Node gn = toGraphNode(g, defaultGraph);
                     consumer.accept(Quad.create(gn, sn, rdfType, cn));
                 }
             }
@@ -168,12 +172,13 @@ public class Generator {
     /* ---------------- SubGraph handling ---------------- */
     private void emitSubGraph(SubGraph subgraph,
             List<RDFNode> graphs,
+            Node defaultGraph,
             Consumer<Quad> consumer) {
 
         Node gn = null;
 
         for (RDFNode g : graphs) {
-            gn = toGraphNode(g);
+            gn = toGraphNode(g, defaultGraph);
 
             Node finalGn = gn;
 
@@ -190,9 +195,9 @@ public class Generator {
     }
 
     /* ---------------- graph conversion ---------------- */
-    private Node toGraphNode(RDFNode g) {
+    private Node toGraphNode(RDFNode g, Node defaultGraph) {
         if (g.equals(RML.defaultGraph)) {
-            return Quad.defaultGraphIRI;
+            return defaultGraph;
         }
         return g.asNode();
     }
