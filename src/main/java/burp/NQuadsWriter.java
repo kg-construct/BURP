@@ -14,10 +14,11 @@ import java.util.List;
 
 public class NQuadsWriter {
 
+    public static void write(OutputStream output, List<RdfStatement> statements) {
+        write(output, statements, StandardCharsets.UTF_8);
+    }
+
     public static void write(OutputStream output, List<RdfStatement> statements, Charset charset) {
-        if (charset == null) {
-            charset = StandardCharsets.UTF_8;
-        }
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, charset));
         try {
             for (RdfStatement statement : statements) {
@@ -138,13 +139,27 @@ public class NQuadsWriter {
             char ch = value.charAt(i);
             int chCode = value.codePointAt(i);
             switch (ch) {
-                case '\\': escaped.append("\\\\"); break;
-                case '"': escaped.append("\\\""); break;
-                case '\n': escaped.append("\\n"); break;
-                case '\r': escaped.append("\\r"); break;
-                case '\t': escaped.append("\\t"); break;
-                case '\b': escaped.append("\\b"); break;
-                case '\u000C': escaped.append("\\f"); break;
+                case '\\':
+                    escaped.append("\\\\");
+                    break;
+                case '"':
+                    escaped.append("\\\"");
+                    break;
+                case '\n':
+                    escaped.append("\\n");
+                    break;
+                case '\r':
+                    escaped.append("\\r");
+                    break;
+                case '\t':
+                    escaped.append("\\t");
+                    break;
+                case '\b':
+                    escaped.append("\\b");
+                    break;
+                case '\u000C':
+                    escaped.append("\\f");
+                    break;
                 default:
                     if (chCode < 0x20) {
                         escaped.append("\\u");

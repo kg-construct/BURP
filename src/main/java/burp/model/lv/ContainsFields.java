@@ -1,4 +1,4 @@
-package burp.model;
+package burp.model.lv;
 
 import java.util.List;
 

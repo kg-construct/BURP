@@ -87,10 +87,6 @@ public class XMLSource extends FileBasedLogicalSource {
     }
 
     @Override
-    public void setReferenceFormulation(Resource value) {
-    }
-
-    @Override
     public Reference buildExportedReference(String reference, Origin origin) {
         return new XMLReference(reference, origin);
     }

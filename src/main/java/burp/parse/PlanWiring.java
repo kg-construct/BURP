@@ -3,7 +3,6 @@ package burp.parse;
 import burp.model.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PlanWiring {
     public static void wire(MappingDocument document) {
@@ -55,7 +54,7 @@ public class PlanWiring {
     }
 
     private static void compileReferences(PlanNode node) {
-        List<ReferenceHolder> holders = node.descendants(ReferenceHolder.class).collect(Collectors.toList());
+        List<ReferenceHolder> holders = node.descendants(ReferenceHolder.class).toList();
         for (ReferenceHolder holder : holders) {
             holder.compileReferences();
         }

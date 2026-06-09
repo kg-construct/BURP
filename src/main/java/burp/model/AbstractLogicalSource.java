@@ -1,6 +1,7 @@
 package burp.model;
 
 
+import burp.model.lv.FieldParent;
 import burp.reporting.BurpException;
 
 import java.util.HashSet;

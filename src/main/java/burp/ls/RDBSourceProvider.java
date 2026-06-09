@@ -18,7 +18,7 @@ public class RDBSourceProvider implements LogicalSourceProvider {
     @Override
     public RDBSource create(Resource ls, Path mappingDirectory, Path currentWorkingDirectory) {
         RDBSource source = new RDBSource();
-        source.setReferenceFormulation(RML.SQL2008Query);
+        source.referenceFormulation = RML.SQL2008Query;
 
         Resource sourceNode = ls.getPropertyResourceValue(RML.source);
         Statement jdbcDSNStmt = sourceNode.getProperty(D2RQ.jdbcDSN);

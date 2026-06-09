@@ -63,10 +63,10 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
 
         if (RML.IRI.equals(termType) && allowed.contains(RML.IRI)) {
             return (List<Term>) (List<?>) generateIRIs(i);
-        } else if (termType.toString().equals("http://w3id.org/rml/URI") && allowed.contains(RML.IRI)) {
-            return (List<Term>) (List<?>) generateIRIs(i); // URI mapped to IRI
-        } else if (termType.toString().equals("http://w3id.org/rml/UnsafeIRI") && allowed.contains(RML.IRI)) {
-            return (List<Term>) (List<?>) generateUnsafeIRIs(i); // UnsafeIRI mapped to IRI
+        } else if (RML.URI.equals(termType) && allowed.contains(RML.URI)) {
+            return (List<Term>) (List<?>) generateURIs(i);
+        } else if (RML.UnsafeIRI.equals(termType) && allowed.contains(RML.IRI)) {
+            return (List<Term>) (List<?>) generateUnsafeIRIs(i);
         } else if (RML.BLANKNODE.equals(termType) && allowed.contains(RML.BLANKNODE)) {
             return (List<Term>) (List<?>) generateBlankNodes(i);
         } else if (RML.LITERAL.equals(termType) && allowed.contains(RML.LITERAL)) {
@@ -74,9 +74,15 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
         } else {
             throw new BurpException(
                     new RmlError(
-                            "The term map " + this.getName() + " generates " + termType + ", which is not allowed. Expected one of " + allowed,
+                            "The term map " + this.getName() + " generates " + termType + ", which is not allowed. " +
+                                    "Expected one of " + allowed,
                             new Origin(this, null),
-                            RER.IncorrectTermType
+                            RER.IncorrectTermType,
+                            null,
+                            Map.of(
+                                    RML.termType, termType,
+                                    BURP.allowedTermType, String.join("", allowed.stream().map(Resource::getURI).toList())
+                            )
                     )
             );
         }

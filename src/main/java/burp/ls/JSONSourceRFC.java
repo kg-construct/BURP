@@ -25,6 +25,8 @@ public class JSONSourceRFC extends FileBasedLogicalSource {
     public String iterator;
     public Origin iteratorOrigin;
 
+
+
     @Override
     public Iterable<Iteration> iterator() {
         try {
@@ -50,6 +52,15 @@ public class JSONSourceRFC extends FileBasedLogicalSource {
         } catch (BurpException burpException) {
             throw burpException;
         } catch (Exception exception) {
+            String exName = exception.getClass().getName();
+            if (exName.equals("at.asitplus.jsonpath.core.JsonPathCompilerException") || 
+                exName.equals("at.asitplus.jsonpath.implementation.JsonPathParserException") ||
+                exception.getCause() != null && (
+                    exception.getCause().getClass().getName().equals("at.asitplus.jsonpath.core.JsonPathCompilerException") ||
+                    exception.getCause().getClass().getName().equals("at.asitplus.jsonpath.implementation.JsonPathParserException")
+                )) {
+                throw new BurpException(new RmlError("Syntax error in JSONPath iterator.", new Origin(this, null), RER.ReferenceFormulationSyntaxError, exception, null));
+            }
             throw new BurpException(new RmlError("Error in JSON preparation of iterator.", new Origin(this, null), RER.LogicalSourceError, exception, null));
         }
     }
@@ -57,10 +68,6 @@ public class JSONSourceRFC extends FileBasedLogicalSource {
     @Override
     public Resource getReferenceFormulation() {
         return RML.JSONPath;
-    }
-
-    @Override
-    public void setReferenceFormulation(Resource value) {
     }
 
     @Override

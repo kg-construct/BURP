@@ -77,11 +77,6 @@ public class CSVSource extends FileBasedLogicalSource {
     }
 
     @Override
-    public void setReferenceFormulation(Resource referenceFormulation) {
-        // do nothing
-    }
-
-    @Override
     public Reference buildExportedReference(String reference, Origin origin) {
         return new CSVReference(reference, origin);
     }

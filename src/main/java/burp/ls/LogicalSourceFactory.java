@@ -11,6 +11,7 @@ import burp.vocabularies.RER;
 import burp.vocabularies.RML;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -48,8 +49,8 @@ public class LogicalSourceFactory {
     }
 
     public static List<Iteration> changeIterator(
-        String iterationAsString,
-        Resource referenceFormulation,
+        @NotNull String iterationAsString,
+        @NotNull Resource referenceFormulation,
         String iterator,
         Origin referenceFormulationOrigin
     ) {
@@ -69,8 +70,8 @@ public class LogicalSourceFactory {
     }
 
     public static List<Iteration> changeIterator(
-        String iterationAsString,
-        Resource referenceFormulation,
+        @NotNull String iterationAsString,
+        @NotNull Resource referenceFormulation,
         String iterator
     ) {
         return changeIterator(iterationAsString, referenceFormulation, iterator, null);

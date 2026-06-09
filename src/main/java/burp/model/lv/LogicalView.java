@@ -26,9 +26,8 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
     public Iterable<PlanNode> children() {
         List<PlanNode> list = new ArrayList<>();
         list.add(logicalSource);
-        for (ExpressionField e : expressionFields) {
-            if (e.fieldExpressionMap != null) list.add(e.fieldExpressionMap);
-        }
+        list.addAll(expressionFields);
+        list.addAll(iterableFields);
         list.addAll(joins);
         return list;
     }
@@ -73,7 +72,7 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
     }
 
     public void addField(Field field) {
-        field.parent = this.logicalSource;
+        field.parentField = this.logicalSource;
 
         if (field instanceof IterableField) {
             iterableFields.add((IterableField) field);
@@ -91,10 +90,6 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
     @Override
     public Resource getReferenceFormulation() {
         return BURP.LogicalView;
-    }
-
-    @Override
-    public void setReferenceFormulation(Resource referenceFormulation) {
     }
 
     @Override

@@ -15,7 +15,7 @@ public class RDBTableSourceProvider extends RDBSourceProvider {
     @Override
     public RDBSource create(Resource ls, Path mappingDirectory, Path currentWorkingDirectory) {
         RDBSource source = super.create(ls, mappingDirectory, currentWorkingDirectory);
-        source.setReferenceFormulation(RML.SQL2008Table);
+        source.referenceFormulation = RML.SQL2008Table;
         source.query = "SELECT * FROM " + source.query;
         return source;
     }

@@ -1,14 +1,16 @@
-package burp.model;
+package burp.model.lv;
 
-import burp.model.lv.LogicalIteration;
+import burp.model.AbstractLogicalSource;
+import burp.model.PlanNode;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Field implements ContainsFields, FieldParent {
+public abstract class Field implements ContainsFields, FieldParent, PlanNode {
 
 	public String fieldName ;
-    public FieldParent parent;
+    public FieldParent parentField;
+    private PlanNode planNodeParent;
 
     public List<ExpressionField> expressionFields = new ArrayList<>();
     public List<IterableField> iterableFields = new ArrayList<>();
@@ -43,11 +45,29 @@ public abstract class Field implements ContainsFields, FieldParent {
 
     @Override
     public String getAbsoluteFieldName() {
-        if (parent instanceof AbstractLogicalSource)
+        if (parentField instanceof AbstractLogicalSource)
             return fieldName;
 
-        Field parent = (Field) this.parent;
+        Field parent = (Field) this.parentField;
         return parent.getAbsoluteFieldName() + "." + fieldName;
+    }
+
+    @Override
+    public PlanNode getParent() {
+        return planNodeParent;
+    }
+
+    @Override
+    public void setParent(PlanNode parent) {
+        this.planNodeParent = parent;
+    }
+
+    @Override
+    public Iterable<PlanNode> children() {
+        List<PlanNode> children = new ArrayList<>();
+        children.addAll(expressionFields);
+        children.addAll(iterableFields);
+        return children;
     }
 
     @Override
@@ -62,7 +82,7 @@ public abstract class Field implements ContainsFields, FieldParent {
 
     @Override
     public void addField(Field field) {
-        field.parent = this;
+        field.parentField = this;
 
         if (field instanceof IterableField) {
             getIterableFields().add((IterableField) field);

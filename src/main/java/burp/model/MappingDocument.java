@@ -9,7 +9,6 @@ import org.apache.jena.vocabulary.RDF;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class MappingDocument implements PlanNode {
     public final List<TriplesMap> triplesMaps;
@@ -143,7 +142,7 @@ public class MappingDocument implements PlanNode {
                         it.getGraph(),
                         it.targets()
                 ))
-                .collect(Collectors.toList());
+                .toList();
 
         result.addAll(rdfStmtsWithoutCollections);
         result.addAll(containerStmts);

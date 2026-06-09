@@ -7,10 +7,10 @@ import org.apache.jena.rdf.model.ResourceFactory;
 public class BURP {
     public static final String NS = "http://BURP.noname/";
     public static final String base_uri = NS;
-
     private static Property property(String local) {
         return ResourceFactory.createProperty(NS + local);
     }
+
     private static Resource resource(String local) {
         return ResourceFactory.createResource(NS + local);
     }
@@ -40,4 +40,10 @@ public class BURP {
     public static final Resource OBJECT = resource("ObjectProv");
 
     public static final Resource TestTurtleAnnotation = resource("TestTurtleAnnotation");
+
+    /**
+     * Indicate the allowed term types of an Expression Map.
+     * Extension to RER Error context.
+     */
+    public static Property allowedTermType = property("allowedTermType");
 }

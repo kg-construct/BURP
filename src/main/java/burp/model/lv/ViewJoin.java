@@ -8,6 +8,7 @@ import burp.reporting.RmlError;
 import burp.vocabularies.RER;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -120,8 +121,8 @@ public class ViewJoin implements PlanNode, ParentJoinReferenceScope, LocalRefere
 
     private boolean matches(LogicalIteration childIteration, LogicalIteration parentIteration) {
         for (JoinCondition jc : joinConditions) {
-            Set<Object> values1 = jc.childMap.generateValues(childIteration, TemplateReferenceSafety.UNSAFE).stream().collect(Collectors.toSet());
-            Set<Object> values2 = jc.parentMap.generateValues(parentIteration, TemplateReferenceSafety.UNSAFE).stream().collect(Collectors.toSet());
+            Set<Object> values1 = new HashSet<>(jc.childMap.generateValues(childIteration, TemplateReferenceSafety.UNSAFE));
+            Set<Object> values2 = new HashSet<>(jc.parentMap.generateValues(parentIteration, TemplateReferenceSafety.UNSAFE));
 
             boolean match = values1.stream().anyMatch(v1 -> values2.stream().anyMatch(v2 -> Datardf.semanticEquals(v1, v2)));
             if (!match) {
@@ -132,7 +133,7 @@ public class ViewJoin implements PlanNode, ParentJoinReferenceScope, LocalRefere
     }
 
     public void addField(Field field) {
-        field.parent = parentLogicalView;
+        field.parentField = parentLogicalView;
         if (field instanceof ExpressionField) {
             this.expressionFields.add((ExpressionField) field);
         } else {

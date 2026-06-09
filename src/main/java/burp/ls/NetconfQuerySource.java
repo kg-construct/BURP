@@ -49,9 +49,8 @@ class NetconfQuerySource extends LogicalSource {
     public String iterator;
     public Resource referenceFormulation;
     public Resource getReferenceFormulation() { return referenceFormulation; }
-    public void setReferenceFormulation(Resource ref) { this.referenceFormulation = ref; }
 
-	protected List<Iteration> iterations = null;
+    protected List<Iteration> iterations = null;
 	public Charset encoding = StandardCharsets.UTF_8;
 
 	private final Map<Resource, Integer> datastoreMap = Map.ofEntries(

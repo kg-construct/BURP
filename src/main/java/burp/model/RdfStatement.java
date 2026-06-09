@@ -22,6 +22,10 @@ public final class RdfStatement implements RdfStatementLike {
         this.targets = targets != null ? targets : Set.of();
     }
 
+    public RdfStatement(BlankNodeOrIRI subject, IRITerm predicate, Term object, IRITerm graph) {
+        this(subject, predicate, object, graph, Set.of());
+    }
+
     public RdfStatement(BlankNodeOrIRI subject, IRITerm predicate, Term object) {
         this(subject, predicate, object, null, Set.of());
     }

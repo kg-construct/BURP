@@ -12,7 +12,6 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
 import org.apache.commons.io.IOUtils;
-import org.apache.jena.atlas.io.OutputUtils;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.iri.Violation;
@@ -54,8 +53,7 @@ public final class Util {
             if (Chars3986.unreserved(c)) {
                 sb.append(c);
             } else {
-                sb.append("%");
-                OutputUtils.printHex(sb, b & 0xFF, 2);
+                sb.append('%').append(String.format("%02X", b & 0xFF));
             }
         }
         return sb.toString();

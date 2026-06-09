@@ -56,7 +56,7 @@ public class GatherMap implements PlanNode {
                 .map(gm -> gm.generateTerms(i))
                 .toList();
 
-        List<? extends List<? extends Term>> itemSets;
+        List<List<Term>> itemSets;
 
         if (RML.append.equals(strategy)) {
             var flattened = superCollection.stream()
@@ -79,7 +79,7 @@ public class GatherMap implements PlanNode {
 
         List<Term> results = new ArrayList<>();
 
-        for (List<? extends Term> items : itemSets) {
+        for (List<Term> items : itemSets) {
             List<BlankNodeOrIRI> idsToUse;
             boolean idGenerated;
             if (explicitIds != null) {
@@ -116,11 +116,11 @@ public class GatherMap implements PlanNode {
         return generateTerms(i, null);
     }
 
-    private <T> List<List<T>> cartesianProduct(List<? extends List<? extends T>> lists) {
+    private <T> List<List<T>> cartesianProduct(List<List<T>> lists) {
         List<List<T>> result = new ArrayList<>();
         result.add(new ArrayList<>());
 
-        for (List<? extends T> list : lists) {
+        for (List<T> list : lists) {
             List<List<T>> currentResult = new ArrayList<>();
             for (T item : list) {
                 for (List<T> combination : result) {

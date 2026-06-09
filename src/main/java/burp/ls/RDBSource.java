@@ -24,16 +24,11 @@ public class RDBSource extends LogicalSource {
     public String username;
     public String query;
 
-    private Resource referenceFormulation;
+    protected Resource referenceFormulation;
 
     @Override
     public Resource getReferenceFormulation() {
         return referenceFormulation;
-    }
-
-    @Override
-    public void setReferenceFormulation(Resource value) {
-        this.referenceFormulation = value;
     }
 
     @Override
@@ -115,10 +110,9 @@ class RDBReference extends Reference {
 
     @Override
     public List<Object> getValues(Iteration i) {
-        if (!(i instanceof RDBIteration)) {
+        if (!(i instanceof RDBIteration rdbIteration)) {
             throw new IllegalArgumentException("RDBReference can only be used with RDBIteration.");
         }
-        RDBIteration rdbIteration = (RDBIteration) i;
         List<Object> l = new ArrayList<>();
         String columnname = StringEscapeUtils.unescapeJava(reference);
 

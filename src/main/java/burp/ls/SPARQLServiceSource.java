@@ -34,11 +34,6 @@ public class SPARQLServiceSource extends LogicalSource {
     }
 
     @Override
-    public void setReferenceFormulation(Resource value) {
-        this.referenceFormulation = value;
-    }
-
-    @Override
     public Iterable<Iteration> iterator() {
         try {
             if (iterations == null) {
