@@ -1,8 +1,6 @@
-package burp.model.fnmlutil;
+package burp.model.fnml;
 
 import burp.Main;
-import burp.model.RMLFunction;
-import burp.model.Return;
 import burp.reporting.BurpException;
 import burp.reporting.Origin;
 import burp.reporting.RmlError;
@@ -36,13 +34,13 @@ public class FunctionsRegistry {
         Map<String, RMLFunction> functionsMap = new HashMap<>();
         
         for (RMLFunction f : load) {
-            if (!functionsMap.containsKey(f.toString())) {
-                functionsMap.put(f.toString(), f);
+            if (!functionsMap.containsKey(f.getName())) {
+                functionsMap.put(f.getName(), f);
             } else {
                 if (Main.report != null && Main.report.getErrors() != null) {
                     Main.report.getErrors().add(
                         new RmlError(
-                            "Function " + f.toString() + " already exists, not loading from service loader " + f + ".",
+                            "Function " + f.getName() + " already exists, not loading from service loader " + f + ".",
                             null,
                             RER.Warning
                         )

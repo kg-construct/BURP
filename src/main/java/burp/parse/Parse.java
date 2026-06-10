@@ -3,6 +3,8 @@ package burp.parse;
 import burp.Main;
 import burp.ls.LogicalSourceFactory;
 import burp.model.*;
+import burp.model.fnml.FunctionExecution;
+import burp.model.fnml.ReturnMap;
 import burp.model.gathermap.GatherMap;
 import burp.model.lv.JoinType;
 import burp.model.lv.LogicalView;
@@ -200,7 +202,7 @@ public class Parse {
                             rml:parameter idlab-fn:boolParameter ;
                             rml:inputValueMap ?condition
                         ] , [
-                            rml:parameter idlab-fn:parameter ;
+                            rml:parameter idlab-fn:expressionParameter ;
                             rml:inputValueMap [
                                 ?prop ?value
                             ]

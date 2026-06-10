@@ -1,7 +1,10 @@
 package burp.model.rdf;
 
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -13,7 +16,8 @@ import java.util.Objects;
 
 public final class Datardf {
 
-    private Datardf() {}
+    private Datardf() {
+    }
 
     public static IRITerm iriTerm(Resource resource) {
         return new IRITerm(resource.getURI());
@@ -60,9 +64,60 @@ public final class Datardf {
     static final IRITerm XSDdateTime = new IRITerm("http://www.w3.org/2001/XMLSchema#dateTime");
     static final IRITerm XSDstring = new IRITerm("http://www.w3.org/2001/XMLSchema#string");
 
-    public static Term toTerm(Object o) {
+    public static Term toTerm(@Nullable Object o) {
+        return toTerm(o, null);
+    }
+
+    public static Term toTerm(@Nullable Object o, @Nullable IRITerm datatype) {
         if (o instanceof Term t) return t;
         if (o == null) return null;
+
+        boolean isXsdDouble = datatype != null && XSDdouble.uri().equals(datatype.uri());
+        if (o instanceof RDFNode node) {
+            if (node.isLiteral()) {
+                Literal l = node.asLiteral();
+                String lex = l.getLexicalForm();
+                String lang = l.getLanguage();
+                String dtUri = l.getDatatypeURI();
+                if (XSDdouble.uri().equals(dtUri) || isXsdDouble) {
+                    try {
+                        double val = l.getDouble();
+                        return new LiteralTerm(doubleCanonicalMap(val), XSDdouble, null);
+                    } catch (Exception e) {
+                        // fallback
+                    }
+                }
+
+                IRITerm finalDt = dtUri != null && !dtUri.equals("http://www.w3.org/2001/XMLSchema#string")
+                        ? new IRITerm(dtUri)
+                        : (datatype);
+
+                if (lang != null && !lang.isEmpty()) {
+                    return new LiteralTerm(lex, null, lang);
+                } else {
+                    return new LiteralTerm(lex, finalDt, null);
+                }
+            } else if (node.isURIResource()) {
+                return new IRITerm(node.asResource().getURI());
+            } else if (node.isAnon()) {
+                return new BlankNodeTerm(node.asResource().getId().getLabelString());
+            }
+        }
+
+        if (datatype != null) {
+            if (isXsdDouble) {
+                if (o instanceof Number n) {
+                    return new LiteralTerm(doubleCanonicalMap(n.doubleValue()), XSDdouble, null);
+                }
+                try {
+                    double val = Double.parseDouble(o.toString());
+                    return new LiteralTerm(doubleCanonicalMap(val), XSDdouble, null);
+                } catch (NumberFormatException e) {
+                    // fallback
+                }
+            }
+            return new LiteralTerm(o.toString(), datatype, null);
+        }
 
         if (o instanceof Integer || o instanceof Long) {
             return new LiteralTerm(o.toString(), XSDinteger, null);

@@ -1,5 +1,6 @@
 package burp.model;
 
+import burp.model.fnml.FunctionExecution;
 import burp.model.rdf.*;
 import burp.parse.turtleprov.ProvTurtleVisitor;
 import burp.reporting.BurpException;
@@ -12,7 +13,6 @@ import org.apache.jena.util.URIref;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
 
@@ -20,7 +20,7 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
     private Origin expressionOrigin = null;
     private final Set<LogicalTarget> logicalTargets = new HashSet<>();
     private PlanNode parent = null;
-    
+
     private String baseIRI = null;
 
     public Expression getExpression() {
@@ -94,11 +94,11 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
             return ((FunctionExecution) expression).values(i);
         } else {
             throw new BurpException(
-                new RmlError(
-                    "Error generating values, expression is not supported.",
-                    expressionOrigin,
-                    RER.UnsupportedMapping
-                )
+                    new RmlError(
+                            "Error generating values, expression is not supported.",
+                            expressionOrigin,
+                            RER.UnsupportedMapping
+                    )
             );
         }
     }
@@ -107,8 +107,9 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
         Set<LogicalTarget> targets = getEffectiveTargets();
         List<Object> values = generateValues(i, TemplateReferenceSafety.UNSAFE);
         List<IRITerm> result = new ArrayList<>();
-        
+
         for (Object it : values) {
+            if (it == null) continue;
             if (it instanceof IRITerm) {
                 result.add(new IRITerm(((IRITerm) it).uri(), targets));
             } else {
@@ -120,22 +121,22 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
                 } else {
                     string = it.toString();
                 }
-                
+
                 String encoded = URIref.encode(string);
                 String baseIriVal = getBaseIRI();
                 String baseEncoded = URIref.encode(baseIriVal + string);
-                
+
                 if (Util.isValidAndAbsoluteIRI(encoded)) {
                     result.add(new IRITerm(string, targets));
                 } else if (Util.isValidAndAbsoluteIRI(baseEncoded)) {
                     result.add(new IRITerm(baseIriVal + string, targets));
                 } else {
                     throw new BurpException(
-                        new RmlError(
-                            baseIriVal + " and " + string + " do not constitute a valid UnsafeIRI",
-                            expressionOrigin,
-                            RER.InvalidIRI
-                        )
+                            new RmlError(
+                                    baseIriVal + " and " + string + " do not constitute a valid UnsafeIRI",
+                                    expressionOrigin,
+                                    RER.InvalidIRI
+                            )
                     );
                 }
             }
@@ -147,8 +148,9 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
         Set<LogicalTarget> targets = getEffectiveTargets();
         List<Object> values = generateValues(i, TemplateReferenceSafety.SAFE_IRI);
         List<IRITerm> result = new ArrayList<>();
-        
+
         for (Object it : values) {
+            if (it == null) continue;
             if (it instanceof IRITerm) {
                 result.add(new IRITerm(((IRITerm) it).uri(), targets));
             } else {
@@ -160,20 +162,20 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
                 } else {
                     string = it.toString();
                 }
-                
+
                 String baseIriVal = getBaseIRI();
-                
+
                 if (Util.isValidAndAbsoluteIRI(string)) {
                     result.add(new IRITerm(string, targets));
                 } else if (Util.isValidAndAbsoluteIRI(baseIriVal + string)) {
                     result.add(new IRITerm(baseIriVal + string, targets));
                 } else {
                     throw new BurpException(
-                        new RmlError(
-                            baseIriVal + " and " + string + " do not constitute a valid IRI",
-                            expressionOrigin,
-                            RER.InvalidIRI
-                        )
+                            new RmlError(
+                                    baseIriVal + " and " + string + " do not constitute a valid IRI",
+                                    expressionOrigin,
+                                    RER.InvalidIRI
+                            )
                     );
                 }
             }
@@ -185,8 +187,9 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
         Set<LogicalTarget> targets = getEffectiveTargets();
         List<Object> values = generateValues(i, TemplateReferenceSafety.SAFE_URI);
         List<IRITerm> result = new ArrayList<>();
-        
+
         for (Object it : values) {
+            if (it == null) continue;
             if (it instanceof IRITerm) {
                 result.add(new IRITerm(((IRITerm) it).uri(), targets));
             } else {
@@ -196,20 +199,20 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
                 } else {
                     string = it.toString();
                 }
-                
+
                 String baseIriVal = getBaseIRI();
-                
+
                 if (Util.isValidAndAbsoluteURI(string)) {
                     result.add(new IRITerm(string, targets));
                 } else if (Util.isValidAndAbsoluteURI(baseIriVal + string)) {
                     result.add(new IRITerm(baseIriVal + string, targets));
                 } else {
                     throw new BurpException(
-                        new RmlError(
-                            baseIriVal + " and " + string + " do not constitute a valid URI",
-                            expressionOrigin,
-                            RER.InvalidURI
-                        )
+                            new RmlError(
+                                    baseIriVal + " and " + string + " do not constitute a valid URI",
+                                    expressionOrigin,
+                                    RER.InvalidURI
+                            )
                     );
                 }
             }
@@ -219,7 +222,7 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
 
     protected List<BlankNodeTerm> generateBlankNodes(Iteration i) {
         Set<LogicalTarget> targets = getEffectiveTargets();
-        
+
         if (expression instanceof RDFNodeConstant) {
             RDFNodeConstant expr = (RDFNodeConstant) expression;
             if (expr.constant instanceof BlankNodeTerm) {
@@ -230,16 +233,19 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
             }
         } else if (expression instanceof Template) {
             return ((Template) expression).values(i, TemplateReferenceSafety.UNSAFE).stream()
-                .map(val -> blankNodeFor(val, targets))
-                .collect(Collectors.toList());
+                    .filter(Objects::nonNull)
+                    .map(val -> blankNodeFor(val, targets))
+                    .toList();
         } else if (expression instanceof Reference) {
             return ((Reference) expression).values(i).stream()
-                .map(val -> blankNodeFor(val, targets))
-                .collect(Collectors.toList());
+                    .filter(Objects::nonNull)
+                    .map(val -> blankNodeFor(val, targets))
+                    .toList();
         } else if (expression instanceof FunctionExecution) {
             return ((FunctionExecution) expression).values(i).stream()
-                .map(val -> blankNodeFor(val, targets))
-                .collect(Collectors.toList());
+                    .filter(Objects::nonNull)
+                    .map(val -> blankNodeFor(val, targets))
+                    .toList();
         } else if (expression == null) {
             return Collections.singletonList(new BlankNodeTerm("bnode-" + (blankNodeIdCounter++), targets));
         } else {
@@ -264,7 +270,7 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
         List<IRITerm> datatypes = dm != null ? dm.generateIRIs(i) : null;
         List<LanguageTag> languages = lm != null ? lm.generateLanguageTags(i) : null;
         Set<LogicalTarget> baseTargets = getEffectiveTargets();
-        
+
         if (expression instanceof RDFNodeConstant) {
             RDFNodeConstant expr = (RDFNodeConstant) expression;
             if (expr.constant instanceof LiteralTerm) {
@@ -275,16 +281,16 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
             }
         } else if (expression instanceof Template) {
             return ((Template) expression).values(i, TemplateReferenceSafety.UNSAFE).stream()
-                .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
-                .collect(Collectors.toList());
+                    .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
+                    .toList();
         } else if (expression instanceof Reference) {
             return ((Reference) expression).values(i).stream()
-                .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
-                .collect(Collectors.toList());
+                    .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
+                    .toList();
         } else if (expression instanceof FunctionExecution) {
             return ((FunctionExecution) expression).values(i).stream()
-                .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
-                .collect(Collectors.toList());
+                    .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
+                    .toList();
         } else {
             throw new RuntimeException("Error generating literal or value.");
         }
@@ -293,23 +299,32 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
     private List<LiteralTerm> literalFor(Object value, List<IRITerm> datatypes, List<LanguageTag> languages, Set<LogicalTarget> baseTargets) {
         if (value == null) {
             return Collections.emptyList();
-        } else if (languages != null) {
-            return languages.stream()
-                .map(langTag -> new LiteralTerm(value.toString(), null, langTag.tag(), intersectTargets(baseTargets, langTag.targets())))
-                .collect(Collectors.toList());
-        } else if (datatypes != null) {
-            return datatypes.stream()
-                .map(dt -> new LiteralTerm(value.toString(), dt, null, intersectTargets(baseTargets, dt.targets())))
-                .collect(Collectors.toList());
-        } else {
-            Term term = Datardf.toTerm(value);
-            if (term instanceof LiteralTerm) {
-                LiteralTerm lt = (LiteralTerm) term;
-                return List.of(new LiteralTerm(lt.value(), lt.datatype(), lt.language(), baseTargets));
-            } else {
-                return Collections.singletonList(new LiteralTerm(value.toString(), null, null, baseTargets));
-            }
         }
+
+        if (languages != null) {
+            return languages.stream()
+                    .map(langTag -> new LiteralTerm(value.toString(), null, langTag.tag(), intersectTargets(baseTargets, langTag.targets())))
+                    .toList();
+        }
+        if (datatypes != null) {
+            return datatypes.stream()
+                    .map(dt -> {
+                        Term term = Datardf.toTerm(value, dt);
+                        if (term instanceof LiteralTerm lt) {
+                            return new LiteralTerm(lt.value(), lt.datatype(), lt.language(), intersectTargets(baseTargets, dt.targets()));
+                        }
+                        return new LiteralTerm(value.toString(), dt, null, intersectTargets(baseTargets, dt.targets()));
+                    })
+                    .toList();
+        }
+
+        Term term = Datardf.toTerm(value);
+        if (term instanceof LiteralTerm lt) {
+            return List.of(new LiteralTerm(lt.value(), lt.datatype(), lt.language(), baseTargets));
+        } else {
+            return Collections.singletonList(new LiteralTerm(value.toString(), null, null, baseTargets));
+        }
+
     }
 
     @Override

@@ -1,5 +1,6 @@
-package burp.model;
+package burp.model.fnml;
 
+import burp.model.TermMap;
 import burp.vocabularies.RML;
 import org.apache.jena.rdf.model.Resource;
 import java.util.Set;

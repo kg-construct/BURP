@@ -1,6 +1,6 @@
-package burp.model;
+package burp.model.fnml;
 
-import burp.model.fnmlutil.FunctionsRegistry;
+import burp.model.*;
 import burp.model.rdf.IRITerm;
 import burp.parse.turtleprov.ProvTurtleVisitor;
 import burp.reporting.*;
@@ -68,9 +68,9 @@ public class FunctionExecution implements Expression {
             ));
         }
 
-        String functionUri = functions.get(0).uri();
+        String functionUri = functions.getFirst().uri();
 
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> inputMap = new HashMap<>();
 
         for (int i = 0; i < inputs.size(); i++) {
             Input input = inputs.get(i);
@@ -94,12 +94,12 @@ public class FunctionExecution implements Expression {
                 ));
             }
 
-            map.put(parameterUri, generatedInputs.getFirst());
+            inputMap.put(parameterUri, generatedInputs.getFirst());
         }
 
         Origin originCall = new Origin(this, List.of(callStmt));
 
-        List<Return> results = FunctionsRegistry.execute(functionUri, map, originCall);
+        List<Return> results = FunctionsRegistry.execute(functionUri, inputMap, originCall);
         for (Return o : results) {
             Origin originReturnMap = new Origin(this, returnMapStmt != null ? List.of(returnMapStmt) : List.of());
             if (returnMap == null) {
@@ -114,7 +114,7 @@ public class FunctionExecution implements Expression {
                     ));
                 }
 
-                String returnUri = returns.get(0).uri();
+                String returnUri = returns.getFirst().uri();
                 Object v = o.get(returnUri);
                 list.add(v);
             }

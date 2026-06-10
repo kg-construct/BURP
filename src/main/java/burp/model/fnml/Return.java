@@ -1,4 +1,4 @@
-package burp.model;
+package burp.model.fnml;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,13 +18,16 @@ public class Return {
 	public Return(Object defaultValue, Map<String, Object> additionalOutputs) {
 		this.defaultValue = defaultValue;
 		this.additionalOutputs = additionalOutputs;
+		if (additionalOutputs != null) {
+			this.returns.putAll(additionalOutputs);
+		}
 	}
 
 	public Object get(Object key) {
-		Object o = returns.get(key.toString());
-		if(o == null)
+		if (!returns.containsKey(key.toString()) && !returns.isEmpty()) {
 			throw new RuntimeException("Unknown return value %s.".formatted(key));
-		return o;
+		}
+		return returns.get(key.toString());
 	}
 
 	public Object put(String key, Object value) {
