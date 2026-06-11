@@ -46,12 +46,30 @@ public class PlainTextReportGenerator {
         if (issue.getOrigin() != null) {
             Origin origin = issue.getOrigin();
             sb.append(prependIndent("In mapping", 4)).append(System.lineSeparator());
-            Path file = Main.mappingFile.normalize();
-            List<PointRange> locations = ProvTurtleVisitor.retrieveTurtleLocation(origin.sourceStatements() != null ? origin.sourceStatements() : Collections.emptyList());
+            
+            Path file = Main.mappingFile != null ? Main.mappingFile.normalize() : null;
+            List<PointRange> locations = new ArrayList<>();
+            if (origin.sourceStatements() != null) {
+                for (RDFPointer ptr : origin.sourceStatements()) {
+                    if (ptr instanceof TextFilePointer tfp) {
+                        locations.add(tfp.range());
+                        if (tfp.path() != null) {
+                            file = tfp.path().normalize();
+                        }
+                    }
+                }
+            }
+            
+            locations.addAll(ProvTurtleVisitor.retrieveTurtleLocation(origin.sourceStatements() != null ? origin.sourceStatements() : Collections.emptyList()));
+
+            if (file == null) {
+                return;
+            }
 
             // Print file:line:col - line:col
             List<PointRange> sortedLocations = new ArrayList<>(locations);
-            sortedLocations.sort(Comparator.comparing(PointRange::getStart));
+            sortedLocations.removeIf(l -> l == null || l.start() == null);
+            sortedLocations.sort(Comparator.comparing(PointRange::start));
 
             List<String> lineLocations = new ArrayList<>();
             for (PointRange location : sortedLocations) {

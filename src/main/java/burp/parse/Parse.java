@@ -14,17 +14,11 @@ import burp.model.rdf.IRITerm;
 import burp.model.rdf.LiteralTerm;
 import burp.model.rdf.Term;
 import burp.parse.turtleprov.ProvStore;
-import burp.parse.turtleprov.ProvTurtleVisitor;
 import burp.parse.turtleprov.RDF12Converter;
-import burp.reporting.BurpException;
-import burp.reporting.Origin;
-import burp.reporting.RmlError;
-import burp.reporting.StatementParts;
+import burp.parse.turtleprov.TurtleProvParser;
+import burp.reporting.*;
 import burp.vocabularies.RER;
 import burp.vocabularies.RML;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
@@ -57,18 +51,22 @@ public class Parse {
     private Path mappingFile = null;
     private Path currentDirectory = null;
     private Model mapping = null;
-    private BurpParserError parserError = null;
+    private ProvStore provStore = null;
 
     private Dataset parseTurtleFromFile(Path turtleFile) throws Exception {
-        CharStream input = CharStreams.fromPath(turtleFile);
-        TurtleLexer lexer = new TurtleLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        TurtleParser parser = new TurtleParser(tokens);
-        parserError = new BurpParserError();
-        parser.addErrorListener(parserError);
-        ProvTurtleVisitor visitor = new ProvTurtleVisitor();
-        ProvStore store = visitor.visitTurtleDoc(parser.turtleDoc());
-        Model m = RDF12Converter.toModel(store);
+        provStore = TurtleProvParser.parseTurtleFromPath(turtleFile);
+        if (!provStore.getSyntaxErrors().isEmpty()) {
+            var rmlSyntaxError = provStore.getSyntaxErrors().stream().map(error -> {
+                TextFilePointer tfp = new TextFilePointer(turtleFile, error.range);
+                Origin origin = new Origin(null, List.of(tfp));
+                return new RmlError(error.message, origin, RER.RDFMappingSyntaxError);
+            }).toList();
+            if (Main.report != null) {
+                Main.report.getErrors().addAll(rmlSyntaxError);
+            }
+            throw new BurpException(rmlSyntaxError.getFirst());
+        }
+        Model m = RDF12Converter.toModel(provStore);
         return DatasetFactory.create(m);
     }
 
@@ -717,7 +715,7 @@ public class Parse {
             mapping.listStatements(focusResource, null, valueNode).forEachRemaining(stmt -> results.add(StatementParts.from(stmt, Subject)));
 
             mapping.listStatements(null, null, focusResource).forEachRemaining(stmt -> {
-                boolean contains = results.stream().anyMatch(it -> it.getStmt().equals(stmt));
+                boolean contains = results.stream().anyMatch(it -> it.stmt().equals(stmt));
                 if (!contains) {
                     results.add(StatementParts.from(stmt, Object));
                 }

@@ -7,9 +7,7 @@ import at.asitplus.jsonpath.implementation.AntlrJsonPathCompiler;
 import burp.model.Iteration;
 import burp.model.LogicalSource;
 import burp.model.Reference;
-import burp.reporting.BurpException;
-import burp.reporting.Origin;
-import burp.reporting.RmlError;
+import burp.reporting.*;
 import burp.vocabularies.RER;
 import burp.vocabularies.RML;
 import com.google.auto.service.AutoService;
@@ -34,6 +32,7 @@ public class JSONSourceProvider implements LogicalSourceProvider {
     public LogicalSource create(Resource ls, Path mappingDirectory, Path currentWorkingDirectory) {
         Resource source = ls.getPropertyResourceValue(RML.source);
         String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
+        var iteratorOrigin = ls.getProperty(RML.iterator);
 
         FileBaseSourceProvider.FileAndOrigin fileAndOrigin = FileBaseSourceProvider.getFile(source, mappingDirectory, currentWorkingDirectory);
 
@@ -41,6 +40,7 @@ public class JSONSourceProvider implements LogicalSourceProvider {
         jsonSource.file = fileAndOrigin.file;
         jsonSource.fileOriginStmts = fileAndOrigin.origin;
         jsonSource.iterator = iterator;
+        jsonSource.iteratorOrigin = StatementParts.from(iteratorOrigin, StatementPart.Object);
         jsonSource.encoding = FileBaseSourceProvider.getEncoding(source);
         jsonSource.compression = FileBaseSourceProvider.getCompression(source);
         jsonSource.getNulls().addAll(FileBaseSourceProvider.getNullValues(source));
@@ -50,18 +50,19 @@ public class JSONSourceProvider implements LogicalSourceProvider {
 
     @Override
     public List<Iteration> parseStringPayload(String payload, String iterator, Origin referenceFormulationOrigin) {
+        CapturingErrorListener listener = new CapturingErrorListener();
         try {
             JsonElement jsonContent = Json.Default.parseToJsonElement(payload);
             if (iterator == null) {
                 throw new BurpException(
-                    new RmlError(
-                        "Iterator is null", referenceFormulationOrigin,
-                        RER.MappingError
-                    )
+                        new RmlError(
+                                "Iterator is null", referenceFormulationOrigin,
+                                RER.MappingError
+                        )
                 );
             }
             JsonPath jsonPath = new JsonPath(
-                iterator, new AntlrJsonPathCompiler(), s -> null
+                    iterator, new AntlrJsonPathCompiler(listener), s -> null
             );
             List<NodeListEntry> results = jsonPath.query(jsonContent);
             List<Iteration> iterationList = new ArrayList<>();
@@ -71,29 +72,50 @@ public class JSONSourceProvider implements LogicalSourceProvider {
             return iterationList;
         } catch (Exception e) {
             if (e instanceof BurpException) throw (BurpException) e;
-            if (e instanceof JsonPathCompilerException || e instanceof IllegalArgumentException) {
+            if (e instanceof JsonPathCompilerException || e instanceof IllegalArgumentException || e.getCause() instanceof JsonPathCompilerException) {
+                if (!listener.getErrors().isEmpty()) {
+                    JSONPathError firstError = listener.getErrors().get(0);
+                    LiteralPart literalPart = null;
+                    if (referenceFormulationOrigin != null && referenceFormulationOrigin.sourceStatements() != null && !referenceFormulationOrigin.sourceStatements().isEmpty()) {
+                        RDFPointer first = referenceFormulationOrigin.sourceStatements().get(0);
+                        if (first instanceof LiteralPart lp) {
+                            literalPart = lp;
+                        }
+                    }
+                    Origin errOrigin = referenceFormulationOrigin;
+                    if (literalPart != null && firstError.start() != null) {
+                        PointRange newRange = literalPart.objectRange().plus(new PointRange(firstError.start()));
+                        errOrigin = new Origin(referenceFormulationOrigin.planNode(), Collections.singletonList(new LiteralPart(literalPart.stmt(), newRange)));
+                    }
+                    String displayMsg = "Syntax error in JSONPath `" + iterator + "`";
+                    if (firstError.start() != null) {
+                        displayMsg += " at " + firstError.start().getDisplayLine() + ":" + firstError.start().getDisplayColumn();
+                    }
+                    displayMsg += ": " + firstError.message();
+                    throw new BurpException(new RmlError(displayMsg, errOrigin, RER.ReferenceFormulationSyntaxError, e));
+                }
                 throw new BurpException(
-                    new RmlError(
-                        "Syntax error in JSONPath `" + iterator + "`",
-                        referenceFormulationOrigin,
-                        RER.ReferenceFormulationSyntaxError,
-                        e
-                    )
+                        new RmlError(
+                                "Syntax error in JSONPath `" + iterator + "`",
+                                referenceFormulationOrigin,
+                                RER.ReferenceFormulationSyntaxError,
+                                e
+                        )
                 );
             }
             throw new BurpException(
-                new RmlError(
-                    "Unexpected Error while changing iterator to JSONPath, iteration content " + payload + ".",
-                    referenceFormulationOrigin,
-                    RER.Error,
-                    e
-                )
+                    new RmlError(
+                            "Unexpected Error while changing iterator to JSONPath, iteration content " + payload + ".",
+                            referenceFormulationOrigin,
+                            RER.Error,
+                            e
+                    )
             );
         }
     }
 
     @Override
     public Reference buildReference(String reference, Origin origin, Origin referenceFormulationOrigin) {
-        return new JSONPathReference(reference, origin);
+        return new JSONPathReference(reference, referenceFormulationOrigin);
     }
 }

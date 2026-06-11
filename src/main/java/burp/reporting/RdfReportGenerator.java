@@ -98,20 +98,59 @@ public class RdfReportGenerator {
 
             if (origin.sourceStatements() != null) {
                 for (RDFPointer rdfPtr : origin.sourceStatements()) {
-                    if (rdfPtr instanceof StatementParts stmtPtr) {
-                        Resource sp = model.createResource(PTR.StatementPart);
-                        sp.addProperty(PTR.statement, model.createStatementTerm(stmtPtr.getStmt()));
-                        
-                        if (stmtPtr.isSubject()) sp.addProperty(PTR.part, PTR.Subject);
-                        if (stmtPtr.isPredicate()) sp.addProperty(PTR.part, PTR.Predicate);
-                        if (stmtPtr.isObject()) sp.addProperty(PTR.part, PTR.Object);
-                        
-                        model.add(errorResource, RER.mappingStatement, sp);
+                    switch (rdfPtr) {
+                        case StatementParts(
+                                var stmt, boolean subject, boolean predicate, boolean object
+                        ) -> {
+                            Resource sp = model.createResource(PTR.StatementPart);
+                            sp.addProperty(PTR.statement, model.createStatementTerm(stmt));
+
+                            if (subject) sp.addProperty(PTR.part, PTR.Subject);
+                            if (predicate) sp.addProperty(PTR.part, PTR.Predicate);
+                            if (object) sp.addProperty(PTR.part, PTR.Object);
+
+                            model.add(errorResource, RER.mappingStatement, sp);
+                        }
+                        case LiteralPart(var stmt, var range) -> {
+                            Resource sp = model.createResource(PTR.StatementPart);
+                            sp.addProperty(PTR.statement, model.createStatementTerm(stmt));
+                            sp.addProperty(PTR.part, PTR.Object);
+                            sp.addProperty(PTR.textRange, createRangeResource(model, range));
+                            model.add(errorResource, RER.mappingStatement, sp);
+                        }
+                        case TextFilePointer tfp -> {
+                            Resource tfpRes = model.createResource(PTR.TextFilePointer);
+                            if (tfp.path() != null)
+                                tfpRes.addProperty(PTR.path, tfp.path().toString());
+                            if (tfp.range() != null)
+                                tfpRes.addProperty(PTR.range, createRangeResource(model, tfp.range()));
+                            model.add(errorResource, RER.mappingStatement, tfpRes);
+                        }
+
+                        case null, default -> {
+                        }
                     }
-                    //TODO TextFilePointer and LiteralPart
                 }
             }
         }
+    }
+
+    private static Resource createRangeResource(Model model, PointRange range) {
+        Resource rangeRes = model.createResource(PTR.Range);
+
+        Resource startPt = model.createResource(PTR.Point);
+        startPt.addProperty(PTR.line, model.createTypedLiteral(range.start().getDisplayLine()));
+        startPt.addProperty(PTR.column, model.createTypedLiteral(range.start().getDisplayColumn()));
+        rangeRes.addProperty(PTR.start, startPt);
+
+        if (range.end() != null) {
+            Resource endPt = model.createResource(PTR.Point);
+            endPt.addProperty(PTR.line, model.createTypedLiteral(range.end().getDisplayLine()));
+            endPt.addProperty(PTR.column, model.createTypedLiteral(range.end().getDisplayColumn()));
+            rangeRes.addProperty(PTR.end, endPt);
+        }
+
+        return rangeRes;
     }
 
     private static String getStackTraceAsString(Throwable throwable) {

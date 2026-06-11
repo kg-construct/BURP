@@ -2,36 +2,37 @@ package burp.reporting;
 
 import java.util.*;
 
-/**
- * Converts a list of Nodes (which may span multiple lines) into a map of
- * LineIndex -> List<ColumnRange>. Overlapping ranges are merged.
- *
- * @return a map from line indexes (0 indexed) to a list of column ranges (also 0-indexed).
- */
+
 public class FileGeometry {
 
     public record ColumnRange(int first, int last) {
     }
 
+    /**
+     * Converts a list of Nodes (which may span multiple lines) into a map of
+     * LineIndex -> List<ColumnRange>. Overlapping ranges are merged.
+     *
+     * @return a map from line indexes (0 indexed) to a list of column ranges (also 0-indexed).
+     */
     public static Map<Integer, List<ColumnRange>> getMergedHighlights(List<PointRange> nodes, List<String> lines) {
         Map<Integer, List<ColumnRange>> rawMap = new HashMap<>();
 
         // 1. Flatten Nodes into raw line ranges
         for (PointRange node : nodes) {
-            if (node.getEnd() == null) continue;
+            if (node.end() == null) continue;
 
-            int startLine = Math.max(node.getStart().line(), 0);
-            int endLine = Math.min(node.getEnd().line(), lines.size() - 1);
+            int startLine = Math.max(node.start().line(), 0);
+            int endLine = Math.min(node.end().line(), lines.size() - 1);
 
             for (int lineIdx = startLine; lineIdx <= endLine; lineIdx++) {
                 int lineLen = lines.get(lineIdx).length();
 
-                int startCol = (lineIdx == startLine) ? node.getStart().column() : 0;
-                int endCol = (lineIdx == endLine) ? node.getEnd().column() : lineLen; // Go to end of line if multi-line
+                int startCol = (lineIdx == startLine) ? node.start().column() : 0;
+                int endCol = (lineIdx == endLine) ? node.end().column() : lineLen; // Go to end of line if multi-line
 
                 // Ensure we don't go out of bounds
-                int safeStart = Math.max(0, Math.min(startCol, lineLen));
-                int safeEnd = Math.max(0, Math.min(endCol, lineLen));
+                int safeStart = Math.clamp(startCol, 0, lineLen);
+                int safeEnd = Math.clamp(endCol, 0, lineLen);
 
                 // Add only valid ranges
                 if (safeStart <= safeEnd) {
@@ -61,7 +62,7 @@ public class FileGeometry {
         sorted.sort(Comparator.comparingInt(ColumnRange::first));
 
         List<ColumnRange> merged = new ArrayList<>();
-        ColumnRange current = sorted.get(0);
+        ColumnRange current = sorted.getFirst();
 
         for (int i = 1; i < sorted.size(); i++) {
             ColumnRange next = sorted.get(i);

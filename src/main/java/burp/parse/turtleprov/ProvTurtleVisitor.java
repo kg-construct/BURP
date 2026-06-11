@@ -4,6 +4,7 @@ import burp.reporting.LiteralPart;
 import burp.reporting.PointRange;
 import burp.reporting.RDFGraphPointer;
 import burp.reporting.StatementParts;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.jena.rdf.model.*;
@@ -24,28 +25,28 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         List<PointRange> locations = new ArrayList<>();
         for (Object item : sourceStatements) {
             if (item instanceof RDFGraphPointer gp) {
-                var stmt = gp.getStmt();
+                var stmt = gp.stmt();
                 if (stmt == null || stmt.getModel() == null) {
                     continue;
                 }
                 var infos = RDF12Converter.fromAnnotations(stmt, stmt.getModel());
                 if (gp instanceof StatementParts sp) {
-                    if (sp.isSubject() && infos.subjectInfo != null && infos.subjectInfo.start() != null) {
+                    if (sp.subject() && infos.subjectInfo != null && infos.subjectInfo.start() != null) {
                         locations.add(new PointRange(infos.subjectInfo.start(), infos.subjectInfo.end()));
                     }
-                    if (sp.isPredicate() && infos.predicateInfo != null && infos.predicateInfo.start() != null) {
+                    if (sp.predicate() && infos.predicateInfo != null && infos.predicateInfo.start() != null) {
                         locations.add(new PointRange(infos.predicateInfo.start(), infos.predicateInfo.end()));
                     }
-                    if (sp.isObject() && infos.objectInfo != null && infos.objectInfo.start() != null) {
+                    if (sp.object() && infos.objectInfo != null && infos.objectInfo.start() != null) {
                         locations.add(new PointRange(infos.objectInfo.start(), infos.objectInfo.end()));
                     }
                 } else if (gp instanceof LiteralPart lp) {
                     if (infos.objectInfo != null) {
                         var info = infos.objectInfo;
-                        Point literalEnd = lp.getObjectRange().getEnd();
+                        Point literalEnd = lp.objectRange().end();
                         Point startPt = info.rdfLiteralStringStart();
                         Point endPt = info.rdfLiteralStringEnd();
-                        Point newStart = startPt != null ? startPt.plus(lp.getObjectRange().getStart()) : null;
+                        Point newStart = startPt != null ? startPt.plus(lp.objectRange().start()) : null;
                         Point newEnd = (startPt != null && literalEnd != null) ? startPt.plus(literalEnd) : endPt;
                         if (newStart != null && newEnd != null) {
                             locations.add(new PointRange(newStart, newEnd));
@@ -97,9 +98,21 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         return new Point(endLine, endCol);
     }
 
-    @Override
-    protected Object defaultResult() {
-        return null;
+    private PointRange getRange(ParserRuleContext ctx) {
+        if (ctx == null || ctx.getStart() == null) return null;
+        Point start = getStartPoint(ctx.getStart());
+        Point end = ctx.getStop() != null ? getEndPoint(ctx.getStop()) : getEndPoint(ctx.getStart());
+        return new PointRange(start, end);
+    }
+
+    private PointRange getRange(Token token) {
+        if (token == null) return null;
+        return new PointRange(getStartPoint(token), getEndPoint(token));
+    }
+
+    private PointRange getRange(TerminalNode node) {
+        if (node == null || node.getSymbol() == null) return null;
+        return getRange(node.getSymbol());
     }
 
     @Override
@@ -123,10 +136,10 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         return null;
     }
 
-    public Object makeRegisterPrefix(TerminalNode prefix, TerminalNode iriref, boolean isSparql) {
+    public Object makeRegisterPrefix(TerminalNode prefix, TerminalNode iriRef, boolean isSparql) {
         String prefixText = prefix.getText();
         String prefixNs = prefixText.substring(0, prefixText.length() - 1);
-        String iriText = iriref.getText();
+        String iriText = iriRef.getText();
         String iri = iriText.substring(1, iriText.length() - 1);
         store.getPrefixes().put(prefixNs, iri);
         return null;
@@ -139,7 +152,7 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
 
     @Override
     public Object visitSparqlPrefix(TurtleParser.SparqlPrefixContext ctx) {
-        return makeRegisterPrefix(ctx.PNAME_NS(), ctx.IRIREF(), false);
+        return makeRegisterPrefix(ctx.PNAME_NS(), ctx.IRIREF(), true);
     }
 
     @Override
@@ -176,7 +189,7 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         if (ctx.iri() != null) return visitIri(ctx.iri());
         if (ctx.BlankNode() != null) return visitBlankNodeTerminal(ctx.BlankNode());
         if (ctx.collection() != null) return visitCollection(ctx.collection());
-        throw new IllegalArgumentException("Unknown subject type");
+        throw new TurtleProvException("Unknown subject type", getRange(ctx));
     }
 
     @Override
@@ -205,15 +218,15 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
                 String prefix = match.group(1) != null ? match.group(1) : "";
                 String localName = match.group(2);
                 String namespace = store.getPrefixes().get(prefix);
-                if (namespace == null) throw new IllegalArgumentException("Unknown prefix: " + prefix);
+                if (namespace == null) throw new TurtleProvException("Unknown prefix: " + prefix, getRange(token));
                 Resource resource = ResourceFactory.createResource(namespace + localName);
                 NodeInfo nodeInfo = new NodeInfo(TurtleNodeKind.PREFIXED_NAME, getStartPoint(token), getEndPoint(token), null);
                 return new Pair<>(resource, nodeInfo);
             } else {
-                throw new IllegalArgumentException("Invalid prefixed name: " + prefixedName);
+                throw new TurtleProvException("Invalid prefixed name: " + prefixedName, getRange(token));
             }
         } else {
-            throw new IllegalArgumentException("Unknown IRI type");
+            throw new TurtleProvException("Unknown IRI type", getRange(ctx));
         }
     }
 
@@ -232,7 +245,7 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
                 );
                 return new Pair<>(resource, nodeInfo);
             } else {
-                throw new IllegalArgumentException("Invalid blank node label: " + text);
+                throw new TurtleProvException("Invalid blank node label: " + text, getRange(token));
             }
         } else if (text.startsWith("[") && text.endsWith("]")) {
             Resource resource = createBlankNode();
@@ -242,13 +255,13 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
             );
             return new Pair<>(resource, nodeInfo);
         } else {
-            throw new IllegalArgumentException("Unknown blank node format: " + text);
+            throw new TurtleProvException("Unknown blank node format: " + text, getRange(token));
         }
     }
 
     public Resource assembleList(List<RDFNode> list) {
         if (list.isEmpty()) {
-            return (Resource) RDF.nil;
+            return RDF.nil;
         } else {
             List<Resource> blankNodes = new ArrayList<>(list.size());
             for (int i = 0; i < list.size(); i++) {
@@ -265,8 +278,8 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
                 Resource next = blankNodes.get(i + 1);
                 store.getTriples().add(new ProvTriple(model.createStatement(current, RDF.rest, next)));
             }
-            store.getTriples().add(new ProvTriple(model.createStatement(blankNodes.get(blankNodes.size() - 1), RDF.rest, (Resource) RDF.nil)));
-            return blankNodes.get(0);
+            store.getTriples().add(new ProvTriple(model.createStatement(blankNodes.getLast(), RDF.rest, (Resource) RDF.nil)));
+            return blankNodes.getFirst();
         }
     }
 
@@ -336,7 +349,7 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
             );
             return new Pair<>(RDF.type, nodeInfo);
         } else {
-            throw new IllegalArgumentException("Unknown verb type: " + ctx.getText());
+            throw new TurtleProvException("Unknown verb type: " + ctx.getText(), getRange(ctx));
         }
     }
 
@@ -351,16 +364,15 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Object visitObject_(TurtleParser.Object_Context ctx) {
         if (ctx.iri() != null) return visitIri(ctx.iri());
         if (ctx.BlankNode() != null) return visitBlankNodeTerminal(ctx.BlankNode());
         if (ctx.collection() != null) return visitCollection(ctx.collection());
         if (ctx.blankNodePropertyList() != null) return visitBlankNodePropertyList(ctx.blankNodePropertyList());
         if (ctx.literal() != null) return visitLiteral(ctx.literal());
-        if (ctx.tripleTerm() != null) throw new UnsupportedOperationException("RDF-star / RDF 1.2 triple terms are not supported");
-        if (ctx.reifiedTriple() != null) throw new UnsupportedOperationException("RDF-star / RDF 1.2 reified triples are not supported");
-        throw new IllegalArgumentException("Unknown object type: " + ctx.getText());
+        if (ctx.tripleTerm() != null) throw new TurtleProvException("RDF-star / RDF 1.2 triple terms are not supported", getRange(ctx));
+        if (ctx.reifiedTriple() != null) throw new TurtleProvException("RDF-star / RDF 1.2 reified triples are not supported", getRange(ctx));
+        throw new TurtleProvException("Unknown object type: " + ctx.getText(), getRange(ctx));
     }
 
     @Override
@@ -368,7 +380,7 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         if (ctx.rdfLiteral() != null) return visitRdfLiteral(ctx.rdfLiteral());
         if (ctx.NumericLiteral() != null) return visitNumericLiteral(ctx.NumericLiteral());
         if (ctx.BooleanLiteral() != null) return visitBooleanLiteral(ctx.BooleanLiteral());
-        throw new IllegalArgumentException("Unknown literal type");
+        throw new TurtleProvException("Unknown literal type", getRange(ctx));
     }
 
     @Override

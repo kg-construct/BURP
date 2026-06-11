@@ -1,36 +1,13 @@
 package burp.reporting;
 
 import org.apache.jena.rdf.model.Statement;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-public class StatementParts implements RDFGraphPointer {
-    private final Statement stmt;
-    private final boolean subject;
-    private final boolean predicate;
-    private final boolean object;
-
-    public StatementParts(Statement stmt, boolean subject, boolean predicate, boolean object) {
-        this.stmt = stmt;
-        this.subject = subject;
-        this.predicate = predicate;
-        this.object = object;
-    }
-
-    @Override
-    public Statement getStmt() {
-        return stmt;
-    }
-
-    public boolean isSubject() {
-        return subject;
-    }
-
-    public boolean isPredicate() {
-        return predicate;
-    }
-
-    public boolean isObject() {
-        return object;
-    }
+public record StatementParts(@NonNull Statement stmt,
+                             boolean subject,
+                             boolean predicate,
+                             boolean object) implements RDFGraphPointer {
 
     public static StatementParts from(Statement stmt, StatementPart... parts) {
         boolean subj = false;
@@ -46,5 +23,11 @@ public class StatementParts implements RDFGraphPointer {
 
     public static StatementParts fromPredicateObject(Statement stmt) {
         return new StatementParts(stmt, false, true, true);
+    }
+
+    public @Nullable LiteralPart toLiteralPart() {
+        if (object() && stmt.getObject().isLiteral())
+            return new LiteralPart(stmt, new PointRange());
+        else return null;
     }
 }

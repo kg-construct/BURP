@@ -273,9 +273,45 @@ public class TurtleParserTest {
         Path resourcesPath = Paths.get("src/test/resources");
         if (!Files.exists(resourcesPath)) return Stream.empty();
 
-        return Files.walk(resourcesPath)
-                .filter(p -> p.toString().contains("rml-"))
-                .filter(p -> p.toString().endsWith("mapping.ttl"))
-                .map(Arguments::of);
+        try (Stream<Path> walk = Files.walk(resourcesPath)) {
+            return walk
+                    .filter(p -> p.toString().contains("rml-"))
+                    .filter(p -> p.toString().endsWith("mapping.ttl"))
+                    .map(Arguments::of)
+                    .toList()
+                    .stream();
+        }
+    }
+
+    @Test
+    public void testSyntaxErrorReportingPointRange() {
+        String invalidTurtle = "@prefix ex: <http://example.com/> .\nex:alice ex:knows .";
+        ProvStore store = TurtleProvParser.parseTurtleFromString(invalidTurtle);
+
+        Assertions.assertFalse(store.getSyntaxErrors().isEmpty());
+        var error = store.getSyntaxErrors().getFirst();
+        Assertions.assertNotNull(error.range);
+
+        Assertions.assertEquals(1, error.range.start().line);
+        Assertions.assertEquals(18, error.range.start().column);
+        Assertions.assertNotNull(error.range.end());
+    }
+
+    @Test
+    public void testLexerSyntaxErrorReportingQuotedText() {
+        String invalidTurtle = "@prefix ex: <http://example.com/> .\nex:alice ex:knows \"http://example.com/{Name\\}\" .";
+        ProvStore store = TurtleProvParser.parseTurtleFromString(invalidTurtle);
+
+        Assertions.assertFalse(store.getSyntaxErrors().isEmpty());
+        var error = store.getSyntaxErrors().getFirst();
+        Assertions.assertNotNull(error.range);
+
+        Assertions.assertEquals(1, error.range.start().line);
+        Assertions.assertEquals(18, error.range.start().column);
+
+        // The extracted quoted text is "http://example.com/{Name\} (length 27)
+        Assertions.assertNotNull(error.range.end());
+        Assertions.assertEquals(1, error.range.end().line);
+        Assertions.assertEquals(45, error.range.end().column);
     }
 }
