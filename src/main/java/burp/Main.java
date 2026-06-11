@@ -176,9 +176,7 @@ public class Main {
 
                     final Lang finalLang = targetLang;
                     final Charset finalEncoding = targetEncoding;
-                    Util.writeCompressedFile(resolvedPath, target.getCompression(), output -> {
-                        writeStatements(output, stmts, finalLang, finalEncoding);
-                    });
+                    Util.writeCompressedFile(resolvedPath, target.getCompression(), output -> writeStatements(output, stmts, finalLang, finalEncoding));
                 }
             }
         } catch (BurpException e) {
@@ -186,7 +184,7 @@ public class Main {
         } catch (Exception e) {
             report.getErrors().add(Errors.UnexpectedError(e));
         } finally {
-            System.out.println(report.toString());
+            System.out.print(PlainTextReportGenerator.generateTextReport(report));
             if (reportFilePath != null && !reportFilePath.isBlank()) {
                 RdfReportGenerator.generateRdfReport(report, reportFilePath);
             }

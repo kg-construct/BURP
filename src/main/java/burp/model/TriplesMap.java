@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static burp.model.LogicalTarget.unionLogicalTargets;
+
 public class TriplesMap implements PlanNode, BaseIRIScope, LocalReferenceScope, LogicalTargetScope {
     public Resource subject;
     public AbstractLogicalSource logicalSource;
@@ -62,20 +64,10 @@ public class TriplesMap implements PlanNode, BaseIRIScope, LocalReferenceScope, 
         return logicalTargets;
     }
 
-    private Set<LogicalTarget> unionTargets(Set<LogicalTarget>... targetSets) {
-        Set<LogicalTarget> union = new HashSet<>();
-        for (Set<LogicalTarget> set : targetSets) {
-            if (set != null && !set.isEmpty()) {
-                union.addAll(set);
-            }
-        }
-        return union;
-    }
-
     public List<RdfStatementLike> generate(Iteration i) {
         String tmBaseIRI = getBaseIri();
         List<RdfStatementLike> stmts = new ArrayList<>();
-        
+
         Set<IRITerm> subjectGraphs = new HashSet<>();
         for (TermGenerator map : subjectMap.graphMaps) {
             for (Term t : map.generateTerms(i)) {
@@ -84,7 +76,7 @@ public class TriplesMap implements PlanNode, BaseIRIScope, LocalReferenceScope, 
                 }
             }
         }
-        
+
         Set<IRITerm> targetGraphsForSubjectMap = subjectMap.graphMaps.isEmpty() ? new HashSet<>() : subjectGraphs;
         if (subjectMap.graphMaps.isEmpty()) {
             targetGraphsForSubjectMap.add(null);
@@ -93,17 +85,16 @@ public class TriplesMap implements PlanNode, BaseIRIScope, LocalReferenceScope, 
         var subjects = subjectMap.generateTerms(i);
 
         for (Term s : subjects) {
-            if (!(s instanceof BlankNodeOrIRI)) continue;
-            BlankNodeOrIRI sIri = (BlankNodeOrIRI) s;
-            
+            if (!(s instanceof BlankNodeOrIRI sIri)) continue;
+
             if (s instanceof CollectionOrContainerTerm) {
                 for (IRITerm g : targetGraphsForSubjectMap) {
                     stmts.add(new RdfStatementSubjectGraph(
-                            sIri, g, unionTargets(s.targets(), g != null ? g.targets() : null)
+                            sIri, g, unionLogicalTargets(s.targets(), g != null ? g.targets() : null)
                     ));
                 }
             }
-            
+
             for (Resource c : subjectMap.classes) {
                 Set<LogicalTarget> classTargets = subjectMap.getEffectiveTargets();
                 for (IRITerm g : targetGraphsForSubjectMap) {
@@ -112,7 +103,7 @@ public class TriplesMap implements PlanNode, BaseIRIScope, LocalReferenceScope, 
                             new IRITerm("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
                             new IRITerm(c.getURI(), classTargets),
                             g,
-                            unionTargets(s.targets(), classTargets, g != null ? g.targets() : null)
+                            unionLogicalTargets(s.targets(), classTargets, g != null ? g.targets() : null)
                     ));
                     countGeneratedStatements++;
                 }
@@ -122,8 +113,7 @@ public class TriplesMap implements PlanNode, BaseIRIScope, LocalReferenceScope, 
         for (PredicateObjectMap pom : predicateObjectMaps) {
             List<RdfPredicateObject> generatedPoms = pom.generate(i);
             for (Term s : subjects) {
-                if (!(s instanceof BlankNodeOrIRI)) continue;
-                BlankNodeOrIRI sIri = (BlankNodeOrIRI) s;
+                if (!(s instanceof BlankNodeOrIRI sIri)) continue;
 
                 for (RdfPredicateObject po : generatedPoms) {
                     Set<IRITerm> combinedGraphs = new HashSet<>();
@@ -137,7 +127,7 @@ public class TriplesMap implements PlanNode, BaseIRIScope, LocalReferenceScope, 
                     }
 
                     for (IRITerm g : combinedGraphs) {
-                        Set<LogicalTarget> finalTargets = unionTargets(s.targets(), po.targets(), g != null ? g.targets() : null);
+                        Set<LogicalTarget> finalTargets = unionLogicalTargets(s.targets(), po.targets(), g != null ? g.targets() : null);
                         stmts.add(new RdfStatement(sIri, po.predicate(), po.object(), g, finalTargets));
                         countGeneratedStatements++;
                     }

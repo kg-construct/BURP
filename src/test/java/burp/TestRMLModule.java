@@ -124,7 +124,7 @@ public abstract class TestRMLModule {
         String resultPath = tempDir.resolve(testData.output1 != null && !testData.output1.isEmpty() ? testData.output1 : "default.nq").toString();
         String reportPath = Files.createTempFile("report_" + testData.ID, ".nq").toString();
 
-        String tempMappingPath = tempDir.resolve("mapping.ttl").toString();
+        String tempMappingPath = tempDir.resolve(testData.mapping).toString();
 
         int exit = Main.doMain(
                 new String[]{

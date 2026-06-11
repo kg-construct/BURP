@@ -7,7 +7,7 @@ import burp.reporting.Origin;
 import burp.reporting.RmlError;
 import burp.vocabularies.RER;
 import com.google.auto.service.AutoService;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.text.WordUtils;
 import org.apache.jena.rdf.model.Property;
@@ -124,7 +124,7 @@ public class GrelFunctions {
         public List<Return> apply(Map<String, Object> parameters, Origin origin) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String f = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sep");
-            String out = StringUtils.removeEnd(s, f);
+            String out = Strings.CS.removeEnd(s, f);
             return List.of(new Return(out, out != null ? Map.of("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out) : Map.of()));
         }
     }

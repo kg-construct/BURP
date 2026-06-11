@@ -12,8 +12,7 @@ public interface LogicalTargetScope extends PlanNode {
         }
         PlanNode p = getParent();
         while (p != null) {
-            if (p instanceof LogicalTargetScope) {
-                LogicalTargetScope lts = (LogicalTargetScope) p;
+            if (p instanceof LogicalTargetScope lts) {
                 if (lts.getLogicalTargets() != null && !lts.getLogicalTargets().isEmpty()) {
                     return lts.getLogicalTargets();
                 }

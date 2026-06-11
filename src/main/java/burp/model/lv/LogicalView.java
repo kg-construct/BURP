@@ -37,6 +37,7 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
         return children();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Iterable<Iteration> iterator() throws BurpException {
         if (iterations == null) {
@@ -58,7 +59,7 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
             }
         }
 
-        return (List<Iteration>) (List) iterations;
+        return (List<Iteration>) (List<?>) iterations;
     }
 
     @Override
@@ -110,11 +111,9 @@ class LogicalReference extends Reference {
 
     @Override
     public List<Object> getValues(Iteration i) {
-        if (!(i instanceof LogicalIteration)) {
+        if (!(i instanceof LogicalIteration li)) {
             throw new IllegalArgumentException("LogicalReference " + reference + " can only be used with LogicalIteration.");
         }
-
-        LogicalIteration li = (LogicalIteration) i;
 
         if (!li.map.containsKey(reference)) {
             throw new BurpException(new RmlError(

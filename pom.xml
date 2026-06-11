@@ -2,15 +2,53 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>io.github.kg-construct</groupId>
     <artifactId>BURP</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.7</version>
+
     <name>Basic and Unassuming RML Processor</name>
+    <description>A Basic and Unassuming RML Processor (BURP) with RML Execution Report (RER) error handling
+    </description>
+    <url>https://github.com/kg-construct/BURP/</url>
+    <inceptionYear>2024</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://opensource.org/license/mit/</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Christophe Debruyne</name>
+            <url>https://ChristopheDebruyne.be</url>
+            <organization>University of Liège</organization>
+            <organizationUrl>https://www.uliege.be</organizationUrl>
+        </developer>
+        <developer>
+            <name>Jakub Duchateau</name>
+            <url>https://jduchateau.github.io</url>
+            <organization>University of Liège</organization>
+            <organizationUrl>https://www.uliege.be</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/kg-construct/BURP/</url>
+        <connection>scm:git:git://github.com/kg-construct/BURP.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/kg-construct/BURP.git</developerConnection>
+    </scm>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jena.version>5.6.0</jena.version>
+        <antlr.version>4.13.1</antlr.version>
+        <gitlab.project.id>${env.CI_PROJECT_ID}</gitlab.project.id>
     </properties>
 
     <repositories>
@@ -34,10 +72,142 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.11.0</version>
                 <configuration>
-                    <release>17</release>
+                    <release>21</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.auto.service</groupId>
+                            <artifactId>auto-service</artifactId>
+                            <version>1.1.1</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+
+            <!-- ANTLR4 Plugin -->
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>${antlr.version}</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <id>antlr</id>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <visitor>true</visitor>
+                    <listener>false</listener>
+                    <arguments>
+                        <argument>-package</argument>
+                        <argument>burp.parse.turtleprov</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+
+            <!-- Generate Vocabularies with Exec Maven Plugin -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-ptr</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>jena.schemagen</mainClass>
+                            <arguments>
+                                <argument>-i</argument>
+                                <argument>${project.basedir}/src/main/resources/vocabularies/ptr.ttl</argument>
+                                <argument>-e</argument>
+                                <argument>TURTLE</argument>
+                                <argument>-o</argument>
+                                <argument>${project.build.directory}/generated-sources/vocabularies</argument>
+                                <argument>--package</argument>
+                                <argument>burp.vocabularies</argument>
+                                <argument>-n</argument>
+                                <argument>PTR</argument>
+                                <argument>--ontology</argument>
+                                <argument>--rdfs</argument>
+                                <argument>--inference</argument>
+                                <argument>-a</argument>
+                                <argument>https://w3id.org/dre/ptr#</argument>
+                            </arguments>
+                            <includePluginDependencies>true</includePluginDependencies>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-rer</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>jena.schemagen</mainClass>
+                            <arguments>
+                                <argument>-i</argument>
+                                <argument>${project.basedir}/src/main/resources/vocabularies/rer.ttl</argument>
+                                <argument>-e</argument>
+                                <argument>TURTLE</argument>
+                                <argument>-o</argument>
+                                <argument>${project.build.directory}/generated-sources/vocabularies</argument>
+                                <argument>--package</argument>
+                                <argument>burp.vocabularies</argument>
+                                <argument>-n</argument>
+                                <argument>RER</argument>
+                                <argument>--ontology</argument>
+                                <argument>--rdfs</argument>
+                                <argument>--inference</argument>
+                                <argument>--import</argument>
+                                <argument>${project.basedir}/src/main/resources/vocabularies/ptr.ttl</argument>
+                                <argument>-a</argument>
+                                <argument>https://w3id.org/dre/rer#</argument>
+                                <argument>--declarations</argument>
+                                <argument>static {
+                                    M_MODEL.read(RER.class.getClassLoader().getResourceAsStream("vocabularies/rer.ttl"),
+                                    RER.NS, "TURTLE"); }
+                                </argument>
+                            </arguments>
+                            <includePluginDependencies>true</includePluginDependencies>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.jena</groupId>
+                        <artifactId>jena-cmds</artifactId>
+                        <version>${jena.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <!-- Build Helper Plugin to add generated sources -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.4.0</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/vocabularies</source>
+                                <source>${project.build.directory}/generated-sources/antlr4</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -89,6 +259,14 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -111,15 +289,15 @@
                                     <shadedArtifactAttached>true</shadedArtifactAttached>
                                     <transformers>
                                         <transformer
-                                            implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                             <mainClass>burp.Main</mainClass>
                                         </transformer>
                                         <transformer
-                                            implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                                implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                         <transformer
-                                            implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
+                                                implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
                                         <transformer
-                                            implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+                                                implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
                                             <addHeader>false</addHeader>
                                         </transformer>
                                     </transformers>
@@ -137,6 +315,120 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+
+                    <!-- Maven Central Publishing Plugin -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.9.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Source plugin for publishing -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Javadoc plugin for publishing -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.6.3</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- JReleaser Plugin -->
+                    <plugin>
+                        <groupId>org.jreleaser</groupId>
+                        <artifactId>jreleaser-maven-plugin</artifactId>
+                        <version>1.12.0</version>
+                        <configuration>
+                            <jreleaser>
+                                <project>
+                                    <description>A Basic and Unassuming RML Processor (BURP) with RML Execution Report
+                                        (RER)
+                                        error handling
+                                    </description>
+                                    <authors>Jakub Duchateau, Christophe Debruyne</authors>
+                                    <license>MIT</license>
+                                    <links>
+                                        <homepage>https://github.com/kg-construct/BURP</homepage>
+                                    </links>
+                                    <copyright>2026 Jakub Duchateau, 2024 Christophe Debruyne</copyright>
+                                </project>
+                                <release>
+                                    <github>
+                                        <repoOwner>kg-construct</repoOwner>
+                                        <name>BURP</name>
+                                        <host>github.com</host>
+                                        <overwrite>true</overwrite>
+                                        <skipTag>true</skipTag>
+                                        <draft>true</draft>
+                                        <changelog>
+                                            <enabled>true</enabled>
+                                            <formatted>ALWAYS</formatted>
+                                            <preset>conventional-commits</preset>
+                                        </changelog>
+                                        <issues>
+                                            <enabled>true</enabled>
+                                        </issues>
+                                    </github>
+                                </release>
+                                <distributions>
+                                    <burp>
+                                        <active>ALWAYS</active>
+                                        <type>SINGLE_JAR</type>
+                                        <java>
+                                            <version>21</version>
+                                            <mainClass>burp.Main</mainClass>
+                                        </java>
+                                        <executable>
+                                            <name>burp</name>
+                                        </executable>
+                                        <artifacts>
+                                            <artifact>
+                                                <path>${project.build.directory}/burp.jar</path>
+                                            </artifact>
+                                        </artifacts>
+                                    </burp>
+                                </distributions>
+                                <packagers>
+                                    <jbang>
+                                        <active>ALWAYS</active>
+                                        <repository>
+                                            <active>ALWAYS</active>
+                                            <repoOwner>jduchateau</repoOwner>
+                                            <name>jbang-catalog</name>
+                                        </repository>
+                                        <commitAuthor>
+                                            <name>jduchateau</name>
+                                            <email>jduchateau@users.noreply.github.com</email>
+                                        </commitAuthor>
+                                    </jbang>
+                                </packagers>
+                            </jreleaser>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -190,10 +482,10 @@
             <artifactId>kotlinx-serialization-json-jvm</artifactId>
             <version>1.6.3</version>
         </dependency>
-		<dependency>
-			<groupId>com.mysql</groupId>
-			<artifactId>mysql-connector-j</artifactId>
-			<version>9.3.0</version>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -237,33 +529,33 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-params</artifactId>
-			<version>5.10.2</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-            <groupId>org.testcontainers</groupId>
-			<artifactId>testcontainers-junit-jupiter</artifactId>
-			<version>2.0.3</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-			<artifactId>testcontainers-postgresql</artifactId>
-			<version>2.0.3</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>testcontainers-mysql</artifactId>
-			<version>2.0.3</version>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <version>2.0.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-			<artifactId>testcontainers-mssqlserver</artifactId>
-			<version>2.0.3</version>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <version>2.0.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-mysql</artifactId>
+            <version>2.0.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-mssqlserver</artifactId>
+            <version>2.0.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>

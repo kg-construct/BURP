@@ -69,7 +69,7 @@ Some libraries are available on GitHub's maven repository. Add a GitHub authenti
 
 ## Using BURP
 
-You can run BURP instantly without installing Java manually or downloading any files using [JBang](https://jbang.dev):
+You can run BURP using [JBang](https://jbang.dev):
 
 ```bash
 $ jbang burp@jduchateau [-h] [-b=<baseIRI>] -m=<mappingFile> [-o=<outputFile>]

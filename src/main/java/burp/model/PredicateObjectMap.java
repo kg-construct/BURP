@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static burp.model.LogicalTarget.unionLogicalTargets;
+
 public class PredicateObjectMap implements LogicalTargetScope, PlanNode {
     private final Set<LogicalTarget> logicalTargets = new HashSet<>();
     public List<PredicateMap> predicateMaps = new ArrayList<>();
@@ -46,17 +48,6 @@ public class PredicateObjectMap implements LogicalTargetScope, PlanNode {
         return children();
     }
 
-    @SafeVarargs
-    private Set<LogicalTarget> unionTargets(Set<LogicalTarget>... targetSets) {
-        Set<LogicalTarget> union = new HashSet<>();
-        for (Set<LogicalTarget> set : targetSets) {
-            if (set != null && !set.isEmpty()) {
-                union.addAll(set);
-            }
-        }
-        return union;
-    }
-
     public List<RdfPredicateObject> generate(Iteration i) {
         List<RdfPredicateObject> lists = new ArrayList<>();
 
@@ -69,7 +60,7 @@ public class PredicateObjectMap implements LogicalTargetScope, PlanNode {
                     var objects = om.generateTerms(i);
                     for (Term o : objects) {
                         if (graphMaps.isEmpty()) {
-                            lists.add(new RdfPredicateObject(pIri, o, null, unionTargets(p.targets(), o.targets())));
+                            lists.add(new RdfPredicateObject(pIri, o, null, unionLogicalTargets(p.targets(), o.targets())));
                         } else {
                             for (GraphMap gm : graphMaps) {
                                 var graphs = gm.generateTerms(i);
@@ -77,7 +68,7 @@ public class PredicateObjectMap implements LogicalTargetScope, PlanNode {
                                     if (g instanceof IRITerm gIri) {
                                         // Graph targets are NOT applied here. They are applied per-graph in TriplesMap
                                         // to avoid graph-level targets leaking across different named graphs.
-                                        lists.add(new RdfPredicateObject(pIri, o, gIri, unionTargets(p.targets(), o.targets())));
+                                        lists.add(new RdfPredicateObject(pIri, o, gIri, unionLogicalTargets(p.targets(), o.targets())));
                                     }
                                 }
                             }

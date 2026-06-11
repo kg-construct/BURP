@@ -38,10 +38,8 @@ public class RawReference extends Reference implements ReferenceHolder {
     public void compileReferences() {
         if (compiledReference == null && reference != null) {
             LocalReferenceScope scope = ancestor(LocalReferenceScope.class);
-            System.out.println("Compiling RawReference: " + reference + ", found scope: " + (scope != null ? scope.getClass().getSimpleName() : "null"));
             if (scope != null) {
                 compiledReference = scope.buildLocalReference(reference, origin);
-                System.out.println("   compiled to: " + (compiledReference != null ? compiledReference.getClass().getSimpleName() : "null"));
             }
         }
     }

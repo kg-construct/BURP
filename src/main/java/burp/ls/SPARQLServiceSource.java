@@ -86,6 +86,7 @@ public class SPARQLServiceSource extends LogicalSource {
     @Override
     public Reference buildExportedReference(String reference, Origin origin) {
         if (isTSV) return new SPARQLTSVReference(reference, origin);
-        return new SPARQLReference(reference, origin);
+        boolean isCSV = burp.vocabularies.RML.SPARQL_Results_CSV.equals(referenceFormulation);
+        return new SPARQLReference(reference, origin, isCSV);
     }
 }

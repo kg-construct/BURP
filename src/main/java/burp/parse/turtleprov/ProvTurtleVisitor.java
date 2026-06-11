@@ -1,8 +1,9 @@
 package burp.parse.turtleprov;
 
-import burp.parse.turtleprov.generated.TurtleBaseVisitor;
-import burp.parse.turtleprov.generated.TurtleParser;
+import burp.reporting.LiteralPart;
 import burp.reporting.PointRange;
+import burp.reporting.RDFGraphPointer;
+import burp.reporting.StatementParts;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.jena.rdf.model.*;
@@ -13,7 +14,48 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
-    public static List<PointRange> retrieveTurtleLocation(Object o) { return Collections.emptyList(); }
+    public static List<PointRange> retrieveTurtleLocation(Object o) {
+        if (!(o instanceof List<?> sourceStatements)) {
+            return Collections.emptyList();
+        }
+        if (sourceStatements.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<PointRange> locations = new ArrayList<>();
+        for (Object item : sourceStatements) {
+            if (item instanceof RDFGraphPointer gp) {
+                var stmt = gp.getStmt();
+                if (stmt == null || stmt.getModel() == null) {
+                    continue;
+                }
+                var infos = RDF12Converter.fromAnnotations(stmt, stmt.getModel());
+                if (gp instanceof StatementParts sp) {
+                    if (sp.isSubject() && infos.subjectInfo != null && infos.subjectInfo.start() != null) {
+                        locations.add(new PointRange(infos.subjectInfo.start(), infos.subjectInfo.end()));
+                    }
+                    if (sp.isPredicate() && infos.predicateInfo != null && infos.predicateInfo.start() != null) {
+                        locations.add(new PointRange(infos.predicateInfo.start(), infos.predicateInfo.end()));
+                    }
+                    if (sp.isObject() && infos.objectInfo != null && infos.objectInfo.start() != null) {
+                        locations.add(new PointRange(infos.objectInfo.start(), infos.objectInfo.end()));
+                    }
+                } else if (gp instanceof LiteralPart lp) {
+                    if (infos.objectInfo != null) {
+                        var info = infos.objectInfo;
+                        Point literalEnd = lp.getObjectRange().getEnd();
+                        Point startPt = info.rdfLiteralStringStart();
+                        Point endPt = info.rdfLiteralStringEnd();
+                        Point newStart = startPt != null ? startPt.plus(lp.getObjectRange().getStart()) : null;
+                        Point newEnd = (startPt != null && literalEnd != null) ? startPt.plus(literalEnd) : endPt;
+                        if (newStart != null && newEnd != null) {
+                            locations.add(new PointRange(newStart, newEnd));
+                        }
+                    }
+                }
+            }
+        }
+        return locations;
+    }
     private final ProvStore store = new ProvStore();
 
     public ProvStore getStore() {

@@ -63,12 +63,10 @@ public class MappingDocument implements PlanNode {
         List<RdfStatement> result = new ArrayList<>();
 
         for (RdfStatementLike stmt : stmts) {
-            if (stmt instanceof RdfStatement) {
-                RdfStatement rStmt = (RdfStatement) stmt;
+            if (stmt instanceof RdfStatement rStmt) {
                 extractAndMergeContainers(rStmt.getSubject(), rStmt.getGraph(), containers, expandedContainer, newTerm -> rStmt.setSubject((BlankNodeOrIRI) newTerm));
                 extractAndMergeContainers(rStmt.getObject(), rStmt.getGraph(), containers, expandedContainer, newTerm -> rStmt.setObject(newTerm));
-            } else if (stmt instanceof RdfStatementSubjectGraph) {
-                RdfStatementSubjectGraph rStmtGraph = (RdfStatementSubjectGraph) stmt;
+            } else if (stmt instanceof RdfStatementSubjectGraph rStmtGraph) {
                 extractAndMergeContainers(rStmtGraph.getSubject(), rStmtGraph.getGraph(), containers, expandedContainer, newTerm -> rStmtGraph.setSubject((BlankNodeOrIRI) newTerm));
             }
         }
@@ -96,38 +94,42 @@ public class MappingDocument implements PlanNode {
             for (CollectionOrContainerTerm c : graphContainers.values()) {
                 Term subject = c.getId();
 
-                if (c instanceof RdfListTerm) {
-                    Term currentListId = subject;
-                    for (int i = 0; i < c.getElements().size(); i++) {
-                        boolean isLast = i == c.getElements().size() - 1;
-                        Term element = c.getElements().get(i);
+                switch (c) {
+                    case RdfListTerm rdfListTerm -> {
+                        Term currentListId = subject;
+                        for (int i = 0; i < c.getElements().size(); i++) {
+                            boolean isLast = i == c.getElements().size() - 1;
+                            Term element = c.getElements().get(i);
 
-                        containerStmts.add(new RdfStatement(
-                                (BlankNodeOrIRI) currentListId,
-                                new IRITerm(RDF.first.getURI()),
-                                TermExtensions.itselfOrId(element),
-                                graph,
-                                null
-                        ));
+                            containerStmts.add(new RdfStatement(
+                                    (BlankNodeOrIRI) currentListId,
+                                    new IRITerm(RDF.first.getURI()),
+                                    TermExtensions.itselfOrId(element),
+                                    graph,
+                                    null
+                            ));
 
-                        Term restObj = isLast ? new IRITerm(RDF.nil.getURI()) : new BlankNodeTerm(subject.toString() + "_" + (i + 1));
+                            Term restObj = isLast ? new IRITerm(RDF.nil.getURI()) : new BlankNodeTerm(subject.toString() + "_" + (i + 1));
 
-                        containerStmts.add(new RdfStatement(
-                                (BlankNodeOrIRI) currentListId,
-                                new IRITerm(RDF.rest.getURI()),
-                                restObj,
-                                graph,
-                                null
-                        ));
+                            containerStmts.add(new RdfStatement(
+                                    (BlankNodeOrIRI) currentListId,
+                                    new IRITerm(RDF.rest.getURI()),
+                                    restObj,
+                                    graph,
+                                    null
+                            ));
 
-                        currentListId = restObj;
+                            currentListId = restObj;
+                        }
                     }
-                } else if (c instanceof RdfBagTerm) {
-                    emitContainerStmts(c, subject, new IRITerm(RDF.Bag.getURI()), graph, containerStmts);
-                } else if (c instanceof RdfSeqTerm) {
-                    emitContainerStmts(c, subject, new IRITerm(RDF.Seq.getURI()), graph, containerStmts);
-                } else if (c instanceof RdfAltTerm) {
-                    emitContainerStmts(c, subject, new IRITerm(RDF.Alt.getURI()), graph, containerStmts);
+                    case RdfBagTerm rdfBagTerm ->
+                            emitContainerStmts(c, subject, new IRITerm(RDF.Bag.getURI()), graph, containerStmts);
+                    case RdfSeqTerm rdfSeqTerm ->
+                            emitContainerStmts(c, subject, new IRITerm(RDF.Seq.getURI()), graph, containerStmts);
+                    case RdfAltTerm rdfAltTerm ->
+                            emitContainerStmts(c, subject, new IRITerm(RDF.Alt.getURI()), graph, containerStmts);
+                    default -> {
+                    }
                 }
             }
         }
@@ -169,8 +171,7 @@ public class MappingDocument implements PlanNode {
     }
 
     private void extractAndMergeContainers(Term t, IRITerm graph, Map<IRITerm, Map<Term, CollectionOrContainerTerm>> containers, Map<IRITerm, Set<CollectionOrContainerTerm>> expandedContainer, Consumer<Term> replaceTermBy) {
-        if (t instanceof CollectionOrContainerTerm) {
-            CollectionOrContainerTerm c = (CollectionOrContainerTerm) t;
+        if (t instanceof CollectionOrContainerTerm c) {
             Set<CollectionOrContainerTerm> set = expandedContainer.computeIfAbsent(graph, k -> new HashSet<>());
             if (set.add(c)) {
                 Map<Term, CollectionOrContainerTerm> graphContainers = containers.computeIfAbsent(graph, k -> new HashMap<>());

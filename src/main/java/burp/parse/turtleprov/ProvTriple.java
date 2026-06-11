@@ -28,8 +28,7 @@ public final class ProvTriple {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ProvTriple)) return false;
-        ProvTriple that = (ProvTriple) o;
+        if (!(o instanceof ProvTriple that)) return false;
         return Objects.equals(statement, that.statement) &&
                 Objects.equals(subjectInfo, that.subjectInfo) &&
                 Objects.equals(predicateInfo, that.predicateInfo) &&

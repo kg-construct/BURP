@@ -18,7 +18,7 @@ public class SPARQLFileSource extends FileBasedLogicalSource {
     public List<Iteration> getIterations() { return iterations; }
     public void setIterations(List<Iteration> i) { iterations = i; }
     private final boolean isTSV;
-    private Resource referenceFormulation;
+    private final Resource referenceFormulation;
     public String iterator;
     public Origin iteratorOrigin;
 
@@ -62,25 +62,46 @@ public class SPARQLFileSource extends FileBasedLogicalSource {
     @Override
     public Reference buildExportedReference(String reference, Origin origin) {
         if (isTSV) return new SPARQLTSVReference(reference, origin);
-        return new SPARQLReference(reference, origin);
+        boolean isCSV = burp.vocabularies.RML.SPARQL_Results_CSV.equals(referenceFormulation);
+        return new SPARQLReference(reference, origin, isCSV);
     }
 }
 
 class SPARQLReference extends Reference {
-    public SPARQLReference(String reference, Origin origin) {
+    private final boolean isCSV;
+
+    public SPARQLReference(String reference, Origin origin, boolean isCSV) {
         super(reference, origin);
+        this.isCSV = isCSV;
     }
 
     @Override
     public List<Object> getValues(Iteration i) {
-        if (!(i instanceof SPARQLIteration)) {
+        if (!(i instanceof SPARQLIteration sqIteration)) {
             throw new IllegalArgumentException("SPARQLReference can only be used with SPARQLIteration.");
         }
-        SPARQLIteration sqIteration = (SPARQLIteration) i;
         List<Object> l = new ArrayList<>();
         RDFNode n = sqIteration.sol != null ? sqIteration.sol.get(reference) : null;
         if (n != null && !sqIteration.getNulls().contains(n)) {
-            l.add(n);
+            if (isCSV && n.isLiteral()) {
+                org.apache.jena.rdf.model.Literal lit = n.asLiteral();
+                String dtUri = lit.getDatatypeURI();
+                String lang = lit.getLanguage();
+                if ((dtUri == null || dtUri.equals("http://www.w3.org/2001/XMLSchema#string")) && (lang == null || lang.isEmpty())) {
+                    String lex = lit.getLexicalForm();
+                    if (lex.matches("^[+-]?\\d+$")) {
+                        l.add(org.apache.jena.rdf.model.ResourceFactory.createTypedLiteral(lex, org.apache.jena.datatypes.xsd.XSDDatatype.XSDinteger));
+                    } else if (lex.matches("^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$")) {
+                        l.add(org.apache.jena.rdf.model.ResourceFactory.createTypedLiteral(lex, org.apache.jena.datatypes.xsd.XSDDatatype.XSDdouble));
+                    } else {
+                        l.add(n);
+                    }
+                } else {
+                    l.add(n);
+                }
+            } else {
+                l.add(n);
+            }
         }
         return l;
     }
@@ -93,10 +114,9 @@ class SPARQLTSVReference extends Reference {
 
     @Override
     public List<Object> getValues(Iteration i) {
-        if (!(i instanceof SPARQLTSVIteration)) {
+        if (!(i instanceof SPARQLTSVIteration sqIteration)) {
             throw new IllegalArgumentException("SPARQLTSVReference can only be used with SPARQLTSVIteration.");
         }
-        SPARQLTSVIteration sqIteration = (SPARQLTSVIteration) i;
         List<Object> l = new ArrayList<>();
         RDFNode n = sqIteration.sol != null ? sqIteration.sol.get(reference != null ? reference.substring(1) : null) : null;
         if (n != null && !sqIteration.getNulls().contains(n)) {

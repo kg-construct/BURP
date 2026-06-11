@@ -16,6 +16,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -31,13 +32,11 @@ public class TestRMLIORegistry extends TestRMLModule {
 
     @Override
     public void prepareSource(TestData testData) throws Exception {
-        System.out.printf("Preparing test %s%n", testData.ID);
-
         String mappingPath = new File(base + testData.ID, testData.mapping).getAbsolutePath();
         String newMappingPath = mappingPath;
 
         if ("application/sql".equals(testData.input_format1)) {
-            System.out.println("Preparing mapping for database connection...");
+            System.out.println("Preparing database connection...");
             Model model = RDFDataMgr.loadModel(mappingPath);
             String jdbcDriver = model.listObjectsOfProperty(D2RQ.jdbcDriver).next().asLiteral().getString();
 
@@ -75,12 +74,14 @@ public class TestRMLIORegistry extends TestRMLModule {
                     throw new IllegalArgumentException("Unsupported JDBC driver: " + jdbcDriver);
             }
 
+            System.out.printf("Updating database connection in mapping with JDBC URL=%s Username=%s Password=%s%n", db.getJdbcUrl(), db.getUsername(), db.getPassword());
             String sparql = String.format(
-                "PREFIX d2rq: <http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#>\n" +
-                "DELETE { ?s d2rq:jdbcDSN ?oldDSN; d2rq:username ?oldUser; d2rq:password ?oldPass }\n" +
-                "INSERT { ?s d2rq:jdbcDSN \"%s\"; d2rq:username \"%s\"; d2rq:password \"%s\" }\n" +
-                "WHERE { ?s d2rq:jdbcDSN ?oldDSN; d2rq:username ?oldUser; d2rq:password ?oldPass }",
-                db.getJdbcUrl(), db.getUsername(), db.getPassword()
+                    """
+                    PREFIX d2rq: <http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#>
+                    DELETE { ?s d2rq:jdbcDSN ?oldDSN; d2rq:username ?oldUser; d2rq:password ?oldPass }
+                    INSERT { ?s d2rq:jdbcDSN "%s"; d2rq:username "%s"; d2rq:password "%s" }
+                    WHERE { ?s d2rq:jdbcDSN ?oldDSN; d2rq:username ?oldUser; d2rq:password ?oldPass }""",
+                    db.getJdbcUrl(), db.getUsername(), db.getPassword()
             );
             var updateRequest = UpdateFactory.create(sparql);
             UpdateAction.execute(updateRequest, model);
@@ -89,6 +90,7 @@ public class TestRMLIORegistry extends TestRMLModule {
             try (FileOutputStream out = new FileOutputStream(newMappingPath)) {
                 RDFDataMgr.write(out, model, RDFFormat.TURTLE_PRETTY);
             }
+            System.out.println("Mapping updated in " + newMappingPath);
 
             System.out.println("Populating database...");
             String sqlFilePath = new File(base + testData.ID, testData.input1).getAbsolutePath();
@@ -103,30 +105,23 @@ public class TestRMLIORegistry extends TestRMLModule {
             }
         }
 
-        System.out.println(testData.mapping);
-        System.out.println(testData.output1);
-        System.out.println(testData.error);
-        System.out.println();
-
-        if (testData.error) {
-            testForNotOK(testData, newMappingPath);
-        } else {
-            testForOK(testData);
+        if (!newMappingPath.equals(mappingPath)) {
+            testData.mapping = Path.of(newMappingPath).getFileName().toString();
         }
     }
 
     public static PostgreSQLContainer PGSQL_CONTAINER = new PostgreSQLContainer("postgres:latest")
-        .withUsername("postgres")
-        .withPassword("test");
+            .withUsername("postgres")
+            .withPassword("test");
     private static CompletableFuture<Void> PGSQL_CONTAINER_FUTURE = null;
 
     public static MySQLContainer MYSQL_CONTAINER = new MySQLContainer("mysql:8")
-        .withEnv("MYSQL_ROOT_HOST", "%")
-        .withCommand("mysqld", "--sql_mode=ANSI_QUOTES");
+            .withEnv("MYSQL_ROOT_HOST", "%")
+            .withCommand("mysqld", "--sql_mode=ANSI_QUOTES");
     private static CompletableFuture<Void> MYSQL_CONTAINER_FUTURE = null;
 
     public static MSSQLServerContainer MSSQL_CONTAINER = new MSSQLServerContainer("mcr.microsoft.com/mssql/server:2022-CU20-ubuntu-22.04")
-        .acceptLicense();
+            .acceptLicense();
     private static CompletableFuture<Void> MSSQL_CONTAINER_FUTURE = null;
 
     @BeforeAll
@@ -139,7 +134,7 @@ public class TestRMLIORegistry extends TestRMLModule {
     @AfterAll
     public static void stopContainers() {
         Stream.<JdbcDatabaseContainer<?>>of(PGSQL_CONTAINER, MYSQL_CONTAINER, MSSQL_CONTAINER)
-            .parallel()
-            .forEach(JdbcDatabaseContainer::stop);
+                .parallel()
+                .forEach(JdbcDatabaseContainer::stop);
     }
 }

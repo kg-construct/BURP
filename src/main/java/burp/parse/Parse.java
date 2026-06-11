@@ -16,8 +16,6 @@ import burp.model.rdf.Term;
 import burp.parse.turtleprov.ProvStore;
 import burp.parse.turtleprov.ProvTurtleVisitor;
 import burp.parse.turtleprov.RDF12Converter;
-import burp.parse.turtleprov.generated.TurtleLexer;
-import burp.parse.turtleprov.generated.TurtleParser;
 import burp.reporting.BurpException;
 import burp.reporting.Origin;
 import burp.reporting.RmlError;
@@ -66,8 +64,6 @@ public class Parse {
         TurtleLexer lexer = new TurtleLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         TurtleParser parser = new TurtleParser(tokens);
-        var errorListeners = parser.getErrorListeners();
-        var parserListeners = parser.getParseListeners();
         parserError = new BurpParserError();
         parser.addErrorListener(parserError);
         ProvTurtleVisitor visitor = new ProvTurtleVisitor();
@@ -85,9 +81,6 @@ public class Parse {
 
         if (guessType == Lang.TURTLE) {
             Dataset dataset = parseTurtleFromFile(mappingPath);
-            if (parserError!=null&& !parserError.errors.isEmpty()) {
-
-            }
             mapping = dataset.getDefaultModel();
         } else {
             mapping = RDFDataMgr.loadModel(mappingPath.toString());
@@ -109,16 +102,11 @@ public class Parse {
 
             Resource ls = r.getPropertyResourceValue(RML.logicalSource);
             Statement lsStmt = r.getProperty(RML.logicalSource);
-            AbstractLogicalSource source = prepareLogicalSource(ls);
-            tm.logicalSource = source;
+            tm.logicalSource = prepareLogicalSource(ls);
 
-            ls.listProperties(RML.logicalTarget).forEachRemaining(s -> {
-                tm.getLogicalTargets().add(prepareLogicalTarget(s.getResource()));
-            });
+            ls.listProperties(RML.logicalTarget).forEachRemaining(s -> tm.getLogicalTargets().add(prepareLogicalTarget(s.getResource())));
 
-            r.listProperties(RML.logicalTarget).forEachRemaining(s -> {
-                tm.getLogicalTargets().add(prepareLogicalTarget(s.getResource()));
-            });
+            r.listProperties(RML.logicalTarget).forEachRemaining(s -> tm.getLogicalTargets().add(prepareLogicalTarget(s.getResource())));
 
             List<Statement> subjectMapList = r.listProperties(RML.subjectMap).toList();
             if (subjectMapList.isEmpty()) {
@@ -139,7 +127,7 @@ public class Parse {
                 Main.report.getErrors().add(
                         new RmlError(
                                 "Multiple subject maps in " + tm,
-                                new Origin((PlanNode) null, originStatements),
+                                new Origin(null, originStatements),
                                 RER.MappingError,
                                 null
                         )
@@ -297,7 +285,7 @@ public class Parse {
         return pss.toString();
     }
 
-    private AbstractLogicalSource prepareLogicalSource(Resource ls) throws Exception {
+    private AbstractLogicalSource prepareLogicalSource(Resource ls) {
         if (ls.hasProperty(RML.viewOn)) {
             return prepareLogicalView(ls);
         }
@@ -311,17 +299,11 @@ public class Parse {
 
             lv.logicalSource = prepareLogicalSource(view);
 
-            ls.listProperties(RML.field).forEachRemaining(s -> {
-                lv.addField(prepareField(s.getObject().asResource()));
-            });
+            ls.listProperties(RML.field).forEachRemaining(s -> lv.addField(prepareField(s.getObject().asResource())));
 
-            ls.listProperties(RML.leftJoin).forEachRemaining(s -> {
-                lv.addJoin(prepareLeftJoin(s.getObject().asResource()));
-            });
+            ls.listProperties(RML.leftJoin).forEachRemaining(s -> lv.addJoin(prepareLeftJoin(s.getObject().asResource())));
 
-            ls.listProperties(RML.innerJoin).forEachRemaining(s -> {
-                lv.addJoin(prepareInnerJoin(s.getObject().asResource()));
-            });
+            ls.listProperties(RML.innerJoin).forEachRemaining(s -> lv.addJoin(prepareInnerJoin(s.getObject().asResource())));
 
             return lv;
         } catch (Exception e) {
@@ -348,9 +330,7 @@ public class Parse {
         resource.listProperties(RML.joinCondition).forEachRemaining(s -> conditions.add(prepareJoinCondition(s)));
         viewJoin.joinConditions = conditions;
 
-        resource.listProperties(RML.field).forEachRemaining(s -> {
-            viewJoin.addField(prepareField(s.getObject().asResource()));
-        });
+        resource.listProperties(RML.field).forEachRemaining(s -> viewJoin.addField(prepareField(s.getObject().asResource())));
 
         return viewJoin;
     }
@@ -359,9 +339,7 @@ public class Parse {
         SubjectMap subjectMap = new SubjectMap();
         prepareExpression(sm, subjectMap);
 
-        sm.listProperties(RML.clazz).forEachRemaining(s -> {
-            subjectMap.classes.add(s.getObject().asResource());
-        });
+        sm.listProperties(RML.clazz).forEachRemaining(s -> subjectMap.classes.add(s.getObject().asResource()));
 
         sm.listProperties(RML.graphMap).forEachRemaining(s -> {
             GraphMap gm = prepareGraphMap(s.getObject().asResource());
@@ -528,9 +506,7 @@ public class Parse {
         field.fieldName = p.getRequiredProperty(RML.fieldName).getObject().asLiteral().getString();
 
         Field finalField = field;
-        p.listProperties(RML.field).forEachRemaining(s -> {
-            finalField.addField(prepareField(s.getObject().asResource()));
-        });
+        p.listProperties(RML.field).forEachRemaining(s -> finalField.addField(prepareField(s.getObject().asResource())));
 
         return finalField;
     }
@@ -561,9 +537,7 @@ public class Parse {
         rom.listProperties(RML.joinCondition).forEachRemaining(s -> conditions.add(prepareJoinCondition(s)));
         referencingObjectMap.joinConditions = conditions;
 
-        rom.listProperties(RML.logicalTarget).forEachRemaining(s -> {
-            referencingObjectMap.logicalTargets.add(prepareLogicalTarget(s.getResource()));
-        });
+        rom.listProperties(RML.logicalTarget).forEachRemaining(s -> referencingObjectMap.logicalTargets.add(prepareLogicalTarget(s.getResource())));
 
         return referencingObjectMap;
     }
@@ -577,9 +551,7 @@ public class Parse {
         em.setExpression(exprAndOrigin.expression);
         em.setExpressionOrigin(exprAndOrigin.origin);
 
-        r.listProperties(RML.logicalTarget).forEachRemaining(s -> {
-            em.getLogicalTargets().add(prepareLogicalTarget(s.getResource()));
-        });
+        r.listProperties(RML.logicalTarget).forEachRemaining(s -> em.getLogicalTargets().add(prepareLogicalTarget(s.getResource())));
 
         return em;
     }
@@ -609,7 +581,7 @@ public class Parse {
             } else {
                 term = new BlankNodeTerm(constant.asResource().getId().getLabelString());
             }
-            Origin origin = new Origin((PlanNode) null, List.of(StatementParts.fromPredicateObject(stmt)));
+            Origin origin = new Origin(null, List.of(StatementParts.fromPredicateObject(stmt)));
             return new ExpressionAndOrigin(new RDFNodeConstant(term), origin);
         }
 
@@ -655,8 +627,7 @@ public class Parse {
     private Input prepareInput(Resource r) {
         Input input = new Input();
 
-        ParameterMap pm = prepareExpression(r.getPropertyResourceValue(RML.parameterMap), new ParameterMap());
-        input.parameterMap = pm;
+        input.parameterMap = prepareExpression(r.getPropertyResourceValue(RML.parameterMap), new ParameterMap());
 
         input.inputValueMap = prepareInputValueMap(r.getPropertyResourceValue(RML.inputValueMap));
 
@@ -712,39 +683,38 @@ public class Parse {
         }
 
         if (resultPath != null) {
-            if (resultPath instanceof P_Path0 p0) {
-                Property predicate = mapping.getProperty(p0.getNode().getURI());
-                if (valueNode != null) {
-                    mapping.listStatements(focusResource, predicate, valueNode).forEachRemaining(stmt -> {
-                        results.add(StatementParts.from(stmt, Subject, Predicate, Object));
-                    });
-                } else {
-                    mapping.listStatements(focusResource, predicate, (RDFNode) null).forEachRemaining(stmt -> {
-                        results.add(StatementParts.from(stmt, Subject, Predicate, Object));
-                    });
-                }
-            } else if (resultPath instanceof P_Path1 p1) {
-                if (resultPath instanceof P_Inverse pInv) {
-                    org.apache.jena.sparql.path.Path subPath = pInv.getSubPath();
-                    if (subPath instanceof P_Path0 p0) {
-                        Property predicate = mapping.getProperty(p0.getNode().getURI());
-                        Resource s = (valueNode != null && valueNode.isResource()) ? valueNode.asResource() : null;
-                        mapping.listStatements(s, predicate, focusResource).forEachRemaining(stmt -> {
-                            results.add(StatementParts.from(stmt, Subject, Predicate, Object));
-                        });
+            switch (resultPath) {
+                case P_Path0 p0 -> {
+                    Property predicate = mapping.getProperty(p0.getNode().getURI());
+                    if (valueNode != null) {
+                        mapping.listStatements(focusResource, predicate, valueNode).forEachRemaining(stmt -> results.add(StatementParts.from(stmt, Subject, Predicate, Object)));
+                    } else {
+                        mapping.listStatements(focusResource, predicate, (RDFNode) null).forEachRemaining(stmt -> results.add(StatementParts.from(stmt, Subject, Predicate, Object)));
                     }
                 }
-            } else if (resultPath instanceof P_Path2) {
-                // Not handled
-            } else if (resultPath instanceof P_NegPropSet) {
-                // Not handled
+                case P_Path1 p1 -> {
+                    if (resultPath instanceof P_Inverse pInv) {
+                        org.apache.jena.sparql.path.Path subPath = pInv.getSubPath();
+                        if (subPath instanceof P_Path0 p0) {
+                            Property predicate = mapping.getProperty(p0.getNode().getURI());
+                            Resource s = (valueNode != null && valueNode.isResource()) ? valueNode.asResource() : null;
+                            mapping.listStatements(s, predicate, focusResource).forEachRemaining(stmt -> results.add(StatementParts.from(stmt, Subject, Predicate, Object)));
+                        }
+                    }
+                }
+                case P_Path2 pPath2 -> {
+                    // Not handled
+                }
+                case P_NegPropSet pNegPropSet -> {
+                    // Not handled
+                }
+                default -> {
+                }
             }
         }
 
         if (results.isEmpty()) {
-            mapping.listStatements(focusResource, null, valueNode).forEachRemaining(stmt -> {
-                results.add(StatementParts.from(stmt, Subject));
-            });
+            mapping.listStatements(focusResource, null, valueNode).forEachRemaining(stmt -> results.add(StatementParts.from(stmt, Subject)));
 
             mapping.listStatements(null, null, focusResource).forEachRemaining(stmt -> {
                 boolean contains = results.stream().anyMatch(it -> it.getStmt().equals(stmt));

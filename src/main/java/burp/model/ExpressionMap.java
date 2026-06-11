@@ -78,22 +78,26 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
         return baseIRI;
     }
 
+    @SuppressWarnings("unchecked")
     public List<Object> generateValues(Iteration i, TemplateReferenceSafety safe) {
-        if (expression instanceof RDFNodeConstant) {
-            RDFNodeConstant expr = (RDFNodeConstant) expression;
-            List<Object> list = new ArrayList<>();
-            if (expr.constant != null) {
-                list.add(expr.constant);
+        switch (expression) {
+            case RDFNodeConstant expr -> {
+                List<Object> list = new ArrayList<>();
+                if (expr.constant != null) {
+                    list.add(expr.constant);
+                }
+                return list;
             }
-            return list;
-        } else if (expression instanceof Template) {
-            return (List<Object>) (List<?>) ((Template) expression).values(i, safe);
-        } else if (expression instanceof Reference) {
-            return ((Reference) expression).values(i);
-        } else if (expression instanceof FunctionExecution) {
-            return ((FunctionExecution) expression).values(i);
-        } else {
-            throw new BurpException(
+            case Template template -> {
+                return (List<Object>) (List<?>) template.values(i, safe);
+            }
+            case Reference reference -> {
+                return reference.values(i);
+            }
+            case FunctionExecution functionExecution -> {
+                return functionExecution.values(i);
+            }
+            case null, default -> throw new BurpException(
                     new RmlError(
                             "Error generating values, expression is not supported.",
                             expressionOrigin,
@@ -223,10 +227,8 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
     protected List<BlankNodeTerm> generateBlankNodes(Iteration i) {
         Set<LogicalTarget> targets = getEffectiveTargets();
 
-        if (expression instanceof RDFNodeConstant) {
-            RDFNodeConstant expr = (RDFNodeConstant) expression;
-            if (expr.constant instanceof BlankNodeTerm) {
-                BlankNodeTerm constant = (BlankNodeTerm) expr.constant;
+        if (expression instanceof RDFNodeConstant expr) {
+            if (expr.constant instanceof BlankNodeTerm constant) {
                 return Collections.singletonList(new BlankNodeTerm(constant.id(), targets));
             } else {
                 return Collections.emptyList();
@@ -271,10 +273,8 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
         List<LanguageTag> languages = lm != null ? lm.generateLanguageTags(i) : null;
         Set<LogicalTarget> baseTargets = getEffectiveTargets();
 
-        if (expression instanceof RDFNodeConstant) {
-            RDFNodeConstant expr = (RDFNodeConstant) expression;
-            if (expr.constant instanceof LiteralTerm) {
-                LiteralTerm constant = (LiteralTerm) expr.constant;
+        if (expression instanceof RDFNodeConstant expr) {
+            if (expr.constant instanceof LiteralTerm constant) {
                 return Collections.singletonList(new LiteralTerm(constant.value(), constant.datatype(), constant.language(), baseTargets));
             } else {
                 return Collections.emptyList();

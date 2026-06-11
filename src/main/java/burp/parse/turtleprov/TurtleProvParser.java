@@ -1,8 +1,5 @@
 package burp.parse.turtleprov;
 
-import burp.parse.turtleprov.generated.TurtleLexer;
-import burp.parse.turtleprov.generated.TurtleParser;
-
 import java.util.ArrayList;
 import java.util.List;
 

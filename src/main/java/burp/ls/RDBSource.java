@@ -43,7 +43,7 @@ public class RDBSource extends LogicalSource {
                     Class.forName(jdbcDriver);
                 } catch (ClassNotFoundException e) {
                     throw new BurpException(
-                        new RmlError("Problem querying database.", null, RER.Error, e)
+                            new RmlError("Problem querying database.", null, RER.Error, e)
                     );
                 }
             }
@@ -82,7 +82,7 @@ public class RDBSource extends LogicalSource {
                         return goNext;
                     } catch (SQLException e) {
                         throw new BurpException(
-                            new RmlError("Problem querying database while iterating over rows.", null, RER.Error, e)
+                                new RmlError("Problem querying database while iterating over rows.", null, RER.LogicalSourceError, e)
                         );
                     }
                 }
@@ -92,8 +92,10 @@ public class RDBSource extends LogicalSource {
                     return new RDBIteration(resultset, indexMap, getNulls());
                 }
             };
+        } catch (SQLSyntaxErrorException e) {
+            throw new BurpException(new RmlError("Syntax error in SQL " + query, null, RER.ReferenceFormulationSyntaxError, e));
         } catch (Throwable e) {
-            throw new RuntimeException(e);
+            throw new BurpException(new RmlError("Error in RDB source.", null, RER.LogicalSourceError));
         }
     }
 
@@ -118,7 +120,7 @@ class RDBReference extends Reference {
 
         if (!rdbIteration.values.containsKey(columnname) && !rdbIteration.values.containsKey(
                 columnname != null ? columnname.replace("\"", "") : null)) {
-            throw new RuntimeException("Attribute " + columnname + " does not exist.");
+            throw new BurpException(new RmlError("Attribute " + columnname + " does not exist.", origin, RER.ReferenceFormulationExecutionError));
         }
 
         Object value = rdbIteration.values.get(columnname);
