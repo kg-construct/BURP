@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.kg-construct</groupId>
-    <artifactId>BURP</artifactId>
+    <artifactId>burp</artifactId>
     <version>0.1.7</version>
 
-    <name>Basic and Unassuming RML Processor</name>
+    <name>BURP</name>
     <description>A Basic and Unassuming RML Processor (BURP) with RML Execution Report (RER) error handling
     </description>
     <url>https://github.com/kg-construct/BURP/</url>
@@ -48,7 +48,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jena.version>5.6.0</jena.version>
         <antlr.version>4.13.1</antlr.version>
-        <gitlab.project.id>${env.CI_PROJECT_ID}</gitlab.project.id>
     </properties>
 
     <repositories>
@@ -67,7 +66,104 @@
                     <include>**/*.ttl</include>
                 </includes>
             </resource>
+
+            <!-- shapes -->
+            <resource>
+                <directory>rml-modules/rml-core/shapes</directory>
+                <targetPath>shapes</targetPath>
+                <includes>
+                    <include>core.ttl</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>rml-modules/rml-cc/shapes</directory>
+                <targetPath>shapes</targetPath>
+                <includes>
+                    <include>cc.ttl</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>rml-modules/rml-lv/shapes</directory>
+                <targetPath>shapes</targetPath>
+                <includes>
+                    <include>lv.ttl</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>rml-modules/rml-io/shapes</directory>
+                <targetPath>shapes</targetPath>
+                <includes>
+                    <include>io.ttl</include>
+                </includes>
+            </resource>
+
+            <!-- ontologies -->
+            <resource>
+                <directory>rml-modules/rml-core/ontology</directory>
+                <targetPath>vocabularies/rml</targetPath>
+                <includes>
+                    <include>*.owl</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>rml-modules/rml-cc/ontology</directory>
+                <targetPath>vocabularies/rml</targetPath>
+                <includes>
+                    <include>*.owl</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>rml-modules/rml-io/ontology</directory>
+                <targetPath>vocabularies/rml</targetPath>
+                <includes>
+                    <include>*.owl</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>rml-modules/rml-fnml/ontology</directory>
+                <targetPath>vocabularies/rml</targetPath>
+                <includes>
+                    <include>*.owl</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>rml-modules/rml-lv/ontology</directory>
+                <targetPath>vocabularies/rml</targetPath>
+                <includes>
+                    <include>*.owl</include>
+                </includes>
+            </resource>
         </resources>
+
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <directory>rml-modules/rml-core/test-cases</directory>
+                <targetPath>rml-core</targetPath>
+            </testResource>
+            <testResource>
+                <directory>rml-modules/rml-cc/test-cases</directory>
+                <targetPath>rml-cc</targetPath>
+            </testResource>
+            <testResource>
+                <directory>rml-modules/rml-lv/test-cases</directory>
+                <targetPath>rml-lv</targetPath>
+            </testResource>
+            <testResource>
+                <directory>rml-modules/rml-io/test-cases</directory>
+                <targetPath>rml-io</targetPath>
+            </testResource>
+            <testResource>
+                <directory>rml-modules/rml-io-registry/test-cases</directory>
+                <targetPath>rml-io-registry</targetPath>
+            </testResource>
+            <testResource>
+                <directory>rml-modules/rml-fnml/test-cases</directory>
+                <targetPath>rml-fnml</targetPath>
+            </testResource>
+        </testResources>
 
         <plugins>
             <plugin>
@@ -430,6 +526,7 @@
                             </jreleaser>
                         </configuration>
                     </plugin>
+
                 </plugins>
             </build>
         </profile>

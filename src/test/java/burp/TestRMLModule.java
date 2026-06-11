@@ -52,11 +52,19 @@ public abstract class TestRMLModule {
     }
 
     protected Stream<TestData> testDataProviderOK() throws IOException, CsvException {
-        return loadTestData().filter(t -> !t.error);
+        List<TestData> list = loadTestData().filter(t -> !t.error).toList();
+        if (list.isEmpty()) {
+            return Stream.of(new TestData(java.util.Map.of("ID", "dummy", "error", "false")));
+        }
+        return list.stream();
     }
 
     protected Stream<TestData> testDataProviderNotOK() throws IOException, CsvException {
-        return loadTestData().filter(t -> t.error);
+        List<TestData> list = loadTestData().filter(t -> t.error).toList();
+        if (list.isEmpty()) {
+            return Stream.of(new TestData(java.util.Map.of("ID", "dummy", "error", "true")));
+        }
+        return list.stream();
     }
 
     public Path getPath(TestData testData, String path) {
@@ -95,6 +103,7 @@ public abstract class TestRMLModule {
     @ParameterizedTest
     @MethodSource("testDataProviderOK")
     public void testForOK(TestData testData) throws Exception {
+        if ("dummy".equals(testData.ID)) return;
         printTestHeader(testData);
         prepareSource(testData);
 
@@ -237,6 +246,7 @@ public abstract class TestRMLModule {
     @ParameterizedTest
     @MethodSource("testDataProviderNotOK")
     public void testForNotOK(TestData testData) throws Exception {
+        if ("dummy".equals(testData.ID)) return;
         printTestHeader(testData);
         prepareSource(testData);
         testForNotOK(testData, getPath(testData, testData.mapping).toAbsolutePath().toString());

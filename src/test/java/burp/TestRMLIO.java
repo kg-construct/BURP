@@ -6,7 +6,7 @@ import java.util.List;
 public class TestRMLIO extends TestRMLModule {
     @Override
     public String getBase() {
-        return "./src/test/resources/rml-io/";
+        return "./target/test-classes/rml-io/";
     }
 
     private boolean isIgnored(String id) {

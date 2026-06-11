@@ -149,9 +149,10 @@ public class Parse {
 
     private boolean isValid(Model mapping) {
         Model core = ModelFactory.createDefaultModel();
-        core.read(Parse.class.getResourceAsStream("/shapes/rml-core/core.ttl"), "urn:dummy", FileUtils.langTurtle);
-        core.read(Parse.class.getResourceAsStream("/shapes/rml-cc/cc.ttl"), "urn:dummy", FileUtils.langTurtle);
-        core.read(Parse.class.getResourceAsStream("/shapes/rml-lv/lv.ttl"), "urn:dummy", FileUtils.langTurtle);
+        core.read(Parse.class.getResourceAsStream("/shapes/core.ttl"), "urn:dummy", FileUtils.langTurtle);
+        core.read(Parse.class.getResourceAsStream("/shapes/cc.ttl"), "urn:dummy", FileUtils.langTurtle);
+        core.read(Parse.class.getResourceAsStream("/shapes/lv.ttl"), "urn:dummy", FileUtils.langTurtle);
+        core.read(Parse.class.getResourceAsStream("/shapes/io.ttl"), "urn:dummy", FileUtils.langTurtle);
 
         ValidationReport report = ShaclValidator.get().validate(core.getGraph(), mapping.getGraph());
         if (!report.conforms()) {

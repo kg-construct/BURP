@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 
 public class TestRMLIORegistry extends TestRMLModule {
 
-    public static String base = "./src/test/resources/rml-io-registry/";
+    public static String base = "./target/test-classes/rml-io-registry/";
 
     @Override
     public String getBase() {
