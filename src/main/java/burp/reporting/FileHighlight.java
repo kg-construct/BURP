@@ -8,10 +8,18 @@ import java.util.*;
 public class FileHighlight {
 
     public static String extractAndHighlight(Path filePath, List<PointRange> nodes) {
-        return extractAndHighlight(filePath, nodes, 1);
+        return extractAndHighlight(filePath, nodes, 1, Severity.ERROR);
+    }
+
+    public static String extractAndHighlight(Path filePath, List<PointRange> nodes, Severity severity) {
+        return extractAndHighlight(filePath, nodes, 1, severity);
     }
 
     public static String extractAndHighlight(Path filePath, List<PointRange> nodes, int contextLines) {
+        return extractAndHighlight(filePath, nodes, contextLines, Severity.ERROR);
+    }
+
+    public static String extractAndHighlight(Path filePath, List<PointRange> nodes, int contextLines, Severity severity) {
         if (!Files.exists(filePath)) {
             return null;
         }
@@ -49,7 +57,7 @@ public class FileHighlight {
             String lineNumberStr = formatLineNumber(lineIndex + 1);
 
             sb.append(lineNumberStr);
-            sb.append(renderLineWithColors(lineContent, rangesOnLine)).append(System.lineSeparator());
+            sb.append(renderLineWithColors(lineContent, rangesOnLine, severity)).append(System.lineSeparator());
         }
 
         return sb.toString();
@@ -79,7 +87,7 @@ public class FileHighlight {
     /**
      * Splits the line string based on ranges and inserts ANSI codes.
      */
-    private static String renderLineWithColors(String line, List<FileGeometry.ColumnRange> ranges) {
+    private static String renderLineWithColors(String line, List<FileGeometry.ColumnRange> ranges, Severity severity) {
         if (ranges.isEmpty()) {
             return line;
         }
@@ -99,7 +107,13 @@ public class FileHighlight {
             int safeEnd = Math.min(range.last() + 1, line.length());
             if (range.first() < safeEnd) {
                 String textToHighlight = line.substring(range.first(), safeEnd);
-                sb.append(ansiBoldRed(textToHighlight));
+                if (severity == Severity.WARNING) {
+                    sb.append(ansiBoldYellow(textToHighlight));
+                } else if (severity == Severity.INFORMATION) {
+                    sb.append(ansiBoldCyan(textToHighlight));
+                } else {
+                    sb.append(ansiBoldRed(textToHighlight));
+                }
             }
 
             currentIndex = safeEnd;
@@ -119,5 +133,21 @@ public class FileHighlight {
 
     public static String ansiRed(String text) {
         return "\u001B[31m" + text + "\u001B[0m";
+    }
+
+    public static String ansiYellow(String text) {
+        return "\u001B[33m" + text + "\u001B[0m";
+    }
+
+    public static String ansiBoldYellow(String text) {
+        return "\u001B[1;33m" + text + "\u001B[0m";
+    }
+
+    public static String ansiCyan(String text) {
+        return "\u001B[36m" + text + "\u001B[0m";
+    }
+
+    public static String ansiBoldCyan(String text) {
+        return "\u001B[1;36m" + text + "\u001B[0m";
     }
 }

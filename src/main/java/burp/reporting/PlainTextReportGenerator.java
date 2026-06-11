@@ -18,7 +18,20 @@ public class PlainTextReportGenerator {
     public static String generateTextReport(RmlExecutionReport report) {
         StringBuilder sb = new StringBuilder();
 
-        printIssues(sb, report.getErrors(), "Errors");
+        List<RmlError> errors = new ArrayList<>();
+        List<RmlError> warnings = new ArrayList<>();
+        List<RmlError> info = new ArrayList<>();
+
+        for (RmlError issue : report.getErrors()) {
+            OntClass logType = issue.getErrorType();
+            if (isOrParent(logType, RER.Information)) info.add(issue);
+            else if (isOrParent(logType, RER.Warning)) warnings.add(issue);
+            else errors.add(issue);
+        }
+
+        printIssues(sb, errors, "Errors", Severity.ERROR);
+        printIssues(sb, warnings, "Warnings", Severity.WARNING);
+        printIssues(sb, info, "Information", Severity.INFORMATION);
 
         sb.append("Statistics:\n");
         int triplesMapsSize = 0;
@@ -42,7 +55,11 @@ public class PlainTextReportGenerator {
         return sb.toString();
     }
 
-    private static void printTracingInfo(StringBuilder sb, RmlError issue) {
+    private static boolean isOrParent(OntClass ontClass, OntClass parent) {
+        return ontClass.equals(parent) || ontClass.hasSuperClass(ontClass);
+    }
+
+    private static void printTracingInfo(StringBuilder sb, RmlError issue, Severity severity) {
         if (issue.getOrigin() != null) {
             Origin origin = issue.getOrigin();
             sb.append(prependIndent("In mapping", 4)).append(System.lineSeparator());
@@ -77,10 +94,10 @@ public class PlainTextReportGenerator {
             }
 
             // Print File Underlined extract
-            String highlight = FileHighlight.extractAndHighlight(file, locations);
+            String highlight = FileHighlight.extractAndHighlight(file, locations, severity);
             if (highlight != null) {
                 if (!lineLocations.isEmpty()) {
-                    sb.append(lineLocations.get(0)).append(System.lineSeparator());
+                    sb.append(lineLocations.getFirst()).append(System.lineSeparator());
                 }
                 sb.append(highlight);
             } else {
@@ -91,13 +108,20 @@ public class PlainTextReportGenerator {
         }
     }
 
-    private static void printIssues(StringBuilder sb, List<RmlError> issues, String header) {
+    private static void printIssues(StringBuilder sb, List<RmlError> issues, String header, Severity severity) {
         if (issues != null && !issues.isEmpty()) {
             sb.append(header).append(":").append(System.lineSeparator());
             for (int i = 0; i < issues.size(); i++) {
                 RmlError issue = issues.get(i);
-                sb.append(prependIndent(FileHighlight.ansiRed(issue.getMessage()), 2)).append(System.lineSeparator());
-                printTracingInfo(sb, issue);
+                String msg = issue.getMessage();
+                String msgColored;
+                switch (severity) {
+                    case WARNING -> msgColored = FileHighlight.ansiYellow(msg);
+                    case INFORMATION -> msgColored = FileHighlight.ansiCyan(msg);
+                    case null, default -> msgColored = FileHighlight.ansiRed(msg);
+                }
+                sb.append(prependIndent(msgColored, 2)).append(System.lineSeparator());
+                printTracingInfo(sb, issue, severity);
                 appendErrorTypeHelp(sb, issue.getErrorType());
 
                 if (issue.getException() != null) {
