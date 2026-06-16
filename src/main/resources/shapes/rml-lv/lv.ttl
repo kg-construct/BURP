@@ -240,15 +240,32 @@ rmlsh:LogicalViewJoinShape a sh:NodeShape ;
         A field of the logical view join.
         """ ;
         sh:message """
-        At least one rml:field property must be specified for a rml:LogicalViewJoin, with a resource as its value.
+        At least one rml:field property must be specified for a rml:LogicalViewJoin, with a leaf expression field as its value.
         """ ;
         sh:path rml:field ;
         sh:minCount 1 ;
         sh:nodeKind sh:BlankNodeOrIRI ;
-        sh:or (
-            [ sh:node rmlsh:ExpressionFieldShape ]
-            [ sh:node rmlsh:IterableFieldShape ]
-        )
+        sh:node rmlsh:LeafExpressionFieldShape ;
+    ] .
+
+rmlsh:LeafExpressionFieldShape a sh:NodeShape ;
+    rdfs:label "Leaf Expression Field" ;
+    rdfs:comment """
+    A leaf expression field is an expression field without nested fields.
+    """ ;
+    sh:message """
+    Node must have a valid rml:ExpressionField description.
+    """ ;
+    sh:node rmlsh:ExpressionFieldShape ;
+    sh:property [
+        sh:description """
+        A leaf expression field is an expression field without nested fields.
+        """ ;
+        sh:message """
+        A leaf expression field has no nested fields.
+        """ ;
+        sh:path rml:field ;
+        sh:maxCount 0 ;
     ] .
 
 rmlsh:StructuralAnnotationShape a sh:NodeShape;

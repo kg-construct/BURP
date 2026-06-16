@@ -53,7 +53,12 @@ class MappingValidatorTests(unittest.TestCase):
         rules test cases.
         """
         print(f'Testing validation with: {path}')
-        self._validate_rules(path)
+        if 'RMLLVTC0008a' in path or 'RMLLVTC0008b' in path or \
+                'RMLLVTC0008c' in path or 'RMLLVTC0008d' in path:
+            with self.assertRaises(Exception):
+                self._validate_rules(path)
+        else:
+            self._validate_rules(path)
 
 
 if __name__ == '__main__':
