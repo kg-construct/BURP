@@ -1,18 +1,18 @@
 package burp.model.fnmlutil;
 
+import burp.model.RMLFunction;
+import burp.model.Return;
+import burp.reporting.Origin;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.text.WordUtils;
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.vocabulary.XSD;
+
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StringEscapeUtils;
-
-import burp.model.RMLFunction;
-import burp.model.Return;
-import org.apache.commons.text.WordUtils;
-import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.vocabulary.XSD;
 
 public class Functions {
 	
@@ -22,7 +22,7 @@ public class Functions {
 		
 		RMLFunction f = functions.get(function);
 		if(f != null)
-			return f.apply(map);
+			return f.apply(map, null);
 		
 		throw new RuntimeException(String.format("Function %s not yet supported.", function));
 	}
@@ -34,7 +34,7 @@ public class Functions {
 
 		functions.put("http://example.com/functions/helloworld", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					l.add(new Return("Hello World!"));
@@ -49,7 +49,7 @@ public class Functions {
 
 		functions.put("http://example.com/functions/schema", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://example.com/functions/stringParameter").toString();
@@ -71,7 +71,7 @@ public class Functions {
 
 		functions.put("http://example.com/functions/parseURL", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				String s = map.get("http://example.com/functions/stringParameter").toString();
 
 				try {
@@ -99,7 +99,7 @@ public class Functions {
 
 		functions.put("https://github.com/morph-kgc/morph-kgc/function/built-in.ttl#uuid", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try{
 					List<Return> l = new ArrayList<Return>();
 					l.add(new Return(UUID.randomUUID().toString()));
@@ -115,7 +115,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#boolean_and", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					Literal a = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_a");
@@ -135,7 +135,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#boolean_not", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					Literal a = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool");
@@ -154,7 +154,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#boolean_or", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					Literal a = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_a");
@@ -174,7 +174,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#boolean_xor", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					Literal a = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_a");
@@ -194,7 +194,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_chomp", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -214,7 +214,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_contains", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -234,7 +234,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_contains_pattern", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -254,7 +254,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#endsWith", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -276,7 +276,7 @@ public class Functions {
 		// Note that quotes are required around your mode. See the recipes for examples of escaping and unescaping.
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#escape", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -309,7 +309,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#length", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -328,7 +328,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#math_abs", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					Literal s = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_dec_n");
@@ -363,7 +363,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#math_ceil", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					Literal s = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_dec_n");
@@ -398,7 +398,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#math_floor", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					Literal s = (Literal) map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_dec_n");
@@ -433,7 +433,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#startsWith", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -456,7 +456,7 @@ public class Functions {
 		// that the second argument n to is omitted a single character will be returned.
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_get", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -489,7 +489,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_replace", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -510,7 +510,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_strip", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -529,7 +529,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_substring", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -562,7 +562,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#string_trim", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String s = map.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam").toString();
@@ -581,7 +581,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#toLowerCase", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 
@@ -601,7 +601,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#toUpperCase", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 
@@ -621,7 +621,7 @@ public class Functions {
 
 		functions.put("http://users.ugent.be/~bjdmeest/function/grel.ttl#toTitleCase", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 
@@ -645,7 +645,7 @@ public class Functions {
 		
 		functions.put("http://example.com/idlab/function/toUpperCaseURL", new RMLFunction() {
 			@Override
-			public List<Return> apply(Map<String, Object> map) {
+			public List<Return> apply(Map<String, Object> map, Origin origin) {
 				try {
 					List<Return> l = new ArrayList<Return>();
 					String str = map.get("http://example.com/idlab/function/str").toString().toUpperCase();

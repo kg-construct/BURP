@@ -1,7 +1,6 @@
 package burp.model;
 
 public class Input {
-
-	public ParameterMap parameterMap;
-	public InputValueMap inputValueMap;
+    public ParameterMap parameterMap;
+    public InputValueMap inputValueMap;
 }

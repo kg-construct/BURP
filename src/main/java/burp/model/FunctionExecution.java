@@ -1,68 +1,125 @@
 package burp.model;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import burp.model.fnmlutil.FunctionsRegistry;
+import burp.model.rdf.IRITerm;
+import burp.parse.turtleprov.ProvTurtleVisitor;
+import burp.reporting.*;
+import burp.vocabularies.RER;
 
-import org.apache.jena.rdf.model.RDFNode;
+import java.util.*;
 
-import burp.model.fnmlutil.Functions;
+public class FunctionExecution implements Expression {
+    private PlanNode parent = null;
+    public FunctionMap functionMap = null;
+    public List<Input> inputs = new ArrayList<>();
+    public ReturnMap returnMap = null;
 
-public class FunctionExecution extends Expression {
-	
-	public FunctionMap functionMap;
-	public List<Input> inputs = new ArrayList<>();
-	public ReturnMap returnMap;
+    public StatementParts callStmt;
+    public List<StatementParts> inputsStmt = new ArrayList<>();
+    public StatementParts returnMapStmt = null;
+    public StatementParts functionMapStmt = null;
 
-	public List<Object> values(Iteration i, String baseIRI) {
-		List<Object> list = new ArrayList<>();
-		
-		// TODO: We assume that function maps, parameter maps, and input value maps only yield one value
-		List<RDFNode> functions = functionMap.generateIRIs(i, baseIRI);
-		if(functions.size() != 1)
-			throw new RuntimeException("Function map should generate exactly one value.");
-		
-		String function = functions.get(0).asResource().getURI();
-		
-		// Bind parameters via a map
-		Map<String, Object> map = new HashMap<>();
-		
-		for(Input input : inputs) {
-			List<RDFNode> parameters = input.parameterMap.generateIRIs(i, baseIRI);
-			if(parameters.size() != 1)
-				throw new RuntimeException("Parameter map should generate exactly one value.");
-			
-			String parameter = parameters.get(0).asResource().getURI();
-			
-			List<RDFNode> inputs = input.inputValueMap.generateTerms(i, baseIRI);
-			if(inputs.size() != 1)
-				throw new RuntimeException("Input value map should generate exactly one value.");
-			
-			Object in = inputs.get(0).isResource() ? inputs.get(0) : inputs.get(0).asLiteral();
-			
-			map.put(parameter, in);
-		}
-		
-		for(Return o : Functions.execute(function, map)) {
-			// if return map is null, then we return the default return value
-			// Otherwise, look for the value identified by the return map
-			if(returnMap == null) {
-				list.add(o.defaultValue);				
-			} else {
-				List<RDFNode> returns = returnMap.generateIRIs(i, baseIRI);
-				if(returns.size() != 1)
-					throw new RuntimeException("Input value map should generate exactly one value.");
-				
-				Object v = o.get(returns.get(0));
-				if(v == null)
-					throw new RuntimeException("Return value %s no known.".formatted(returns.get(0)));
-				
-				list.add(v);
-			}
-		}
-		
-		return list;	
-	}
+    @Override
+    public PlanNode getParent() {
+        return parent;
+    }
 
+    @Override
+    public void setParent(PlanNode parent) {
+        this.parent = parent;
+    }
+
+    @Override
+    public List<PlanNode> children() {
+        List<PlanNode> list = new ArrayList<>();
+        if (functionMap != null) list.add(functionMap);
+        for (Input input : inputs) {
+            if (input.parameterMap != null) list.add(input.parameterMap);
+            if (input.inputValueMap != null) list.add(input.inputValueMap);
+        }
+        if (returnMap != null) list.add(returnMap);
+        return list;
+    }
+
+    @Override
+    public List<PlanNode> dependencies() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<PointRange> nodeRanges() {
+        List<RDFGraphPointer> pointers = new ArrayList<>();
+        pointers.add(callStmt);
+        if (functionMapStmt != null) pointers.add(functionMapStmt);
+        if (returnMapStmt != null) pointers.add(returnMapStmt);
+        pointers.addAll(inputsStmt);
+        return ProvTurtleVisitor.retrieveTurtleLocation(pointers);
+    }
+
+    public List<Object> values(Iteration iteration) {
+        List<Object> list = new ArrayList<>();
+
+        List<IRITerm> functions = functionMap.generateIRIs(iteration);
+        if (functions.size() != 1) {
+            throw new BurpException(new RmlError(
+                "Function map should generate exactly one value.",
+                new Origin(this, functionMapStmt != null ? List.of(functionMapStmt) : List.of()),
+                RER.FunctionExecutionError
+            ));
+        }
+
+        String functionUri = functions.get(0).uri();
+
+        Map<String, Object> map = new HashMap<>();
+
+        for (int i = 0; i < inputs.size(); i++) {
+            Input input = inputs.get(i);
+            List<IRITerm> parameters = input.parameterMap.generateIRIs(iteration);
+            if (parameters.size() != 1) {
+                throw new BurpException(new RmlError(
+                    "Parameter map should generate exactly one value.",
+                    new Origin(this, List.of(inputsStmt.get(i))),
+                    RER.FunctionExecutionError
+                ));
+            }
+
+            String parameterUri = parameters.getFirst().uri();
+
+            var generatedInputs = input.inputValueMap.generateTerms(iteration);
+            if (generatedInputs.size() != 1) {
+                throw new BurpException(new RmlError(
+                    "Input value map should generate exactly one value.",
+                    new Origin(this, List.of(inputsStmt.get(i))),
+                    RER.FunctionExecutionError
+                ));
+            }
+
+            map.put(parameterUri, generatedInputs.getFirst());
+        }
+
+        Origin originCall = new Origin(this, List.of(callStmt));
+
+        List<Return> results = FunctionsRegistry.execute(functionUri, map, originCall);
+        for (Return o : results) {
+            Origin originReturnMap = new Origin(this, returnMapStmt != null ? List.of(returnMapStmt) : List.of());
+            if (returnMap == null) {
+                list.add(o.defaultValue);
+            } else {
+                List<IRITerm> returns = returnMap.generateIRIs(iteration);
+                if (returns.size() != 1) {
+                    throw new BurpException(new RmlError(
+                        "Return map should generate exactly one value.",
+                        originReturnMap,
+                        RER.FunctionExecutionError
+                    ));
+                }
+
+                String returnUri = returns.get(0).uri();
+                Object v = o.get(returnUri);
+                list.add(v);
+            }
+        }
+
+        return list;
+    }
 }

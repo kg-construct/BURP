@@ -1,5 +1,7 @@
 package burp.model;
 
+import burp.model.lv.LogicalIteration;
+
 import java.util.ArrayList;
 import java.util.List;
 

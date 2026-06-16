@@ -7,10 +7,17 @@ public class Return {
 
 	private final Map<String, Object> returns = new HashMap<>();
 
-	public Object defaultValue = null;
-	
+	public Object defaultValue;
+	public Map<String, Object> additionalOutputs;
+
 	public Return(Object defaultValue) {
 		this.defaultValue = defaultValue;
+		this.additionalOutputs = Map.of();
+	}
+
+	public Return(Object defaultValue, Map<String, Object> additionalOutputs) {
+		this.defaultValue = defaultValue;
+		this.additionalOutputs = additionalOutputs;
 	}
 
 	public Object get(Object key) {

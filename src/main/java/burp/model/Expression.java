@@ -1,6 +1,9 @@
 package burp.model;
 
-public abstract class Expression {
+public interface Expression extends PlanNode {
+    @Override
+    PlanNode getParent();
 
+    @Override
+    void setParent(PlanNode parent);
 }
-

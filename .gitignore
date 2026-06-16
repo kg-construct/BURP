@@ -71,3 +71,7 @@ BURP.iml
 .idea/jarRepositories.xml
 .idea/modules.xml
 .idea/workspace.xml
+
+src/main/resources/shapes/rml-*
+src/main/resources/vocabularies/rml
+src/test/resources/rml-*

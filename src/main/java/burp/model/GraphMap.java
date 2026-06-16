@@ -1,31 +1,23 @@
 package burp.model;
 
-import java.util.List;
-
-import org.apache.jena.rdf.model.RDFNode;
-
 import burp.vocabularies.RML;
+import org.apache.jena.rdf.model.Resource;
+
+import java.util.Set;
 
 public class GraphMap extends TermMap {
-	
-	public GraphMap() {
-		termType = RML.IRI;
-	}
 
-	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
-		if(RML.IRI.equals(termType))
-			return generateIRIs(i, baseIRI);
-        if(termType == RML.URI)
-            return generateURIs(i, baseIRI);
-		if(RML.BLANKNODE.equals(termType))
-			return generateBlankNodes(i, baseIRI);
-				
-		throw new RuntimeException("Incorrect term type for graph map.");
-	}
-	
-	@Override
-	public boolean isGatherMap() {
-		return false;
-	}
-	
+    public GraphMap() {
+        this.termType = RML.IRI;
+    }
+
+    @Override
+    public String getName() {
+        return "graph map";
+    }
+
+    @Override
+    public Set<Resource> getAllowedTermTypes() {
+        return Set.of(RML.IRI, RML.URI, RML.BLANKNODE);
+    }
 }

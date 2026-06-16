@@ -1,176 +1,97 @@
 package burp.ls;
 
-import java.io.StringWriter;
+import burp.model.Iteration;
+import burp.model.Reference;
+import burp.reporting.BurpException;
+import burp.reporting.Origin;
+import burp.reporting.RmlError;
+import burp.vocabularies.RER;
+import burp.vocabularies.RML;
+import net.sf.saxon.s9api.*;
+import org.apache.jena.rdf.model.Resource;
+
+import javax.xml.transform.stream.StreamSource;
+import java.io.BufferedReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
+public class XMLSource extends FileBasedLogicalSource {
+    private List<Iteration> iterations = null;
+    public List<Iteration> getIterations() { return iterations; }
+    public void setIterations(List<Iteration> i) { iterations = i; }
+    public String iterator;
+    public Origin iteratorOrigin;
+    public Map<String, String> prefixMap;
+    private XPathCompiler xPathCompiler;
 
-import org.apache.commons.io.IOUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import burp.model.Iteration;
-import burp.util.SimpleNamespaceContext;
-
-class XMLSource extends FileBasedLogicalSource {
-
-	public HashMap<String, String> prefixMap;
-
-	@Override
-	public Iterator<Iteration> iterator() {
-		try {
-			if (iterations == null) {
-				iterations = new ArrayList<>();
-
-				String contents = Files.readString(Paths.get(getDecompressedFile()), encoding);
-
-				DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-				if (prefixMap != null) {
-					// Required for prefix evaluation of XPath expression
-					builderFactory.setNamespaceAware(true);
-				}
-				DocumentBuilder builder = builderFactory.newDocumentBuilder();
-				Document xmlDocument = builder.parse(IOUtils.toInputStream(contents, encoding));
-
-				XPath xPath = XPathFactory.newInstance().newXPath();
-				if (prefixMap != null) {
-					SimpleNamespaceContext namespaces = new SimpleNamespaceContext(prefixMap);
-					xPath.setNamespaceContext(namespaces);
-				}
-
-				NodeList nodes = (NodeList) xPath.compile(iterator).evaluate(xmlDocument, XPathConstants.NODESET);
-
-				for (int i = 0; i < nodes.getLength(); i++) {
-					Node node = nodes.item(i);
-					iterations.add(new XMLIteration(node, nulls, prefixMap));
-				}
-			}
-			return iterations.iterator();
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-}
-
-class XMLIteration extends Iteration {
-
-	private final Node node;
-	private final HashMap<String, String> prefixMap;
-
-	protected XMLIteration(Node node, Set<Object> nulls, HashMap<String, String> prefixMap) {
-		super(nulls);
-
-		this.node = node;
-		this.prefixMap = prefixMap;
-	}
-
-	@Override
-	public List<Object> getValuesFor(String reference) {
-		// We need to explicitly convert the objects
-		// to strings because RML has not worked out
-		// "6.6.1 Automatically deriving datatypes" yet
-		List<Object> l2 = new ArrayList<>();
-		try {
-			XPath xPath = XPathFactory.newInstance().newXPath();
-			if (prefixMap != null) {
-				SimpleNamespaceContext namespaces = new SimpleNamespaceContext(prefixMap);
-				xPath.setNamespaceContext(namespaces);
-			}
-
-			Object val = xPath.compile(reference).evaluate(node);
-
-			if(val instanceof String s) {
-				if(!nulls.contains(s))
-					l2.add(s);
-			} else if (val instanceof Double d) {
-				if(!nulls.contains(d.toString()))
-					l2.add(d.toString());
-			} else if (val instanceof Boolean b) {
-				if(!nulls.contains(b.toString()))
-					l2.add(b.toString());
-			} else if (val instanceof NodeList nodes) {
-				for(int i = 0; i < nodes.getLength(); i++) {
-					Node node = nodes.item(0);
-					if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
-						l2.add(node.getTextContent());
-				}
-			} else {
-				throw new Exception("Unsupported XPath object");
-			}
-
-		} catch (Exception e) {
-			// No data, silently ignore
-			e.printStackTrace();
-		}
-		return l2;
-	}
-
-	@Override
-	public List<String> getStringsFor(String reference) {
-		List<String> l2 = new ArrayList<>();
-		try {
-			XPath xPath = XPathFactory.newInstance().newXPath();
-			if (prefixMap != null) {
-				SimpleNamespaceContext namespaces = new SimpleNamespaceContext(prefixMap);
-				xPath.setNamespaceContext(namespaces);
-			}
-
-			Object val = xPath.compile(reference).evaluate(node);
-
-			if(val instanceof String s) {
-				if(!nulls.contains(s))
-					l2.add(s);
-			} else if (val instanceof Double d) {
-				if(!nulls.contains(d.toString()))
-					l2.add(d.toString());
-			} else if (val instanceof Boolean b) {
-				if(!nulls.contains(b.toString()))
-					l2.add(b.toString());
-			} else if (val instanceof NodeList nodes) {
-				for(int i = 0; i < nodes.getLength(); i++) {
-					Node node = nodes.item(0);
-					if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
-						l2.add(node.getTextContent());
-				}
-			} else {
-				throw new Exception("Unsupported XPath object");
-			}
-
-		} catch (Exception e) {
-			// No data, silently ignore
-			e.printStackTrace();
-		}
-		return l2;
-	}
+    public static final Processor processor = new Processor(false);
+    public static final DocumentBuilder documentBuilder = processor.newDocumentBuilder();
 
     @Override
-    public String asString() {
+    public Iterable<Iteration> iterator() {
         try {
-            TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            StringWriter writer = new StringWriter();
-            transformer.transform(new DOMSource(node), new StreamResult(writer));
-            return writer.toString();
+            if (getIterations() == null) {
+                setIterations(new ArrayList<>());
+
+                XdmNode xmlDocument;
+                try (BufferedReader reader = Files.newBufferedReader(Paths.get(getDecompressedFile()), StandardCharsets.UTF_8)) {
+                    xmlDocument = documentBuilder.build(new StreamSource(reader));
+                }
+
+                xPathCompiler = processor.newXPathCompiler();
+                if (prefixMap != null) {
+                    for (Map.Entry<String, String> entry : prefixMap.entrySet()) {
+                        xPathCompiler.declareNamespace(entry.getKey(), entry.getValue());
+                    }
+                }
+
+                XPathSelector selector = xPathCompiler.compile(iterator).load();
+                selector.setContextItem(xmlDocument);
+
+                for (XdmItem item : selector) {
+                    getIterations().add(new XMLIteration(item, getNulls(), xPathCompiler));
+                }
+            }
+            return getIterations();
+        } catch (SaxonApiException e) {
+            throw new BurpException(
+                new RmlError(
+                    e.getMessage() != null ? e.getMessage() : "SaxonApiException",
+                    iteratorOrigin,
+                    RER.ReferenceFormulationSyntaxError,
+                    e,
+                    new HashMap<>()
+                )
+            );
         } catch (Exception e) {
-            throw new RuntimeException("Error converting Node to String", e);
+            throw new BurpException(
+                new RmlError(
+                    e.getMessage() != null ? e.getMessage() : "Exception",
+                    iteratorOrigin,
+                    RER.ReferenceFormulationExecutionError,
+                    e,
+                    new HashMap<>()
+                )
+            );
         }
     }
 
+    @Override
+    public Resource getReferenceFormulation() {
+        return RML.XPath;
+    }
+
+    @Override
+    public void setReferenceFormulation(Resource value) {
+    }
+
+    @Override
+    public Reference buildExportedReference(String reference, Origin origin) {
+        return new XMLReference(reference, origin);
+    }
 }

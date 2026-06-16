@@ -1,20 +1,63 @@
 package burp.model;
 
+import burp.reporting.Origin;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class Reference extends Expression {
-	
-	public String reference = null;
-	
-	public Reference(String reference) {
-		this.reference = reference;
-	}
+public abstract class Reference implements Expression {
+    protected final String reference;
+    protected Origin origin;
+    protected PlanNode parent = null;
 
-	// If the term map is a reference-valued term map, 
-	// then the generated RDF term is determined by applying the 
-	// term generation rules to its reference value.
-	public List<Object> values(Iteration i) {
-		return i.getValuesFor(reference);
-	}
-	
+    public Reference(String reference, Origin origin) {
+        this.reference = reference;
+        this.origin = origin;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public Origin getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(Origin origin) {
+        this.origin = origin;
+    }
+
+    @Override
+    public PlanNode getParent() {
+        return parent;
+    }
+
+    @Override
+    public void setParent(PlanNode parent) {
+        this.parent = parent;
+    }
+
+    @Override
+    public Iterable<PlanNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Iterable<PlanNode> dependencies() {
+        return Collections.emptyList();
+    }
+
+    public List<Object> values(Iteration i) {
+        return getValues(i);
+    }
+
+    public abstract List<Object> getValues(Iteration i);
+
+    public List<String> getStrings(Iteration i) {
+        return getValues(i).stream()
+                .filter(Objects::nonNull)
+                .map(Object::toString)
+                .collect(Collectors.toList());
+    }
 }

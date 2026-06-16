@@ -4,15 +4,11 @@ import burp.model.GatherMap;
 import burp.model.Iteration;
 import burp.vocabularies.RML;
 import com.google.common.collect.Lists;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.RDF;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.jena.rdf.model.Container;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFList;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.vocabulary.RDF;
 
 public class GatherMapMixin {
 

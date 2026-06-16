@@ -1,13 +1,34 @@
 package burp.model;
 
-import org.apache.jena.rdf.model.Resource;
 
-import java.util.*;
+import burp.reporting.BurpException;
 
-public abstract class AbstractLogicalSource extends Iterable implements FieldParent {
+import java.util.HashSet;
+import java.util.Set;
+
+public abstract class AbstractLogicalSource implements FormulationIterable, FieldParent, ExportedReferenceScope, LogicalTargetScope {
 
     public Set<Object> nulls = new HashSet<>();
-    public abstract Iterator<Iteration> iterator();
+    public Set<Object> getNulls() { return nulls; }
+    private Set<LogicalTarget> logicalTargets = new HashSet<>();
+    private PlanNode parent = null;
+
+    @Override
+    public Set<LogicalTarget> getLogicalTargets() {
+        return logicalTargets;
+    }
+
+    @Override
+    public PlanNode getParent() {
+        return parent;
+    }
+
+    @Override
+    public void setParent(PlanNode parent) {
+        this.parent = parent;
+    }
+
+    public abstract Iterable<Iteration> iterator() throws BurpException;
 
     @Override
     public String getAbsoluteFieldName() {
