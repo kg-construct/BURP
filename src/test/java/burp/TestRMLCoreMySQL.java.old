@@ -7,16 +7,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -90,14 +90,45 @@ public class TestRMLCoreMySQL {
 	@Test public void RMLTC0012dMySQL() throws Exception { testForNotOK("RMLTC0012d-MySQL"); }
 	@Test public void RMLTC0015bMySQL() throws Exception { testForNotOK("RMLTC0015b-MySQL"); }
 	@Test public void RMLTC0019bMySQL() throws Exception { testForNotOK("RMLTC0019b-MySQL"); }
-	
-	@SuppressWarnings({ "resource", "deprecation" })
+
+
+    static MySQLContainer<?> MY_SQL_CONTAINER = new MySQLContainer<>("mysql:8")
+            .withEnv("MYSQL_ROOT_HOST", "%")
+            .withCommand("mysqld", "--sql_mode=ANSI_QUOTES");
+
+    @BeforeAll
+    static void startContainers() {
+        MY_SQL_CONTAINER.start();
+    }
+
+    @AfterAll
+    static void stopContainers() {
+        MY_SQL_CONTAINER.stop();
+    }
+
+    @BeforeEach
+    void setUp() throws SQLException {
+        String databaseName = MY_SQL_CONTAINER.getDatabaseName();
+        // Removing all tables from the database
+        Statement scriptStmt = MY_SQL_CONTAINER.createConnection("").createStatement();
+        String constructScriptQuery = """
+                SELECT CONCAT('DROP TABLE IF EXISTS ', GROUP_CONCAT(table_name))
+                FROM information_schema.tables
+                WHERE table_schema = 'database_name';
+                """.replace("database_name", databaseName);
+        scriptStmt.execute(constructScriptQuery);
+        String script = scriptStmt.getResultSet().next() ? scriptStmt.getResultSet().getString(1) : "";
+        if (script != null && !script.isEmpty()) {
+            Statement dropStmt = MY_SQL_CONTAINER.createConnection("").createStatement();
+            dropStmt.execute(script);
+            dropStmt.close();
+        }
+    }
+
 	public void testForOK(String f) throws Exception {
 		System.out.println(String.format("Now processing %s", f));
-    	
+
 		System.out.println("Loading the database");
-    	MySQLContainer<?> MY_SQL_CONTAINER = new MySQLContainer<>("mysql:latest").withEnv("MYSQL_ROOT_HOST", "%").withCommand("mysqld", "--sql_mode=ANSI_QUOTES");
-		MY_SQL_CONTAINER.start();
 		String jdbcurl = MY_SQL_CONTAINER.getJdbcUrl();
     	String ddl = FileUtils.readFileToString(new File(base + f, "resource.sql"));
     	Statement statement = MY_SQL_CONTAINER.createConnection("?allowMultiQueries=true").createStatement();
@@ -136,18 +167,14 @@ public class TestRMLCoreMySQL {
 		assertTrue(expected.isIsomorphicWith(actual));
 		
     	m2.delete();    	
-		MY_SQL_CONTAINER.stop();
-		
+
 		System.out.println();
 	}
 
-	@SuppressWarnings({ "resource", "deprecation" })
 	public void testForNotOK(String f) throws Exception {
 		System.out.println(String.format("Now processing %s", f));
 		
     	System.out.println("Loading the database");
-    	MySQLContainer<?> MY_SQL_CONTAINER = new MySQLContainer<>("mysql:latest").withEnv("MYSQL_ROOT_HOST", "%");
-		MY_SQL_CONTAINER.start();
 		String jdbcurl = MY_SQL_CONTAINER.getJdbcUrl();
     	String ddl = FileUtils.readFileToString(new File(base + f, "resource.sql"));
     	Statement statement = MY_SQL_CONTAINER.createConnection("?allowMultiQueries=true").createStatement();
@@ -175,8 +202,7 @@ public class TestRMLCoreMySQL {
 		assertTrue(Files.size(Paths.get(r)) == 0);
 
     	m2.delete();    	
-		MY_SQL_CONTAINER.stop();
-		
+
 		System.out.println();
 	}
 

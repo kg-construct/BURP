@@ -93,11 +93,26 @@ class XMLIteration extends Iteration {
 				SimpleNamespaceContext namespaces = new SimpleNamespaceContext(prefixMap);
 				xPath.setNamespaceContext(namespaces);
 			}
-			NodeList nodes = (NodeList) xPath.compile(reference).evaluate(node, XPathConstants.NODESET);
-			for(int i = 0; i < nodes.getLength(); i++) {
-				Node node = nodes.item(0);
-				if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
-					l2.add(node.getTextContent());
+
+			Object val = xPath.compile(reference).evaluate(node);
+
+			if(val instanceof String s) {
+				if(!nulls.contains(s))
+					l2.add(s);
+			} else if (val instanceof Double d) {
+				if(!nulls.contains(d.toString()))
+					l2.add(d.toString());
+			} else if (val instanceof Boolean b) {
+				if(!nulls.contains(b.toString()))
+					l2.add(b.toString());
+			} else if (val instanceof NodeList nodes) {
+				for(int i = 0; i < nodes.getLength(); i++) {
+					Node node = nodes.item(0);
+					if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
+						l2.add(node.getTextContent());
+				}
+			} else {
+				throw new Exception("Unsupported XPath object");
 			}
 
 		} catch (Exception e) {
@@ -116,11 +131,26 @@ class XMLIteration extends Iteration {
 				SimpleNamespaceContext namespaces = new SimpleNamespaceContext(prefixMap);
 				xPath.setNamespaceContext(namespaces);
 			}
-			NodeList nodes = (NodeList) xPath.compile(reference).evaluate(node, XPathConstants.NODESET);
-			for(int i = 0; i < nodes.getLength(); i++) {
-				Node node = nodes.item(0);
-				if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
-					l2.add(node.getTextContent());
+
+			Object val = xPath.compile(reference).evaluate(node);
+
+			if(val instanceof String s) {
+				if(!nulls.contains(s))
+					l2.add(s);
+			} else if (val instanceof Double d) {
+				if(!nulls.contains(d.toString()))
+					l2.add(d.toString());
+			} else if (val instanceof Boolean b) {
+				if(!nulls.contains(b.toString()))
+					l2.add(b.toString());
+			} else if (val instanceof NodeList nodes) {
+				for(int i = 0; i < nodes.getLength(); i++) {
+					Node node = nodes.item(0);
+					if(node.getTextContent() != null && !nulls.contains(node.getTextContent()))
+						l2.add(node.getTextContent());
+				}
+			} else {
+				throw new Exception("Unsupported XPath object");
 			}
 
 		} catch (Exception e) {
