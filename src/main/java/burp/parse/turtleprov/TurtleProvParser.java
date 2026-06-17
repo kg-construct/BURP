@@ -1,6 +1,7 @@
 package burp.parse.turtleprov;
 
 import burp.reporting.PointRange;
+import org.antlr.v4.runtime.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,8 +96,8 @@ public class TurtleProvParser {
         try {
             store = visitor.visitTurtleDoc(parser.turtleDoc());
         } catch (TurtleProvException e) {
-            int line = e.getRange() != null && e.getRange().start() != null ? e.getRange().start().line + 1 : 0;
-            int col = e.getRange() != null && e.getRange().start() != null ? e.getRange().start().column : 0;
+            int line = e.getRange() != null ? e.getRange().start().line + 1 : 0;
+            int col = e.getRange() != null ? e.getRange().start().column : 0;
             syntaxErrors.add(new ProvStore.SyntaxError(line, col, e.getMessage(), "AST Traversal", e.getRange()));
             store = visitor.getStore();
         } catch (Exception e) {
