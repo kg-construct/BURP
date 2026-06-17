@@ -14,7 +14,7 @@ import burp.model.gathermaputil.SubGraph;
 public class ReferencingObjectMap implements GatherMap {
 	
 	public TriplesMap parent = null;
-	public List<JoinCondition> joinConditions = new ArrayList<JoinCondition>();
+	public List<JoinCondition> joinConditions = new ArrayList<>();
 	
 	public GatherMapMixin gatherMap = null;
 	
@@ -28,7 +28,7 @@ public class ReferencingObjectMap implements GatherMap {
 		if(!isGatherMap())
 			throw new RuntimeException("Trying to process a non-gathermap as gathermap");
 		
-		List<SubGraph> g = new ArrayList<SubGraph>();
+		List<SubGraph> g = new ArrayList<>();
 		
 		for(RDFNode n : generateTerms(i, baseIRI)) {
 			SubGraph sg = new SubGraph(n, ModelFactory.createDefaultModel());
@@ -47,7 +47,7 @@ public class ReferencingObjectMap implements GatherMap {
 		if(joinConditions.isEmpty()) {
 			return parent.subjectMap.generateTerms(i, baseIRI);			
 		} else {
-			List<RDFNode> list = new ArrayList<RDFNode>();
+			List<RDFNode> list = new ArrayList<>();
 			Iterator<Iteration> iter2 = parent.logicalSource.iterator();
 			while (iter2.hasNext()) {
 				Iteration i2 = iter2.next();
@@ -57,8 +57,8 @@ public class ReferencingObjectMap implements GatherMap {
 				boolean ok = true;
 				for (JoinCondition jc : joinConditions) {
 
-					List<String> values1 = jc.childMap.generateValues(i);
-					List<String> values2 = jc.parentMap.generateValues(i2);
+					List<Object> values1 = jc.childMap.generateValues(i);
+					List<Object> values2 = jc.parentMap.generateValues(i2);
 
 					if (values1.stream().distinct().filter(values2::contains)
 							.collect(Collectors.toSet()).isEmpty()) {

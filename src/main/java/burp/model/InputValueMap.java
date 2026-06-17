@@ -1,6 +1,5 @@
 package burp.model;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.jena.rdf.model.RDFNode;
@@ -18,10 +17,12 @@ public class InputValueMap extends TermMap {
 	
 	@Override
 	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
-		if(RML.IRI.equals(termType))
-			return new ArrayList<RDFNode>(generateIRIs(i, baseIRI));
-		if(RML.BLANKNODE.equals(termType))
-			return new ArrayList<RDFNode>(generateBlankNodes(i, baseIRI));
+        if(RML.IRI.equals(termType))
+            return generateIRIs(i, baseIRI);
+        if(RML.URI.equals(termType))
+            return generateURIs(i, baseIRI);
+        if(RML.BLANKNODE.equals(termType))
+			return generateBlankNodes(i, baseIRI);
 		if(RML.LITERAL.equals(termType))
 			return generateLiterals(i, baseIRI, datatypeMap, languageMap);
 					

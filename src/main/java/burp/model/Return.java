@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class Return {
 
-	private Map<String, Object> returns = new HashMap<String, Object>();
+	private final Map<String, Object> returns = new HashMap<>();
 
 	public Object defaultValue = null;
 	

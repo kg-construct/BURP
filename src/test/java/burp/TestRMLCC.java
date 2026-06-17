@@ -1,133 +1,108 @@
-
 package burp;
+
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RDFDataMgr;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Iterator;
-
-import org.apache.jena.query.Dataset;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
-import org.junit.jupiter.api.Test;
-
 public class TestRMLCC {
-	private static String base = "./src/test/resources/rml-cc/";
 
-	@Test public void RMLTCCC0001Alt() throws IOException { testForOK("RMLTC-CC-0001-Alt"); }
-	@Test public void RMLTCCC0001Bag() throws IOException { testForOK("RMLTC-CC-0001-Bag"); }
-	@Test public void RMLTCCC0001List() throws IOException { testForOK("RMLTC-CC-0001-List"); }
-	@Test public void RMLTCCC0001Seq() throws IOException { testForOK("RMLTC-CC-0001-Seq"); }
-	@Test public void RMLTCCC0002Bag() throws IOException { testForOK("RMLTC-CC-0002-Bag"); }
-	@Test public void RMLTCCC0002List() throws IOException { testForOK("RMLTC-CC-0002-List"); }
-	@Test public void RMLTCCC0003EB() throws IOException { testForOK("RMLTC-CC-0003-EB"); }
-	@Test public void RMLTCCC0003EL() throws IOException { testForOK("RMLTC-CC-0003-EL"); }
-	@Test public void RMLTCCC0003ELNamed() throws IOException { testForOK("RMLTC-CC-0003-EL-Named"); }
-	@Test public void RMLTCCC0003ELBN() throws IOException { testForOK("RMLTC-CC-0003-EL-BN"); }
-	@Test public void RMLTCCC0003NEB() throws IOException { testForOK("RMLTC-CC-0003-NEB"); }
-	@Test public void RMLTCCC0003NEL() throws IOException { testForOK("RMLTC-CC-0003-NEL"); }
-	@Test public void RMLTCCC0003NELb() throws IOException { testForOK("RMLTC-CC-0003-NELb"); }
-	@Test public void RMLTCCC0004SM1() throws IOException { testForOK("RMLTC-CC-0004-SM1"); }
-	@Test public void RMLTCCC0004SM2() throws IOException { testForOK("RMLTC-CC-0004-SM2"); }
-	@Test public void RMLTCCC0004SM3() throws IOException { testForOK("RMLTC-CC-0004-SM3"); }
-	@Test public void RMLTCCC0004SM4() throws IOException { testForOK("RMLTC-CC-0004-SM4"); }
-	@Test public void RMLTCCC0004SM5() throws IOException { testForOK("RMLTC-CC-0004-SM5"); }
-	@Test public void RMLTCCC0005App1() throws IOException { testForOK("RMLTC-CC-0005-App1"); }
-	@Test public void RMLTCCC0005App2() throws IOException { testForOK("RMLTC-CC-0005-App2"); }
-	@Test public void RMLTCCC0005Car1() throws IOException { testForOK("RMLTC-CC-0005-Car1"); }
-	@Test public void RMLTCCC0005Car2() throws IOException { testForOK("RMLTC-CC-0005-Car2"); }
-	@Test public void RMLTCCC0006IT0() throws IOException { testForOK("RMLTC-CC-0006-IT0"); }
-	@Test public void RMLTCCC0006IT1() throws IOException { testForOK("RMLTC-CC-0006-IT1"); }
-	@Test public void RMLTCCC0006IT2() throws IOException { testForOK("RMLTC-CC-0006-IT2"); }
-	@Test public void RMLTCCC0007NES() throws IOException { testForOK("RMLTC-CC-0007-NES"); }
-	@Test public void RMLTCCC0008ROMa() throws IOException { testForOK("RMLTC-CC-0008-ROMa"); }
-	@Test public void RMLTCCC0008ROMb() throws IOException { testForOK("RMLTC-CC-0008-ROMb"); }
-	@Test public void RMLTCCC0009DUPLIST() throws IOException { testForOK("RMLTC-CC-0009-DUP-List"); }
-	@Test public void RMLTCCC0009DUPBAG() throws IOException { testForOK("RMLTC-CC-0009-DUP-BAG"); }
-	@Test public void RMLTCCC0010LIST() throws IOException { testForGraphsOK("RMLTC-CC-0010-List"); }
-	@Test public void RMLTCCC0010LISTb() throws IOException { testForGraphsOK("RMLTC-CC-0010-Listb"); }
+    public static String base = "./src/test/resources/rml-cc/";
 
-	public void testForOK(String f) throws IOException {
-		System.out.println(String.format("Now processing %s", f));
-		String m = new File(base + f, "mapping.ttl").getAbsolutePath().toString();
-		String r = Files.createTempFile(null, ".nq").toString();
-		System.out.println(String.format("Writing output to %s", r));
+    static Stream<TestData> testDataProvider() throws IOException, CsvException {
 
-		System.out.println("This test should generate a graph.");
-		String o = new File(base + f, "default.nq").getAbsolutePath().toString();
+        Path testCaseDir = Paths.get(base);
 
-		int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
+        List<TestData> testDataList = new ArrayList<TestData>();
+        Path csvFilePath = testCaseDir.resolve("./metadata.csv");
+        CSVReader reader = new CSVReader(new FileReader(csvFilePath.toFile()));
+        List<String[]> records = reader.readAll();
+        //skip the header
+        for (int i = 1; i < records.size(); i++) {
+            String[] record = records.get(i);
+            testDataList.add(new TestData(
+                    record[0], record[1], record[2], record[3], "http://www.example.org/",
+                    record[4], record[5], record[6], record[7],
+                    record[8], record[9], record[10], record[11],
+                    record[12], record[13], record[14], record[15],
+                    record[16], record[17]));
+        }
+        return testDataList.stream();
+    }
 
-		Model expected = RDFDataMgr.loadModel(o);
-		Model actual = RDFDataMgr.loadModel(r);
+    @ParameterizedTest
+    @MethodSource("testDataProvider")
+    void testDirectoryBasedCases(TestData testData) throws IOException {
+        System.out.println("--------------------------------------------------------------------------------");
+        System.out.println(String.format("Processing test %s", testData.ID));
+        System.out.println("--------------------------------------------------------------------------------");
 
-		if (!expected.isIsomorphicWith(actual)) {
-			expected.write(System.out, "NQ");
-			System.out.println("---");
-			actual.write(System.out, "NQ");
-		}
+        System.out.println(testData.mapping);
+        System.out.println(testData.output1);
+        System.out.println(testData.error);
+        System.out.println();
 
-		assertEquals(0, exit);
+        if(testData.error)
+            testForNotOK(testData);
+        else
+            testForOK(testData);
+    }
 
-		System.out.println(expected.isIsomorphicWith(actual) ? "OK" : "NOK");
+    public void testForOK(TestData testData) throws IOException {
+        String m = new File(base + testData.ID, testData.mapping).getAbsolutePath().toString();
+        String r = Files.createTempFile(null, ".nq").toString();
+        System.out.println(String.format("Writing output to %s", r));
 
-		assertTrue(expected.isIsomorphicWith(actual));
-	}
+        System.out.println("This test should generate a graph.");
+        String o = new File(base + testData.ID, testData.output1).getAbsolutePath().toString();
 
-	public void testForGraphsOK(String f) throws IOException {
-		System.out.println(String.format("Now processing %s", f));
-		String m = new File(base + f, "mapping.ttl").getAbsolutePath().toString();
-		String r = Files.createTempFile(null, ".nq").toString();
-		System.out.println(String.format("Writing output to %s", r));
+        int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
 
-		System.out.println("This test should generate a graph.");
-		String o = new File(base + f, "default.nq").getAbsolutePath().toString();
+        Model expected = RDFDataMgr.loadModel(o);
+        Model actual = RDFDataMgr.loadModel(r);
 
-		int exit = Main.doMain(new String[] { "-m", m, "-o", r, "-b", "http://example.com/base/" });
+        if (!expected.isIsomorphicWith(actual)) {
+            expected.write(System.out, "Turtle");
+            System.out.println("---");
+            actual.write(System.out, "Turtle");
+        }
 
-		Dataset expected = RDFDataMgr.loadDataset(o);
-		Dataset actual = RDFDataMgr.loadDataset(r);
+        assertEquals(0, exit);
 
-		RDFDataMgr.write(System.out, expected, RDFFormat.TRIG);
-		System.out.println("----");
-		RDFDataMgr.write(System.out, actual, RDFFormat.TRIG);
+        System.out.println(expected.isIsomorphicWith(actual) ? "OK" : "NOK");
 
-		assertTrue(expected.getDefaultModel().isIsomorphicWith(actual.getDefaultModel()));
-		Iterator<Resource> names = expected.listModelNames();
-		while(names.hasNext()) {
-			Resource name = names.next();
-			assertTrue(expected.getNamedModel(r).isIsomorphicWith(actual.getNamedModel(r)));
-		}
-		names = actual.listModelNames();
-		while(names.hasNext()) {
-			Resource name = names.next();
-			assertTrue(expected.getNamedModel(r).isIsomorphicWith(actual.getNamedModel(r)));
-		}
+        assertTrue(expected.isIsomorphicWith(actual));
+    }
 
-		assertEquals(0, exit);
-	}
+    public void testForNotOK(TestData testData) throws IOException {
+        String m = new File(base + testData.ID, testData.mapping).getAbsolutePath().toString();
+        String r = Files.createTempFile(null, ".nq").toString();
+        System.out.println(String.format("Writing output to %s", r));
 
-	public void testForNotOK(String f) throws IOException {
-		System.out.println(String.format("Now processing %s", f));
-		String m = new File(base + f, "mapping.ttl").getAbsolutePath().toString();
-		String r = Files.createTempFile(null, ".nq").toString();
-		System.out.println(String.format("Writing output to %s", r));
+        System.out.println("This test should NOT generate a graph.");
+        int exit = Main.doMain(new String[] { "-m", m, "-o", r });
+        System.out.println(Files.size(Paths.get(r)) == 0 ? "OK" : "NOK");
+        Model actual = RDFDataMgr.loadModel(r);
+        actual.write(System.out, "NQ");
 
-		System.out.println("This test should NOT generate a graph.");
-		int exit = Main.doMain(new String[] { "-m", m, "-o", r });
-		System.out.println(Files.size(Paths.get(r)) == 0 ? "OK" : "NOK");
-		Model actual = RDFDataMgr.loadModel(r);
-		actual.write(System.out, "NQ");
+        assertTrue(exit > 0);
+        assertTrue(Files.size(Paths.get(r)) == 0);
 
-		assertTrue(exit > 0);
-		assertTrue(Files.size(Paths.get(r)) == 0);
-
-		System.out.println();
-	}
-
+        System.out.println();
+    }
 }

@@ -10,8 +10,8 @@ import burp.vocabularies.RML;
 
 public class SubjectMap extends TermMap {
 
-	public List<Resource> classes = new ArrayList<Resource>();
-	public List<GraphMap> graphMaps = new ArrayList<GraphMap>();
+	public List<Resource> classes = new ArrayList<>();
+	public List<GraphMap> graphMaps = new ArrayList<>();
 	
 	public SubjectMap() {
 		termType = RML.IRI;
@@ -19,9 +19,11 @@ public class SubjectMap extends TermMap {
 
 	@Override
 	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
-		if(RML.IRI.equals(termType))
-			return generateIRIs(i, baseIRI);
-		if(RML.BLANKNODE.equals(termType))
+        if(RML.IRI.equals(termType))
+            return generateIRIs(i, baseIRI);
+        if(RML.URI.equals(termType))
+            return generateURIs(i, baseIRI);
+        if(RML.BLANKNODE.equals(termType))
 			return generateBlankNodes(i, baseIRI);
 		
 		throw new RuntimeException("Incorrect term type for subject map.");

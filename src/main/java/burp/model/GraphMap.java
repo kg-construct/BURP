@@ -15,6 +15,8 @@ public class GraphMap extends TermMap {
 	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
 		if(RML.IRI.equals(termType))
 			return generateIRIs(i, baseIRI);
+        if(termType == RML.URI)
+            return generateURIs(i, baseIRI);
 		if(RML.BLANKNODE.equals(termType))
 			return generateBlankNodes(i, baseIRI);
 				

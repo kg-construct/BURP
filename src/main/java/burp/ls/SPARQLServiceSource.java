@@ -15,7 +15,7 @@ import burp.model.LogicalSource;
 class SPARQLServiceSource extends LogicalSource {
 
 	private List<Iteration> iterations = null;
-	private boolean isTSV;
+	private final boolean isTSV;
 
 	public String iterator;
 	public String endpoint;
@@ -28,7 +28,7 @@ class SPARQLServiceSource extends LogicalSource {
 	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+				iterations = new ArrayList<>();
 
 				QueryExecution exec = QueryExecutionHTTP.service(endpoint).query(iterator).build();
 				ResultSet results = exec.execSelect();

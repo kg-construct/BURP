@@ -1,18 +1,14 @@
 package burp.ls;
 
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
+import com.opencsv.CSVWriter;
 import org.apache.commons.text.StringEscapeUtils;
 
 import burp.model.Iteration;
@@ -31,9 +27,9 @@ class RDBSource extends LogicalSource {
 	public Iterator<Iteration> iterator() {
 		try {
 			Properties props = new Properties();
-			if (username != null && !"".equals(username))
+			if (username != null && !username.isEmpty())
 				props.setProperty("user", username);
-			if (password != null && !"".equals(password))
+			if (password != null && !password.isEmpty())
 				props.setProperty("password", password);
 
 			Class.forName(jdbcDriver);
@@ -41,12 +37,12 @@ class RDBSource extends LogicalSource {
 			Statement statement = connection.createStatement();
 			final ResultSet resultset = statement.executeQuery(query);
 
-			Map<String, Integer> indexMap = new HashMap<String, Integer>();
+			Map<String, Integer> indexMap = new HashMap<>();
 			for (int i = 1; i <= resultset.getMetaData().getColumnCount(); i++) {
 				indexMap.put(resultset.getMetaData().getColumnLabel(i), i);
 			}
 
-			return new Iterator<Iteration>() {
+			return new Iterator<>() {
 
 				@Override
 				public boolean hasNext() {
@@ -72,7 +68,7 @@ class RDBSource extends LogicalSource {
 
 class RDBIteration extends Iteration {
 
-	private Map<String, Object> values = new HashMap<String, Object>();
+	private final Map<String, Object> values = new LinkedHashMap<>();
 
 	protected RDBIteration(ResultSet resultSet, Map<String, Integer> indexMap, Set<Object> nulls) {
 		super(nulls);
@@ -95,7 +91,7 @@ class RDBIteration extends Iteration {
 	
 	@Override
 	public List<Object> getValuesFor(String reference) {
-		List<Object> l = new ArrayList<Object>();
+		List<Object> l = new ArrayList<>();
 		String columnname = StringEscapeUtils.unescapeJava(reference);		
 		
 		if(!values.containsKey(columnname) && !values.containsKey(columnname.replace("\"", "")))
@@ -116,11 +112,16 @@ class RDBIteration extends Iteration {
 
 	@Override
 	public List<String> getStringsFor(String reference) {
-		List<String> l = new ArrayList<String>();
+		List<String> l = new ArrayList<>();
 		for(Object o : getValuesFor(reference))
 			if(o != null)
 				l.add(o.toString());
 		return l;
 	}
-	
+
+    @Override
+    public String asString() {
+        throw new RuntimeException("Not implemented. Does this make sense in the context of LV?");
+    }
+
 }

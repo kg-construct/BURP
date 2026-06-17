@@ -20,12 +20,10 @@ public abstract class TermMap extends ExpressionMap implements GatherMap {
 		if(!isGatherMap())
 			throw new RuntimeException("Trying to process a non-gathermap as gathermap");
 		
-		List<SubGraph> g = new ArrayList<SubGraph>();
+		List<SubGraph> g = new ArrayList<>();
 		
 		if(expression == null) {
-			for(SubGraph sg : gatherMap.generateGraphs(i, baseIRI)) {
-				g.add(sg);
-			}
+            g.addAll(gatherMap.generateGraphs(i, baseIRI));
 		} else {
 			for(RDFNode n : generateTerms(i, baseIRI)) {
 				for(SubGraph sg : gatherMap.generateGraphs(i, baseIRI)) {

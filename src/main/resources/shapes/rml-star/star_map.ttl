@@ -1,0 +1,61 @@
+###############################################################################
+# RML Star Map shape                                                          #
+# Copyright Dylan Van Assche, IDLab - UGent - imec (2023 - 2025)              #
+###############################################################################
+@prefix : <http://w3id.org/rml/shapes/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Validate an RMLS Star Map
+:RMLStarMapShape
+    a sh:NodeShape ;
+    sh:targetClass rml:StarMap ;
+    sh:message "StarMap" ;
+    rdfs:comment """
+    Represents a Star Map.
+    """ ;
+    sh:message """
+    Star Map requires exactly one rml:quotedTriplesMap and
+    zero or more rml:joinCondition.
+    """ ;
+
+    sh:and (
+        # Inherited shapes
+        :RMLJoinConditionPropertiesShape
+        # Star Map specific shapes
+        [
+            sh:path rml:quotedTriplesMap ;
+            sh:name "quotedTriplesMap" ;
+            sh:description """
+            An Quoted Triples Map element to generate a RDF-star triple as 
+            subject or object or another triple from a logical source record.
+            """ ;
+            sh:message """
+            Exactly one rml:quotedTriplesMap is required.
+            """ ;
+            sh:nodeKind sh:BlankNodeOrIRI ;
+            sh:minCount 1 ;
+            sh:maxCount 1 ;
+        ]
+        [
+            sh:targetObjectsOf rml:predicateObjectMap ;
+            sh:name "PredicateMap" ;
+            sh:message """
+            An Quoted Triples Map may never be used for generating a predicate.
+            """ ;
+            sh:xone (
+                [
+                    sh:path rml:predicate ;
+                    sh:minCount 1 ;
+                ] 
+                [
+                    sh:path rml:predicateMap ;
+                    sh:minCount 1 ;
+                ] 
+            );
+        ]
+    ) ;
+.
