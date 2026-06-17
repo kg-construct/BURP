@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    name: Deploy Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: central
+          server-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          server-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          gpg-private-key: ${{ secrets.GPG_ARMOR_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Deploy Maven package
+        run: mvn deploy -B -Pdeploy
+      - name: JReleaser Release
+        run: mvn jreleaser:full-release -B -Pdeploy
+        env:
+          TAG_NAME: ${{ github.ref }}
+          JRELEASER_PROJECT_VERSION: ${{ github.ref }}
+          JRELEASER_JBANG_GITHUB_TOKEN: ${{ secrets.JBANG_CATALOG_TOKEN }}
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

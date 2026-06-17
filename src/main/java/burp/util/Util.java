@@ -1,171 +1,229 @@
 package burp.util;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import burp.reporting.BurpException;
+import burp.reporting.RmlError;
+import burp.vocabularies.RER;
+import burp.vocabularies.RML;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
+import org.apache.commons.io.IOUtils;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.iri.Violation;
+import org.apache.jena.iri.ViolationCodes;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rfc3986.Chars3986;
+
+import java.io.*;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
-import org.apache.commons.io.IOUtils;
-import org.apache.jena.iri.IRIFactory;
-import org.apache.jena.iri.Violation;
-import org.apache.jena.rdf.model.Resource;
+public final class Util {
 
-import burp.vocabularies.RML;
+    public static String toIRISafe(String string) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : string.toCharArray()) {
+            if (Chars3986.iunreserved(c)) sb.append(c);
+            else sb.append('%').append(Integer.toHexString(c).toUpperCase(Locale.getDefault()));
+        }
+        return sb.toString();
+    }
 
-public class Util {
+    public static String toURISafe(String string) {
+        StringBuilder sb = new StringBuilder();
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+        for (byte b : bytes) {
+            char c = (char) (b & 0xFF);
+            if (Chars3986.unreserved(c)) {
+                sb.append(c);
+            } else {
+                sb.append('%').append(String.format("%02X", b & 0xFF));
+            }
+        }
+        return sb.toString();
+    }
 
-	/**
-	 * Translate a string into its IRI safe value as per R2RML's steps
-	 * 
-	 * @param string
-	 * @return
-	 */
-	public static String toIRISafe(String string) {
-		// The IRI-safe version of a string is obtained by applying the following 
-		// transformation to any character that is not in the iunreserved 
-		// production in [RFC3987].
-		StringBuffer sb = new StringBuffer();
-		for(char c : string.toCharArray()) {
-			if(inIUNRESERVED(c)) sb.append(c);
-			else sb.append('%' + Integer.toHexString((int) c).toUpperCase());
-		}
-		return sb.toString();
-	}
-	
-	/**
-	 *	Check whether the characters are part of iunreserved as per
-	 *  https://tools.ietf.org/html/rfc3987#section-2.2
-	 */
-	private static boolean inIUNRESERVED(char c) {
-		if("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~".indexOf(c) != -1) return true;
-		else if (c >= 160 && c <= 55295) return true;
-		else if (c >= 63744 && c <= 64975) return true;
-		else if (c >= 65008 && c <= 65519) return true;
-		else if (c >= 65536 && c <= 131069) return true;
-		else if (c >= 131072 && c <= 196605) return true;
-		else if (c >= 196608 && c <= 262141) return true;
-		else if (c >= 262144 && c <= 327677) return true;
-		else if (c >= 327680 && c <= 393213) return true;
-		else if (c >= 393216 && c <= 458749) return true;
-		else if (c >= 458752 && c <= 524285) return true;
-		else if (c >= 524288 && c <= 589821) return true;
-		else if (c >= 589824 && c <= 655357) return true;
-		else if (c >= 655360 && c <= 720893) return true;
-		else if (c >= 720896 && c <= 786429) return true;
-		else if (c >= 786432 && c <= 851965) return true;
-		else if (c >= 851968 && c <= 917501) return true;
-		else if (c >= 921600 && c <= 983037) return true;
-		return false;
-	}
-
-	/**
-	 * Converts a byte array into a Hex string
-	 * Code based on https://www.programiz.com/java-programming/examples/convert-byte-array-hexadecimal
-	 */
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
-	public static String bytesToHexString(byte[] o) {
-		byte[] bytes = (byte[]) o;
-		char[] hexChars = new char[bytes.length * 2];
+
+    public static String bytesToHexString(byte[] bytes) {
+        if (bytes == null) return null;
+        char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
             hexChars[j * 2] = hexArray[v >>> 4];
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
         return new String(hexChars);
-	}
-	
-	public static boolean isAbsoluteAndValidIRI(String string) {
-		//return isAbsolute(string) && !IRIFactory.iriImplementation().create(string).hasViolation(false);
-		if(isAbsolute(string)) {
-			Iterator<Violation> iter = IRIFactory.iriImplementation().create(string).violations(false);
-			while(iter.hasNext()) {
-				Violation v = iter.next();
-				// TODO: We ignore CAPS in HOST for test cases, but we shouldn't
-				if(v.getViolationCode() == 11);
-				else
-					return false;
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	public static boolean isAbsolute(String string) {
-		return URI.create(string.toLowerCase()).isAbsolute();
-	}
+    }
 
-	public static String downloadFile(String url) {
-		try {
-			String temp = Files.createTempFile(null, ".download.tmp").toString();
-			
-			HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
-			HttpResponse<InputStream> response = HttpClient
-					.newBuilder()
-					.followRedirects(HttpClient.Redirect.ALWAYS)
-					.build()
-					.send(request, HttpResponse.BodyHandlers.ofInputStream());
-			FileOutputStream output = new FileOutputStream(temp);				
-			output.write(response.body().readAllBytes());
-			output.close();
+    public static boolean isValidAndAbsoluteIRI(String string) {
+        return isValidAndAbsolute(string, IRIFactory.iriImplementation());
+    }
 
-			return temp;		
-		} catch(Exception e) {
-			throw new RuntimeException("Problem downloading " + url);
-		}
-	}
+    public static boolean isValidAndAbsoluteURI(String string) {
+        return isValidAndAbsolute(string, IRIFactory.uriImplementation());
+    }
 
-	public static String getDecompressedFile(String file, Resource compression) {
-		try {
-			if(RML.none.equals(compression))
-				return file;
-			
-			String temp = Files.createTempFile(null, ".extracted.tmp").toString();
-			
-			OutputStream out = new FileOutputStream(temp);
-			FileInputStream fin = new FileInputStream(file);
-			InputStream in = null;
+    private static boolean isValidAndAbsolute(String string, IRIFactory factory) {
+        IRI iri = factory.create(string);
+        Iterator<Violation> violations = iri.violations(false);
+        boolean hasViolations = false;
+        while (violations.hasNext()) {
+            Violation violation = violations.next();
+            if (violation.getViolationCode() != ViolationCodes.LOWERCASE_PREFERRED) {
+                hasViolations = true;
+                break;
+            }
+        }
+        return !hasViolations && iri.getScheme() != null && !iri.getScheme().trim().isEmpty();
+    }
 
-			if(RML.zip.equals(compression)) {
-				ZipInputStream a = new ZipInputStream(fin);
-				a.getNextEntry();
-				in = a;
-			} else if(RML.gzip.equals(compression)) {
-				in = new GzipCompressorInputStream(fin);
-			} else if(RML.targz.equals(compression)) {
-				// Suppress warning because we do close it
-				@SuppressWarnings("resource")
-				TarArchiveInputStream a = new TarArchiveInputStream(new GzipCompressorInputStream(fin));
-				a.getNextEntry();
-				in = a;
-			} else if(RML.tarxz.equals(compression)) {
-				// Suppress warning because we do close it
-				@SuppressWarnings("resource")
-				TarArchiveInputStream a = new TarArchiveInputStream(new XZCompressorInputStream(fin));
-				a.getNextEntry();
-				in = a;
-			}
+    public static boolean isAbsoluteAndValidIRI(String string) {
+        return isValidAndAbsoluteIRI(string);
+    }
 
-			IOUtils.copy(in, out);
-			in.close();
-			out.close();
-			
+    public static boolean isAbsoluteAndValidURI(String string) {
+        return isValidAndAbsoluteURI(string);
+    }
+
+    public static boolean isAbsolute(String string) {
+        return URI.create(string.toLowerCase()).isAbsolute();
+    }
+
+    public static String downloadFile(String url) {
+        try {
+            String temp = Files.createTempFile(null, ".download.tmp").toString();
+
+            HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+            HttpResponse<InputStream> response = HttpClient
+                    .newBuilder()
+                    .followRedirects(HttpClient.Redirect.ALWAYS)
+                    .build()
+                    .send(request, HttpResponse.BodyHandlers.ofInputStream());
+            FileOutputStream output = new FileOutputStream(temp);
+            output.write(response.body().readAllBytes());
+            output.close();
+
+            return temp;
+        } catch (Exception e) {
+            throw new RuntimeException("Problem downloading " + url);
+        }
+    }
+
+    public static String getDecompressedFile(String file, Resource compression) {
+        try {
+            if (RML.none.equals(compression))
+                return file;
+
+            String temp = Files.createTempFile(null, ".extracted.tmp").toString();
+
+            OutputStream out = new FileOutputStream(temp);
+            FileInputStream fin = new FileInputStream(file);
+            InputStream in = null;
+
+            if (RML.zip.equals(compression)) {
+                ZipInputStream a = new ZipInputStream(fin);
+                a.getNextEntry();
+                in = a;
+            } else if (RML.gzip.equals(compression)) {
+                in = new GzipCompressorInputStream(fin);
+            } else if (RML.targz.equals(compression)) { // FIXME Ontology specifies targzip not targz.
+                TarArchiveInputStream a = new TarArchiveInputStream(new GzipCompressorInputStream(fin));
+                a.getNextEntry();
+                in = a;
+            } else if (RML.tarxz.equals(compression)) {
+                TarArchiveInputStream a = new TarArchiveInputStream(new XZCompressorInputStream(fin));
+                a.getNextEntry();
+                in = a;
+            } else {
+                throw new BurpException(new RmlError("Compression format not supported " + compression, null, RER.SourceAccessError, null, Map.of(RML.compression, compression, RML.path, file)));
+            }
+
+            IOUtils.copy(in, out);
+            in.close();
+            out.close();
+
             return temp;
 
-		} catch (Exception e) {
-			System.err.println(compression);
-			throw new RuntimeException("Error decompressing file");
-		}
-		
-	}
-	
+        } catch (Exception e) {
+            System.err.println(compression);
+            throw new RuntimeException("Error decompressing file");
+        }
+    }
+
+    private static void writeTarEntry(File file, TarArchiveOutputStream tos, String[] suffixes, Consumer<OutputStream> writeAction) throws IOException {
+        String entryName = file.getName();
+        for (String suffix : suffixes) {
+            if (entryName.endsWith(suffix)) {
+                entryName = entryName.substring(0, entryName.length() - suffix.length());
+            }
+        }
+        TarArchiveEntry entry = new TarArchiveEntry(entryName);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        writeAction.accept(baos);
+        byte[] bytes = baos.toByteArray();
+
+        entry.setSize(bytes.length);
+        tos.putArchiveEntry(entry);
+        tos.write(bytes);
+        tos.closeArchiveEntry();
+    }
+
+    public static void writeCompressedFile(File file, Resource compression, Consumer<OutputStream> writeAction) {
+        try {
+            if (compression == null || RML.none.equals(compression)) {
+                try (FileOutputStream out = new FileOutputStream(file)) {
+                    writeAction.accept(out);
+                }
+                return;
+            }
+
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                if (RML.zip.equals(compression)) {
+                    try (ZipOutputStream zos = new ZipOutputStream(fos)) {
+                        String entryName = file.getName();
+                        if (entryName.endsWith(".zip")) entryName = entryName.substring(0, entryName.length() - 4);
+                        zos.putNextEntry(new ZipEntry(entryName));
+                        writeAction.accept(zos);
+                        zos.closeEntry();
+                    }
+                } else if (RML.gzip.equals(compression)) {
+                    try (GzipCompressorOutputStream gos = new GzipCompressorOutputStream(fos)) {
+                        writeAction.accept(gos);
+                    }
+                } else if (RML.targz.equals(compression)) {
+                    try (GzipCompressorOutputStream gos = new GzipCompressorOutputStream(fos);
+                         TarArchiveOutputStream tos = new TarArchiveOutputStream(gos)) {
+                        writeTarEntry(file, tos, new String[]{".tar.gz", ".tgz"}, writeAction);
+                    }
+                } else if (RML.tarxz.equals(compression)) {
+                    try (XZCompressorOutputStream xos = new XZCompressorOutputStream(fos);
+                         TarArchiveOutputStream tos = new TarArchiveOutputStream(xos)) {
+                        writeTarEntry(file, tos, new String[]{".tar.xz"}, writeAction);
+                    }
+                } else {
+                    throw new RuntimeException("Provided compression " + compression + " not supported.");
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

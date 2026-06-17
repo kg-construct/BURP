@@ -1,0 +1,22 @@
+[submodule "src/test/resources/rdf-tests"]
+	path = src/test/resources/rdf-tests
+	url = https://github.com/w3c/rdf-tests.git
+	branch = main
+[submodule "rml-modules/rml-core"]
+	path = rml-modules/rml-core
+	url = https://github.com/kg-construct/rml-core.git
+[submodule "rml-modules/rml-cc"]
+	path = rml-modules/rml-cc
+	url = https://github.com/kg-construct/rml-cc.git
+[submodule "rml-modules/rml-io"]
+	path = rml-modules/rml-io
+	url = https://github.com/kg-construct/rml-io.git
+[submodule "rml-modules/rml-fnml"]
+	path = rml-modules/rml-fnml
+	url = https://github.com/kg-construct/rml-fnml.git
+[submodule "rml-modules/rml-lv"]
+	path = rml-modules/rml-lv
+	url = https://github.com/kg-construct/rml-lv.git
+[submodule "rml-modules/rml-io-registry"]
+	path = rml-modules/rml-io-registry
+	url = https://github.com/kg-construct/rml-io-registry.git

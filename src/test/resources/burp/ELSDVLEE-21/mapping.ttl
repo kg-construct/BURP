@@ -1,0 +1,58 @@
+@prefix rml: <http://w3id.org/rml/> .
+@prefix dbo: <http://dbpedia.org/ontology/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+<#AuthorMapping>
+    rml:logicalSource <#AuthorsSource> ;
+    rml:subjectMap [
+        rml:template "http://example.com/author/{id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate foaf:name ;
+        rml:objectMap [
+            rml:reference "name"
+        ]
+    ] .
+
+<#BookMapping>
+    rml:logicalSource <#BooksSource> ;
+    rml:subjectMap [
+        rml:template "http://example.com/book/{id}"
+    ] ;
+    rml:predicateObjectMap
+        [
+            rml:predicate dbo:title ;
+            rml:objectMap [
+                rml:reference "title"
+            ]
+        ],
+        [
+            rml:predicate dbo:author ;
+            rml:objectMap [
+                rml:parentTriplesMap <#AuthorMapping> ;
+                rml:joinCondition [
+                    rml:child "author_id" ;
+                    rml:parent "id"
+                ]
+            ]
+        ] .
+
+<#AuthorsSource>
+    a rml:LogicalSource ;
+    rml:source [
+        a rml:RelativePathSource ;
+        rml:root rml:MappingDirectory ;
+        rml:path "authors.json" ;
+    ] ;
+    rml:referenceFormulation rml:JSONPath ;
+    rml:iterator "$[*]" .
+
+<#BooksSource>
+    a rml:LogicalSource ;
+    rml:source [
+        a rml:RelativePathSource ;
+        rml:root rml:MappingDirectory ;
+        rml:path "books.json" ;
+    ] ;
+    rml:referenceFormulation rml:JSONPath ;
+    rml:iterator "$[*]" .

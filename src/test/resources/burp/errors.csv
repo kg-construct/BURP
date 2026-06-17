@@ -1,0 +1,23 @@
+TestCaseId,RerError,ExitCode,Pointer,Line,LineRangeStart,LineRangeEnd
+RMLTC0002e-JSON,SourceAccessError,,"[] rml:path ""student2.json""",10,,
+RMLTC0002g-JSON,ReferenceFormulationSyntaxError,,"[] rml:iterator ""$.students[*]]""",6,,
+RMLTC0004b-JSON,MappingError,,[] rml:termType rml:Literal,21,,
+RMLTC0007h-JSON,MappingError,,[] rml:termType rml:Literal,22,,
+RMLTC0012d-JSON,MappingError,,"[ rml:template ""{$.fname}_{$.lname}_{$.amount}"";
+  rml:termType rml:BlankNode
+],[
+  rml:template ""{$.amount}_{$.fname}_{$.lname}"";
+  rml:termType rml:BlankNode
+]",,27,31
+RMLTC0012c-JSON,MappingError,,,,5,25
+RMLTC0015b-JSON,MappingError,,"[] rml:language ""a-english"";
+[] rml:language ""a-spanish""","15,35",,
+RMLTC0019b-JSON,InvalidIRI,,$.FirstName,20,,
+RMLTC0023a-JSON,ReferenceFormulationSyntaxError,,"[] rml:template ""http://example.com/{{Name}}""",14,,
+RMLTC0023b-JSON,RDFMappingSyntaxError,,,14,,
+RMLTC0023c-JSON,RDFMappingSyntaxError,,,14,,
+RMLTC0023d-JSON,ReferenceFormulationSyntaxError,,"[] rml:template ""http://example.com/{\\\\{Name\\\\}}""",14,,
+RMLTC0023e-JSON,RDFMappingSyntaxError,,"",14,,
+RMLTC0024a-JSON,IncorrectTermType,,"[ rml:constant ""School"";
+  rml:termType rml:BlankNode ]",,21,22
+RMLTC0025b-JSON,ReferenceFormulationExecutionError,,"[] rml:reference ""$.amounts""",16,,

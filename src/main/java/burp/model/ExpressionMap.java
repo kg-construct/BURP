@@ -1,240 +1,340 @@
 package burp.model;
 
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Timestamp;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import org.apache.jena.datatypes.BaseDatatype;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.ResourceFactory;
-
+import burp.model.fnml.FunctionExecution;
+import burp.model.rdf.*;
+import burp.parse.turtleprov.ProvTurtleVisitor;
+import burp.reporting.BurpException;
+import burp.reporting.Origin;
+import burp.reporting.PointRange;
+import burp.reporting.RmlError;
 import burp.util.Util;
+import burp.vocabularies.RER;
+import org.apache.jena.util.URIref;
 
-public abstract class ExpressionMap {
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-	public Expression expression = null;
-	
-	protected List<RDFNode> generateIRIs(Iteration i, String baseIRI) {
-		List<RDFNode> set = new ArrayList<RDFNode>();
-		
-		if(expression instanceof RDFNodeConstant) {
-			// It is assumed to be an IRI, otherwise the shapes
-			// Would have caught the error.
-			set.add(((RDFNodeConstant) expression).constant.asResource());
-			return set;
-		}
-		
-		if(expression instanceof Template) {
-			for(String v : ((Template) expression).values(i, true)) {
-				
-				if(Util.isAbsoluteAndValidIRI(v))
-					set.add(ResourceFactory.createResource(v));
-				else if(Util.isAbsoluteAndValidIRI(baseIRI + v.toString()))
-					set.add(ResourceFactory.createResource(baseIRI + v.toString()));
-				else
-					throw new RuntimeException(baseIRI + " and " + v + " do not constitute a valid IRI");
-				
-			}
-			return set;
-		}
-		
-		if(expression instanceof Reference) {
-			for(Object v : ((Reference) expression).values(i)) {
-				String s = v.toString();
-				
-				if(Util.isAbsoluteAndValidIRI(s))
-					set.add(ResourceFactory.createResource(s));
-				else if(Util.isAbsoluteAndValidIRI(baseIRI + s))
-					set.add(ResourceFactory.createResource(baseIRI + s));
-				else
-					throw new RuntimeException(baseIRI + " and " + s + " do not constitute a valid IRI");
-			}
-			return set;
-		}
-		
-		if(expression instanceof FunctionExecution) {
-			for(Object v : ((FunctionExecution) expression).values(i, baseIRI)) {
-				String s = v.toString();
-				
-				if(Util.isAbsoluteAndValidIRI(s))
-					set.add(ResourceFactory.createResource(s));
-				else if(Util.isAbsoluteAndValidIRI(baseIRI + s))
-					set.add(ResourceFactory.createResource(baseIRI + s));
-				else
-					throw new RuntimeException(baseIRI + " and " + s + " do not constitute a valid IRI");
-			}
-			return set;
-		}
-		
-		throw new RuntimeException("Error generating IRI.");
-	}
+public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
 
-	static private Map<Object, RDFNode> map = new HashMap<Object, RDFNode>();
-	protected List<RDFNode> generateBlankNodes(Iteration i, String baseIRI) {
-		List<RDFNode> set = new ArrayList<RDFNode>();
-		
-		if(expression instanceof RDFNodeConstant) {
-			// It is assumed to be a BN, otherwise the shapes
-			// Would have caught the error.
-			RDFNode n = ((RDFNodeConstant) expression).constant.asResource();
-			set.add(map.computeIfAbsent(n, (x) -> ResourceFactory.createResource()));
-			return set;
-		}
-		
-		if(expression instanceof Template) {
-			for(String v : ((Template) expression).values(i)) {
-				set.add(map.computeIfAbsent(v, (x) -> ResourceFactory.createResource()));
-			}
-			return set;
-		}
-		
-		if(expression instanceof Reference) {
-			for(Object v : ((Reference) expression).values(i)) {
-				set.add(map.computeIfAbsent(v, (x) -> ResourceFactory.createResource()));
-			}
-			return set;
-		}
-		
-		if(expression == null) {
-			// IF NO REFERENCE, TEMPLATE, OR CONSTANT, 
-			// THEN WE GENERATE BLANK NODES (BASED ON THE ITERATION)
-			set.add(ResourceFactory.createResource());
-			return set;
-		}
-		
-		if(expression instanceof FunctionExecution) {
-			for(Object v : ((FunctionExecution) expression).values(i, baseIRI)) {
-				set.add(map.computeIfAbsent(v, (x) -> ResourceFactory.createResource()));
-			}
-			return set;		
-		}
-		
-		throw new RuntimeException("Error generating blank node.");
-	}
-	
-	protected List<RDFNode> generateLiterals(Iteration i, String baseIRI, DatatypeMap dm, LanguageMap lm) {
-		List<RDFNode> set = new ArrayList<RDFNode>();
-		
-		if(expression instanceof RDFNodeConstant) {
-			// It is assumed to be a literal, otherwise the shapes
-			// Would have caught the error.
-			set.add(((RDFNodeConstant) expression).constant);
-			return set;
-		}
-		
-		List<RDFNode> datatypes = dm != null ? dm.generateIRIs(i, baseIRI) : null;
-		List<String> languages = lm != null ? lm.generateStrings(i) : null;
-		
-		if(expression instanceof Template) {
-			for(String v : ((Template) expression).values(i)) {
-				if(languages != null) {
-					for(String l : languages) {
-						set.add(ResourceFactory.createLangLiteral(v, l));
-					}
-				} else if(datatypes != null) {
-					for(RDFNode dt : datatypes) {
-						String dturi = dt.asResource().getURI();
-						set.add(ResourceFactory.createTypedLiteral(v, new BaseDatatype(dturi)));
-					}
-				} else {
-					set.add(createTypedLiteral(v));
-				}
-			}
-			return set;
-		}
-		
-		if(expression instanceof Reference) {
-			for(Object v : ((Reference) expression).values(i)) {
-				if(languages != null) {
-					for(String l : languages) {
-						set.add(ResourceFactory.createLangLiteral(v.toString(), l));
-					}
-				} else if(datatypes != null) {
-					for(RDFNode dt : datatypes) {
-						String dturi = dt.asResource().getURI();
-						set.add(ResourceFactory.createTypedLiteral(v.toString(), new BaseDatatype(dturi)));
-					}
-				} else {
-					set.add(createTypedLiteral(v));
-				}
-			}
-			return set;
-		}
-		
-		if(expression instanceof FunctionExecution) {
-			for(Object v : ((FunctionExecution) expression).values(i, baseIRI)) {
-				if(languages != null) {
-					for(String l : languages) {
-						set.add(ResourceFactory.createLangLiteral(v.toString(), l));
-					}
-				} else if(datatypes != null) {
-					for(RDFNode dt : datatypes) {
-						String dturi = dt.asResource().getURI();
-						set.add(ResourceFactory.createTypedLiteral(v.toString(), new BaseDatatype(dturi)));
-					}
-				} else {
-					set.add(createTypedLiteral(v));
-				}
-			}
-			return set;
-		}
-				
-		throw new RuntimeException("Error generating literal or value.");
-	}
-	
-	private Literal createTypedLiteral(Object o) {
-		if(o instanceof Integer || o instanceof Long)
-			return ResourceFactory.createTypedLiteral(o.toString(), XSDDatatype.XSDinteger);
-		else if(o instanceof Float) {
-			String s = doubleCanonicalMap(Double.valueOf(o.toString()));
-			return ResourceFactory.createTypedLiteral(s, XSDDatatype.XSDdouble);
-		} else if(o instanceof Double) {
-			String s = doubleCanonicalMap(((Double) o));
-			return ResourceFactory.createTypedLiteral(s, XSDDatatype.XSDdouble);
-		} else if(o instanceof Date) {
-			return ResourceFactory.createTypedLiteral(o.toString(), XSDDatatype.XSDdate);
-		} else if(o instanceof Timestamp) {
-			Timestamp t = (Timestamp) o;
-			String s = o.toString().replace(" ", "T");
-			
-			// Ensure canonical xsd:dateTime by removing the ".0" when no fraction
-			if(t.getNanos() == 0)
-				s = s.replace(".0", "");
-			
-			return ResourceFactory.createTypedLiteral(s, XSDDatatype.XSDdateTime);
-		} else if(o instanceof Literal) {
-			return (Literal) o;
-		}
-		
-		return ResourceFactory.createTypedLiteral(o);
-	}
-	
-	private static String doubleCanonicalMap(Double d) {
-		BigDecimal f = BigDecimal.valueOf(d);
-		// The number of digits in the unscaled value
-		int p = f.precision();
-		// We start from two digits 
-		StringBuilder x = new StringBuilder("0.0");
-		// Add the remaining digits to the pattern
-		for (int i = 2; i < p; i++)
-            x.append("#");
-		// Let's not forget the e-notation
-		x.append("E0");
-		
-		NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
-		DecimalFormat formatter = (DecimalFormat) numberFormat;
-		formatter.applyPattern(x.toString());
-		
-		return formatter.format(d);
-	}
-		
+    private Expression expression = null;
+    private Origin expressionOrigin = null;
+    private final Set<LogicalTarget> logicalTargets = new HashSet<>();
+    private PlanNode parent = null;
+
+    private String baseIRI = null;
+
+    public Expression getExpression() {
+        return expression;
+    }
+
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
+
+    public Origin getExpressionOrigin() {
+        return expressionOrigin;
+    }
+
+    public void setExpressionOrigin(Origin expressionOrigin) {
+        this.expressionOrigin = expressionOrigin;
+    }
+
+    @Override
+    public Set<LogicalTarget> getLogicalTargets() {
+        return logicalTargets;
+    }
+
+    @Override
+    public PlanNode getParent() {
+        return parent;
+    }
+
+    @Override
+    public void setParent(PlanNode parent) {
+        this.parent = parent;
+    }
+
+    @Override
+    public Iterable<PlanNode> children() {
+        List<PlanNode> children = new ArrayList<>();
+        if (expression != null) {
+            children.add(expression);
+        }
+        return children;
+    }
+
+    @Override
+    public Iterable<PlanNode> dependencies() {
+        return children();
+    }
+
+    private String getBaseIRI() {
+        if (baseIRI == null) {
+            BaseIRIScope scope = (BaseIRIScope) ancestor(BaseIRIScope.class);
+            if (scope != null) {
+                baseIRI = scope.getBaseIri();
+            }
+        }
+        return baseIRI;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Object> generateValues(Iteration i, TemplateReferenceSafety safe) {
+        switch (expression) {
+            case RDFNodeConstant expr -> {
+                List<Object> list = new ArrayList<>();
+                if (expr.constant != null) {
+                    list.add(expr.constant);
+                }
+                return list;
+            }
+            case Template template -> {
+                return (List<Object>) (List<?>) template.values(i, safe);
+            }
+            case Reference reference -> {
+                return reference.values(i);
+            }
+            case FunctionExecution functionExecution -> {
+                return functionExecution.values(i);
+            }
+            case null, default -> throw new BurpException(
+                    new RmlError(
+                            "Error generating values, expression is not supported.",
+                            expressionOrigin,
+                            RER.UnsupportedMapping
+                    )
+            );
+        }
+    }
+
+    public List<IRITerm> generateUnsafeIRIs(Iteration i) {
+        Set<LogicalTarget> targets = getEffectiveTargets();
+        List<Object> values = generateValues(i, TemplateReferenceSafety.UNSAFE);
+        List<IRITerm> result = new ArrayList<>();
+
+        for (Object it : values) {
+            if (it == null) continue;
+            if (it instanceof IRITerm) {
+                result.add(new IRITerm(((IRITerm) it).uri(), targets));
+            } else {
+                String string;
+                if (it instanceof String) {
+                    string = (String) it;
+                } else if (it instanceof LiteralTerm) {
+                    string = ((LiteralTerm) it).value();
+                } else {
+                    string = it.toString();
+                }
+
+                String encoded = URIref.encode(string);
+                String baseIriVal = getBaseIRI();
+                String baseEncoded = URIref.encode(baseIriVal + string);
+
+                if (Util.isValidAndAbsoluteIRI(encoded)) {
+                    result.add(new IRITerm(string, targets));
+                } else if (Util.isValidAndAbsoluteIRI(baseEncoded)) {
+                    result.add(new IRITerm(baseIriVal + string, targets));
+                } else {
+                    throw new BurpException(
+                            new RmlError(
+                                    baseIriVal + " and " + string + " do not constitute a valid UnsafeIRI",
+                                    expressionOrigin,
+                                    RER.InvalidIRI
+                            )
+                    );
+                }
+            }
+        }
+        return result;
+    }
+
+    public List<IRITerm> generateIRIs(Iteration i) {
+        Set<LogicalTarget> targets = getEffectiveTargets();
+        List<Object> values = generateValues(i, TemplateReferenceSafety.SAFE_IRI);
+        List<IRITerm> result = new ArrayList<>();
+
+        for (Object it : values) {
+            if (it == null) continue;
+            if (it instanceof IRITerm) {
+                result.add(new IRITerm(((IRITerm) it).uri(), targets));
+            } else {
+                String string;
+                if (it instanceof String) {
+                    string = (String) it;
+                } else if (it instanceof LiteralTerm) {
+                    string = ((LiteralTerm) it).value();
+                } else {
+                    string = it.toString();
+                }
+
+                String baseIriVal = getBaseIRI();
+
+                if (Util.isValidAndAbsoluteIRI(string)) {
+                    result.add(new IRITerm(string, targets));
+                } else if (Util.isValidAndAbsoluteIRI(baseIriVal + string)) {
+                    result.add(new IRITerm(baseIriVal + string, targets));
+                } else {
+                    throw new BurpException(
+                            new RmlError(
+                                    baseIriVal + " and " + string + " do not constitute a valid IRI",
+                                    expressionOrigin,
+                                    RER.InvalidIRI
+                            )
+                    );
+                }
+            }
+        }
+        return result;
+    }
+
+    public List<IRITerm> generateURIs(Iteration i) {
+        Set<LogicalTarget> targets = getEffectiveTargets();
+        List<Object> values = generateValues(i, TemplateReferenceSafety.SAFE_URI);
+        List<IRITerm> result = new ArrayList<>();
+
+        for (Object it : values) {
+            if (it == null) continue;
+            if (it instanceof IRITerm) {
+                result.add(new IRITerm(((IRITerm) it).uri(), targets));
+            } else {
+                String string;
+                if (it instanceof String) {
+                    string = (String) it;
+                } else {
+                    string = it.toString();
+                }
+
+                String baseIriVal = getBaseIRI();
+
+                if (Util.isValidAndAbsoluteURI(string)) {
+                    result.add(new IRITerm(string, targets));
+                } else if (Util.isValidAndAbsoluteURI(baseIriVal + string)) {
+                    result.add(new IRITerm(baseIriVal + string, targets));
+                } else {
+                    throw new BurpException(
+                            new RmlError(
+                                    baseIriVal + " and " + string + " do not constitute a valid URI",
+                                    expressionOrigin,
+                                    RER.InvalidURI
+                            )
+                    );
+                }
+            }
+        }
+        return result;
+    }
+
+    protected List<BlankNodeTerm> generateBlankNodes(Iteration i) {
+        Set<LogicalTarget> targets = getEffectiveTargets();
+
+        if (expression instanceof RDFNodeConstant expr) {
+            if (expr.constant instanceof BlankNodeTerm constant) {
+                return Collections.singletonList(new BlankNodeTerm(constant.id(), targets));
+            } else {
+                return Collections.emptyList();
+            }
+        } else if (expression instanceof Template) {
+            return ((Template) expression).values(i, TemplateReferenceSafety.UNSAFE).stream()
+                    .filter(Objects::nonNull)
+                    .map(val -> blankNodeFor(val, targets))
+                    .toList();
+        } else if (expression instanceof Reference) {
+            return ((Reference) expression).values(i).stream()
+                    .filter(Objects::nonNull)
+                    .map(val -> blankNodeFor(val, targets))
+                    .toList();
+        } else if (expression instanceof FunctionExecution) {
+            return ((FunctionExecution) expression).values(i).stream()
+                    .filter(Objects::nonNull)
+                    .map(val -> blankNodeFor(val, targets))
+                    .toList();
+        } else if (expression == null) {
+            return Collections.singletonList(new BlankNodeTerm("bnode-" + (blankNodeIdCounter++), targets));
+        } else {
+            throw new RuntimeException("Error generating blank node.");
+        }
+    }
+
+    private BlankNodeTerm blankNodeFor(Object value, Set<LogicalTarget> targets) {
+        String id = blankNodeMap.computeIfAbsent(value, k -> "bnode-" + (blankNodeIdCounter++));
+        return new BlankNodeTerm(id, targets);
+    }
+
+    private Set<LogicalTarget> intersectTargets(Set<LogicalTarget> t1, Set<LogicalTarget> t2) {
+        if (t1.isEmpty()) return t2;
+        if (t2.isEmpty()) return t1;
+        Set<LogicalTarget> intersection = new HashSet<>(t1);
+        intersection.retainAll(t2);
+        return intersection;
+    }
+
+    protected List<LiteralTerm> generateLiterals(Iteration i, DatatypeMap dm, LanguageMap lm) {
+        List<IRITerm> datatypes = dm != null ? dm.generateIRIs(i) : null;
+        List<LanguageTag> languages = lm != null ? lm.generateLanguageTags(i) : null;
+        Set<LogicalTarget> baseTargets = getEffectiveTargets();
+
+        if (expression instanceof RDFNodeConstant expr) {
+            if (expr.constant instanceof LiteralTerm constant) {
+                return Collections.singletonList(new LiteralTerm(constant.value(), constant.datatype(), constant.language(), baseTargets));
+            } else {
+                return Collections.emptyList();
+            }
+        } else if (expression instanceof Template) {
+            return ((Template) expression).values(i, TemplateReferenceSafety.UNSAFE).stream()
+                    .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
+                    .toList();
+        } else if (expression instanceof Reference) {
+            return ((Reference) expression).values(i).stream()
+                    .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
+                    .toList();
+        } else if (expression instanceof FunctionExecution) {
+            return ((FunctionExecution) expression).values(i).stream()
+                    .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
+                    .toList();
+        } else {
+            throw new RuntimeException("Error generating literal or value.");
+        }
+    }
+
+    private List<LiteralTerm> literalFor(Object value, List<IRITerm> datatypes, List<LanguageTag> languages, Set<LogicalTarget> baseTargets) {
+        if (value == null) {
+            return Collections.emptyList();
+        }
+
+        if (languages != null) {
+            return languages.stream()
+                    .map(langTag -> new LiteralTerm(value.toString(), null, langTag.tag(), intersectTargets(baseTargets, langTag.targets())))
+                    .toList();
+        }
+        if (datatypes != null) {
+            return datatypes.stream()
+                    .map(dt -> {
+                        Term term = Datardf.toTerm(value, dt);
+                        if (term instanceof LiteralTerm lt) {
+                            return new LiteralTerm(lt.value(), lt.datatype(), lt.language(), intersectTargets(baseTargets, dt.targets()));
+                        }
+                        return new LiteralTerm(value.toString(), dt, null, intersectTargets(baseTargets, dt.targets()));
+                    })
+                    .toList();
+        }
+
+        Term term = Datardf.toTerm(value);
+        if (term instanceof LiteralTerm lt) {
+            return List.of(new LiteralTerm(lt.value(), lt.datatype(), lt.language(), baseTargets));
+        } else {
+            return Collections.singletonList(new LiteralTerm(value.toString(), null, null, baseTargets));
+        }
+
+    }
+
+    @Override
+    public List<PointRange> nodeRanges() {
+        if (expressionOrigin == null || expressionOrigin.sourceStatements() == null) {
+            return Collections.emptyList();
+        }
+        return ProvTurtleVisitor.retrieveTurtleLocation(expressionOrigin.sourceStatements());
+    }
+
+    private static long blankNodeIdCounter = 0L;
+    private static final Map<Object, String> blankNodeMap = new ConcurrentHashMap<>();
 }

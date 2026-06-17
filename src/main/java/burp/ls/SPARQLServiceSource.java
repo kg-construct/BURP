@@ -1,51 +1,92 @@
 package burp.ls;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.sparql.exec.http.QueryExecutionHTTP;
-
 import burp.model.Iteration;
 import burp.model.LogicalSource;
+import burp.model.Reference;
+import burp.reporting.BurpException;
+import burp.reporting.Origin;
+import burp.reporting.RmlError;
+import burp.vocabularies.RER;
+import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.sparql.exec.http.QueryExecutionHTTP;
 
-class SPARQLServiceSource extends LogicalSource {
+import java.util.ArrayList;
+import java.util.List;
 
-	private List<Iteration> iterations = null;
-	private boolean isTSV;
+public class SPARQLServiceSource extends LogicalSource {
+    private final boolean isTSV;
+    private Resource referenceFormulation;
+    private List<Iteration> iterations;
 
-	public String iterator;
-	public String endpoint;
+    public String iterator;
+    public Origin iteratorOrigin;
+    public String endpoint;
 
-	public SPARQLServiceSource(boolean isTSV) {
-		this.isTSV = isTSV;
-	}
+    public SPARQLServiceSource(boolean isTSV, Resource referenceFormulation) {
+        this.isTSV = isTSV;
+        this.referenceFormulation = referenceFormulation;
+    }
 
-	@Override
-	public Iterator<Iteration> iterator() {
-		try {
-			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+    @Override
+    public Resource getReferenceFormulation() {
+        return referenceFormulation;
+    }
 
-				QueryExecution exec = QueryExecutionHTTP.service(endpoint).query(iterator).build();
-				ResultSet results = exec.execSelect();
+    @Override
+    public Iterable<Iteration> iterator() {
+        try {
+            if (iterations == null) {
+                iterations = new ArrayList<>();
 
-				while (results.hasNext()) {
-					QuerySolution sol = results.next();
+                QueryExecution exec = QueryExecutionHTTP.service(endpoint).query(iterator).build();
+                ResultSet results = exec.execSelect();
 
-					if (isTSV)
-						iterations.add(new SPARQLTSVIteratation(sol, nulls));
-					else
-						iterations.add(new SPARQLIteratation(sol, nulls));
-				}
-			}
-			return iterations.iterator();
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
+                while (results.hasNext()) {
+                    QuerySolution sol = results.next();
 
+                    if (isTSV) {
+                        iterations.add(new SPARQLTSVIteration(sol, getNulls()));
+                    } else {
+                        iterations.add(new SPARQLIteration(sol, getNulls()));
+                    }
+                }
+            }
+            return iterations;
+        } catch (QueryParseException e) {
+            throw new BurpException(
+                new RmlError(
+                    "SPARQL Query Parse Error in " + iterator,
+                    iteratorOrigin,
+                    RER.ReferenceFormulationSyntaxError,
+                    e
+                )
+            );
+        } catch (QueryException e) {
+            throw new BurpException(
+                new RmlError(
+                    "SPARQL Query Error",
+                    iteratorOrigin,
+                    RER.ReferenceFormulationExecutionError,
+                    e
+                )
+            );
+        } catch (Exception e) {
+            throw new BurpException(
+                new RmlError(
+                    "SPARQL Source Unexpected Error",
+                    iteratorOrigin,
+                    RER.LogicalSourceError,
+                    e
+                )
+            );
+        }
+    }
+
+    @Override
+    public Reference buildExportedReference(String reference, Origin origin) {
+        if (isTSV) return new SPARQLTSVReference(reference, origin);
+        boolean isCSV = burp.vocabularies.RML.SPARQL_Results_CSV.equals(referenceFormulation);
+        return new SPARQLReference(reference, origin, isCSV);
+    }
 }

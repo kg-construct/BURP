@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-cc/ontology" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-cc/shapes" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-core/ontology" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-core/shapes" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-fnml/ontology" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-fnml/shapes" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-io/ontology" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-io/shapes" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-lv/ontology" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rml-modules/rml-lv/shapes" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>

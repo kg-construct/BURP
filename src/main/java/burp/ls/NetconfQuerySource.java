@@ -3,21 +3,13 @@
 
 package burp.ls;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
+import burp.model.Iteration;
+import burp.model.LogicalSource;
+import burp.model.Reference;
+import burp.reporting.Origin;
+import burp.util.SimpleNamespaceContext;
+import burp.vocabularies.YS;
+import com.tailf.jnc.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
@@ -27,21 +19,25 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.tailf.jnc.Element;
-import com.tailf.jnc.JNCException;
-import com.tailf.jnc.NetconfSession;
-import com.tailf.jnc.Prefix;
-import com.tailf.jnc.PrefixMap;
-import com.tailf.jnc.SSHConnection;
-import com.tailf.jnc.SSHSession;
-import com.tailf.jnc.XMLParser;
-
-import burp.model.Iteration;
-import burp.model.LogicalSource;
-import burp.util.SimpleNamespaceContext;
-import burp.vocabularies.YS;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class NetconfQuerySource extends LogicalSource {
+
+    @Override
+    public Reference buildExportedReference(String reference, Origin origin) {
+        return null;
+    }
 
 	public String endpoint;
 	public String password;
@@ -49,13 +45,15 @@ class NetconfQuerySource extends LogicalSource {
 	public Resource datastoreType;
 	public Resource filter;
 
-	public String rmlIterator;
 	public HashMap<String, String> rmlPrefixMap;
+    public String iterator;
+    public Resource referenceFormulation;
+    public Resource getReferenceFormulation() { return referenceFormulation; }
 
-	protected List<Iteration> iterations = null;
+    protected List<Iteration> iterations = null;
 	public Charset encoding = StandardCharsets.UTF_8;
 
-	private Map<Resource, Integer> datastoreMap = Map.ofEntries(
+	private final Map<Resource, Integer> datastoreMap = Map.ofEntries(
 	  	Map.entry(YS.CandidateDatastore, NetconfSession.CANDIDATE),
 	  	Map.entry(YS.StartupDatastore, NetconfSession.STARTUP),
 		Map.entry(YS.RunningDatastore, NetconfSession.RUNNING)
@@ -63,7 +61,7 @@ class NetconfQuerySource extends LogicalSource {
 	private PrefixMap netconfPrefixMap;
 
 	@Override
-	public Iterator<Iteration> iterator() {
+	public Iterable<Iteration> iterator() {
 		//Element.setDebugLevel(2); # Helpful for debugging
 		SSHConnection c = new SSHConnection();
 		String contents = null;
@@ -78,7 +76,7 @@ class NetconfQuerySource extends LogicalSource {
 			if (filter.hasProperty(RDF.type, YS.XPathFilter)) {
 				// Set map of namespaces for XPath iteration
 				StmtIterator properties = filter.listProperties(YS.namespace);
-				HashMap<String, String> prefixMap = new HashMap<String, String>();
+				HashMap<String, String> prefixMap = new HashMap<>();
 				while (properties.hasNext()) {
 					Statement statement = properties.next();
 					Resource namespace = statement.getResource();
@@ -122,16 +120,14 @@ class NetconfQuerySource extends LogicalSource {
 				}
 			}
 			c.close();
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
-		} catch (JNCException ex) {
+		} catch (IOException | JNCException ex) {
 			throw new RuntimeException(ex);
 		}
 
-		// XML data fetched from YANG server. Now iterate.
+        // XML data fetched from YANG server. Now iterate.
 		try {
 			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+				iterations = new ArrayList<>();
 
 				DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 				if (rmlPrefixMap != null) {
@@ -147,14 +143,14 @@ class NetconfQuerySource extends LogicalSource {
 					xPath.setNamespaceContext(namespaces);
 				}
 
-				NodeList nodes = (NodeList) xPath.compile(rmlIterator).evaluate(xmlDocument, XPathConstants.NODESET);
+				NodeList nodes = (NodeList) xPath.compile(iterator).evaluate(xmlDocument, XPathConstants.NODESET);
 
 				for (int i = 0; i < nodes.getLength(); i++) {
 					Node node = nodes.item(i);
-					iterations.add(new XMLIteration(node, nulls, rmlPrefixMap));
+					throw new RuntimeException("XMLIteration with DOM Node is not supported here.");
 				}
 			}
-			return iterations.iterator();
+			return iterations;
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}

@@ -1,15 +1,14 @@
 package burp.util;
 
+import javax.xml.namespace.NamespaceContext;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.xml.namespace.NamespaceContext;
-
 // Kudos to https://stackoverflow.com/a/6392700
 public class SimpleNamespaceContext implements NamespaceContext {
 
-    private final Map<String, String> PREF_MAP = new HashMap<String, String>();
+    private final Map<String, String> PREF_MAP = new HashMap<>();
 
     public SimpleNamespaceContext(final Map<String, String> prefMap) {
         PREF_MAP.putAll(prefMap);
@@ -23,7 +22,7 @@ public class SimpleNamespaceContext implements NamespaceContext {
         throw new UnsupportedOperationException();
     }
 
-    public Iterator getPrefixes(String uri) {
+    public Iterator<String> getPrefixes(String uri) {
         throw new UnsupportedOperationException();
     }
 

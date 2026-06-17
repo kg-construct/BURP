@@ -1,103 +1,83 @@
 package burp.ls;
 
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import burp.model.Iteration;
+import burp.model.Reference;
+import burp.reporting.BurpException;
+import burp.reporting.Origin;
+import burp.reporting.RmlError;
+import burp.vocabularies.RER;
+import burp.vocabularies.RML;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import org.apache.commons.io.input.BOMInputStream;
+import org.apache.jena.rdf.model.Resource;
 
-import burp.model.Iteration;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
-class CSVSource extends FileBasedLogicalSource {
+public class CSVSource extends FileBasedLogicalSource {
+    public char delimiter = ',';
+    public boolean firstLineIsHeader = true;
 
-	public char delimiter = ',';
-	public Boolean firstLineIsHeader = true;
+    @Override
+    public Iterable<Iteration> iterator() {
+        try {
+            if (iterations == null) {
+                iterations = new ArrayList<>();
 
-	@Override
-	public Iterator<Iteration> iterator() {
-		try {
-			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+                FileInputStream fileReader = new FileInputStream(getDecompressedFile());
+                BOMInputStream bomStream = BOMInputStream.builder().setInputStream(fileReader).get();
+                InputStreamReader reader = new InputStreamReader(bomStream, encoding);
 
-				FileReader fr = new FileReader(getDecompressedFile(), encoding);
-				
-				CSVReader reader = new CSVReaderBuilder(fr)
-			    .withCSVParser(new CSVParserBuilder()
-			        .withSeparator(delimiter)
-			        .build()
-			    ).build();
-				
-				
-				List<String[]> all = reader.readAll();
-				reader.close();
+                CSVReader csvReader = new CSVReaderBuilder(reader)
+                        .withCSVParser(
+                                new CSVParserBuilder()
+                                        .withSeparator(delimiter)
+                                        .build()
+                        ).build();
 
-				String[] header = null;
-				
-				// IF THE FIRST LINE IS THE HEADER, REMOVE THE FIRST FROM CSV
-				// OTHERWISE, CREATE A LIST OF NUMBERED COLUMNS STARTING FROM ONE
-				if(firstLineIsHeader)
-					header = all.remove(0);
-				else {
-					int n = all.get(0).length;
-					header = new String[n];
-					for(int i = 0; i < n; i++)
-						header[i] = Integer.toString(i + 1);
-				}
-				
-				for (String[] rec : all) {
-					iterations.add(new CSVIteration(header, rec, nulls));
-				}
-			}
-			return iterations.iterator();
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
+                List<String[]> all = csvReader.readAll();
+                csvReader.close();
 
-}
+                if (all.isEmpty()) {
+                    return iterations;
+                }
 
-class CSVIteration extends Iteration {
+                // IF THE FIRST LINE IS THE HEADER, REMOVE THE FIRST FROM CSV
+                // OTHERWISE, CREATE A LIST OF NUMBERED COLUMNS STARTING FROM ONE
+                String[] header;
+                if (firstLineIsHeader) {
+                    header = all.removeFirst();
+                } else {
+                    int columnCount = all.getFirst().length;
+                    header = new String[columnCount];
+                    for (int i = 0; i < columnCount; i++) {
+                        header[i] = String.valueOf(i + 1);
+                    }
+                }
 
-	private Map<String, String> map = new HashMap<String, String>();
-	
-	protected CSVIteration(String[] header, String[] rec, Set<Object> nulls) {
-		super(nulls);
+                for (String[] rec : all) {
+                    iterations.add(new CSVIteration(header, rec, nulls));
+                }
+            }
+            return iterations;
+        } catch (BurpException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BurpException(new RmlError(e.getMessage(), new Origin(this, null), RER.Error, e));
+        }
+    }
 
-		for(int i = 0; i < header.length; i++) {
-			map.put(header[i], rec[i]);
-		}
-	}
+    @Override
+    public Resource getReferenceFormulation() {
+        return RML.CSV;
+    }
 
-	@Override
-	public List<Object> getValuesFor(String reference) {
-		List<Object> l = new ArrayList<Object>();
-		if(!map.containsKey(reference))
-			throw new RuntimeException("Attribute " + reference + " does not exist.");
-		
-		String o = map.get(reference);
-		if(!nulls.contains(o))
-			l.add(o);
-		
-		return l;
-	}
-
-	@Override
-	public List<String> getStringsFor(String reference) {
-		List<String> l = new ArrayList<String>();
-		if(!map.containsKey(reference))
-			throw new RuntimeException("Attribute " + reference + " does not exist.");
-		
-		String o = map.get(reference);
-		if(!nulls.contains(o))
-			l.add(o);
-		
-		return l;
-	}
-	
+    @Override
+    public Reference buildExportedReference(String reference, Origin origin) {
+        return new CSVReference(reference, origin);
+    }
 }

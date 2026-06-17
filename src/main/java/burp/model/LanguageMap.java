@@ -1,39 +1,47 @@
 package burp.model;
 
-import java.util.ArrayList;
+
+import burp.model.rdf.LiteralTerm;
+import burp.reporting.BurpException;
+import burp.reporting.RmlError;
+import burp.vocabularies.RER;
+import org.apache.jena.langtagx.LangTagX;
+
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class LanguageMap extends ExpressionMap {
 
-	public List<String> generateStrings(Iteration i) {
-		List<String> set = new ArrayList<String>();
-		
-		if(expression instanceof RDFNodeConstant) {
-			// It is assumed to be a string, otherwise the shapes
-			// Would have caught the error.
-			set.add(((RDFNodeConstant) expression).constant.toString());
-		}
-		else if(expression instanceof Template) {
-			set.addAll(((Template) expression).values(i));
-		}
-		else if(expression instanceof Reference) {
-			for(Object o : ((Reference) expression).values(i))
-				set.add(o.toString());
-		}
-		
-		set.forEach((l) -> {
-			if(!isValidLanguageCode(l))
-				throw new RuntimeException("Invalid language code: " + l);
-		});
-		
-		return set;
-	}
+    /**
+     * Generate valid Language Tags according to RFC 5646
+     */
+    public List<LanguageTag> generateLanguageTags(Iteration i) {
+        Set<LogicalTarget> targets = getEffectiveTargets();
+        return generateValues(i, TemplateReferenceSafety.UNSAFE)
+                .stream()
+                .filter(Objects::nonNull)
+                .map(it -> {
+                    String string;
+                    if (it instanceof LiteralTerm literalTerm) {
+                        string = literalTerm.value();
+                    } else {
+                        string = it.toString();
+                    }
 
-	// Source of REGEX based on, but reduced: https://www.regextester.com/103066
-	private static Pattern p = Pattern.compile("^(((?:([A-Za-z]{2,3}(-(?:[A-Za-z]{3}(-[A-Za-z]{3}){0,2}))?))(-(?:[A-Za-z]{4}))?(-(?:[A-Za-z]{2}|[0-9]{3}))?(-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(-(?:[0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+))*(-(?:x(-[A-Za-z0-9]{1,8})+))?)|(?:x(-[A-Za-z0-9]{1,8})+))$");
-	private boolean isValidLanguageCode(String lang) {
-		return p.matcher(lang).find();
-	}
-
+                    if (LangTagX.checkLanguageTag(string)) {
+                        return new LanguageTag(string, targets);
+                    } else {
+                        throw new BurpException(
+                                new RmlError(
+                                        "Invalid language code: " + it,
+                                        getExpressionOrigin(),
+                                        RER.InvalidLanguageTagError
+                                )
+                        );
+                    }
+                })
+                .collect(Collectors.toList());
+    }
 }

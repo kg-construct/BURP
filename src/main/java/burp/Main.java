@@ -1,301 +1,288 @@
 package burp;
 
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
+import burp.model.*;
+import burp.model.rdf.*;
+import burp.parse.Parse;
+import burp.parse.PlanWiring;
+import burp.reporting.*;
+import burp.util.BURPConfiguration;
+import burp.util.Util;
+import burp.vocabularies.RER;
+import burp.vocabularies.RML;
+import org.apache.jena.datatypes.BaseDatatype;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
-import org.apache.jena.rdf.model.Container;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFList;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.util.ResourceUtils;
-import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.riot.RDFLanguages;
+import org.jspecify.annotations.NonNull;
+import picocli.CommandLine;
 
-import burp.model.GraphMap;
-import burp.model.Iteration;
-import burp.model.ObjectMap;
-import burp.model.PredicateMap;
-import burp.model.PredicateObjectMap;
-import burp.model.ReferencingObjectMap;
-import burp.model.SubjectMap;
-import burp.model.TriplesMap;
-import burp.model.gathermaputil.SubGraph;
-import burp.parse.Parse;
-import burp.util.BURPConfiguration;
-import burp.vocabularies.RML;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class Main {
 
-	private static List<RDFNode> def = List.of(RML.defaultGraph);
+    public static void main(String[] args) {
+        Path cwd = Paths.get("").toAbsolutePath();
+        int exit = doMain(args, cwd);
+        System.out.println("System exiting with code: " + exit);
+        System.exit(exit);
+    }
 
-	public static void main(String[] args) {
-		int exit = doMain(args);
-		System.out.println("System exiting with code: " + exit);
-		System.exit(exit);
-	}
+    public static int doMain(String[] args, Path currentWorkingDirectory) {
+        BURPConfiguration conf = new BURPConfiguration();
+        CommandLine cmd = new CommandLine(conf);
+        try {
+            cmd.parseArgs(args);
+            if (cmd.isUsageHelpRequested()) {
+                cmd.usage(System.out);
+                return 0;
+            } else if (cmd.isVersionHelpRequested()) {
+                cmd.printVersionHelp(System.out);
+                return 0;
+            }
+        } catch (CommandLine.ParameterException ex) {
+            System.err.println(ex.getMessage());
+            ex.getCommandLine().usage(System.err);
+            return 1;
+        }
 
-	public static int doMain(String[] args) {
-		try {
-			// Process the configuration file
-			BURPConfiguration conf = new BURPConfiguration(args);
+        return doMain(
+                conf.mappingFile,
+                conf.outputFile,
+                conf.getOutputFormat(),
+                conf.reportFile,
+                conf.baseIRI,
+                currentWorkingDirectory
+        );
+    }
 
-			// Parse the mapping file
-			List<TriplesMap> triplesmaps = Parse.parseMappingFile(conf.mappingFile);
+    public static RmlExecutionReport report;
+    public static String baseIRI;
+    public static Path mappingFile;
 
-			Dataset ds = generate(triplesmaps, conf.baseIRI);
+    public static int doMain(
+            String mappingFilePath,
+            String outputFilePath,
+            Lang outputFormat,
+            String reportFilePath,
+            String baseIRIValue,
+            Path currentWorkingDirectory
+    ) {
+        report = new RmlExecutionReport();
+        baseIRI = baseIRIValue;
+        mappingFile = Path.of(mappingFilePath);
 
-			if (conf.outputFile != null)
-				RDFDataMgr.write(new FileOutputStream(conf.outputFile), ds, Lang.NQ);
-			else
-				RDFDataMgr.write(System.out, ds, Lang.NQ);
+        try {
+            Parse parser = new Parse();
+            List<TriplesMap> triplesMaps;
+            try {
+                triplesMaps = parser.parseMappingFile(mappingFile, currentWorkingDirectory);
+            } catch (BurpException burpException) {
+                throw burpException;
+            } catch (Exception e) {
+                throw new BurpException(new RmlError(
+                        "Unknown Error while Parsing " + mappingFilePath,
+                        new Origin(),
+                        RER.RDFMappingSyntaxError,
+                        e
+                ));
+            }
+            if (triplesMaps.isEmpty()) {
+                report.getErrors().add(Errors.NoTriplesMap());
+            }
 
-			// It all went well, thus return 0
-			return 0;
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.err.println(e.getMessage());
-			return 1;
-		}
-	}
+            // Wire AST tree
+            MappingDocument document = new MappingDocument(triplesMaps);
+            PlanWiring.wire(document);
+            report.setExecutionPlan(document);
 
-	private static Dataset generate(List<TriplesMap> triplesmaps, String baseIRI) {
-		Dataset ds = DatasetFactory.create();
+            Map<TriplesMap, Long> statementsPerMap = new HashMap<>();
+            for (TriplesMap map : triplesMaps) {
+                statementsPerMap.put(map, map.countGeneratedStatements);
+            }
+            report.getStatistics().setGeneratedStatementPerTriplesMap(statementsPerMap);
 
-		// Execute the triples maps
-		for (TriplesMap tm : triplesmaps) {
-			// Let sm be the subject map of the triples map
-			SubjectMap sm = tm.subjectMap;
+            List<RdfStatement> statements = document.generate();
 
-			// Let sgm be the set of graph maps of subject maps
-			List<GraphMap> sgm = sm.graphMaps;
+            statementsPerMap = new HashMap<>();
+            for (TriplesMap map : triplesMaps) {
+                statementsPerMap.put(map, map.countGeneratedStatements);
+            }
+            report.getStatistics().setGeneratedStatementPerTriplesMap(statementsPerMap);
 
-			// For each iteration i in iterations, apply the following steps:
-			Iterator<Iteration> iter = tm.logicalSource.iterator();
-			while (iter.hasNext()) {
-				Iteration i = iter.next();
+            List<RdfStatement> defaultStatements = new ArrayList<>();
+            Map<LogicalTarget, List<RdfStatement>> statementsByTarget = new HashMap<>();
 
-				// Let sgs be the set of the generated RDF terms
-				// that result from applying each term map in sgm to i
-				List<RDFNode> sgs = sgm.isEmpty() ? def : new ArrayList<RDFNode>();
-				for (GraphMap gm : sgm) {
-					sgs.addAll(gm.generateTerms(i, baseIRI));
-				}
+            for (RdfStatement stmtLike : statements) {
+                if (stmtLike == null) continue;
+                if (stmtLike.targets() == null || stmtLike.targets().isEmpty()) {
+                    defaultStatements.add(stmtLike);
+                } else {
+                    for (LogicalTarget target : stmtLike.targets()) {
+                        statementsByTarget.computeIfAbsent(target, k -> new ArrayList<>()).add(stmtLike);
+                    }
+                }
+            }
 
-				// Let subjects be the generated RDF terms that result from applying sm to i
-				List<RDFNode> subjects = new ArrayList<RDFNode>();
+            // Write default statements if there are any, or if we have an explicit output file (to create an empty file if needed)
+            if (!defaultStatements.isEmpty() || outputFilePath != null) {
+                Lang lang = outputFormat != null ? outputFormat :
+                        (outputFilePath != null ? RDFLanguages.pathnameToLang(outputFilePath) : null);
+                if (lang == null) lang = Lang.NQ;
 
-				if (!sm.isGatherMap()) {
-					subjects.addAll(sm.generateTerms(i, baseIRI));
-				} else {
-					for (SubGraph subgraph : sm.generateGatherMapGraphs(i, baseIRI)) {
-						subjects.add(subgraph.node);
-						addToGraphs(ds, sgs, subgraph);
-					}
-				}
+                if (outputFilePath != null) {
+                    try (FileOutputStream output = new FileOutputStream(outputFilePath)) {
+                        writeStatements(output, defaultStatements, lang, StandardCharsets.UTF_8);
+                    }
+                } else {
+                    writeStatements(System.out, defaultStatements, lang, StandardCharsets.UTF_8);
+                }
+            }
 
-				// For each subject in subjects and each class in classes,
-				// add triples to the output dataset as follows:
-				// subject: subject
-				// predicate: rdf:type
-				// object: class
-				// target graphs: If sgm is empty: rr:defaultgraph; otherwise: subject_graphs
+            // Write target statements
+            for (var entry : statementsByTarget.entrySet()) {
+                LogicalTarget target = entry.getKey();
+                List<RdfStatement> stmts = entry.getValue();
+                RMLTarget t = target.getTarget();
+                if (t instanceof FilePathTarget fpt) {
+                    File resolvedPath;
+                    if (RML.MappingDirectory.equals(fpt.getRoot())) {
+                        resolvedPath = mappingFile.getParent().resolve(fpt.getPath()).toFile();
+                    } else {
+                        resolvedPath = currentWorkingDirectory.resolve(fpt.getPath()).toFile();
+                    }
 
-				storeTriplesOfSubjectMaps(ds, sm.classes, subjects, sgs);
+                    Lang targetLang = null;
+                    if (target.getSerialization() != null)
+                        targetLang = getTargetLang(target.getSerialization(), resolvedPath);
+                    if (targetLang == null) targetLang = RDFLanguages.pathnameToLang(resolvedPath.getName());
+                    if (targetLang == null) targetLang = Lang.NQ;
 
-				// For each predicate-object map of the triples map, apply the following steps:
-				// Let predicates be the set of generated RDF terms that result
-				// from applying each of the predicate-object map's predicate maps to i
-				// Let objects be the set of generated RDF terms that result from applying each
-				// of the predicate-object map's object maps (but not referencing object maps)
-				// to i
-				// Let pogm be the set of graph maps of the predicate-object map
-				// Let pogs be the set of generated RDF terms that result from applying each
-				// graph map in pogm to i
-				// For each possible combination <s, p, o> in subjects X predicates X objects,
-				// add triples to the output dataset as follows:
-				// s: subject
-				// p: predicate
-				// o: object
-				// Target graphs: If sgm and pogm are empty: rr:defaultGraph; otherwise:
-				// union of subject_graphs and predicate-object_graphs
+                    Charset targetEncoding = StandardCharsets.UTF_8;
+                    if (target.getEncoding() != null)
+                        targetEncoding = getStandardCharsets(target.getEncoding());
 
-				for (PredicateObjectMap pom : tm.predicateObjectMaps) {
-					List<RDFNode> pogs = new ArrayList<RDFNode>();
-					for (GraphMap gm : pom.graphMaps) {
-						pogs.addAll(gm.generateTerms(i, baseIRI));
-					}
+                    if (resolvedPath.getParentFile() != null)
+                        resolvedPath.getParentFile().mkdirs();
 
-					List<RDFNode> graphs = def;
-					// If sgm and pogm are empty: rr:defaultGraph (see line above)
-					if (!sgm.isEmpty() || !pogs.isEmpty()) {
-						// otherwise: union of subject_graphs and predicate-object_graphs
-						// we do an additional test as sgs contains rml:defaultGraph if sgm is empty
-						// we do not want to include that
-						pogs.addAll(!sgm.isEmpty() ? sgs : new ArrayList<>());
-						graphs = pogs;
-					}
+                    final Lang finalLang = targetLang;
+                    final Charset finalEncoding = targetEncoding;
+                    Util.writeCompressedFile(resolvedPath, target.getCompression(), output -> writeStatements(output, stmts, finalLang, finalEncoding));
+                }
+            }
+        } catch (BurpException e) {
+            report.getErrors().add(e.getError());
+        } catch (Exception e) {
+            report.getErrors().add(Errors.UnexpectedError(e));
+        } finally {
+            System.out.print(PlainTextReportGenerator.generateTextReport(report));
+            if (reportFilePath != null && !reportFilePath.isBlank()) {
+                RdfReportGenerator.generateRdfReport(report, reportFilePath);
+            }
+        }
 
-					List<RDFNode> predicates = new ArrayList<RDFNode>();
-					for (PredicateMap pm : pom.predicateMaps) {
-						predicates.addAll(pm.generateTerms(i, baseIRI));
-					}
+        return report.getErrors().isEmpty() ? 0 : 1;
+    }
 
-					List<RDFNode> objects = new ArrayList<RDFNode>();
+    private static Lang getTargetLang(Resource targetSerialization, File resolvedPath) {
+        return switch (targetSerialization.getURI()) {
+            case "http://www.w3.org/ns/formats/N-Quads" -> Lang.NQ;
+            case "http://www.w3.org/ns/formats/N-Triples" -> Lang.NT;
+            case "http://www.w3.org/ns/formats/Turtle" -> Lang.TURTLE;
+            case "http://www.w3.org/ns/formats/JSON-LD" -> Lang.JSONLD;
+            case "http://www.w3.org/ns/formats/RDF_XML" -> Lang.RDFXML;
+            case "http://www.w3.org/ns/formats/RDF_JSON" -> Lang.RDFJSON;
+            case "http://www.w3.org/ns/formats/TriG" -> Lang.TRIG;
+            default -> RDFLanguages.pathnameToLang(resolvedPath.getName());
+        };
+    }
 
-					for (ObjectMap om : pom.objectMaps) {
-						if (!om.isGatherMap()) {
-							objects.addAll(om.generateTerms(i, baseIRI));
-						} else {
-							for (SubGraph subgraph : om.generateGatherMapGraphs(i, baseIRI)) {
-								objects.add(subgraph.node);
-								addToGraphs(ds, graphs, subgraph);
-							}
-						}
-					}
+    private static @NonNull Charset getStandardCharsets(Resource encoding) {
+        if (encoding.equals(RML.UTF8)) return StandardCharsets.UTF_8;
+        else if (encoding.equals(RML.UTF16)) return StandardCharsets.UTF_16;
+        return StandardCharsets.UTF_8;
+    }
 
-					for (ReferencingObjectMap rom : pom.refObjectMaps) {
-						objects.addAll(rom.generateTerms(i, baseIRI));
-					}
+    private static void writeStatements(OutputStream output, List<RdfStatement> statements, Lang lang, Charset encoding) {
+        if (lang == Lang.NQ || lang == Lang.NT) {
+            NQuadsWriter.write(output, statements, encoding);
+            report.getStatistics().setGeneratedStatements((long) statements.size());
+            return;
+        }
 
-					storetriples(ds, subjects, predicates, objects, graphs);
-				}
+        Dataset ds = generateDataset(statements);
+        if (RDFLanguages.isQuads(lang)) {
+            RDFDataMgr.write(output, ds, lang);
+        } else {
+            RDFDataMgr.write(output, ds.getDefaultModel(), lang);
+        }
+    }
 
-			}
+    private static Dataset generateDataset(List<RdfStatement> statements) {
+        Dataset ds = DatasetFactory.create();
 
-		}
+        Map<String, Resource> bnodeMap = new HashMap<>();
 
-		removeJunk(ds);
+        for (RdfStatement stmt : statements) {
+            IRITerm graph = stmt.getGraph();
+            Model model;
+            if (graph == null || RML.defaultGraph.getURI().equals(graph.uri())) {
+                model = ds.getDefaultModel();
+            } else {
+                model = ds.getNamedModel(graph.uri());
+            }
 
-		return ds;
-	}
+            BlankNodeOrIRI sub = stmt.getSubject();
+            Resource s;
+            if (sub instanceof IRITerm) {
+                s = ResourceFactory.createResource(((IRITerm) sub).uri());
+            } else if (sub instanceof BlankNodeTerm) {
+                String id = ((BlankNodeTerm) sub).id();
+                s = bnodeMap.computeIfAbsent(id, k -> ResourceFactory.createResource());
+            } else {
+                throw new RuntimeException("Subject must be URI or BlankNode");
+            }
 
-	private static void removeJunk(Dataset ds) {
-		removeJunk(ds.getDefaultModel());
-		Iterator<Resource> iter = ds.listModelNames();
-		while (iter.hasNext())
-			removeJunk(ds.getNamedModel(iter.next()));
-	}
+            Property p = ResourceFactory.createProperty(stmt.getPredicate().uri());
 
-	private static void removeJunk(Model model) {
-		StmtIterator s = model.listStatements(null, RDF.type, RML.list);
-		while (s.hasNext()) {
-			Statement statement = s.next();
-			s.remove();
+            Term obj = stmt.getObject();
+            RDFNode o;
+            switch (obj) {
+                case IRITerm iriTerm -> o = ResourceFactory.createResource(iriTerm.uri());
+                case BlankNodeTerm blankNodeTerm -> {
+                    String id = blankNodeTerm.id();
+                    o = bnodeMap.computeIfAbsent(id, k -> ResourceFactory.createResource());
+                }
+                case LiteralTerm lit -> {
+                    if (lit.language() != null) {
+                        o = ResourceFactory.createLangLiteral(lit.value(), lit.language());
+                    } else if (lit.datatype() != null) {
+                        o = ResourceFactory.createTypedLiteral(lit.value(), new BaseDatatype(lit.datatype().uri()));
+                    } else {
+                        o = ResourceFactory.createTypedLiteral(lit.value());
+                    }
+                }
+                case null, default -> throw new RuntimeException("Unsupported object term " + obj);
+            }
+            model.add(s, p, o);
+        }
 
-			Resource l = statement.getSubject();
-			if (!l.hasProperty(RDF.first)) {
-				ResourceUtils.renameResource(l, RDF.nil.toString());
-			}
-		}
-	}
+        long count = ds.getDefaultModel().size();
+        Iterator<String> names = ds.listNames();
+        while (names.hasNext()) {
+            count += ds.getNamedModel(names.next()).size();
+        }
+        report.getStatistics().setGeneratedStatements(count);
 
-	private static void storetriples(Dataset ds, List<RDFNode> subjects, List<RDFNode> predicates,
-			List<RDFNode> objects, List<RDFNode> graphs) {
-
-		for (RDFNode s : subjects) {
-			Resource sr = s.asResource();
-			for (RDFNode p : predicates) {
-				Property pp = ResourceFactory.createProperty(p.asResource().getURI());
-				for (RDFNode o : objects)
-					for (RDFNode g : graphs)
-						getModel(ds, g).add(sr, pp, o);
-			}
-		}
-	}
-
-	private static void storeTriplesOfSubjectMaps(Dataset ds, List<Resource> classes, List<RDFNode> subjects,
-			List<RDFNode> graphs) {
-
-		for (RDFNode s : subjects) {
-			Resource sr = s.asResource();
-
-			for (RDFNode c : classes)
-				for (RDFNode g : graphs)
-					getModel(ds, g).add(sr, RDF.type, c);
-		}
-	}
-
-	private static void addToGraphs(Dataset ds, List<RDFNode> graphs, SubGraph subgraph) {
-		for (RDFNode graph : graphs) {
-			Model g = getModel(ds, graph);
-			Resource r = subgraph.node.asResource();
-
-			if(subgraph.isList()) {
-				g.add(r, RDF.type, RML.list);
-
-				try {
-					RDFList l = g.getList(r);
-					RDFList sub = subgraph.model.getList(r);
-
-					List<RDFNode> elements = sub.iterator().toList();
-					for(RDFNode e : elements) {
-						l.add(e);
-					}
-
-					while(true) {
-						if(sub.isEmpty())
-							break;
-						sub = sub.removeHead();
-					}
-
-					g.add(subgraph.model);
-				} catch (Exception e) {
-					// List did not exist, so we can just add it
-					g.add(subgraph.model);
-				}
-
-			} else {
-				Container c = null;
-				Container sub = null;
-				if(subgraph.isAlt()) {
-					g.add(r, RDF.type, RDF.Alt);
-					c = g.getAlt(r);
-					sub = subgraph.model.getAlt(r);
-				} else if(subgraph.isBag()) {
-					g.add(r, RDF.type, RDF.Bag);
-					c = g.getAlt(r);
-					sub = subgraph.model.getBag	(r);
-				} else if(subgraph.isSeq()) {
-					g.add(r, RDF.type, RDF.Seq);
-					c = g.getAlt(r);
-					sub = subgraph.model.getSeq(r);
-				}
-
-				// Now amend everything so that
-				// we append the containers
-				List<RDFNode> elements = sub.iterator().toList();
-				for(RDFNode e : elements)
-					c.add(e);
-
-				StmtIterator iter = sub.listProperties();
-				while(iter.hasNext()) {
-					Statement s = iter.next();
-					if(s.getSubject().equals(r))
-						if(s.getPredicate().getURI().startsWith("http://www.w3.org/1999/02/22-rdf-syntax-ns#_"))
-							iter.remove();
-				}
-
-				// We all all the remaining triples
-				g.add(subgraph.model);
-
-			}
-		}
-	}
-
-	private static Model getModel(Dataset ds, RDFNode g) {
-		if (g.equals(RML.defaultGraph))
-			return ds.getDefaultModel();
-		return ds.getNamedModel(g.asResource());
-	}
-
+        return ds;
+    }
 }
