@@ -1,6 +1,7 @@
 [submodule "src/test/resources/rdf-tests"]
 	path = src/test/resources/rdf-tests
 	url = https://github.com/w3c/rdf-tests.git
+	branch = main
 [submodule "rml-modules/rml-core"]
 	path = rml-modules/rml-core
 	url = https://github.com/kg-construct/rml-core.git
