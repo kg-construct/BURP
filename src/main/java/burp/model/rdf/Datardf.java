@@ -58,6 +58,7 @@ public final class Datardf {
         return Objects.equals(termA, termB);
     }
 
+    static final IRITerm XSDboolean = new IRITerm("http://www.w3.org/2001/XMLSchema#boolean");
     static final IRITerm XSDinteger = new IRITerm("http://www.w3.org/2001/XMLSchema#integer");
     static final IRITerm XSDdouble = new IRITerm("http://www.w3.org/2001/XMLSchema#double");
     static final IRITerm XSDdate = new IRITerm("http://www.w3.org/2001/XMLSchema#date");
@@ -119,7 +120,9 @@ public final class Datardf {
             return new LiteralTerm(o.toString(), datatype, null);
         }
 
-        if (o instanceof Integer || o instanceof Long) {
+        if (o instanceof Boolean bool) {
+            return new LiteralTerm(bool.toString(), XSDboolean, null);
+        } else if (o instanceof Integer || o instanceof Long) {
             return new LiteralTerm(o.toString(), XSDinteger, null);
         } else if (o instanceof Float f) {
             return new LiteralTerm(doubleCanonicalMap(f.doubleValue()), XSDdouble, null);
