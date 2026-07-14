@@ -270,17 +270,29 @@ public class TurtleParserTest {
 
 
     public static Stream<Arguments> rmlMappingFiles() throws Exception {
-        Path resourcesPath = Paths.get("src/test/resources");
-        if (!Files.exists(resourcesPath)) return Stream.empty();
-
-        try (Stream<Path> walk = Files.walk(resourcesPath)) {
-            return walk
+        Path rmlResourcesPath = Paths.get("rml-modules");
+        Stream<Arguments> rmlMappings;
+        try (Stream<Path> walk = Files.walk(rmlResourcesPath)) {
+            rmlMappings = walk
                     .filter(p -> p.toString().contains("rml-"))
                     .filter(p -> p.toString().endsWith("mapping.ttl"))
                     .map(Arguments::of)
                     .toList()
                     .stream();
         }
+
+        Path burpResourcesPath = Paths.get("src/test/resources/burp");
+        Stream<Arguments> burpMappings;
+        try (Stream<Path> walk = Files.walk(burpResourcesPath)) {
+            burpMappings = walk
+                    .filter(p -> p.toString().endsWith("mapping.ttl"))
+                    .map(Arguments::of)
+                    .toList()
+                    .stream();
+        }
+
+        return Stream.concat(rmlMappings, burpMappings);
+
     }
 
     @Test
