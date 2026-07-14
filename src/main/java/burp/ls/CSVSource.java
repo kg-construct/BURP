@@ -20,6 +20,8 @@ import java.util.List;
 
 public class CSVSource extends FileBasedLogicalSource {
     public char delimiter = ',';
+    public char quoteChar = '"';
+    public String commentPrefix = null;
     public boolean firstLineIsHeader = true;
 
     @Override
@@ -36,11 +38,16 @@ public class CSVSource extends FileBasedLogicalSource {
                         .withCSVParser(
                                 new CSVParserBuilder()
                                         .withSeparator(delimiter)
+                                        .withQuoteChar(quoteChar)
                                         .build()
                         ).build();
 
                 List<String[]> all = csvReader.readAll();
                 csvReader.close();
+
+                if (commentPrefix != null) {
+                    all.removeIf(rec -> rec.length > 0 && rec[0] != null && rec[0].startsWith(commentPrefix));
+                }
 
                 if (all.isEmpty()) {
                     return iterations;

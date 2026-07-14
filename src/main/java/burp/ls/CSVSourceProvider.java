@@ -67,12 +67,30 @@ public class CSVSourceProvider implements LogicalSourceProvider {
                 }
 
                 if (r.hasProperty(CSVW.delimiter)) {
-                    // TODO: According to CSVW, the delimiter is a string. But all examples are chars.
-                    source.delimiter = r.getProperty(CSVW.delimiter).getChar();
+                    String delimStr = r.getProperty(CSVW.delimiter).getString();
+                    if (delimStr.equals("\\t")) {
+                        source.delimiter = '\t';
+                    } else if (delimStr.equals("\\n")) {
+                        source.delimiter = '\n';
+                    } else if (delimStr.equals("\\r")) {
+                        source.delimiter = '\r';
+                    } else if (delimStr.length() == 1) {
+                        source.delimiter = delimStr.charAt(0);
+                    } else {
+                        source.delimiter = r.getProperty(CSVW.delimiter).getChar();
+                    }
                 }
 
                 if (r.hasProperty(CSVW.header)) {
                     source.firstLineIsHeader = r.getProperty(CSVW.header).getBoolean();
+                }
+
+                if (r.hasProperty(CSVW.quoteChar)) {
+                    source.quoteChar = r.getProperty(CSVW.quoteChar).getChar();
+                }
+
+                if (r.hasProperty(CSVW.commentPrefix)) {
+                    source.commentPrefix = r.getProperty(CSVW.commentPrefix).getString();
                 }
 
                 if (r.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.NULL)) {
@@ -92,7 +110,11 @@ public class CSVSourceProvider implements LogicalSourceProvider {
             }
         }
 
-        source.encoding = FileBaseSourceProvider.getEncoding(ls);
+        if (ls.hasProperty(RML.encoding)) {
+            source.encoding = FileBaseSourceProvider.getEncoding(ls);
+        } else if (!s.hasProperty(CSVW.dialect) || !s.getPropertyResourceValue(CSVW.dialect).hasProperty(CSVW.encoding)) {
+            source.encoding = FileBaseSourceProvider.getEncoding(ls);
+        }
         source.nulls.addAll(FileBaseSourceProvider.getNullValues(s));
 
         return source;

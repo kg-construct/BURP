@@ -9,6 +9,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.RDF;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -38,11 +39,11 @@ public class FileBaseSourceProvider {
             return StandardCharsets.UTF_16;
         }
         throw new BurpException(
-            new RmlError(
-                "Provided Character Set " + enc + " not supported.",
-                new Origin(source.getProperty(RML.encoding), StatementPart.Predicate, StatementPart.Object),
-                RER.Error
-            )
+                new RmlError(
+                        "Provided Character Set " + enc + " not supported.",
+                        new Origin(source.getProperty(RML.encoding), StatementPart.Predicate, StatementPart.Object),
+                        RER.Error
+                )
         );
     }
 
@@ -72,7 +73,7 @@ public class FileBaseSourceProvider {
 
     public static FileAndOrigin getFile(Resource source, Path mappingDir, Path currentWorkingDir) {
         if (source.hasProperty(RDF.type, RML.RelativePathSource) || source.hasProperty(RDF.type, RML.FilePath)) {
-            Statement pathStmt = source.getProperty(RML.path);
+            @Nullable Statement pathStmt = source.getProperty(RML.path);
             String file;
             if (pathStmt != null && pathStmt.getObject().isLiteral()) {
                 file = pathStmt.getLiteral().getString();
@@ -113,16 +114,42 @@ public class FileBaseSourceProvider {
 
         if (source.hasProperty(RDF.type, CSVW.Table)) {
             String url = source.getProperty(CSVW.url).getLiteral().getString();
-            return new FileAndOrigin(new SourceFile.Remote(url), List.of(StatementParts.fromPredicateObject(source.getProperty(CSVW.url))));
+            if (isLocalURL(url)) {
+                Path resolved = resolveLocalPath(url, mappingDir);
+                return new FileAndOrigin(new SourceFile.Local(resolved.toString()), List.of(StatementParts.fromPredicateObject(source.getProperty(CSVW.url))));
+            } else {
+                return new FileAndOrigin(new SourceFile.Remote(url), List.of(StatementParts.fromPredicateObject(source.getProperty(CSVW.url))));
+            }
         }
 
         Resource type = source.getPropertyResourceValue(RDF.type);
         throw new BurpException(
-            new RmlError(
-                "Source type (" + type + ") not yet implemented in source " + source,
-                new Origin(source.getProperty(RDF.type), StatementPart.Object),
-                RER.UnsupportedMapping
-            )
+                new RmlError(
+                        "Source type (" + type + ") not yet implemented in source " + source,
+                        new Origin(source.getProperty(RDF.type), StatementPart.Object),
+                        RER.UnsupportedMapping
+                )
         );
+    }
+
+    private static boolean isLocalURL(String url) {
+        try {
+            java.net.URI uri = java.net.URI.create(url);
+            String scheme = uri.getScheme();
+            return scheme == null || scheme.equalsIgnoreCase("file");
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    private static Path resolveLocalPath(String url, Path mappingDir) {
+        try {
+            if (url.startsWith("file:")) {
+                return Path.of(java.net.URI.create(url));
+            }
+        } catch (Exception e) {
+            // ignore and fallback
+        }
+        return mappingDir.resolve(url);
     }
 }
