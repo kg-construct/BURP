@@ -1,7 +1,7 @@
 package burp.model;
 
 import burp.reporting.Origin;
-import java.util.Collections;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -36,16 +36,6 @@ public abstract class Reference implements Expression {
     @Override
     public void setParent(PlanNode parent) {
         this.parent = parent;
-    }
-
-    @Override
-    public Iterable<PlanNode> children() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public Iterable<PlanNode> dependencies() {
-        return Collections.emptyList();
     }
 
     public List<Object> values(Iteration i) {

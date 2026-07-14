@@ -17,10 +17,6 @@ public final class RdfStatementSubjectGraph implements RdfStatementLike {
         this.targets = targets != null ? targets : Set.of();
     }
 
-    public RdfStatementSubjectGraph(BlankNodeOrIRI subject) {
-        this(subject, null, Set.of());
-    }
-
     public BlankNodeOrIRI getSubject() { return subject; }
     public void setSubject(BlankNodeOrIRI subject) { this.subject = subject; }
 

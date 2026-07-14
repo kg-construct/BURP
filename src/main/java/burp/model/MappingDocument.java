@@ -57,6 +57,13 @@ public class MappingDocument implements PlanNode {
         return postProcessContainers(stmts);
     }
 
+    public static Term termItselfOrCollectionId(Term t) {
+        if (t instanceof CollectionOrContainerTerm) {
+            return ((CollectionOrContainerTerm) t).getId();
+        }
+        return t;
+    }
+
     private List<RdfStatement> postProcessContainers(List<RdfStatementLike> stmts) {
         Map<IRITerm, Map<Term, CollectionOrContainerTerm>> containers = new HashMap<>();
         Map<IRITerm, Set<CollectionOrContainerTerm>> expandedContainer = new HashMap<>();
@@ -104,7 +111,7 @@ public class MappingDocument implements PlanNode {
                             containerStmts.add(new RdfStatement(
                                     (BlankNodeOrIRI) currentListId,
                                     new IRITerm(RDF.first.getURI()),
-                                    TermExtensions.itselfOrId(element),
+                                    termItselfOrCollectionId(element),
                                     graph,
                                     null
                             ));
@@ -156,7 +163,7 @@ public class MappingDocument implements PlanNode {
         containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, new IRITerm(RDF.type.getURI()), type, graph, null));
         for (int i = 0; i < c.getElements().size(); i++) {
             Term element = c.getElements().get(i);
-            containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, new IRITerm("http://www.w3.org/1999/02/22-rdf-syntax-ns#_" + (i + 1)), TermExtensions.itselfOrId(element), graph, null));
+            containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, new IRITerm("http://www.w3.org/1999/02/22-rdf-syntax-ns#_" + (i + 1)), termItselfOrCollectionId(element), graph, null));
         }
     }
 
@@ -164,10 +171,7 @@ public class MappingDocument implements PlanNode {
         if (t instanceof RdfListTerm && ((RdfListTerm) t).getElements().isEmpty()) {
             return new IRITerm(RDF.nil.getURI());
         }
-        if (t instanceof CollectionOrContainerTerm) {
-            return ((CollectionOrContainerTerm) t).getId();
-        }
-        return t;
+        return termItselfOrCollectionId(t);
     }
 
     private void extractAndMergeContainers(Term t, IRITerm graph, Map<IRITerm, Map<Term, CollectionOrContainerTerm>> containers, Map<IRITerm, Set<CollectionOrContainerTerm>> expandedContainer, Consumer<Term> replaceTermBy) {

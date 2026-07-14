@@ -69,14 +69,6 @@ public class LogicalSourceFactory {
         );
     }
 
-    public static List<Iteration> changeIterator(
-        @NotNull String iterationAsString,
-        @NotNull Resource referenceFormulation,
-        String iterator
-    ) {
-        return changeIterator(iterationAsString, referenceFormulation, iterator, null);
-    }
-
     public static Reference buildReference(
         Resource referenceFormulation, String reference, Origin origin, Origin referenceFormulationOrigin
     ) {
@@ -93,11 +85,5 @@ public class LogicalSourceFactory {
                 RER.UnsupportedMapping
             )
         );
-    }
-
-    public static Reference buildReference(
-        Resource referenceFormulation, String reference, Origin origin
-    ) {
-        return buildReference(referenceFormulation, reference, origin, null);
     }
 }
