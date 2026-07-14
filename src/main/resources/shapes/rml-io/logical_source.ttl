@@ -1,0 +1,43 @@
+###############################################################################
+# RML Logical Source shape                                                    #
+# Copyright Dylan Van Assche, IDLab - UGent - imec (2020 - 2024)              #
+###############################################################################
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix : <http://w3id.org/rml/shapes/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+
+:RMLLogicalSourceShape
+    a sh:NodeShape ;
+    sh:targetSubjectsOf rml:source ;
+    sh:targetClass rml:LogicalSource ;  # Used as a class
+    # Already targets 'rml:logicalSource'
+    rdfs:label "RML Logical Source" ;
+    rdfs:comment """
+    A logical source is any source that is mapped to RDF triples.
+    """ ;
+    sh:message """
+    RML Logical Source requires one rml:source and requires everyting
+    an Abstract Logical Source requires.
+    """ ;
+
+    # rml:source
+    sh:property [
+        sh:path rml:source ;
+        rdfs:label "rml:source" ;
+        rdfs:comment """
+        The source (rml:source) locates the input data source. It is a URI
+        that represents the data source where the data source is.
+        """ ;
+        sh:message """
+        rml:source must be provided to locate the data source. 
+        rml:source must be provided exactly once as an URI.
+        """ ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:BlankNodeOrIRI;
+        sh:node :RMLSourceShape;
+    ] ; 
+.

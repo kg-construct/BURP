@@ -1,0 +1,198 @@
+###############################################################################
+# RML shared properties among resources shapes                                #
+# Copyright Dylan Van Assche, IDLab - UGent - imec (2023 - 2024)              #
+###############################################################################
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix : <http://w3id.org/rml/shapes/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+
+
+:RMLTriplesMapPropertiesShape
+    a sh:NodeShape;   
+    sh:targetClass rml:TriplesMap;
+    sh:targetClass rml:NonAssertedTriplesMap;
+
+    sh:property [
+        sh:targetSubjectsOf rml:logicalSource ;
+        sh:path rml:logicalSource ;
+        rdfs:label "logicalSource" ;
+        rdfs:comment """
+        A logical source is any source that is mapped to RDF triples.
+        """ ;
+        sh:message """
+        Exactly one rml:logicalSource is required to access the data source.
+        """ ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:node :RMLAbstractLogicalSourceShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    sh:property [
+        sh:targetSubjectsOf rml:subjectMap ;
+        sh:targetSubjectsOf rml:subject ;
+        sh:targetSubjectsOf rml:quotedTriplesMap ;
+        sh:path [sh:alternativePath (rml:subjectMap rml:subject rml:quotedTriplesMap)] ;
+        rdfs:label "subjectMap/subject/quotedTriplesMap" ;
+        rdfs:comment """
+        Either a rml:subject, rml:subjectMap or a rml:quotedTriplesMap is required, not multiple.
+        """ ;
+        sh:message """
+        Either a rml:subject, rml:subjectMap or a rml:quotedTriplesMap is required, not multiple.
+        """ ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    sh:property [
+        sh:targetSubjectsOf rml:subjectMap ;
+        sh:path rml:subjectMap ;
+        rdfs:label "subjectMap" ;
+        rdfs:comment """
+        A Subject Map element to generate a subject for generated RDF triples.
+        """ ;
+        sh:message """
+        rml:SubjectMap must be an IRI or blank node.
+        """ ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:or ([sh:node :RMLSubjectMapShape]
+               [sh:node :RMLStarMapShape]) ;
+    ] ;
+
+    # rml:subject
+    sh:property [
+        sh:targetSubjectsOf rml:subject ;
+        sh:path rml:subject ;
+        rdfs:label "subject" ;
+        rdfs:comment """
+        An IRI reference for use as subject for all generated RDF triples.
+        """ ;
+        sh:message """
+        rml:subject must be an IRI or blank node.
+        """ ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+    ] ;
+
+    # rml:predicateObjectMap
+    sh:property [
+        sh:targetSubjectsOf rml:predicateObjectMap ;
+        sh:path rml:predicateObjectMap ;
+        rdfs:label "predicateObjectMap" ;
+        rdfs:comment """
+        A Predicate Object Map element to generate a (predicate, object) pair.
+        """ ;
+        sh:message """
+        rml:PredicateObjectMap must be an IRI or blank node.
+        """ ;
+        sh:minCount 0 ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+    ] ;
+
+    # rml:baseIRI
+    sh:property [
+        sh:path rml:baseIRI ;
+        sh:description """
+        Base IRI to use for generating RDF triples or quads.
+        """ ;
+        sh:message """
+        rml:baseIRI must be an IRI.
+        """ ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 0 ;
+        sh:maxCount 1 ;
+    ] ;
+.
+
+:RMLGraphMapPropertiesShape
+    a sh:NodeShape;   
+    sh:targetSubjectsOf rml:graphMap ;
+    sh:targetSubjectsOf rml:graph ;
+
+    sh:property [
+        sh:path [sh:alternativePath (rml:graph rml:graphMap)] ;
+        rdfs:label "graph/graphMap" ;
+        rdfs:comment """
+        Either an rml:graph or rml:graphMap may be optionally be provided,
+        but not both.
+        """ ;
+        sh:message """
+        Either an rml:graph or rml:graphMap may be optionally be provided,
+        but not both.
+        """ ;
+        sh:minCount 0 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path rml:graphMap ;
+        rdfs:label "graphMap" ;
+        rdfs:comment """
+        Specifies a Graph Map. When used with a Subject Map element, all the
+        RDF triples generated will be stored in the specified named graph.
+        Otherwise, the RDF triple generated using the (predicate, object) 
+        pair will be stored in the specified named graph.
+        """ ;
+        sh:message """
+        rml:graphMap must be either an IRI or blank node. 
+        """ ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+    ] ;
+    sh:property [
+        sh:path rml:graph ;
+        rdfs:label "graph" ;
+        rdfs:comment """
+        An IRI reference to use as the named graph of all generated triples.
+        """ ;
+        sh:message """
+        rml:graphMap must be an IRI. 
+        """ ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+.
+
+:RMLJoinConditionPropertiesShape
+    a sh:PropertyShape;
+    sh:path rml:joinCondition ;
+    sh:targetSubjectsOf rml:joinCondition ;
+    rdfs:label "joinCondition" ;
+    rdfs:comment """
+    Specifies the join condition for joining a child data source with 
+    a parent data source of the foreign key constraint.
+    """ ;
+    sh:message """
+    rml:joinCondition must specify an rml:parent and rml:child.
+    """ ;
+    sh:nodeKind sh:BlankNodeOrIRI ;
+.
+
+:RMLLogicalTargetPropertiesShape
+    a sh:PropertyShape ;
+    sh:path rml:logicalTarget ;
+    sh:targetSubjectsOf rml:logicalTarget ;
+    sh:path rml:logicalTarget ;
+    rdfs:label "logicalTarget" ;
+    rdfs:comment """
+    A logical target is any target to where generated RDF triples are
+    exported to.
+    """ ;
+    sh:message """
+    Zero or more rml:logicalTarget is required to export RDF triples.
+    """ ;
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:minCount 0 ;
+.
+
+:RMLStrategyAppendShape
+    a sh:NodeShape ;
+    sh:targetObjectsOf rml:strategy ;
+    rdfs:label "Strategy" ;
+    rdfs:comment """
+    Strategy to follow when generating RDF triples.
+    """ ;
+    sh:message """
+    Strategy must be either rml:append or rml:cartesianProduct.
+    """ ;
+    sh:in (rml:append rml:cartesianProduct) ;
+.

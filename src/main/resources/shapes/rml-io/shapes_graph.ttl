@@ -1,0 +1,5 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<http://w3id.org/rml/io/shapes> a owl:Ontology ;
+    owl:imports <http://w3id.org/rml/core/shapes> ;
+.

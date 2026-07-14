@@ -8,10 +8,10 @@ import burp.model.gathermaputil.SubGraph;
 
 public interface GatherMap {
 
-	public abstract boolean isGatherMap();
+	boolean isGatherMap();
 	
-	abstract public List<SubGraph> generateGatherMapGraphs(Iteration i, String baseIRI);
+	List<SubGraph> generateGatherMapGraphs(Iteration i, String baseIRI);
 
-	abstract public List<RDFNode> generateTerms(Iteration i, String baseIRI);
+	List<RDFNode> generateTerms(Iteration i, String baseIRI);
 	
 }

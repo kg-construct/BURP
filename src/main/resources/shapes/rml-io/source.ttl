@@ -1,0 +1,91 @@
+###############################################################################
+# RML Source shape                                                            #
+# Copyright Dylan Van Assche, IDLab - UGent - imec (2023 - 2024)              #
+###############################################################################
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix : <http://w3id.org/rml/shapes/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+
+:RMLSourceShape
+    a sh:NodeShape ;
+    sh:targetObjectsOf rml:source ;  # Object of rml:LogicalSource
+    sh:targetClass rml:Source ;  # Used as a class
+    # Already targets 'rml:source'
+    rdfs:label "RML Source" ;
+    rdfs:comment """
+    A source describes access to a data source. Any data access description
+    is allowed, but rml:Source provides additional properties to complete
+    such descriptions.
+    """ ;
+    sh:message """
+    RML Source accepts one or multiple rml:null, one rml:compression,
+    and one rml:encoding. All of them are optional.
+    """ ;
+
+    # rml:null
+    sh:property [
+        sh:path rml:null ;
+        rdfs:label "rml:null" ;
+        rdfs:comment """
+        rml:null specifies how NULL or empty values are exposed by the data 
+        source.
+        """ ;
+        sh:message """
+        rml:source must be provided as a string Literal.
+        """ ;
+        sh:minCount 0 ;
+        sh:nodeKind sh:Literal;
+        sh:datatype xsd:string ;
+    ] ; 
+
+    # rml:compression
+    sh:property [
+        sh:path rml:compression ;
+        rdfs:label "rml:compression" ;
+        rdfs:comment """
+        rml:compression specifies the compression algorithm to use when
+        accessing the data source. By default, no compression is applied.
+        """ ;
+        sh:message """
+        rml:compression must be provided as an IRI.
+        """ ;
+        sh:minCount 0 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI;
+    ] ; 
+
+    # rml:encoding
+    sh:property [
+        sh:path rml:encoding ;
+        rdfs:label "rml:encoding" ;
+        rdfs:comment """
+        rml:encoding specifies the encoding to use when accessing the data 
+        source. By default, UTF-8 is used.
+        """ ;
+        sh:message """
+        rml:encoding must be provided as an IRI.
+        """ ;
+        sh:minCount 0;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+
+    # rml:null
+    sh:property [
+        sh:path rml:null ;
+        rdfs:label "rml:null" ;
+        rdfs:comment """
+        rml:null specifies which data values inside the source should be 
+        considered as NULL. Defaults to the default NULL character of a source,
+        if available.
+        """ ;
+        sh:message """
+        rml:null must be provided as a Literal.
+        """ ;
+        sh:minCount 0;
+        sh:nodeKind sh:Literal ;
+    ] ;
+.

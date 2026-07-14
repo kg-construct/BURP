@@ -1,14 +1,19 @@
 package burp.ls;
 
 import java.io.File;
+import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
+import burp.model.AbstractLogicalSource;
+import burp.model.Iteration;
+import com.jayway.jsonpath.JsonPath;
+import com.opencsv.CSVReader;
+import net.minidev.json.JSONObject;
+import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
@@ -25,6 +30,15 @@ import burp.vocabularies.SD;
 import burp.vocabularies.UCOCore;
 import burp.vocabularies.UCOObservable;
 import burp.vocabularies.YS;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 
 public class LogicalSourceFactory {
 
@@ -52,13 +66,11 @@ public class LogicalSourceFactory {
 
 				if (r.hasProperty(CSVW.delimiter)) {
 					// TODO: According to CSVW, the delimiter is a string. But all examples are chars.
-					char e = r.getProperty(CSVW.delimiter).getChar();
-					source.delimiter = e;
+                    source.delimiter = r.getProperty(CSVW.delimiter).getChar();
 				}
 
 				if (r.hasProperty(CSVW.header)) {
-					Boolean e = r.getProperty(CSVW.header).getBoolean();
-					source.firstLineIsHeader = e;
+                    source.firstLineIsHeader = r.getProperty(CSVW.header).getBoolean();
 				}
 
 				if (r.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.NULL)) {
@@ -227,7 +239,7 @@ public class LogicalSourceFactory {
 		// Get operation filter
 		source.filter = s.getPropertyResourceValue(YS.filter);
 		// Set XPath for RML iterator
-		source.rmlIterator = ls.getProperty(RML.iterator).getLiteral().getString();
+		source.iterator = ls.getProperty(RML.iterator).getLiteral().getString();
 		// Set map of prefixes for RML iterations
 		source.rmlPrefixMap = getPrefixMap(ls);
 		return source;
@@ -340,7 +352,7 @@ public class LogicalSourceFactory {
 		Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
 		// Set map of namespaces for XPath iteration
 		StmtIterator properties = referenceFormulation.listProperties(RML.namespace);
-		HashMap<String, String> prefixMap = new HashMap<String, String>();
+		HashMap<String, String> prefixMap = new HashMap<>();
 		while (properties.hasNext()) {
 			Statement statement = properties.next();
 			Resource namespace = statement.getResource();
@@ -352,4 +364,50 @@ public class LogicalSourceFactory {
 		return prefixMap;
 	}
 
+    public static List<Iteration> changeIterator(String iterationAsString, Resource rf, String iterator) {
+        try {
+            if (RML.JSONPath.equals(rf)) {
+                // Create JSON iterations
+                List<Iteration> iterations = new ArrayList<>();
+                String contents = iterationAsString;
+                List<Map<String, Object>> nodes = JsonPath.using(JSONSource.configuration).parse(contents).read(iterator);
+                for (Map<String, Object> n : nodes)
+                    // TODO: How do we provide null values?
+                    iterations.add(new JSONIteration(JSONObject.toJSONString(n), new HashSet<>()));
+                return iterations;
+
+            } else if (RML.CSV.equals(rf)) {
+                // Create CSV iterations
+                CSVReader reader = new CSVReader(new StringReader(iterationAsString));
+                List<String[]> all = reader.readAll();
+                reader.close();
+                String[] header = all.remove(0);
+                List<Iteration> iterations = new ArrayList<>();
+                for (String[] rec : all)
+                    // TODO: How do we provide null values?
+                    iterations.add(new CSVIteration(header, rec, new HashSet<>()));
+                return iterations;
+
+            } else if (RML.XPath.equals(rf)) {
+                // Create XPATH iterations
+                DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = builderFactory.newDocumentBuilder();
+                Document xmlDocument = builder.parse(IOUtils.toInputStream(iterationAsString));
+                XPath xPath = XPathFactory.newInstance().newXPath();
+                NodeList nodes = (NodeList) xPath.compile(iterator).evaluate(xmlDocument, XPathConstants.NODESET);
+
+                List<Iteration> iterations = new ArrayList<>();
+                for (int index = 0; index < nodes.getLength(); index++) {
+                    Node node = nodes.item(index);
+                    // TODO: How do we provide null values?
+                    // TODO: How do we provide the prefix mappings?
+                    iterations.add(new XMLIteration(node, new HashSet<>(), new HashMap<>()));
+                }
+            }
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        throw new RuntimeException("Other reference formulations for iterable fields are not yet supported: " + rf);
+    }
 }

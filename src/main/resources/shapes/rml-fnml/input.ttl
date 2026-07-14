@@ -1,0 +1,107 @@
+###############################################################################
+# RML Input shape                                                             #
+# Copyright Dylan Van Assche, IDLab - UGent - imec (2023 - 2024)              #
+###############################################################################
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix : <http://w3id.org/rml/shapes/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+
+:RMLInputShape
+    a sh:NodeShape ;
+    rdfs:label "rml:Input" ;
+    rdfs:comment """
+    Represents an Input for a function.
+    """ ;
+    sh:targetObjectsOf rml:input ;
+
+    # Exactly one rml:parameter or rml:parameterMap is required 
+    sh:property [
+        sh:path [sh:alternativePath (rml:parameter 
+                                     rml:parameterMap)] ;
+        rdfs:label "rml:parameter/rml:parameterMap" ;
+        rdfs:comment """
+        Exactly one rml:parameter or rml:parameterMap is required.
+        """ ;
+        sh:message """
+        Exactly one rml:parameter or rml:parameterMap is required.
+        """ ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # rml:parameterMap non-shortcut
+    sh:property [
+        sh:path rml:parameterMap ;
+        rdfs:label "rml:parameterMap" ;
+        rdfs:comment """
+        Parameters to supply to FnO function.
+        """ ;
+        sh:message """
+        rml:parameterMap must be an IRI or Blank node.
+        """ ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:node :RMLParameterMap;
+        sh:maxCount 1 ;
+    ] ;
+
+    # rml:parameter shortcut
+    sh:property [
+        sh:path rml:parameter ;
+        rdfs:label "rml:parameter" ;
+        rdfs:comment """
+        Parameters to supply to FnO function.
+        """ ;
+        sh:message """
+        rml:parameter must be an IRI.
+        """ ;
+        sh:nodeKind sh:IRI ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # Exactly one rml:inputValue or rml:inputValueMap is required 
+    sh:property [
+        sh:path [sh:alternativePath (rml:inputValue 
+                                     rml:inputValueMap)] ;
+        rdfs:label "rml:inputValue/rml:inputValueMap" ;
+        rdfs:comment """
+        Exactly one rml:inputValue or rml:inputValueMap is required.
+        """ ;
+        sh:message """
+        Exactly one rml:inputValue or rml:inputValueMap is required.
+        """ ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # rml:inputValueMap
+    sh:property [
+        sh:path rml:inputValueMap ;
+        rdfs:label "rml:inputValueMap" ;
+        rdfs:comment """
+        Values of the parameters.
+        """ ;
+        sh:message """
+        rml:inputValueMap must be an IRI or Blank node, provided once.
+        """ ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+    ] ;
+
+    # rml:inputValue shortcut
+    sh:property [
+        sh:path rml:inputValue ;
+        rdfs:label "rml:inputValue" ;
+        rdfs:comment """
+        Parameters to supply to FnO function.
+        """ ;
+        sh:message """
+        rml:inputValue must be a string Literal.
+        """ ;
+        sh:nodeKind sh:Literal ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+    ] ;
+.

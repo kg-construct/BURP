@@ -49,13 +49,12 @@ class NetconfQuerySource extends LogicalSource {
 	public Resource datastoreType;
 	public Resource filter;
 
-	public String rmlIterator;
 	public HashMap<String, String> rmlPrefixMap;
 
 	protected List<Iteration> iterations = null;
 	public Charset encoding = StandardCharsets.UTF_8;
 
-	private Map<Resource, Integer> datastoreMap = Map.ofEntries(
+	private final Map<Resource, Integer> datastoreMap = Map.ofEntries(
 	  	Map.entry(YS.CandidateDatastore, NetconfSession.CANDIDATE),
 	  	Map.entry(YS.StartupDatastore, NetconfSession.STARTUP),
 		Map.entry(YS.RunningDatastore, NetconfSession.RUNNING)
@@ -78,7 +77,7 @@ class NetconfQuerySource extends LogicalSource {
 			if (filter.hasProperty(RDF.type, YS.XPathFilter)) {
 				// Set map of namespaces for XPath iteration
 				StmtIterator properties = filter.listProperties(YS.namespace);
-				HashMap<String, String> prefixMap = new HashMap<String, String>();
+				HashMap<String, String> prefixMap = new HashMap<>();
 				while (properties.hasNext()) {
 					Statement statement = properties.next();
 					Resource namespace = statement.getResource();
@@ -122,16 +121,14 @@ class NetconfQuerySource extends LogicalSource {
 				}
 			}
 			c.close();
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
-		} catch (JNCException ex) {
+		} catch (IOException | JNCException ex) {
 			throw new RuntimeException(ex);
 		}
 
-		// XML data fetched from YANG server. Now iterate.
+        // XML data fetched from YANG server. Now iterate.
 		try {
 			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+				iterations = new ArrayList<>();
 
 				DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 				if (rmlPrefixMap != null) {
@@ -147,7 +144,7 @@ class NetconfQuerySource extends LogicalSource {
 					xPath.setNamespaceContext(namespaces);
 				}
 
-				NodeList nodes = (NodeList) xPath.compile(rmlIterator).evaluate(xmlDocument, XPathConstants.NODESET);
+				NodeList nodes = (NodeList) xPath.compile(iterator).evaluate(xmlDocument, XPathConstants.NODESET);
 
 				for (int i = 0; i < nodes.getLength(); i++) {
 					Node node = nodes.item(i);

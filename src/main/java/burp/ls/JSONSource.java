@@ -21,17 +21,20 @@ import net.minidev.json.JSONObject;
 
 class JSONSource extends FileBasedLogicalSource {
 
-	private static Configuration c = Configuration.builder().mappingProvider(new JacksonMappingProvider())
-			.jsonProvider(new JacksonJsonProvider()).build().addOptions(Option.ALWAYS_RETURN_LIST);
+	public static final Configuration configuration = Configuration.builder()
+            .mappingProvider(new JacksonMappingProvider())
+			.jsonProvider(new JacksonJsonProvider())
+            .build()
+            .addOptions(Option.ALWAYS_RETURN_LIST);
 
 	@Override
 	public Iterator<Iteration> iterator() {
 		try {
 			if (iterations == null) {
-				iterations = new ArrayList<Iteration>();
+				iterations = new ArrayList<>();
 				String contents = Files.readString(Paths.get(getDecompressedFile()), encoding);
 
-				List<Map<String, Object>> nodes = JsonPath.using(c).parse(contents).read(iterator);
+				List<Map<String, Object>> nodes = JsonPath.using(configuration).parse(contents).read(iterator);
 				for (Map<String, Object> n : nodes) {
 					iterations.add(new JSONIteration(JSONObject.toJSONString(n), nulls));
 				}
@@ -47,34 +50,22 @@ class JSONSource extends FileBasedLogicalSource {
 class JSONIteration extends Iteration {
 
 	private DocumentContext doc = null;
-	
-	private static Configuration c = Configuration
-			.builder()
-            .mappingProvider(new JacksonMappingProvider())
-            .jsonProvider(new JacksonJsonProvider())
-            .build()
-            .addOptions(Option.ALWAYS_RETURN_LIST)
-			;
-	
+
 	protected JSONIteration(String json, Set<Object> nulls) {
 		super(nulls);
-		
-		doc = JsonPath.using(c).parse(json);
+		doc = JsonPath.using(JSONSource.configuration).parse(json);
 	}
 
 	@Override
 	public List<Object> getValuesFor(String reference) {
-		// We need to explicitly convert the objects
-		// to strings because RML has not worked out
-		// "6.6.1 Automatically deriving datatypes" yet
-		List<Object> l2 = new ArrayList<Object>();
+		List<Object> l2 = new ArrayList<>();
 		try {
 			List<Object> l = doc.read(reference);
 			for(Object o : l) {
 				if (o instanceof List<?>)
 					throw new RuntimeException("Data error: reference retrieved an array");
-				if (o != null && !nulls.contains(o))
-					l2.add(o.toString());
+				if (o != null && (nulls == null || !nulls.contains(o)))
+					l2.add(o);
 			}
 		} catch (PathNotFoundException e) {
 			// No data, silently ignore
@@ -85,16 +76,13 @@ class JSONIteration extends Iteration {
 
 	@Override
 	public List<String> getStringsFor(String reference) {
-		// We need to explicitly convert the objects
-		// to strings (when they are null) because 
-		// this JSONPath library is... difficult.
-		List<String> l2 = new ArrayList<String>();
+		List<String> l2 = new ArrayList<>();
 		try {
 			List<Object> l = doc.read(reference);
 			for(Object o : l) {
 				if (o instanceof List<?>)
 					throw new RuntimeException("Data error: reference retrieved an array");
-				if (o != null && !nulls.contains(o))
+                if (o != null && (nulls == null || !nulls.contains(o)))
 					l2.add(o.toString());
 			}
 		} catch (PathNotFoundException e) {
@@ -103,5 +91,10 @@ class JSONIteration extends Iteration {
 		}
 		return l2;
 	}
-	
+
+    @Override
+    public String asString() {
+        return doc.jsonString();
+    }
+
 }
