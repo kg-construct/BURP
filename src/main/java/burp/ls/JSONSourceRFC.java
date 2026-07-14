@@ -21,10 +21,14 @@ import org.antlr.v4.kotlinruntime.Recognizer;
 import org.antlr.v4.kotlinruntime.atn.ATNConfigSet;
 import org.antlr.v4.kotlinruntime.dfa.DFA;
 import org.apache.jena.rdf.model.Resource;
+import org.bson.RawBsonDocument;
+import org.bson.json.JsonMode;
+import org.bson.json.JsonWriterSettings;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -39,12 +43,18 @@ public class JSONSourceRFC extends FileBasedLogicalSource {
     public Iterable<Iteration> iterator() {
         try {
             String decompressedFile = getDecompressedFile();
+            Path decompressedFilePath = Paths.get(decompressedFile);
 
             String jsonString;
             if (decompressedFile.endsWith(".bson")) {
-                throw new RuntimeException("BSON not supported.");
+                byte[] bsonBytes = Files.readAllBytes(decompressedFilePath);
+                RawBsonDocument bsonDoc = new RawBsonDocument(bsonBytes);
+                JsonWriterSettings settings = JsonWriterSettings.builder()
+                        .outputMode(JsonMode.RELAXED)
+                        .build();
+                jsonString = bsonDoc.toJson(settings);
             } else {
-                jsonString = Files.readString(Paths.get(decompressedFile), encoding);
+                jsonString = Files.readString(decompressedFilePath, encoding);
             }
 
             JsonElement jsonContent = Json.Default.parseToJsonElement(jsonString);
