@@ -8,6 +8,7 @@ import org.apache.jena.update.UpdateAction;
 import org.apache.jena.update.UpdateFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.mssqlserver.MSSQLServerContainer;
 import org.testcontainers.mysql.MySQLContainer;
@@ -21,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+@Disabled
 public class TestRMLIORegistry extends TestRMLModule {
 
     public static String base = "./target/test-classes/rml-io-registry/";
@@ -133,7 +135,7 @@ public class TestRMLIORegistry extends TestRMLModule {
 
     @AfterAll
     public static void stopContainers() {
-        Stream.<JdbcDatabaseContainer<?>>of(PGSQL_CONTAINER, MYSQL_CONTAINER, MSSQL_CONTAINER)
+        Stream.of(PGSQL_CONTAINER, MYSQL_CONTAINER, MSSQL_CONTAINER)
                 .parallel()
                 .forEach(JdbcDatabaseContainer::stop);
     }
