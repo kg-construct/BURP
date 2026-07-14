@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
@@ -93,17 +93,12 @@ public class CSVSourceProvider implements LogicalSourceProvider {
                     source.commentPrefix = r.getProperty(CSVW.commentPrefix).getString();
                 }
 
-                if (r.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.NULL)) {
-                    r.listProperties(CSVW.NULL).forEachRemaining((Consumer<Statement>) t -> {
-                        if (t.getObject().isResource()) {
-                            // WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR
-                            // SPARQL SOURCES
-                            source.nulls.add(t.getObject().asResource());
-                        } else {
-                            source.nulls.add(t.getObject().asLiteral().getValue());
-                        }
-                    });
+                if (r.hasProperty(CSVW.trim)) {
+                    source.trim = r.getProperty(CSVW.trim).getBoolean();
                 }
+                source.nulls.addAll(getNulls(ls, s));
+                source.nulls.addAll(getNulls(ls, r));
+
                 // TODO: Natural RDF mapping of CSV values
             } else {
                 source.encoding = StandardCharsets.UTF_8;
@@ -120,6 +115,21 @@ public class CSVSourceProvider implements LogicalSourceProvider {
         return source;
     }
 
+    private Set<Object> getNulls(Resource ls, Resource resource) {
+        if (resource.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.NULL)) {
+            return resource.listProperties(CSVW.NULL).mapWith(t -> {
+                if (t.getObject().isResource()) {
+                    // WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR
+                    // SPARQL SOURCES
+                    return (t.getObject().asResource());
+                } else {
+                    return (t.getObject().asLiteral().getValue());
+                }
+            }).toSet();
+        }
+        return Collections.emptySet();
+    }
+
     @Override
     public List<Iteration> parseStringPayload(String payload, String iterator, Origin referenceFormulationOrigin) {
         try {
@@ -127,7 +137,7 @@ public class CSVSourceProvider implements LogicalSourceProvider {
             List<String[]> all = reader.readAll();
             reader.close();
             if (all.isEmpty()) return Collections.emptyList();
-            String[] header = all.remove(0);
+            String[] header = all.removeFirst();
             return all.stream()
                 .map(it -> (Iteration) new CSVIteration(header, it, Collections.emptySet()))
                 .collect(Collectors.toList());

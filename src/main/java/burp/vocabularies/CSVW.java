@@ -18,4 +18,5 @@ public class CSVW {
 	public static final Property url = ResourceFactory.createProperty(NS + "url");
 	public static final Property quoteChar = ResourceFactory.createProperty(NS + "quoteChar");
 	public static final Property commentPrefix = ResourceFactory.createProperty(NS + "commentPrefix");
+	public static final Property trim = ResourceFactory.createProperty(NS + "trim");
 }

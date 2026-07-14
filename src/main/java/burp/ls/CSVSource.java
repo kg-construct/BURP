@@ -22,6 +22,7 @@ public class CSVSource extends FileBasedLogicalSource {
     public char delimiter = ',';
     public char quoteChar = '"';
     public String commentPrefix = null;
+    public boolean trim = false;
     public boolean firstLineIsHeader = true;
 
     @Override
@@ -58,6 +59,13 @@ public class CSVSource extends FileBasedLogicalSource {
                 String[] header;
                 if (firstLineIsHeader) {
                     header = all.removeFirst();
+                    if (trim) {
+                        for (int i = 0; i < header.length; i++) {
+                            if (header[i] != null) {
+                                header[i] = header[i].trim();
+                            }
+                        }
+                    }
                 } else {
                     int columnCount = all.getFirst().length;
                     header = new String[columnCount];
@@ -67,6 +75,13 @@ public class CSVSource extends FileBasedLogicalSource {
                 }
 
                 for (String[] rec : all) {
+                    if (trim) {
+                        for (int i = 0; i < rec.length; i++) {
+                            if (rec[i] != null) {
+                                rec[i] = rec[i].trim();
+                            }
+                        }
+                    }
                     iterations.add(new CSVIteration(header, rec, nulls));
                 }
             }
