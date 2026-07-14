@@ -140,6 +140,14 @@ public final class Datardf {
     }
 
     static String doubleCanonicalMap(double d) {
+        if (Double.isNaN(d)) return "NaN";
+        if (d == Double.POSITIVE_INFINITY) return "INF";
+        if (d == Double.NEGATIVE_INFINITY) return "-INF";
+        if (d < 0.999 || d > 999) return doubleScientificMap(d);
+        return Double.toString(d);
+    }
+
+    static String doubleScientificMap(double d) {
         BigDecimal f = BigDecimal.valueOf(d);
         int p = f.precision();
         String x = "0.0" + "#".repeat(Math.max(0, p - 2)) + "E0";

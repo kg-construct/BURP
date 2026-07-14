@@ -8,7 +8,6 @@ import org.apache.jena.update.UpdateAction;
 import org.apache.jena.update.UpdateFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.mssqlserver.MSSQLServerContainer;
 import org.testcontainers.mysql.MySQLContainer;
@@ -22,7 +21,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-@Disabled
+
 public class TestRMLIORegistry extends TestRMLModule {
 
     public static String base = "./target/test-classes/rml-io-registry/";
