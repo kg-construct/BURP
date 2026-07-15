@@ -5,25 +5,25 @@
 <#AuthorMapping>
     rml:logicalSource <#AuthorsSource> ;
     rml:subjectMap [
-        rml:template "http://example.com/author/{id}"
+        rml:template "http://example.com/author/{$.id}"
     ] ;
     rml:predicateObjectMap [
         rml:predicate foaf:name ;
         rml:objectMap [
-            rml:reference "name"
+            rml:reference "$.name"
         ]
     ] .
 
 <#BookMapping>
     rml:logicalSource <#BooksSource> ;
     rml:subjectMap [
-        rml:template "http://example.com/book/{id}"
+        rml:template "http://example.com/book/{$.id}"
     ] ;
     rml:predicateObjectMap
         [
             rml:predicate dbo:title ;
             rml:objectMap [
-                rml:reference "title"
+                rml:reference "$.title"
             ]
         ],
         [
@@ -31,8 +31,8 @@
             rml:objectMap [
                 rml:parentTriplesMap <#AuthorMapping> ;
                 rml:joinCondition [
-                    rml:child "author_id" ;
-                    rml:parent "id"
+                    rml:child "$.author_id" ;
+                    rml:parent "$.id"
                 ]
             ]
         ] .

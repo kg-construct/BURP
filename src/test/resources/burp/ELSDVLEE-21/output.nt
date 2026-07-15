@@ -1,0 +1,15 @@
+<http://example.com/author/1> <http://xmlns.com/foaf/0.1/name> "Alice" .
+<http://example.com/author/3> <http://xmlns.com/foaf/0.1/name> "Charlie" .
+<http://example.com/author/2> <http://xmlns.com/foaf/0.1/name> "Bob" .
+
+<http://example.com/book/101> <http://dbpedia.org/ontology/author> <http://example.com/author/1> .
+<http://example.com/book/101> <http://dbpedia.org/ontology/title> "RDF Fundamentals" .
+
+<http://example.com/book/102> <http://dbpedia.org/ontology/title> "Knowledge Graphs Guide" .
+<http://example.com/book/102> <http://dbpedia.org/ontology/author> <http://example.com/author/2> .
+
+<http://example.com/book/103> <http://dbpedia.org/ontology/title> "Semantic Web Handbook" .
+<http://example.com/book/103> <http://dbpedia.org/ontology/author> <http://example.com/author/1> .
+
+<http://example.com/book/104> <http://dbpedia.org/ontology/title> "Data Mapping Patterns" .
+<http://example.com/book/104> <http://dbpedia.org/ontology/author> <http://example.com/author/3> .

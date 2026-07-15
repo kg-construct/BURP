@@ -54,7 +54,7 @@
     rml:fieldName "birthyear" ;
     rml:reference "birthyear" ;
   ] ;
-  rml:innerJoin [
+  rml:leftJoin [
     rml:parentLogicalView :jsonView ;
     rml:joinCondition [
       rml:parent "name" ;
