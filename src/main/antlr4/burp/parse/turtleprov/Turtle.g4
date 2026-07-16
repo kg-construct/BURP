@@ -294,7 +294,7 @@ STRING_LITERAL_LONG_SINGLE_QUOTE
 
 // [47] STRING_LITERAL_LONG_QUOTE ::=  	'"""' (('"' | '""')? ([^"\] | ECHAR | UCHAR))* '"""'
 STRING_LITERAL_LONG_QUOTE
-    : '"""' (('\'' | '\'\'')? ((~ ['\\]) | ECHAR | UCHAR))* '"""'
+    : '"""' (('"' | '""')? ((~ ["\\]) | ECHAR | UCHAR))* '"""'
     ;
 
 // [44] STRING_LITERAL_QUOTE ::= '"' ([^#x22#x5C#x0A#x0D] | ECHAR | UCHAR)* '"'
@@ -345,6 +345,7 @@ PN_CHARS_BASE
     | '\u3001' .. '\uD7FF'
     | '\uF900' .. '\uFDCF'
     | '\uFDF0' .. '\uFFFD'
+    | '\u{10000}' .. '\u{EFFFF}'
     ;
 
 // [53] PN_CHARS_U ::= PN_CHARS_BASE | '_'

@@ -28,6 +28,9 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractManifestTest {
 
@@ -166,22 +169,22 @@ public abstract class AbstractManifestTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("positiveSyntaxTests")
     public void testPositiveSyntax(TestInfo info) throws Exception {
-        if (!"dummy".equals(info.name)) return;
+        if ("dummy".equals(info.name)) return;
         TurtleProvParser.parseTurtleFromString(Files.readString(info.actionFile));
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("negativeSyntaxTests")
     public void testNegativeSyntax(TestInfo info) throws Exception {
-        if (!"dummy".equals(info.name)) return;
+        if ("dummy".equals(info.name)) return;
         ProvStore store = TurtleProvParser.parseTurtleFromString(Files.readString(info.actionFile));
-        Assertions.assertFalse(store.getSyntaxErrors().isEmpty(), "Expected syntax errors but none were found");
+        assertFalse(store.getSyntaxErrors().isEmpty(), "Expected syntax errors but none were found");
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("evalTests")
     public void testEvaluation(TestInfo info) throws Exception {
-        if (!"dummy".equals(info.name)) return;
+        if ("dummy".equals(info.name)) return;
         ProvStore store = TurtleProvParser.parseTurtleFromString(Files.readString(info.actionFile));
         Model actionModel = RDF12Converter.toModel(store, false);
         Model expectedModel = RDFDataMgr.loadModel(info.resultFile.toString());
@@ -193,10 +196,10 @@ public abstract class AbstractManifestTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("negativeEvalTests")
     public void testNegativeEvaluation(TestInfo info) {
-        if (!"dummy".equals(info.name)) return;
+        if ("dummy".equals(info.name)) return;
         try {
             ProvStore store = TurtleProvParser.parseTurtleFromString(Files.readString(info.actionFile));
-            Assertions.assertTrue(store.triples.isEmpty() || !store.getSyntaxErrors().isEmpty());
+            assertTrue(store.triples.isEmpty() || !store.getSyntaxErrors().isEmpty());
         } catch (Exception e) {
             // Expected parsing/evaluation failure
             return;

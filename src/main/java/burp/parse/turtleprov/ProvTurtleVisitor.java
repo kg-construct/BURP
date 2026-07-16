@@ -7,6 +7,8 @@ import burp.reporting.StatementParts;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.irix.IRIx;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 
@@ -57,11 +59,13 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         }
         return locations;
     }
+
     private final ProvStore store = new ProvStore();
 
     public ProvStore getStore() {
         return store;
     }
+
     private final Model model = ModelFactory.createDefaultModel();
     private final Map<String, Resource> blankNodeMap = new HashMap<>();
 
@@ -75,6 +79,15 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
 
     private static final Pattern prefixedNamePattern = Pattern.compile("^(.*?):(.*)$");
     private static final Pattern blankNodeLabelPattern = Pattern.compile("^_:(.+)$");
+    private String baseURI = null;
+
+    private String resolveRelativeIRI(String base, String rel) {
+        try {
+            return IRIx.create(base).resolve(rel).toString();
+        } catch (Exception e) {
+            return rel;
+        }
+    }
 
     private Point getStartPoint(Token token) {
         if (token == null) return null;
@@ -141,6 +154,10 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         String prefixNs = prefixText.substring(0, prefixText.length() - 1);
         String iriText = iriRef.getText();
         String iri = iriText.substring(1, iriText.length() - 1);
+        iri = unescapeIri(iri);
+        if (baseURI != null) {
+            iri = resolveRelativeIRI(baseURI, iri);
+        }
         store.getPrefixes().put(prefixNs, iri);
         return null;
     }
@@ -157,11 +174,27 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
 
     @Override
     public Object visitBase(TurtleParser.BaseContext ctx) {
+        String baseText = ctx.IRIREF().getText();
+        String base = baseText.substring(1, baseText.length() - 1);
+        base = unescapeIri(base);
+        if (baseURI != null) {
+            this.baseURI = resolveRelativeIRI(baseURI, base);
+        } else {
+            this.baseURI = base;
+        }
         return null;
     }
 
     @Override
     public Object visitSparqlBase(TurtleParser.SparqlBaseContext ctx) {
+        String baseText = ctx.IRIREF().getText();
+        String base = baseText.substring(1, baseText.length() - 1);
+        base = unescapeIri(base);
+        if (baseURI != null) {
+            this.baseURI = resolveRelativeIRI(baseURI, base);
+        } else {
+            this.baseURI = base;
+        }
         return null;
     }
 
@@ -192,6 +225,61 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         throw new TurtleProvException("Unknown subject type", getRange(ctx));
     }
 
+    public static String unescapeLocalName(String s) {
+        if (s == null) return null;
+        return s.replaceAll("\\\\(.)", "$1");
+    }
+
+    private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\\\(u([0-9a-fA-F]{0,4})|U([0-9a-fA-F]{0,8})|.?)");
+
+    private static String unescape(String s, boolean isIri) {
+        if (s == null) return null;
+        Matcher m = ESCAPE_PATTERN.matcher(s);
+        StringBuilder sb = new StringBuilder(s.length());
+        while (m.find()) {
+            String esc = m.group(1);
+            if (esc == null || esc.isEmpty()) {
+                throw new IllegalArgumentException(isIri ? "Trailing backslash in IRI" : "Trailing backslash in string");
+            }
+            char first = esc.charAt(0);
+            if (first == 'u') {
+                if (esc.length() < 5) {
+                    throw new IllegalArgumentException("Incomplete \\u unicode escape");
+                }
+                int cp = Integer.parseInt(esc.substring(1), 16);
+                m.appendReplacement(sb, Matcher.quoteReplacement(String.valueOf((char) cp)));
+            } else if (first == 'U') {
+                if (esc.length() < 9) {
+                    throw new IllegalArgumentException("Incomplete \\U unicode escape");
+                }
+                int cp = Integer.parseInt(esc.substring(1), 16);
+                m.appendReplacement(sb, Matcher.quoteReplacement(new String(Character.toChars(cp))));
+            } else {
+                if (isIri) {
+                    throw new IllegalArgumentException("Invalid escape in IRI: \\" + first);
+                }
+                char replacement = switch (first) {
+                    case 't' -> '\t';
+                    case 'b' -> '\b';
+                    case 'n' -> '\n';
+                    case 'r' -> '\r';
+                    case 'f' -> '\f';
+                    case '"' -> '"';
+                    case '\'' -> '\'';
+                    case '\\' -> '\\';
+                    default -> throw new IllegalArgumentException("Invalid escape sequence: \\" + first);
+                };
+                m.appendReplacement(sb, Matcher.quoteReplacement(String.valueOf(replacement)));
+            }
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    public static String unescapeIri(String s) {
+        return unescape(s, true);
+    }
+
     @Override
     public Object visitIri(TurtleParser.IriContext ctx) {
         TerminalNode irirefCtx = ctx.IRIREF();
@@ -201,12 +289,16 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
             Token token = irirefCtx.getSymbol();
             String iriText = token.getText();
             String iri = iriText.substring(1, iriText.length() - 1);
+            iri = unescapeIri(iri);
+            if (baseURI != null) {
+                iri = resolveRelativeIRI(baseURI, iri);
+            }
             Resource resource = ResourceFactory.createResource(iri);
             NodeInfo nodeInfo = new NodeInfo(
-                TurtleNodeKind.IRIREF,
-                getStartPoint(token),
-                getEndPoint(token),
-                null
+                    TurtleNodeKind.IRIREF,
+                    getStartPoint(token),
+                    getEndPoint(token),
+                    null
             );
             return new Pair<>(resource, nodeInfo);
         } else if (prefixedNameCtx != null) {
@@ -217,6 +309,7 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
             if (match.matches()) {
                 String prefix = match.group(1) != null ? match.group(1) : "";
                 String localName = match.group(2);
+                localName = unescapeLocalName(localName);
                 String namespace = store.getPrefixes().get(prefix);
                 if (namespace == null) throw new TurtleProvException("Unknown prefix: " + prefix, getRange(token));
                 Resource resource = ResourceFactory.createResource(namespace + localName);
@@ -240,8 +333,8 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
                 String label = matcher.group(1);
                 Resource resource = blankNodeMap.computeIfAbsent(label, this::createBlankNode);
                 NodeInfo nodeInfo = new NodeInfo(
-                    TurtleNodeKind.BLANK_NODE_LABEL,
-                    getStartPoint(token), getEndPoint(token), label
+                        TurtleNodeKind.BLANK_NODE_LABEL,
+                        getStartPoint(token), getEndPoint(token), label
                 );
                 return new Pair<>(resource, nodeInfo);
             } else {
@@ -250,8 +343,8 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         } else if (text.startsWith("[") && text.endsWith("]")) {
             Resource resource = createBlankNode();
             NodeInfo nodeInfo = new NodeInfo(
-                TurtleNodeKind.ANONYMOUS_BLANK_NODE,
-                getStartPoint(token), getEndPoint(token), null
+                    TurtleNodeKind.ANONYMOUS_BLANK_NODE,
+                    getStartPoint(token), getEndPoint(token), null
             );
             return new Pair<>(resource, nodeInfo);
         } else {
@@ -271,7 +364,6 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
                 Resource node = blankNodes.get(i);
                 RDFNode value = list.get(i);
                 store.getTriples().add(new ProvTriple(model.createStatement(node, RDF.first, value)));
-                store.getTriples().add(new ProvTriple(model.createStatement(node, RDF.type, RDF.List)));
             }
             for (int i = 0; i < blankNodes.size() - 1; i++) {
                 Resource current = blankNodes.get(i);
@@ -293,8 +385,8 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         }
         Resource collectionStart = assembleList(items);
         NodeInfo nodeInfo = new NodeInfo(
-            TurtleNodeKind.COLLECTION,
-            getStartPoint(ctx.start), getEndPoint(ctx.stop), null
+                TurtleNodeKind.COLLECTION,
+                getStartPoint(ctx.start), getEndPoint(ctx.stop), null
         );
 
         return new Pair<>(collectionStart, nodeInfo);
@@ -304,8 +396,8 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
     public Object visitBlankNodePropertyList(TurtleParser.BlankNodePropertyListContext ctx) {
         Resource resource = createBlankNode();
         NodeInfo nodeInfo = new NodeInfo(
-            TurtleNodeKind.BLANK_NODE_PROPERTY_LIST,
-            getStartPoint(ctx.start), getEndPoint(ctx.stop), null
+                TurtleNodeKind.BLANK_NODE_PROPERTY_LIST,
+                getStartPoint(ctx.start), getEndPoint(ctx.stop), null
         );
 
         Pair<Resource, NodeInfo> subject = new Pair<>(resource, nodeInfo);
@@ -318,8 +410,8 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
 
     @SuppressWarnings("unchecked")
     private void visitPredicateObjectList(
-        TurtleParser.PredicateObjectListContext ctx,
-        Pair<Resource, NodeInfo> subject
+            TurtleParser.PredicateObjectListContext ctx,
+            Pair<Resource, NodeInfo> subject
     ) {
         List<TurtleParser.VerbContext> verbs = ctx.verb();
         List<TurtleParser.ObjectListContext> objectLists = ctx.objectList();
@@ -344,8 +436,8 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
             return new Pair<>(property, iriPair.second());
         } else if ("a".equals(ctx.getText())) {
             NodeInfo nodeInfo = new NodeInfo(
-                TurtleNodeKind.TYPE_VERB,
-                getStartPoint(ctx.start), getEndPoint(ctx.stop), null
+                    TurtleNodeKind.TYPE_VERB,
+                    getStartPoint(ctx.start), getEndPoint(ctx.stop), null
             );
             return new Pair<>(RDF.type, nodeInfo);
         } else {
@@ -370,8 +462,10 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         if (ctx.collection() != null) return visitCollection(ctx.collection());
         if (ctx.blankNodePropertyList() != null) return visitBlankNodePropertyList(ctx.blankNodePropertyList());
         if (ctx.literal() != null) return visitLiteral(ctx.literal());
-        if (ctx.tripleTerm() != null) throw new TurtleProvException("RDF-star / RDF 1.2 triple terms are not supported", getRange(ctx));
-        if (ctx.reifiedTriple() != null) throw new TurtleProvException("RDF-star / RDF 1.2 reified triples are not supported", getRange(ctx));
+        if (ctx.tripleTerm() != null)
+            throw new TurtleProvException("RDF-star / RDF 1.2 triple terms are not supported", getRange(ctx));
+        if (ctx.reifiedTriple() != null)
+            throw new TurtleProvException("RDF-star / RDF 1.2 reified triples are not supported", getRange(ctx));
         throw new TurtleProvException("Unknown object type: " + ctx.getText(), getRange(ctx));
     }
 
@@ -407,7 +501,7 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         TurtleNodeKind kind;
         TerminalNode firstChild = (TerminalNode) ctx.string().getChild(0);
         int symbolType = firstChild.getSymbol().getType();
-        
+
         if (symbolType == TurtleParser.STRING_LITERAL_QUOTE) {
             kind = TurtleNodeKind.STRING_LITERAL_QUOTE;
         } else if (symbolType == TurtleParser.STRING_LITERAL_SINGLE_QUOTE) {
@@ -422,7 +516,7 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
 
         Point startPoint = getStartPoint(ctx.start);
         Point endPoint = getEndPoint(ctx.stop);
-        
+
         Point rdfStart = null;
         if (ctx.string().start != null) {
             rdfStart = getStartPoint(ctx.string().start).plus(new Point(0, quoteSize));
@@ -436,30 +530,35 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         }
 
         NodeInfo nodeInfo = new NodeInfo(
-            kind,
-            startPoint,
-            endPoint,
-            rdfStart,
-            rdfEnd,
-            null
+                kind,
+                startPoint,
+                endPoint,
+                rdfStart,
+                rdfEnd,
+                null
         );
         return new Pair<>(literal, nodeInfo);
+    }
+
+    public static String unescapeRdfLiteralString(String s) {
+        return unescape(s, false);
     }
 
     @Override
     public Object visitString(TurtleParser.StringContext ctx) {
         String text = ctx.getText();
-        if (text.startsWith("\"\"\"") && text.endsWith("\"\"\"")) {
-            return new Pair<>(text.substring(3, text.length() - 3), 3);
-        } else if (text.startsWith("'''") && text.endsWith("'''")) {
-            return new Pair<>(text.substring(3, text.length() - 3), 3);
-        } else if (text.startsWith("\"") && text.endsWith("\"")) {
-            return new Pair<>(text.substring(1, text.length() - 1), 1);
-        } else if (text.startsWith("'") && text.endsWith("'")) {
-            return new Pair<>(text.substring(1, text.length() - 1), 1);
+        String content;
+        int delimiterLength;
+        if (ctx.STRING_LITERAL_LONG_QUOTE() != null || ctx.STRING_LITERAL_LONG_SINGLE_QUOTE() != null) {
+            content = text.substring(3, text.length() - 3);
+            delimiterLength = 3;
         } else {
-            return new Pair<>(text, 0);
+            assert ctx.STRING_LITERAL_QUOTE() != null || ctx.STRING_LITERAL_SINGLE_QUOTE() != null;
+            content = text.substring(1, text.length() - 1);
+            delimiterLength = 1;
         }
+        content = unescapeRdfLiteralString(content);
+        return new Pair<>(content, delimiterLength);
     }
 
     private Pair<Literal, NodeInfo> visitNumericLiteral(TerminalNode terminalNode) {
@@ -470,13 +569,13 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         TurtleNodeKind kind;
 
         if (text.contains("e") || text.contains("E")) {
-            literal = model.createTypedLiteral(Double.parseDouble(text));
+            literal = model.createTypedLiteral(text, XSDDatatype.XSDdouble);
             kind = TurtleNodeKind.DOUBLE_LITERAL;
         } else if (text.contains(".")) {
-            literal = model.createTypedLiteral(Double.parseDouble(text)); // TODO add decimal
+            literal = model.createTypedLiteral(text, XSDDatatype.XSDdecimal);
             kind = TurtleNodeKind.DECIMAL_LITERAL;
         } else {
-            literal = model.createTypedLiteral(Integer.parseInt(text));
+            literal = model.createTypedLiteral(text, XSDDatatype.XSDinteger);
             kind = TurtleNodeKind.INTEGER_LITERAL;
         }
 
@@ -491,5 +590,6 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         return new Pair<>(literal, nodeInfo);
     }
 
-    public record Pair<A, B>(A first, B second) {}
+    public record Pair<A, B>(A first, B second) {
+    }
 }

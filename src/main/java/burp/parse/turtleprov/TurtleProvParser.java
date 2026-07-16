@@ -2,6 +2,7 @@ package burp.parse.turtleprov;
 
 import burp.reporting.PointRange;
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.Interval;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +31,7 @@ public class TurtleProvParser {
         TurtleLexer lexer = new TurtleLexer(input);
         List<ProvStore.SyntaxError> syntaxErrors = new ArrayList<>();
 
-        final String fullText = input.size() > 0 ? input.getText(org.antlr.v4.runtime.misc.Interval.of(0, input.size() - 1)) : "";
+        final String fullText = input.size() > 0 ? input.getText(Interval.of(0, input.size() - 1)) : "";
 
         BaseErrorListener errorListener = new BaseErrorListener() {
             @Override

@@ -2,6 +2,7 @@ package burp.parse.turtleprov;
 
 import burp.reporting.PointRange;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
@@ -23,27 +24,20 @@ public class ProvStore {
         return syntaxErrors;
     }
 
-    public static class SyntaxError {
-        public final int line;
-        public final int charPositionInLine;
-        public final String message;
-        public final String offendingSymbol;
-        public final PointRange range;
-
-        public SyntaxError(int line, int charPositionInLine, String message, String offendingSymbol, PointRange range) {
-            this.line = line;
-            this.charPositionInLine = charPositionInLine;
-            this.message = message;
-            this.offendingSymbol = offendingSymbol;
-            this.range = range;
-        }
+    public record SyntaxError(
+            int line,
+            int charPositionInLine,
+            String message,
+            String offendingSymbol,
+            PointRange range
+    ) {
 
         public SyntaxError(int line, int charPositionInLine, String message, String offendingSymbol) {
             this(line, charPositionInLine, message, offendingSymbol, null);
         }
 
         @Override
-        public String toString() {
+        public @NonNull String toString() {
             return "line " + line + ":" + charPositionInLine + " " + message;
         }
     }

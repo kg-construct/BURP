@@ -18,11 +18,16 @@ import burp.reporting.*;
 import burp.vocabularies.RER;
 import burp.vocabularies.RML;
 import org.apache.jena.graph.Node;
+import org.apache.jena.langtagx.LangTagX;
+import org.apache.jena.ontapi.OntModelFactory;
+import org.apache.jena.ontapi.model.OntModel;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryParseException;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.reasoner.Reasoner;
+import org.apache.jena.reasoner.ReasonerRegistry;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.ShaclValidator;
@@ -41,6 +46,17 @@ import static burp.reporting.StatementPart.*;
 
 public class Parse {
 
+    private static final OntModel RML_CORE_ONTOLOGY = loadRmlCoreOntology();
+
+    private static OntModel loadRmlCoreOntology() {
+        OntModel schema = OntModelFactory.createModel();
+        var stream = Parse.class.getResourceAsStream("/vocabularies/rml/rml-core.owl");
+        if (stream != null) {
+            schema.read(stream, "urn:dummy", FileUtils.langTurtle);
+        }
+        return schema;
+    }
+
     public final Map<Resource, TriplesMap> triplesMaps = new HashMap<>();
     public final Map<Resource, LogicalView> logicalViews = new HashMap<>();
     public final Map<Resource, LogicalTarget> logicalTargets = new HashMap<>();
@@ -55,9 +71,9 @@ public class Parse {
         provStore = TurtleProvParser.parseTurtleFromPath(turtleFile);
         if (!provStore.getSyntaxErrors().isEmpty()) {
             var rmlSyntaxError = provStore.getSyntaxErrors().stream().map(error -> {
-                TextFilePointer tfp = new TextFilePointer(turtleFile, error.range);
+                TextFilePointer tfp = new TextFilePointer(turtleFile, error.range());
                 Origin origin = new Origin(null, List.of(tfp));
-                return new RmlError(error.message, origin, RER.RDFMappingSyntaxError);
+                return new RmlError(error.message(), origin, RER.RDFMappingSyntaxError);
             }).toList();
             if (Main.report != null) {
                 Main.report.getErrors().addAll(rmlSyntaxError);
@@ -146,13 +162,16 @@ public class Parse {
     }
 
     private boolean isValid(Model mapping) {
-        Model core = ModelFactory.createDefaultModel();
-        core.read(Parse.class.getResourceAsStream("/shapes/core.ttl"), "urn:dummy", FileUtils.langTurtle);
-        core.read(Parse.class.getResourceAsStream("/shapes/cc.ttl"), "urn:dummy", FileUtils.langTurtle);
-        core.read(Parse.class.getResourceAsStream("/shapes/lv.ttl"), "urn:dummy", FileUtils.langTurtle);
-        core.read(Parse.class.getResourceAsStream("/shapes/io.ttl"), "urn:dummy", FileUtils.langTurtle);
+        Model shapesModel = ModelFactory.createDefaultModel();
+        shapesModel.read(Parse.class.getResourceAsStream("/shapes/core.ttl"), "urn:dummy", FileUtils.langTurtle);
+        shapesModel.read(Parse.class.getResourceAsStream("/shapes/cc.ttl"), "urn:dummy", FileUtils.langTurtle);
+        shapesModel.read(Parse.class.getResourceAsStream("/shapes/lv.ttl"), "urn:dummy", FileUtils.langTurtle);
+        shapesModel.read(Parse.class.getResourceAsStream("/shapes/io.ttl"), "urn:dummy", FileUtils.langTurtle);
 
-        ValidationReport report = ShaclValidator.get().validate(core.getGraph(), mapping.getGraph());
+        Reasoner reasoner = ReasonerRegistry.getRDFSReasoner().bindSchema(RML_CORE_ONTOLOGY);
+        InfModel infModel = ModelFactory.createInfModel(reasoner, mapping);
+
+        ValidationReport report = ShaclValidator.get().validate(shapesModel.getGraph(), infModel.getGraph());
         if (!report.conforms()) {
             report.getEntries().forEach(vr -> {
                 List<StatementParts> focusOrigins = extractStatementsFromShaclViolation(vr, mapping);
@@ -472,7 +491,23 @@ public class Parse {
     }
 
     private LanguageMap prepareLanguageMap(Resource lam) {
-        return prepareExpression(lam, new LanguageMap());
+        LanguageMap lm = prepareExpression(lam, new LanguageMap());
+        if (lm.getExpression() instanceof RDFNodeConstant constant) {
+            String value = (constant.constant instanceof LiteralTerm literalTerm)
+                    ? literalTerm.value()
+                    : constant.constant.toString();
+            if (!LangTagX.checkLanguageTag(value)) {
+                throw new BurpException(
+                        new RmlError(
+                                "Invalid static language code: " + value,
+                                lm.getExpressionOrigin(),
+                                RER.MappingError
+                                //TODO Should probably be a InvalidLanguageTag error but it is an ExecutionError which says that it is due to data but herer it is constant so due to mapping.
+                        )
+                );
+            }
+        }
+        return lm;
     }
 
     private Field prepareField(Resource p) {
