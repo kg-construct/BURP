@@ -23,7 +23,7 @@ import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.DatasetGraphFactory;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.util.IsoMatcher;
-import org.junit.jupiter.api.Assertions;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -32,7 +32,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestRMLModule {
@@ -192,7 +196,7 @@ public abstract class TestRMLModule {
                 }
 
                 System.out.println("Isomorphic? " + (isIsomorphic ? "OK" : "NOK"));
-                Assertions.assertTrue(isIsomorphic, "is not isomorphic");
+                assertTrue(isIsomorphic, "is not isomorphic");
             } catch (Exception e) {
                 if (isNFormat) {
                     System.out.println("RDF parsing failed, falling back to line-by-line comparison: " + e.getMessage());
@@ -242,10 +246,15 @@ public abstract class TestRMLModule {
 
         Model report = RDFDataMgr.loadModel(reportPath);
         long countErrors = getCountErrors(report);
-        List<String> errorTypes = getErrorTypes(report);
+        var errorTypes = getErrorTypes(report);
         if (countErrors > 0) {
-            System.out.println("Error types: " + errorTypes);
+            String errorTypeNames = mapToLocalNames(errorTypes).collect(Collectors.joining(", "));
+            System.out.println("Error types: " + errorTypeNames);
         }
+    }
+
+    private static @NonNull Stream<String> mapToLocalNames(List<Resource> errorTypes) {
+        return errorTypes.stream().map(Resource::getLocalName);
     }
 
     @ParameterizedTest
@@ -293,14 +302,14 @@ public abstract class TestRMLModule {
             writer.flush();
         }
 
-        Assertions.assertTrue(exit > 0);
-        Assertions.assertFalse(report.isEmpty());
+        assertTrue(exit > 0);
+        assertFalse(report.isEmpty());
 
         long countErrors = getCountErrors(report);
-        List<String> errorTypes = getErrorTypes(report);
+        var errorTypes = getErrorTypes(report);
 
         System.out.println("Error types: " + errorTypes);
-        Assertions.assertTrue(countErrors > 0, "Expected at least 1 error, but got " + countErrors);
+        assertTrue(countErrors > 0, "Expected at least 1 error, but got " + countErrors);
 
         checkExpectedErrors(testData, errorTypes);
 
@@ -311,7 +320,7 @@ public abstract class TestRMLModule {
             nextLine.add(testData.ID);
             nextLine.add(testData.title);
             nextLine.add(String.valueOf(countErrors));
-            nextLine.addAll(errorTypes);
+            nextLine.addAll(mapToLocalNames(errorTypes).toList());
             writer.writeNext(nextLine.toArray(new String[0]));
             writer.flush();
         }
@@ -346,7 +355,7 @@ public abstract class TestRMLModule {
         return countErrors;
     }
 
-    private static List<String> getErrorTypes(Model report) {
+    private static List<Resource> getErrorTypes(Model report) {
         String typeQueryString =
                 "PREFIX rer: <" + RER.NS + ">\n" +
                         "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
@@ -354,21 +363,21 @@ public abstract class TestRMLModule {
                         "  ?s rer:hasError ?error .\n" +
                         "  ?error rdf:type ?type .\n" +
                         "}";
-        List<String> errorTypes = new ArrayList<>();
+        List<Resource> errorTypes = new ArrayList<>();
         try (QueryExecution qexec = QueryExecutionFactory.create(typeQueryString, report)) {
             ResultSet results = qexec.execSelect();
             while (results.hasNext()) {
                 QuerySolution soln = results.nextSolution();
                 Resource typeInfo = soln.getResource("type");
                 if (typeInfo != null) {
-                    errorTypes.add(typeInfo.getLocalName());
+                    errorTypes.add(typeInfo);
                 }
             }
         }
         return errorTypes;
     }
 
-    private void checkExpectedErrors(TestData testData, List<String> errorTypes) throws IOException, CsvException {
+    private void checkExpectedErrors(TestData testData, List<Resource> errorTypes) throws IOException, CsvException {
         Path expectedErrorsCsv = Paths.get("src/test/resources/burp/errors.csv").toAbsolutePath().normalize();
         if (Files.exists(expectedErrorsCsv)) {
             try (CSVReaderHeaderAware reader = new CSVReaderHeaderAware(new FileReader(expectedErrorsCsv.toFile()))) {
@@ -377,16 +386,58 @@ public abstract class TestRMLModule {
                     if (testData.ID.equals(record.get("TestCaseId"))) {
                         String expectedRerError = record.get("RerError");
                         if (expectedRerError != null && !expectedRerError.isBlank()) {
-                            boolean match = errorTypes.contains(expectedRerError);
-                            // TODO: In the future, we can expand this to check for subclasses 
-                            // by loading the RER ontology and checking rdfs:subClassOf
-                            Assertions.assertTrue(match,
-                                    "Expected error type " + expectedRerError + " not found in actual error types: " + errorTypes);
+                            String rerNamespace = "https://w3id.org/dre/rer#";
+                            String expectedUri = expectedRerError.contains(":") || expectedRerError.startsWith("http") ? expectedRerError : rerNamespace + expectedRerError;
+                            Resource expected = RER_ONTOLOGY.getResource(expectedUri);
+                            boolean match = errorTypes.stream()
+                                    .anyMatch(actual -> isSubclassOf(actual, expected));
+                            assertTrue(match, "Expected error type " + expectedRerError + " (or a subclass) not found in actual error types: " + errorTypes);
                         }
                     }
                 }
             }
         }
+    }
+
+    private static final Model RER_ONTOLOGY;
+
+    static {
+        var model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel();
+        try {
+            Path path = Paths.get("src/main/resources/vocabularies/rer.ttl").toAbsolutePath().normalize();
+            if (Files.exists(path)) {
+                RDFDataMgr.read(model, path.toString(), Lang.TURTLE);
+            } else {
+                try (var is = TestRMLModule.class.getResourceAsStream("/vocabularies/rer.ttl")) {
+                    if (is != null) {
+                        RDFDataMgr.read(model, is, Lang.TURTLE);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load RER ontology");
+            e.printStackTrace();
+        }
+        RER_ONTOLOGY = model;
+    }
+
+    private static boolean isSubclassOf(Resource actual, Resource expected) {
+        if (actual.equals(expected)) {
+            return true;
+        }
+        Resource ontologyActual = RER_ONTOLOGY.getResource(actual.getURI());
+        if (ontologyActual != null) {
+            org.apache.jena.rdf.model.StmtIterator it = ontologyActual.listProperties(org.apache.jena.vocabulary.RDFS.subClassOf);
+            while (it.hasNext()) {
+                org.apache.jena.rdf.model.Statement s = it.nextStatement();
+                if (s.getObject().isResource()) {
+                    if (isSubclassOf(s.getObject().asResource(), expected)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private static List<String> normalizeAndDeduplicateLines(String data) {
@@ -415,7 +466,7 @@ public abstract class TestRMLModule {
      * </ul>
      * <p>
      * To ensure that the test isomorphic check compares literals by their actual numerical values
-     * rather than their literal lexical representations, this method parses all double/float 
+     * rather than their literal lexical representations, this method parses all double/float
      * literals in the DatasetGraph and normalises them to the standard <code>Double.toString (d)</code> format.
      */
     private static DatasetGraph normalizeDoubles(DatasetGraph dsg) {

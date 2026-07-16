@@ -46,10 +46,26 @@ public class TestRMLIORegistry extends TestRMLModule {
                 case "com.mysql.cj.jdbc.Driver":
                     queryString = "?allowMultiQueries=true";
                     MYSQL_CONTAINER.addParameter("allowMultiQueries", "true");
+                    try (var conn = java.sql.DriverManager.getConnection(MYSQL_CONTAINER.getJdbcUrl(), "root", MYSQL_CONTAINER.getPassword())) {
+                        try (var stmt = conn.createStatement()) {
+                            stmt.executeUpdate("GRANT ALL PRIVILEGES ON *.* TO '" + MYSQL_CONTAINER.getUsername() + "'@'%'");
+                            stmt.executeUpdate("FLUSH PRIVILEGES");
+                            stmt.executeUpdate("DROP DATABASE IF EXISTS test");
+                            stmt.executeUpdate("CREATE DATABASE test");
+                        }
+                    }
                     db = MYSQL_CONTAINER;
                     break;
 
                 case "org.postgresql.Driver":
+                    try (var conn = PGSQL_CONTAINER.createConnection("")) {
+                        try (var stmt = conn.createStatement()) {
+                            stmt.executeUpdate("DROP SCHEMA public CASCADE");
+                            stmt.executeUpdate("CREATE SCHEMA public");
+                            stmt.executeUpdate("GRANT ALL ON SCHEMA public TO public");
+                            stmt.executeUpdate("GRANT ALL ON SCHEMA public TO postgres");
+                        }
+                    }
                     db = PGSQL_CONTAINER;
                     break;
 
@@ -93,6 +109,32 @@ public class TestRMLIORegistry extends TestRMLModule {
             String sql = new String(Files.readAllBytes(Paths.get(sqlFilePath)));
             try (var conn = db.createConnection(queryString)) {
                 try (var stmt = conn.createStatement()) {
+                    switch (jdbcDriver) {
+                        case "org.postgresql.Driver" -> {
+                            // Strip USE statements for PostgreSQL
+                            sql = sql.replaceAll("(?i)\\bUSE\\s+[a-zA-Z0-9_]+\\s*;?", "");
+                            // Strip database prefix qualifiers (e.g., TestDB.Student -> Student)
+                            sql = sql.replaceAll("(?i)\\b(TestDB|test|testdb)\\.", "");
+                        }
+                        case "com.mysql.cj.jdbc.Driver" -> {
+                            // Dynamically create any databases in USE statements for MySQL
+                            java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?i)\\bUSE\\s+([a-zA-Z0-9_]+)");
+                            java.util.regex.Matcher m = p.matcher(sql);
+                            while (m.find()) {
+                                String dbName = m.group(1);
+                                stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS " + dbName);
+                            }
+                        }
+                        case "com.microsoft.sqlserver.jdbc.SQLServerDriver" -> {
+                            // Dynamically create any databases in USE statements for SQL Server
+                            java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?i)\\bUSE\\s+([a-zA-Z0-9_]+)");
+                            java.util.regex.Matcher m = p.matcher(sql);
+                            while (m.find()) {
+                                String dbName = m.group(1);
+                                stmt.executeUpdate("IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'" + dbName + "') CREATE DATABASE [" + dbName + "]");
+                            }
+                        }
+                    }
                     int update = stmt.executeUpdate(sql);
                     if (update > 0) {
                         System.out.println("SQL update successfully.");
@@ -113,7 +155,7 @@ public class TestRMLIORegistry extends TestRMLModule {
             .withReuse(true);
 
     @Container
-    public static MySQLContainer MYSQL_CONTAINER = new MySQLContainer("mysql:8")
+    public static MySQLContainer MYSQL_CONTAINER = new MySQLContainer("mysql:latest")
             .withEnv("MYSQL_ROOT_HOST", "%")
             .withCommand("mysqld", "--sql_mode=ANSI_QUOTES")
             .withReuse(true);
@@ -121,7 +163,7 @@ public class TestRMLIORegistry extends TestRMLModule {
 
     @Container
     public static MSSQLServerContainer MSSQL_CONTAINER =
-            new MSSQLServerContainer("mcr.microsoft.com/mssql/server:2022-CU20-ubuntu-22.04")
+            new MSSQLServerContainer("mcr.microsoft.com/mssql/server:2025-latest")
                     .acceptLicense()
                     .withReuse(true);
 
