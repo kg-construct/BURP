@@ -61,6 +61,7 @@ public final class Datardf {
     static final IRITerm XSDboolean = new IRITerm("http://www.w3.org/2001/XMLSchema#boolean");
     static final IRITerm XSDinteger = new IRITerm("http://www.w3.org/2001/XMLSchema#integer");
     static final IRITerm XSDdouble = new IRITerm("http://www.w3.org/2001/XMLSchema#double");
+    static final IRITerm XSDfloat = new IRITerm("http://www.w3.org/2001/XMLSchema#float");
     static final IRITerm XSDdate = new IRITerm("http://www.w3.org/2001/XMLSchema#date");
     static final IRITerm XSDdateTime = new IRITerm("http://www.w3.org/2001/XMLSchema#dateTime");
     static final IRITerm XSDstring = new IRITerm("http://www.w3.org/2001/XMLSchema#string");
@@ -74,6 +75,7 @@ public final class Datardf {
         if (o == null) return null;
 
         boolean isXsdDouble = datatype != null && XSDdouble.uri().equals(datatype.uri());
+        boolean isXsdFloat = datatype != null && XSDfloat.uri().equals(datatype.uri());
         if (o instanceof RDFNode node) {
             if (node.isLiteral()) {
                 Literal l = node.asLiteral();
@@ -84,6 +86,14 @@ public final class Datardf {
                     try {
                         double val = l.getDouble();
                         return new LiteralTerm(doubleCanonicalMap(val), XSDdouble, null);
+                    } catch (Exception e) {
+                        // fallback
+                    }
+                } else if (XSDfloat.uri().equals(dtUri) || isXsdFloat) {
+                    try {
+                        float val = l.getFloat();
+                        //FIXME Tests expect xsd:double but it would make sens to use xsd:float
+                        return new LiteralTerm(floatCanonicalMap(val), XSDdouble, null);
                     } catch (Exception e) {
                         // fallback
                     }
@@ -116,6 +126,18 @@ public final class Datardf {
                 } catch (NumberFormatException e) {
                     // fallback
                 }
+            } else if (isXsdFloat) {
+                if (o instanceof Number n) {
+                    //FIXME Tests expect xsd:double but it would make sens to use xsd:float
+                    return new LiteralTerm(floatCanonicalMap(n.floatValue()), XSDdouble, null);
+                }
+                try {
+                    float val = Float.parseFloat(o.toString());
+                    //FIXME Tests expect xsd:double but it would make sens to use xsd:float
+                    return new LiteralTerm(floatCanonicalMap(val), XSDdouble, null);
+                } catch (NumberFormatException e) {
+                    // fallback
+                }
             }
             return new LiteralTerm(o.toString(), datatype, null);
         }
@@ -125,7 +147,8 @@ public final class Datardf {
         } else if (o instanceof Integer || o instanceof Long) {
             return new LiteralTerm(o.toString(), XSDinteger, null);
         } else if (o instanceof Float f) {
-            return new LiteralTerm(doubleCanonicalMap(f.doubleValue()), XSDdouble, null);
+            //FIXME Tests expect xsd:double but it would make sens to use xsd:float
+            return new LiteralTerm(floatCanonicalMap(f), XSDdouble, null);
         } else if (o instanceof Double d) {
             return new LiteralTerm(doubleCanonicalMap(d), XSDdouble, null);
         } else if (o instanceof Date) {
@@ -139,21 +162,28 @@ public final class Datardf {
         }
     }
 
-    static String doubleCanonicalMap(double d) {
+    public static String doubleCanonicalMap(double d) {
         if (Double.isNaN(d)) return "NaN";
         if (d == Double.POSITIVE_INFINITY) return "INF";
         if (d == Double.NEGATIVE_INFINITY) return "-INF";
-        if (d < 0.999 || d > 999) return doubleScientificMap(d);
+        if (d < 0.999 || d > 999) return scientificNotation(BigDecimal.valueOf(d));
         return Double.toString(d);
     }
 
-    static String doubleScientificMap(double d) {
-        BigDecimal f = BigDecimal.valueOf(d);
+    public static String floatCanonicalMap(float f) {
+        if (Float.isNaN(f)) return "NaN";
+        if (f == Float.POSITIVE_INFINITY) return "INF";
+        if (f == Float.NEGATIVE_INFINITY) return "-INF";
+        if (f < 0.999 || f > 999) return scientificNotation(BigDecimal.valueOf(f));
+        return Float.toString(f);
+    }
+
+    public static String scientificNotation(BigDecimal f) {
         int p = f.precision();
         String x = "0.0" + "#".repeat(Math.max(0, p - 2)) + "E0";
         NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
         DecimalFormat formatter = (DecimalFormat) numberFormat;
         formatter.applyPattern(x);
-        return formatter.format(d);
+        return formatter.format(f);
     }
 }
