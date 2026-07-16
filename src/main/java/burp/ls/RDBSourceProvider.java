@@ -37,7 +37,8 @@ public class RDBSourceProvider implements LogicalSourceProvider {
         source.password = passwordStmt != null ? passwordStmt.getLiteral().getString() : null;
 
         String query = ls.getProperty(RML.iterator).getLiteral().getString();
-        source.query = query.replace("\\", "");
+        source.query = query; // TODO: Investigate we were previously replacing \\ by "" but the reason was lost.
+        source.queryStmt = ls.getProperty(RML.iterator);
 
         source.getNulls().addAll(FileBaseSourceProvider.getNullValues(ls));
         source.currentWorkingDirectory = currentWorkingDirectory;
