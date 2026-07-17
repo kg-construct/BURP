@@ -22,12 +22,9 @@ import java.util.Map;
 
 public class XMLSource extends FileBasedLogicalSource {
     private List<Iteration> iterations = null;
-    public List<Iteration> getIterations() { return iterations; }
-    public void setIterations(List<Iteration> i) { iterations = i; }
     public String iterator;
     public Origin iteratorOrigin;
     public Map<String, String> prefixMap;
-    private XPathCompiler xPathCompiler;
 
     public static final Processor processor = new Processor(false);
     public static final DocumentBuilder documentBuilder = processor.newDocumentBuilder();
@@ -35,15 +32,15 @@ public class XMLSource extends FileBasedLogicalSource {
     @Override
     public Iterable<Iteration> iterator() {
         try {
-            if (getIterations() == null) {
-                setIterations(new ArrayList<>());
+            if (iterations == null) {
+                iterations = new ArrayList<>();
 
                 XdmNode xmlDocument;
                 try (BufferedReader reader = Files.newBufferedReader(Paths.get(getDecompressedFile()), StandardCharsets.UTF_8)) {
                     xmlDocument = documentBuilder.build(new StreamSource(reader));
                 }
 
-                xPathCompiler = processor.newXPathCompiler();
+                XPathCompiler xPathCompiler = processor.newXPathCompiler();
                 if (prefixMap != null) {
                     for (Map.Entry<String, String> entry : prefixMap.entrySet()) {
                         xPathCompiler.declareNamespace(entry.getKey(), entry.getValue());
@@ -54,29 +51,31 @@ public class XMLSource extends FileBasedLogicalSource {
                 selector.setContextItem(xmlDocument);
 
                 for (XdmItem item : selector) {
-                    getIterations().add(new XMLIteration(item, getNulls(), xPathCompiler));
+                    iterations.add(new XMLIteration(item, getNulls(), xPathCompiler));
                 }
             }
-            return getIterations();
+
+            return iterations;
+
         } catch (SaxonApiException e) {
             throw new BurpException(
-                new RmlError(
-                    e.getMessage() != null ? e.getMessage() : "SaxonApiException",
-                    iteratorOrigin,
-                    RER.ReferenceFormulationSyntaxError,
-                    e,
-                    new HashMap<>()
-                )
+                    new RmlError(
+                            e.getMessage() != null ? e.getMessage() : "SaxonApiException",
+                            iteratorOrigin,
+                            RER.ReferenceFormulationSyntaxError,
+                            e,
+                            new HashMap<>()
+                    )
             );
         } catch (Exception e) {
             throw new BurpException(
-                new RmlError(
-                    e.getMessage() != null ? e.getMessage() : "Exception",
-                    iteratorOrigin,
-                    RER.ReferenceFormulationExecutionError,
-                    e,
-                    new HashMap<>()
-                )
+                    new RmlError(
+                            e.getMessage() != null ? e.getMessage() : "Exception",
+                            iteratorOrigin,
+                            RER.ReferenceFormulationExecutionError,
+                            e,
+                            new HashMap<>()
+                    )
             );
         }
     }
