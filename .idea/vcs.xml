@@ -2,6 +2,12 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/rml-modules/rml-cc" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/rml-modules/rml-core" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/rml-modules/rml-fnml" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/rml-modules/rml-io" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/rml-modules/rml-io-registry" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/rml-modules/rml-lv" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/test/resources/rdf-tests" vcs="Git" />
   </component>
 </project>
