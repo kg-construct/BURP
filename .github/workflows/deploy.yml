@@ -2,8 +2,6 @@ name: Deploy
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
 
@@ -33,7 +31,13 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_ARMOR_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
       - name: Deploy Maven package
-        run: mvn deploy -B -Pdeploy
+        # Locally run instead: mvn clean deploy -DskipTests -Pdeploy -Dgpg.passphrase=""
+        run: mvn deploy -B -Pdeploy -Dgpg.signer=bc -DskipTests
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.GPG_ARMOR_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: JReleaser Release
         run: mvn jreleaser:full-release -B -Pdeploy
         env:
