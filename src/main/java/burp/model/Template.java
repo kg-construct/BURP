@@ -101,6 +101,7 @@ public class Template implements Expression {
                 .collect(Collectors.toList());
     }
 
+    private static final Pattern bracesPattern = Pattern.compile("(?<!\\\\)\\{(.+?)(?<!\\\\)}");
     public List<String> references() {
         List<String> list = new ArrayList<>();
         Matcher m = bracesPattern.matcher(template);
@@ -206,10 +207,15 @@ public class Template implements Expression {
         return constructedSegments;
     }
 
+    private static final Pattern unescapePattern = Pattern.compile("\\\\([{}\\\\])");
+    /**
+     * Unescapes the escaping backslash from \{ and \} and \\.
+     */
     private String escape(String s) {
-        return s.replace("\\\\{", "{").replace("\\\\}", "}");
+        if (s == null || s.indexOf('\\') < 0) return s;
+        return unescapePattern.matcher(s).replaceAll("$1");
     }
 
-    private static final Pattern bracesPattern = Pattern.compile("(?<!\\\\)\\{(.+?)(?<!\\\\)}");
+
 
 }

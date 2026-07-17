@@ -10,6 +10,9 @@ import org.apache.jena.vocabulary.RDF;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static burp.model.rdf.Datardf.iriTerm;
+import static burp.model.rdf.Datardf.rdfUnderscore;
+
 public class MappingDocument implements PlanNode {
     public final List<TriplesMap> triplesMaps;
     private PlanNode parent = null;
@@ -110,17 +113,17 @@ public class MappingDocument implements PlanNode {
 
                             containerStmts.add(new RdfStatement(
                                     (BlankNodeOrIRI) currentListId,
-                                    new IRITerm(RDF.first.getURI()),
+                                    iriTerm(RDF.first),
                                     termItselfOrCollectionId(element),
                                     graph,
                                     null
                             ));
 
-                            Term restObj = isLast ? new IRITerm(RDF.nil.getURI()) : new BlankNodeTerm(subject.toString() + "_" + (i + 1));
+                            Term restObj = isLast ? iriTerm(RDF.nil) : new BlankNodeTerm(subject.toString() + "_" + (i + 1));
 
                             containerStmts.add(new RdfStatement(
                                     (BlankNodeOrIRI) currentListId,
-                                    new IRITerm(RDF.rest.getURI()),
+                                    iriTerm(RDF.rest),
                                     restObj,
                                     graph,
                                     null
@@ -130,11 +133,11 @@ public class MappingDocument implements PlanNode {
                         }
                     }
                     case RdfBagTerm rdfBagTerm ->
-                            emitContainerStmts(c, subject, new IRITerm(RDF.Bag.getURI()), graph, containerStmts);
+                            emitContainerStmts(c, subject, iriTerm(RDF.Bag), graph, containerStmts);
                     case RdfSeqTerm rdfSeqTerm ->
-                            emitContainerStmts(c, subject, new IRITerm(RDF.Seq.getURI()), graph, containerStmts);
+                            emitContainerStmts(c, subject, iriTerm(RDF.Seq), graph, containerStmts);
                     case RdfAltTerm rdfAltTerm ->
-                            emitContainerStmts(c, subject, new IRITerm(RDF.Alt.getURI()), graph, containerStmts);
+                            emitContainerStmts(c, subject, iriTerm(RDF.Alt), graph, containerStmts);
                     default -> {
                     }
                 }
@@ -160,16 +163,16 @@ public class MappingDocument implements PlanNode {
     }
 
     private void emitContainerStmts(CollectionOrContainerTerm c, Term subject, IRITerm type, IRITerm graph, List<RdfStatement> containerStmts) {
-        containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, new IRITerm(RDF.type.getURI()), type, graph, null));
+        containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, iriTerm(RDF.type), type, graph, null));
         for (int i = 0; i < c.getElements().size(); i++) {
             Term element = c.getElements().get(i);
-            containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, new IRITerm("http://www.w3.org/1999/02/22-rdf-syntax-ns#_" + (i + 1)), termItselfOrCollectionId(element), graph, null));
+            containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, rdfUnderscore(i + 1), termItselfOrCollectionId(element), graph, null));
         }
     }
 
     private Term rewrite(Term t) {
         if (t instanceof RdfListTerm && ((RdfListTerm) t).getElements().isEmpty()) {
-            return new IRITerm(RDF.nil.getURI());
+            return iriTerm(RDF.nil);
         }
         return termItselfOrCollectionId(t);
     }

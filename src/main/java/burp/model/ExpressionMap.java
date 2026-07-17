@@ -227,31 +227,42 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
     protected List<BlankNodeTerm> generateBlankNodes(Iteration i) {
         Set<LogicalTarget> targets = getEffectiveTargets();
 
-        if (expression instanceof RDFNodeConstant expr) {
-            if (expr.constant instanceof BlankNodeTerm constant) {
-                return Collections.singletonList(new BlankNodeTerm(constant.id(), targets));
-            } else {
-                return Collections.emptyList();
+        switch (expression) {
+            case RDFNodeConstant expr -> {
+                if (expr.constant instanceof BlankNodeTerm constant) {
+                    return Collections.singletonList(new BlankNodeTerm(constant.id(), targets));
+                } else {
+                    return Collections.emptyList();
+                }
             }
-        } else if (expression instanceof Template) {
-            return ((Template) expression).values(i, TemplateReferenceSafety.UNSAFE).stream()
-                    .filter(Objects::nonNull)
-                    .map(val -> blankNodeFor(val, targets))
-                    .toList();
-        } else if (expression instanceof Reference) {
-            return ((Reference) expression).values(i).stream()
-                    .filter(Objects::nonNull)
-                    .map(val -> blankNodeFor(val, targets))
-                    .toList();
-        } else if (expression instanceof FunctionExecution) {
-            return ((FunctionExecution) expression).values(i).stream()
-                    .filter(Objects::nonNull)
-                    .map(val -> blankNodeFor(val, targets))
-                    .toList();
-        } else if (expression == null) {
-            return Collections.singletonList(new BlankNodeTerm("bnode-" + (blankNodeIdCounter++), targets));
-        } else {
-            throw new RuntimeException("Error generating blank node.");
+            case Template template -> {
+                return template.values(i, TemplateReferenceSafety.UNSAFE).stream()
+                        .filter(Objects::nonNull)
+                        .map(val -> blankNodeFor(val, targets))
+                        .toList();
+            }
+            case Reference reference -> {
+                return reference.values(i).stream()
+                        .filter(Objects::nonNull)
+                        .map(val -> blankNodeFor(val, targets))
+                        .toList();
+            }
+            case FunctionExecution functionExecution -> {
+                return functionExecution.values(i).stream()
+                        .filter(Objects::nonNull)
+                        .map(val -> blankNodeFor(val, targets))
+                        .toList();
+            }
+            case null -> {
+                return Collections.singletonList(new BlankNodeTerm("bnode-" + (blankNodeIdCounter++), targets));
+            }
+            default -> throw new BurpException(
+                    new RmlError(
+                            "Error generating blank node for expression " + expression,
+                            expressionOrigin,
+                            RER.UnexpectedError
+                    )
+            );
         }
     }
 
@@ -273,26 +284,36 @@ public abstract class ExpressionMap implements LogicalTargetScope, PlanNode {
         List<LanguageTag> languages = lm != null ? lm.generateLanguageTags(i) : null;
         Set<LogicalTarget> baseTargets = getEffectiveTargets();
 
-        if (expression instanceof RDFNodeConstant expr) {
-            if (expr.constant instanceof LiteralTerm constant) {
-                return Collections.singletonList(new LiteralTerm(constant.value(), constant.datatype(), constant.language(), baseTargets));
-            } else {
-                return Collections.emptyList();
+        switch (expression) {
+            case RDFNodeConstant expr -> {
+                if (expr.constant instanceof LiteralTerm constant) {
+                    return Collections.singletonList(new LiteralTerm(constant.value(), constant.datatype(), constant.language(), baseTargets));
+                } else {
+                    return Collections.emptyList();
+                }
             }
-        } else if (expression instanceof Template) {
-            return ((Template) expression).values(i, TemplateReferenceSafety.UNSAFE).stream()
-                    .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
-                    .toList();
-        } else if (expression instanceof Reference) {
-            return ((Reference) expression).values(i).stream()
-                    .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
-                    .toList();
-        } else if (expression instanceof FunctionExecution) {
-            return ((FunctionExecution) expression).values(i).stream()
-                    .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
-                    .toList();
-        } else {
-            throw new RuntimeException("Error generating literal or value.");
+            case Template template -> {
+                return template.values(i, TemplateReferenceSafety.UNSAFE).stream()
+                        .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
+                        .toList();
+            }
+            case Reference reference -> {
+                return reference.values(i).stream()
+                        .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
+                        .toList();
+            }
+            case FunctionExecution functionExecution -> {
+                return functionExecution.values(i).stream()
+                        .flatMap(val -> literalFor(val, datatypes, languages, baseTargets).stream())
+                        .toList();
+            }
+            case null, default -> throw new BurpException(
+                    new RmlError(
+                            "Error generating literal for expression " + expression,
+                            expressionOrigin,
+                            RER.UnexpectedError
+                    )
+            );
         }
     }
 
