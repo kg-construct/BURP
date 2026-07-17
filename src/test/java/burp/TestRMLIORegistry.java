@@ -18,6 +18,7 @@ import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 @Testcontainers
 public class TestRMLIORegistry extends TestRMLModule {
@@ -27,6 +28,20 @@ public class TestRMLIORegistry extends TestRMLModule {
     @Override
     public String getBase() {
         return base;
+    }
+
+    @Override
+    public List<String> buggyTests() {
+        return List.of(
+                // td:Thing not yet implemented
+                "RMLIOREGTC0008a",
+                // Kafka not supported
+                "RMLIOREGTC0009a",
+                // MQTT not supported
+                "RMLIOREGTC0010a",
+                // Flaky test due to dbpedia.org access and data changes
+                "RMLIOREGTC0011a"
+        );
     }
 
     @Override

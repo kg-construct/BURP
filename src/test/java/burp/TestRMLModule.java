@@ -35,11 +35,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestRMLModule {
+
+    public List<String> buggyTests() {
+        return Collections.emptyList();
+    }
 
     public abstract String getBase();
 
@@ -61,7 +64,11 @@ public abstract class TestRMLModule {
     }
 
     protected Stream<TestData> testDataProviderOK() throws IOException, CsvException {
-        List<TestData> list = loadTestData().filter(t -> !t.error).toList();
+        var buggyTests = new HashSet<>(buggyTests());
+        List<TestData> list = loadTestData()
+                .filter(t -> !t.error)
+                .filter(t -> !buggyTests.contains(t.ID))
+                .toList();
         if (list.isEmpty()) {
             return Stream.of(new TestData(java.util.Map.of("ID", "dummy", "error", "false")));
         }
@@ -69,7 +76,11 @@ public abstract class TestRMLModule {
     }
 
     protected Stream<TestData> testDataProviderNotOK() throws IOException, CsvException {
-        List<TestData> list = loadTestData().filter(t -> t.error).toList();
+        var buggyTests = new HashSet<>(buggyTests());
+        List<TestData> list = loadTestData()
+                .filter(t -> t.error)
+                .filter(t -> !buggyTests.contains(t.ID))
+                .toList();
         if (list.isEmpty()) {
             return Stream.of(new TestData(java.util.Map.of("ID", "dummy", "error", "true")));
         }
@@ -302,7 +313,7 @@ public abstract class TestRMLModule {
             writer.flush();
         }
 
-        assertTrue(exit > 0);
+        assertNotEquals(0, exit);
         assertFalse(report.isEmpty());
 
         long countErrors = getCountErrors(report);

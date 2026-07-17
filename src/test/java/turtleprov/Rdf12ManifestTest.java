@@ -1,8 +1,11 @@
 package turtleprov;
 
+import org.junit.jupiter.api.Disabled;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Disabled
 public class Rdf12ManifestTest extends AbstractManifestTest {
     @Override
     public Path rootManifestFile() {

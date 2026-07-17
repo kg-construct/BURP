@@ -1,6 +1,5 @@
 package burp;
 
-import java.util.HashSet;
 import java.util.List;
 
 public class TestRMLIO extends TestRMLModule {
@@ -9,8 +8,8 @@ public class TestRMLIO extends TestRMLModule {
         return "./target/test-classes/rml-io/";
     }
 
-    private boolean isIgnored(String id) {
-        var buggyTests = List.of(
+    public List<String> buggyTests() {
+        return List.of(
                 // https://github.com/kg-construct/rml-io/issues/167
                 "RMLSTC0011a",
                 "RMLSTC0011b",
@@ -33,16 +32,5 @@ public class TestRMLIO extends TestRMLModule {
                 "RMLTTC0006d",
                 "RMLTTC0006e"
         );
-        return (new HashSet<>(buggyTests)).contains(id);
-    }
-
-    @Override
-    protected java.util.stream.Stream<TestData> testDataProviderOK() throws java.io.IOException, com.opencsv.exceptions.CsvException {
-        return super.testDataProviderOK().filter(t -> !isIgnored(t.ID));
-    }
-
-    @Override
-    protected java.util.stream.Stream<TestData> testDataProviderNotOK() throws java.io.IOException, com.opencsv.exceptions.CsvException {
-        return super.testDataProviderNotOK().filter(t -> !isIgnored(t.ID));
     }
 }
