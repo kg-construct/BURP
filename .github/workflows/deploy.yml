@@ -29,6 +29,14 @@ jobs:
           server-id: central
           server-username: MAVEN_USERNAME # env variable for username in deploy
           server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
+      - name: Set project version from tag
+        run: |
+          TAG_VERSION="${{ github.ref_name }}"
+          # Remove leading 'v' if present (e.g. v0.1.4 -> 0.1.4)
+          TAG_VERSION="${TAG_VERSION#v}"
+          
+          echo "Updating pom.xml version to: $TAG_VERSION"
+          mvn versions:set -DnewVersion="$TAG_VERSION" -DgenerateBackupPoms=false -B
       - name: Deploy Maven package
         # Locally run instead: mvn clean deploy -DskipTests -Pdeploy -Dgpg.passphrase=""
         run: mvn deploy -B -Pdeploy -Dgpg.signer=bc -DskipTests
