@@ -683,8 +683,7 @@
         <dependency>
             <groupId>com.github.candil-data-fabric</groupId>
             <artifactId>JNC</artifactId>
-            <!--suppress MavenModelInspection -->
-            <version>xpath-namespace-SNAPSHOT</version>
+            <version>1.3.0</version>
         </dependency>
 
         <!-- ServiceLoader Annotations -->

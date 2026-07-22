@@ -9,7 +9,7 @@ import burp.model.Reference;
 import burp.reporting.Origin;
 import burp.util.SimpleNamespaceContext;
 import burp.vocabularies.YS;
-import com.tailf.jnc.*;
+import com.github.candildatafabric.jnc.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
