@@ -1,5 +1,7 @@
 package burp;
 
+import java.util.Map;
+
 public class TestData {
 
     public String ID;
@@ -22,44 +24,26 @@ public class TestData {
     public String output3;
     public boolean error;
 
-    TestData(String ID,
-             String title,
-             String description,
-             String specification,
-             String baseIRI,
-             String mapping,
-             String input_format1,
-             String input_format2,
-             String input_format3,
-             String output_format1,
-             String output_format2,
-             String output_format3,
-             String input1,
-             String input2,
-             String input3,
-             String output1,
-             String output2,
-             String output3,
-             String error) {
-        this.ID = ID;
-        this.title = title;
-        this.description = description;
-        this.specification = specification;
-        this.baseIRI = baseIRI;
-        this.mapping = mapping;
-        this.input_format1 = input_format1;
-        this.input_format2 = input_format2;
-        this.input_format3 = input_format3;
-        this.output_format1 = output_format1;
-        this.output_format2 = output_format2;
-        this.output_format3 = output_format3;
-        this.input1 = input1;
-        this.input2 = input2;
-        this.input3 = input3;
-        this.output1 = output1;
-        this.output2 = output2;
-        this.output3 = output3;
-        this.error = "true".equalsIgnoreCase(error);
+    public TestData(Map<String, String> data) {
+        this.ID = data.get("ID");
+        this.title = data.get("title");
+        this.description = data.get("description");
+        this.specification = data.get("specification");
+        this.baseIRI = data.getOrDefault("base_iri", "http://example.com/base/");
+        this.mapping = data.get("mapping");
+        this.input_format1 = data.get("input_format1");
+        this.input_format2 = data.get("input_format2");
+        this.input_format3 = data.get("input_format3");
+        this.output_format1 = data.get("output_format1");
+        this.output_format2 = data.get("output_format2");
+        this.output_format3 = data.get("output_format3");
+        this.input1 = data.get("input1");
+        this.input2 = data.get("input2");
+        this.input3 = data.get("input3");
+        this.output1 = data.get("output1");
+        this.output2 = data.get("output2");
+        this.output3 = data.get("output3");
+        this.error = "true".equalsIgnoreCase(data.get("error"));
     }
 
     public String toString() {

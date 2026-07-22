@@ -1,20 +1,15 @@
 package burp.model;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public abstract class Iteration {
-	
-	public Set<Object> nulls = new HashSet<>();
-	
-	public Iteration(Set<Object> nulls) {
-		this.nulls = nulls;
-	}
+    public final Set<Object> nulls;
 
-	public abstract List<Object> getValuesFor(String reference);
+    public Set<Object> getNulls() { return nulls; }
 
-	public abstract List<String> getStringsFor(String reference);
+    public Iteration(Set<Object> nulls) {
+        this.nulls = nulls;
+    }
 
     public abstract String asString();
 }

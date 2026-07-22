@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    name: Deploy Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: central
+          server-username: MAVEN_USERNAME # env variable for username in deploy
+          server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
+      - name: Set project version from tag
+        run: |
+          TAG_VERSION="${{ github.ref_name }}"
+          # Remove leading 'v' if present (e.g. v0.1.4 -> 0.1.4)
+          TAG_VERSION="${TAG_VERSION#v}"
+          
+          echo "Updating pom.xml version to: $TAG_VERSION"
+          mvn versions:set -DnewVersion="$TAG_VERSION" -DgenerateBackupPoms=false -B
+      - name: Deploy Maven package
+        # Locally run instead: mvn clean deploy -DskipTests -Pdeploy -Dgpg.passphrase=""
+        run: mvn deploy -B -Pdeploy -Dgpg.signer=bc -DskipTests
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          # ASCII-armored secret key (TSK), e.g. from `gpg --armor --export-secret-keys YOUR_ID`
+          MAVEN_GPG_KEY: ${{ secrets.GPG_ARMOR_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: JReleaser Release
+        run: mvn jreleaser:full-release -B -Pdeploy
+        env:
+          TAG_NAME: ${{ github.ref }}
+          JRELEASER_PROJECT_VERSION: ${{ github.ref }}
+          JRELEASER_JBANG_GITHUB_TOKEN: ${{ secrets.JBANG_CATALOG_TOKEN }}
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
