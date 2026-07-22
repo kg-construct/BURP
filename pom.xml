@@ -8,8 +8,9 @@
     <version>0.1.3</version>
 
     <name>BURP</name>
-    <description>A Basic and Unassuming RML Processor (BURP) with RML Execution Report (RER) error handling
-    </description>
+    <!-- @formatter:off -->
+    <description>A Basic and Unassuming RML Processor (BURP) with RML Execution Report (RER) error handling</description>
+    <!-- @formatter:on -->
     <url>https://github.com/kg-construct/BURP/</url>
     <inceptionYear>2024</inceptionYear>
 
@@ -381,6 +382,7 @@
                                     <goal>shade</goal>
                                 </goals>
                                 <configuration>
+                                    <createDependencyReducedPom>false</createDependencyReducedPom>
                                     <shadedArtifactAttached>true</shadedArtifactAttached>
                                     <transformers>
                                         <transformer
@@ -493,10 +495,9 @@
                         <configuration>
                             <jreleaser>
                                 <project>
-                                    <description>A Basic and Unassuming RML Processor (BURP) with RML Execution Report
-                                        (RER)
-                                        error handling
-                                    </description>
+                                    <!-- @formatter:off -->
+                                    <description>A Basic and Unassuming RML Processor (BURP) with RML Execution Report (RER) error handling</description>
+                                    <!-- @formatter:on -->
                                     <authors>Jakub Duchateau, Christophe Debruyne</authors>
                                     <license>MIT</license>
                                     <links>
