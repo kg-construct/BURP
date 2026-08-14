@@ -1,39 +1,49 @@
 package burp.util;
 
-import picocli.CommandLine;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFLanguages;
+import org.jspecify.annotations.NonNull;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(name = "burp")
+import java.util.Arrays;
+import java.util.Iterator;
+
+@Command(name = "burp", mixinStandardHelpOptions = true, description = "A Basic and Unassuming RML Processor (BURP)")
 public class BURPConfiguration {
 
-	@Option(names = {"-h", "--help" }, usageHelp = true, description = "Display a help message")
-	public boolean help = false;
+    @Option(names = {"-m", "--mappingFile"}, required = true, description = "The RML mapping file")
+    public String mappingFile;
 
-	@Option(names= {"-m", "--mappingFile"}, description = "The RML mapping file", required = true)
-	public String mappingFile = null;
+    @Option(names = {"-o", "--outputFile"}, description = "The output file")
+    public String outputFile;
 
-	@Option(names= {"-o", "--outputFile"}, description = "The output file", required = false)
-	public String outputFile = null;
+    @Option(names = {"-f", "--outputFormat"},
+            description = "The format of the output file (default: deduced from output file)",
+            completionCandidates = FormatCandidates.class)
+    public String outputFormatString;
 
-	@Option(names = {"-b", "--baseIRI"}, description = "Used in resolving relative IRIs produced by the RML mapping" )
-	public String baseIRI = null;
-	
-	public BURPConfiguration(String[] args) throws Exception {
-		try {
-			BURPConfiguration conf = CommandLine.populateCommand(this, args);
-			if(conf.help) {
-				new CommandLine(this).usage(System.out);
-				System.exit(0);
-			}
-			
-			if(conf.mappingFile == null) {
-				throw new Exception("An RML mapping file is mandatory.");
-			}
-		} catch (CommandLine.ParameterException pe) {
-			System.out.println(pe.getMessage());
-			new CommandLine(this).usage(System.out);
-			throw pe;
-		}
-	}
+    public Lang getOutputFormat() {
+        if (outputFormatString == null) return null;
+        Lang lang = RDFLanguages.nameToLang(outputFormatString);
+        if (lang == null) throw new IllegalArgumentException("Unknown output format: " + outputFormatString);
+        return lang;
+    }
+
+    @Option(names = {"-b", "--baseIRI"}, description = "Used in resolving relative IRIs produced by the RML mapping",
+            defaultValue = "http://example.org/")
+    public String baseIRI = "http://example.org/";
+
+    @Option(names = {"-r", "--reportFile"}, description = "The report file")
+    public String reportFile;
+
+    static class FormatCandidates implements Iterable<String> {
+        @Override
+        public @NonNull Iterator<String> iterator() {
+            return Arrays.asList(
+                    RDFLanguages.strLangNQuads, RDFLanguages.strLangTurtle, RDFLanguages.strLangTriG,
+                    RDFLanguages.strLangJSONLD, RDFLanguages.strLangRDFXML
+            ).iterator();
+        }
+    }
 }

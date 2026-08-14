@@ -12,6 +12,7 @@ public final class RML {
 	public static final Resource BLANKNODE = ResourceFactory.createResource(NS + "BlankNode");
     public static final Resource IRI = ResourceFactory.createResource(NS + "IRI");
     public static final Resource URI = ResourceFactory.createResource(NS + "URI");
+    public static final Resource UnsafeIRI = ResourceFactory.createResource(NS + "UnsafeIRI");
 	public static final Resource LITERAL = ResourceFactory.createResource(NS + "Literal");
 
 	// RML Constants
@@ -22,6 +23,7 @@ public final class RML {
     public static final Resource CurrentWorkingDirectory = ResourceFactory.createResource(NS + "CurrentWorkingDirectory");
 	public static final Resource Namespace = ResourceFactory.createResource(NS + "Namespace");
 	public static final Resource RelativePathSource = ResourceFactory.createResource(NS + "RelativePathSource");
+	public static final Resource FilePath = ResourceFactory.createResource(NS + "FilePath");
 	public static final Resource SQL2008Table = ResourceFactory.createResource(NS + "SQL2008Table");
 	public static final Resource SQL2008Query = ResourceFactory.createResource(NS + "SQL2008Query");
     public static final Resource XPath = ResourceFactory.createResource(NS + "XPath");
@@ -45,7 +47,7 @@ public final class RML {
 	public static final Resource SPARQL_Results_XML = ResourceFactory.createResource(FORMATSNS + "SPARQL_Results_XML");
 
 	// Classes
-    // We currently have no need for classes and that limits the memory footprint
+    // We currently have no need for classes
 
     // Properties
 	public static final Property allowEmptyListAndContainer = ResourceFactory.createProperty(NS + "allowEmptyListAndContainer");
@@ -67,10 +69,13 @@ public final class RML {
     public static final Property input  = ResourceFactory.createProperty(NS + "input");
     public static final Property inputValueMap  = ResourceFactory.createProperty(NS + "inputValueMap");
 	public static final Property iterator  = ResourceFactory.createProperty(NS + "iterator");
+	public static final Property logicalSource = ResourceFactory.createProperty(NS + "logicalSource");
+	public static final Property logicalTarget = ResourceFactory.createProperty(NS + "logicalTarget");
+	public static final Property target = ResourceFactory.createProperty(NS + "target");
 	public static final Property joinCondition  = ResourceFactory.createProperty(NS + "joinCondition");
     public static final Property leftJoin  = ResourceFactory.createProperty(NS + "leftJoin");
     public static final Property languageMap  = ResourceFactory.createProperty(NS + "languageMap");
-	public static final Property logicalSource = ResourceFactory.createProperty(NS + "logicalSource");
+	public static final Property serialization = ResourceFactory.createProperty(NS + "serialization");
 	public static final Property namespace  = ResourceFactory.createProperty(NS + "namespace");
 	public static final Property namespacePrefix  = ResourceFactory.createProperty(NS + "namespacePrefix");
 	public static final Property namespaceURL  = ResourceFactory.createProperty(NS + "namespaceURL");

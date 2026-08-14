@@ -1,0 +1,14 @@
+<http://example.org/person/P1> <http://example.org/hasName> "alice" .
+<http://example.org/person/P1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/Person> .
+<http://example.org/person/P1> <http://example.org/hasBirthyear> "1995"^^<http://www.w3.org/2001/XMLSchema#gYear> .
+<http://example.org/person/P1> <http://example.org/hasItem> "sword" .
+<http://example.org/person/P1> <http://example.org/hasItem> "shield" .
+<http://example.org/person/P2> <http://example.org/hasItem> "flower" .
+
+<http://example.org/person/P2> <http://example.org/hasName> "bob" .
+<http://example.org/person/P2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/Person> .
+<http://example.org/person/P2> <http://example.org/hasBirthyear> "1999"^^<http://www.w3.org/2001/XMLSchema#gYear> .
+
+<http://example.org/person/P3> <http://example.org/hasName> "tobias" .
+<http://example.org/person/P3> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/Person> .
+<http://example.org/person/P3> <http://example.org/hasBirthyear> "2005"^^<http://www.w3.org/2001/XMLSchema#gYear> .

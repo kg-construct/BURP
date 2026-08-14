@@ -1,37 +1,36 @@
 package burp.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.jena.rdf.model.RDFNode;
+import burp.vocabularies.BURP;
+import burp.vocabularies.RML;
 import org.apache.jena.rdf.model.Resource;
 
-import burp.vocabularies.RML;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class SubjectMap extends TermMap {
+    public List<Resource> classes = new ArrayList<>();
+    public List<GraphMap> graphMaps = new ArrayList<>();
 
-	public List<Resource> classes = new ArrayList<>();
-	public List<GraphMap> graphMaps = new ArrayList<>();
-	
-	public SubjectMap() {
-		termType = RML.IRI;
-	}
+    public SubjectMap() {
+        this.termType = RML.IRI;
+    }
 
-	@Override
-	public List<RDFNode> generateTerms(Iteration i, String baseIRI) {
-        if(RML.IRI.equals(termType))
-            return generateIRIs(i, baseIRI);
-        if(RML.URI.equals(termType))
-            return generateURIs(i, baseIRI);
-        if(RML.BLANKNODE.equals(termType))
-			return generateBlankNodes(i, baseIRI);
-		
-		throw new RuntimeException("Incorrect term type for subject map.");
-	}
+    @Override
+    public Iterable<PlanNode> children() {
+        List<PlanNode> children = new ArrayList<>();
+        super.children().forEach(children::add);
+        graphMaps.forEach(children::add);
+        return children;
+    }
 
-	@Override
-	public boolean isGatherMap() {
-		return gatherMap != null;
-	}
+    @Override
+    public String getName() {
+        return "subject map";
+    }
 
+    @Override
+    public Set<Resource> getAllowedTermTypes() {
+        return Set.of(RML.IRI, RML.URI, RML.BLANKNODE, BURP.CollectionOrContainer);
+    }
 }

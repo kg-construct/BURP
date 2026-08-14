@@ -1,0 +1,23 @@
+@prefix ex: <http://example.com/>.
+@prefix rml: <http://w3id.org/rml/>.
+@prefix d2rq: <http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#>.
+
+<http://example.com/base/TriplesMap1> a rml:TriplesMap;
+  rml:logicalSource [
+    a rml:LogicalSource;
+    rml:referenceFormulation rml:SQL2008Table;
+    rml:iterator "person";
+    rml:source <#DB_source>;
+  ];
+  rml:predicateObjectMap [
+    rml:objectMap [ rml:reference "name" ];
+    rml:predicate ex:name;
+  ], [
+    rml:objectMap [ rml:reference "firstname" ];
+    rml:predicate ex:firstname;
+  ];
+  rml:subjectMap [ rml:template "http://example.com/{id}" ].
+
+<#DB_source> a rml:Source, d2rq:Database;
+  d2rq:jdbcDSN "jdbc:sqlite:student.db".
+

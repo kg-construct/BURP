@@ -1,0 +1,35 @@
+@base <http://example.com/base/>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix rml: <http://w3id.org/rml/>.
+@prefix idlab-fn: <https://w3id.org/imec/idlab/function#>.
+
+<TriplesMap1> rml:logicalSource [
+  rml:source [
+    a rml:RelativePathSource;
+    rml:root rml:MappingDirectory;
+    rml:path "student.csv";
+  ];
+  rml:referenceFormulation rml:CSV;
+];
+  rml:subjectMap [ rml:template "http://example.com/{Id}" ];
+  rml:predicateObjectMap [
+    rml:predicate foaf:name;
+    rml:objectMap [
+      rml:functionExecution [
+        rml:function idlab-fn:concatSequence;
+        rml:input [
+          rml:parameter idlab-fn:_seq;
+          rml:inputValueMap [
+            rml:gather ( [ rml:reference "Name" ] [ rml:constant "la Gaffe" ] );
+            rml:gatherAs rdf:Seq;
+          ];
+        ], [
+          rml:parameter idlab-fn:_delimiter;
+          rml:inputValueMap [ rml:constant " " ];
+        ];
+      ];
+      rml:return idlab-fn:_stringOut;
+    ];
+  ].
+

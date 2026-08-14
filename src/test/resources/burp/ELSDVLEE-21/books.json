@@ -1,0 +1,22 @@
+[
+  {
+    "id": 101,
+    "title": "RDF Fundamentals",
+    "author_id": 1
+  },
+  {
+    "id": 102,
+    "title": "Knowledge Graphs Guide",
+    "author_id": 2
+  },
+  {
+    "id": 103,
+    "title": "Semantic Web Handbook",
+    "author_id": 1
+  },
+  {
+    "id": 104,
+    "title": "Data Mapping Patterns",
+    "author_id": 3
+  }
+]

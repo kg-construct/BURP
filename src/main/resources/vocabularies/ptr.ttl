@@ -1,0 +1,148 @@
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:    <http://www.w3.org/2002/07/owl#> .
+@prefix dc:     <http://purl.org/dc/terms/> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix schema: <http://schema.org/> .
+@prefix widoco: <https://w3id.org/widoco/vocab#> .
+@prefix vann:   <http://purl.org/vocab/vann/> .
+
+@prefix rer:    <https://w3id.org/dre/rer#> .
+@prefix ptr:    <https://w3id.org/dre/ptr#> .
+@prefix draw:   <https://w3id.org/dre/draw#> .
+
+ptr:
+    a                             owl:Ontology ;
+    vann:preferredNamespacePrefix "ptr" ;
+    vann:preferredNamespaceUri    "https://w3id.org/dre/ptr#" ;
+    dc:title                      "RDF Pointer Vocabulary" ;
+    dc:abstract                "Vocabulary to describe pointers to parts of RDF statements (statement parts and descriptors)." ;
+    dc:date                       "2026-01-07"^^xsd:date ;
+    dc:creator                    "Jakub Duchateau" ;
+    schema:codeRepository "https://github.com/jduchateau/RER" ;
+    owl:versionInfo               "0.0.1" ;
+    dc:license                    <http://purl.org/NET/rdflicense/cc-by4.0> ;
+    schema:funding "This work was supported by the Fonds de la Recherche Scientifique -- FNRS under Grant n° MIS~F.4016.24." .
+
+
+ptr:StatementPart
+    a                owl:Class ;
+    rdfs:label       "Statement part" ;
+    rdfs:comment     "Wrapper describing which part of an RDF statement is implicated." ;
+    rdfs:isDefinedBy ptr: ;
+    widoco:order     1 .
+
+ptr:statement
+    a                owl:ObjectProperty ;
+    rdfs:label       "statement" ;
+    rdfs:comment     "The RDF statement to which this part belongs." ;
+    rdfs:range       rdf:Statement ;
+    rdfs:domain      ptr:StatementPart ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:part
+    a                owl:ObjectProperty ;
+    rdfs:label       "part" ;
+    rdfs:comment     "Whether the subject, predicate, or object of the statement is implicated." ;
+    rdfs:range       ptr:StatementPartDescriptor ;
+    rdfs:domain      ptr:StatementPart ;
+    rdfs:isDefinedBy ptr: .
+
+
+ptr:StatementPartDescriptor
+    a                owl:Class ;
+    rdfs:label       "Statement part descriptor" ;
+    rdfs:comment     "Named descriptor of a statement position (subject, predicate, object)." ;
+    rdfs:subClassOf  owl:NamedIndividual ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:Subject
+    a                ptr:StatementPartDescriptor ;
+    rdfs:label       "Subject" ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:Predicate
+    a                ptr:StatementPartDescriptor ;
+    rdfs:label       "Predicate" ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:Object
+    a                ptr:StatementPartDescriptor ;
+    rdfs:label       "Object" ;
+    rdfs:isDefinedBy ptr: .
+
+
+ptr:textRange
+    a                owl:ObjectProperty ;
+    rdfs:label       "text range" ;
+    rdfs:comment     "Character range in the mapping text where the error occurs." ;
+    rdfs:domain      ptr:StatementPart ;
+    rdfs:range       ptr:Range ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:Range
+    a                owl:Class ;
+    rdfs:label       "Range" ;
+    rdfs:comment     "Text span defined by start and end points." ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:start
+    a                owl:ObjectProperty ;
+    rdfs:label       "start" ;
+    rdfs:comment     "Starting point of the text range." ;
+    rdfs:domain      ptr:Range ;
+    rdfs:range       ptr:Point ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:end
+    a                owl:ObjectProperty ;
+    rdfs:label       "end" ;
+    rdfs:comment     "Ending point of the text range." ;
+    rdfs:domain      ptr:Range ;
+    rdfs:range       ptr:Point ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:Point
+    a                owl:Class ;
+    rdfs:label       "Point" ;
+    rdfs:comment     "Line/column coordinates inside a text." ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:line
+    a                owl:DatatypeProperty ;
+    rdfs:label       "line" ;
+    rdfs:comment     "Line number for the point." ;
+    rdfs:domain      ptr:Point ;
+    rdfs:range       xsd:integer ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:column
+    a                owl:DatatypeProperty ;
+    rdfs:label       "column" ;
+    rdfs:comment     "Column number for the point." ;
+    rdfs:domain      ptr:Point ;
+    rdfs:range       xsd:integer ;
+    rdfs:isDefinedBy ptr: .
+
+
+ptr:TextFilePointer
+    a                owl:Class ;
+    rdfs:label       "Text file pointer" ;
+    rdfs:comment     "Pointer pointing to a specific location in a text file." ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:path
+    a                owl:DatatypeProperty ;
+    rdfs:label       "path" ;
+    rdfs:comment     "The path of the file containing the reference." ;
+    rdfs:domain      ptr:TextFilePointer ;
+    rdfs:range       xsd:string ;
+    rdfs:isDefinedBy ptr: .
+
+ptr:range
+    a                owl:ObjectProperty ;
+    rdfs:label       "range" ;
+    rdfs:comment     "The character range in the text file." ;
+    rdfs:domain      ptr:TextFilePointer ;
+    rdfs:range       ptr:Range ;
+    rdfs:isDefinedBy ptr: .

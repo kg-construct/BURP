@@ -1,0 +1,12 @@
+ID,title,description,specification,mapping,input_format1,output_format1,input1,output1,error
+BURPFNMLTC-CSV-SHA1,string_sha1,Tests string_sha1 function,fnml,mapping.ttl,text/csv,application/n-quads,student.csv,output.nq,false
+BURPFNMLTC-CSV-SHA256,string_sha256,Tests string_sha256 function,fnml,mapping.ttl,text/csv,application/n-quads,student.csv,output.nq,false
+BURPFNMLTC-CSV-Concat,concat,Tests concat function,fnml,mapping.ttl,text/csv,application/n-quads,student.csv,output.nq,false
+BURPFNMLTC-CSV-ConcatSequence,concatSequence,Tests concatSequence function,fnml,mapping.ttl,text/csv,application/n-quads,student.csv,output.nq,false
+BURPFNMLTC-CSV-toSafeIRI,toSafeIRI,Tests toSafeIRI function,fnml,mapping.ttl,text/csv,application/n-quads,student.csv,output.nq,false
+BURPFNMLTC-CSV-toSafeURI,toSafeURI,Tests toSafeURI function,fnml,mapping.ttl,text/csv,application/n-quads,student.csv,output.nq,false
+BURPIOTC-CSV-BOM,csv_bom,Tests CSV BOM parsing,rml-core,mapping.ttl,text/csv,application/n-quads,country_info.csv,output.nq,false
+BURPIOTC-SQLITE,sqlite,Tests SQLite DB reading,rml-io,mapping.ttl,application/sql,application/n-quads,student.db,output.nq,false
+BURPIOTC-BSON,bson,Tests BSON reading,rml-io,mapping.ttl,application/bson,application/n-quads,student.bson,output.nq,false
+ELSDVLEE-20,RML-LV left join causes error,,rml-lv,mapping.ttl,,,"",output.nt,false
+ELSDVLEE-21,explicit rml:TriplesMap statement needed to use TriplesMap as ParentTriplesMap,,rml-lv,mapping.ttl,,,,output.nt,false
