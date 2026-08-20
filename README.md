@@ -72,7 +72,7 @@ Some libraries are available on GitHub's maven repository. Add a GitHub authenti
 You can run BURP using [JBang](https://jbang.dev):
 
 ```bash
-$ jbang burp@jduchateau [-h] [-b=<baseIRI>] -m=<mappingFile> [-o=<outputFile>]
+$ jbang burp@kg-construct [-h] [-b=<baseIRI>] -m=<mappingFile> [-o=<outputFile>]
 ```
 
 *Note: JBang will automatically download the required JDK and resolve all project dependencies on the first run.*
