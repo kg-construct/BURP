@@ -54,7 +54,13 @@ If you build BURP locally:
 mvn package -Pdeploy -DskipTests
 ```
 
-The extension automatically detects `target/burp.jar` in your workspace without downloading anything.
+Point VS Code to your local JAR in `.vscode/settings.json`:
+
+```json
+{
+  "rml.burp.path": "${workspaceFolder}/target/burp.jar"
+}
+```
 
 ### Running against an External Dev Server
 

@@ -4,6 +4,7 @@
   "icon": "assets/rml-128.png",
   "description": "A RDF Mapping Language (RML) Development Server with the BURP RML Processor",
   "version": "0.1.4",
+  "serverVersion": "0.1.4",
   "publisher": "uliege-dre",
   "repository": {
     "type": "git",

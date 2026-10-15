@@ -1,6 +1,6 @@
 import * as cp from 'child_process';
 import * as vscode from 'vscode';
-import {findBurpExecutable} from './burpDiscovery';
+import {BurpTarget, findBurpExecutable} from './burpDiscovery';
 import {getConfiguration} from './config';
 
 export enum JavaErrorCode {
@@ -53,11 +53,16 @@ export class ServerProcess {
 
         await this.stop();
 
-        const { command, args } = this.resolveBurpExecution();
+        const {command, args, target} = this.resolveBurpExecution();
 
         // 1. Verify Java before spawning
         if (command === config.javaPath || command === 'java' || command.endsWith('java') || command.endsWith('java.exe')) {
             await this.checkJavaVersion(command);
+        }
+
+        // 2. Check and log BURP server version
+        if (target) {
+            await this.checkBurpVersion(target);
         }
 
         this.outputChannel.appendLine(`[ServerProcess] Starting BURP Dev Server: ${command} ${args.join(' ')}`);
@@ -151,7 +156,7 @@ export class ServerProcess {
         }
     }
 
-    private resolveBurpExecution(): { command: string; args: string[] } {
+    private resolveBurpExecution(): { command: string; args: string[]; target?: BurpTarget } {
         const config = getConfiguration();
         const devArg = config.serverPort > 0 ? `-d=${config.serverPort}` : '-d';
 
@@ -159,15 +164,10 @@ export class ServerProcess {
             const target = findBurpExecutable(this.context);
             if (target) {
                 this.outputChannel.appendLine(`[ServerProcess] Using BURP (${target.source}): ${target.path}`);
-                if (target.type === 'jar') {
-                    return {
-                        command: config.javaPath,
-                        args: ['-jar', target.path, devArg, ...config.extraArgs]
-                    };
-                }
                 return {
-                    command: target.path,
-                    args: [devArg, ...config.extraArgs]
+                    command: config.javaPath,
+                    args: ['-jar', target.path, devArg, ...config.extraArgs],
+                    target
                 };
             }
         }
@@ -177,16 +177,48 @@ export class ServerProcess {
             if (trimmed.endsWith('.jar')) {
                 return {
                     command: config.javaPath,
-                    args: ['-jar', trimmed, devArg, ...config.extraArgs]
+                    args: ['-jar', trimmed, devArg, ...config.extraArgs],
+                    target: {type: 'jar', path: trimmed, source: 'config'}
                 };
             }
-            return {
-                command: trimmed,
-                args: [devArg, ...config.extraArgs]
-            };
         }
 
-        throw new Error('BURP executable or JAR could not be found. Please download BURP Dev Server or configure rml.burp.path.');
+        throw new Error('BURP JAR could not be found. Please download BURP Dev Server or configure rml.burp.path.');
+    }
+
+    private async checkBurpVersion(target: BurpTarget): Promise<void> {
+        const config = getConfiguration();
+        const checkCmd = `"${config.javaPath}" -jar "${target.path}" --version`;
+
+        try {
+            const actualVersion = await new Promise<string>((resolve, reject) => {
+                cp.exec(checkCmd, {timeout: 3000}, (error, stdout) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve((stdout || '').trim());
+                });
+            });
+
+            this.outputChannel.appendLine(`BURP server version: ${actualVersion}`);
+
+            const expectedVersion = this.context?.extension?.packageJSON?.serverVersion;
+            if (expectedVersion && actualVersion !== expectedVersion) {
+                this.outputChannel.appendLine(
+                    `WARNING: BURP server version mismatch. Running ${actualVersion}, expected ${expectedVersion}.`
+                );
+                vscode.window.showWarningMessage(
+                    `BURP Server version mismatch: running ${actualVersion}, but extension expects ${expectedVersion}.`,
+                    'Update Server'
+                ).then(choice => {
+                    if (choice === 'Update Server') {
+                        vscode.commands.executeCommand('rml-dev-server.downloadServer');
+                    }
+                });
+            }
+        } catch (err: any) {
+            this.outputChannel.appendLine(`[ServerProcess] Could not determine BURP server version: ${err.message}`);
+        }
     }
 
     private async checkJavaVersion(javaCmd: string): Promise<void> {

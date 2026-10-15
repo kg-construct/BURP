@@ -8,7 +8,7 @@ export async function downloadBurpServer(
     outputChannel: vscode.OutputChannel,
     force: boolean = false
 ): Promise<string> {
-    const version = context.extension?.packageJSON?.version || 'latest';
+    const version = context.extension?.packageJSON?.serverVersion;
     const serverDir = path.join(context.globalStorageUri.fsPath, 'server');
     if (!fs.existsSync(serverDir)) {
         fs.mkdirSync(serverDir, {recursive: true});
@@ -29,27 +29,14 @@ export async function downloadBurpServer(
         }
     }
 
-    const primaryUrl = `https://github.com/kg-construct/BURP/releases/download/v${version}/burp.jar`;
-    const fallbackUrl = 'https://github.com/kg-construct/BURP/releases/latest/download/burp.jar';
+    const downloadUrl = `https://github.com/kg-construct/BURP/releases/download/v${version}/burp.jar`;
 
-    outputChannel.appendLine(`[BURP Downloader] Downloading BURP Server from ${primaryUrl}...`);
+    outputChannel.appendLine(`[BURP Downloader] Downloading BURP Server from ${downloadUrl}...`);
 
-    try {
-        await downloadFile(primaryUrl, targetJarPath, {
-            title: `Downloading BURP Dev Server (${version})...`,
-            outputChannel
-        });
-    } catch (err: any) {
-        if (primaryUrl !== fallbackUrl) {
-            outputChannel.appendLine(`[BURP Downloader] Tagged download failed (${err.message}). Trying latest release fallback...`);
-            await downloadFile(fallbackUrl, targetJarPath, {
-                title: `Downloading BURP Dev Server (latest release)...`,
-                outputChannel
-            });
-        } else {
-            throw err;
-        }
-    }
+    await downloadFile(downloadUrl, targetJarPath, {
+        title: `Downloading BURP Dev Server (${version})...`,
+        outputChannel
+    });
 
     // Clean up older downloaded JARs to reclaim disk space (~50MB per version)
     cleanupOldBurpJars(serverDir, path.basename(targetJarPath), outputChannel);

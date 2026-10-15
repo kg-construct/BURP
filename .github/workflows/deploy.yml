@@ -68,6 +68,7 @@ jobs:
           cd rml-dev-server
           # Sync package.json version with tag version
           npm version "$TAG_VERSION_VS" --no-git-tag-version --allow-same-version
+          npm pkg set serverVersion="$TAG_VERSION"
 
           # Install dependencies and package into target VSIX
           npm ci
