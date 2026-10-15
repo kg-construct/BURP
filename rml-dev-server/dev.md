@@ -2,6 +2,8 @@
 
 This document describes how to set up, build, test, and package the RML Dev Server VS Code extension.
 
+For general BURP information see the root [../dev.md](../dev.md).
+
 ---
 
 ## Prerequisites

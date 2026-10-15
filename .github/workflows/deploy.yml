@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -30,10 +30,10 @@ jobs:
           server-username: MAVEN_USERNAME # env variable for username in deploy
           server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 24
+          cache: npm
           cache-dependency-path: 'rml-dev-server/package-lock.json'
       - name: Set project version from tag
         run: |
@@ -56,14 +56,22 @@ jobs:
         run: |
           TAG_VERSION="${{ github.ref_name }}"
           TAG_VERSION="${TAG_VERSION#v}"
+          # Strip '-rc.*' to get VS Code compatible version https://code.visualstudio.com/api/working-with-extensions/publishing-extension#pre-release-extensions
+          TAG_VERSION_VS="${TAG_VERSION%%-*}"
+          
+          # Add --pre-release flag if this is a pre-release version
+          PRE_RELEASE_FLAG=""
+          if [[ "$TAG_VERSION" == *"-"* ]]; then
+            PRE_RELEASE_FLAG="--pre-release"
+          fi
 
           cd rml-dev-server
           # Sync package.json version with tag version
-          npm version "$TAG_VERSION" --no-git-tag-version --allow-same-version
+          npm version "$TAG_VERSION_VS" --no-git-tag-version --allow-same-version
 
           # Install dependencies and package into target VSIX
           npm ci
-          npx --yes @vscode/vsce package --out "rml-dev-server-$TAG_VERSION.vsix"
+          npm run package -- $PRE_RELEASE_FLAG --out "rml-dev-server-$TAG_VERSION.vsix"
       - name: JReleaser Release
         run: mvn jreleaser:full-release -B -Pdeploy
         env:

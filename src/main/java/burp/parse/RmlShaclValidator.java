@@ -3,7 +3,6 @@ package burp.parse;
 import burp.reporting.*;
 import burp.vocabularies.RER;
 import org.apache.jena.ontology.OntClass;
-import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDFS;
 import org.jspecify.annotations.NullMarked;
@@ -14,7 +13,6 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
