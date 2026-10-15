@@ -25,5 +25,4 @@
 	url = https://github.com/kg-construct/rml-io-registry.git
 [submodule "rml-modules/rml-shacl"]
 	path = rml-modules/rml-shacl
-	url = https://github.com/jduchateau/rml-shacl.git
-	branch = rer-error-annotations
+	url = https://github.com/Ikeragnell/rml-shacl.git
