@@ -59,6 +59,8 @@ public final class RML {
 	public static final Property datatypeMap  = ResourceFactory.createProperty(NS + "datatypeMap");
 	public static final Property encoding  = ResourceFactory.createProperty(NS + "encoding");
 	public static final Property functionExecution  = ResourceFactory.createProperty(NS + "functionExecution");
+	public static final Property FunctionExecution  = ResourceFactory.createProperty(NS + "FunctionExecution");
+	public static final Property function  = ResourceFactory.createProperty(NS + "function");
 	public static final Property functionMap  = ResourceFactory.createProperty(NS + "functionMap");
     public static final Property field  = ResourceFactory.createProperty(NS + "field");
     public static final Property fieldName  = ResourceFactory.createProperty(NS + "fieldName");
@@ -94,7 +96,10 @@ public final class RML {
 	public static final Property root = ResourceFactory.createProperty(NS + "root");
 	public static final Property source = ResourceFactory.createProperty(NS + "source");
 	public static final Property strategy = ResourceFactory.createProperty(NS + "strategy");
+	public static final Property subject = ResourceFactory.createProperty(NS + "subject");
 	public static final Property subjectMap  = ResourceFactory.createProperty(NS + "subjectMap");
+	public static final Property predicate = ResourceFactory.createProperty(NS + "predicate");
+	public static final Property object = ResourceFactory.createProperty(NS + "object");
 	public static final Property template = ResourceFactory.createProperty(NS + "template");
     public static final Property termType = ResourceFactory.createProperty(NS + "termType");
     public static final Property viewOn = ResourceFactory.createProperty(NS + "viewOn");
@@ -103,4 +108,6 @@ public final class RML {
 	public static final Resource list = ResourceFactory.createResource(NS + "list");
 	public static final Resource noempty = ResourceFactory.createResource(NS + "noEmpty");
 
+    public static Resource IterableField = ResourceFactory.createResource(NS + "IterableField");
+    public static Resource ExpressionField = ResourceFactory.createResource(NS + "ExpressionField");
 }

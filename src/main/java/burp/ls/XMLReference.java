@@ -34,9 +34,10 @@ public class XMLReference extends Reference {
             throw new BurpException(
                 new RmlError(
                     "Error executing XPath: " + reference + " on node " + i + ".",
-                    origin,
+                    emitOrigin("reference"),
                     RER.ReferenceFormulationExecutionError,
-                    e
+                    e,
+                    this
                 )
             );
         }

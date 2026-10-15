@@ -29,6 +29,12 @@ jobs:
           server-id: central
           server-username: MAVEN_USERNAME # env variable for username in deploy
           server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'rml-dev-server/package-lock.json'
       - name: Set project version from tag
         run: |
           TAG_VERSION="${{ github.ref_name }}"
@@ -46,6 +52,18 @@ jobs:
           # ASCII-armored secret key (TSK), e.g. from `gpg --armor --export-secret-keys YOUR_ID`
           MAVEN_GPG_KEY: ${{ secrets.GPG_ARMOR_KEY }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Package VS Code Extension (VSIX)
+        run: |
+          TAG_VERSION="${{ github.ref_name }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+
+          cd rml-dev-server
+          # Sync package.json version with tag version
+          npm version "$TAG_VERSION" --no-git-tag-version --allow-same-version
+
+          # Install dependencies and package into target VSIX
+          npm ci
+          npx --yes @vscode/vsce package --out "rml-dev-server-$TAG_VERSION.vsix"
       - name: JReleaser Release
         run: mvn jreleaser:full-release -B -Pdeploy
         env:

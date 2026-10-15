@@ -1,0 +1,24 @@
+PREFIX rml: <http://w3id.org/rml/>
+PREFIX grel: <http://users.ugent.be/~bjdmeest/function/grel.ttl#>
+PREFIX ex: <http://example.com/>
+
+ex:TM a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [ a rml:RelativePathSource ; rml:path "student.csv" ] ;
+        rml:referenceFormulation rml:CSV
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/Student/{id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:name ;
+        rml:objectMap [
+            rml:functionExecution [
+                rml:function grel:nonExistentFunction ;
+                rml:input [
+                    rml:parameter grel:valueParam ;
+                    rml:inputValue "test"
+                ]
+            ]
+        ]
+    ] .

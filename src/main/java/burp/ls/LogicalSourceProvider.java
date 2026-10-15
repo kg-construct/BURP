@@ -8,13 +8,19 @@ import burp.reporting.Origin;
 import burp.reporting.RmlError;
 import burp.vocabularies.RER;
 import org.apache.jena.rdf.model.Resource;
+import org.jspecify.annotations.NonNull;
 
 import java.nio.file.Path;
 import java.util.List;
 
 public interface LogicalSourceProvider {
     boolean supports(Resource referenceFormulation);
+
     LogicalSource create(Resource ls, Path mappingDirectory, Path currentWorkingDirectory);
+
+    default LogicalSource create(Resource ls, @NonNull RmlLogicalSourceContext context) {
+        return create(ls, context.mappingDirectory(), context.currentWorkingDirectory());
+    }
 
     /**
      * Parse a string payload into a list of nested Iterations (used by RML-LV IterableField).
@@ -23,11 +29,11 @@ public interface LogicalSourceProvider {
      */
     default List<Iteration> parseStringPayload(String payload, String iterator, Origin referenceFormulationOrigin) {
         throw new BurpException(
-            new RmlError(
-                "Nested iterations from string payload are not supported for this reference formulation.",
-                referenceFormulationOrigin,
-                RER.UnsupportedMapping
-            )
+                new RmlError(
+                        "Nested iterations from string payload are not supported for this reference formulation.",
+                        referenceFormulationOrigin,
+                        RER.UnsupportedMapping
+                )
         );
     }
 
@@ -40,11 +46,11 @@ public interface LogicalSourceProvider {
      */
     default Reference buildReference(String reference, Origin origin, Origin referenceFormulationOrigin) {
         throw new BurpException(
-            new RmlError(
-                "Nested references not supported for this formulation.",
-                referenceFormulationOrigin,
-                RER.UnsupportedMapping
-            )
+                new RmlError(
+                        "Nested references not supported for this formulation.",
+                        referenceFormulationOrigin,
+                        RER.UnsupportedMapping
+                )
         );
     }
 

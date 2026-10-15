@@ -1,34 +1,46 @@
 package burp.model;
 
+import burp.model.context.EvaluationContext;
+import burp.model.key.AstKey;
 import burp.model.rdf.*;
-import burp.reporting.BurpException;
-import burp.reporting.Origin;
-import burp.reporting.RmlError;
-import burp.vocabularies.RER;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
 
+import static burp.model.LogicalTarget.unionLogicalTargets;
 import static burp.model.rdf.Datardf.iriTerm;
 import static burp.model.rdf.Datardf.rdfUnderscore;
 
-public class MappingDocument implements PlanNode {
+public class MappingDocument extends AbstractPlanNode {
     public final List<TriplesMap> triplesMaps;
-    private PlanNode parent = null;
+    /**
+     * Prefixes defined in the mapping file.
+     * Do not use them for generation.
+     * Use them to understand some kind of errors or do the error reporting.
+     */
+    public final Map<String, String> prefixMap;
 
-    public MappingDocument(List<TriplesMap> triplesMaps) {
+    public MappingDocument(@NonNull List<TriplesMap> triplesMaps, @NonNull Map<String, String> prefixMap) {
         this.triplesMaps = triplesMaps;
+        this.prefixMap = Collections.unmodifiableMap(prefixMap);
+        for (TriplesMap tm : this.triplesMaps) {
+            if (tm != null) {
+                tm.setParent(this);
+            }
+        }
+    }
+
+    public MappingDocument(@NonNull List<TriplesMap> triplesMaps) {
+        this(triplesMaps, Collections.emptyMap());
     }
 
     @Override
-    public PlanNode getParent() {
-        return parent;
-    }
-
-    @Override
-    public void setParent(PlanNode parent) {
-        this.parent = parent;
+    public @Nullable Resource getIri() {
+        return null;
     }
 
     @Override
@@ -41,23 +53,36 @@ public class MappingDocument implements PlanNode {
         return new ArrayList<>(triplesMaps);
     }
 
-    public List<RdfStatement> generate() {
+    @Override
+    public AstKey computeAstKey() {
+        List<AstKey> childKeys = new ArrayList<>();
+        for (PlanNode child : children()) {
+            childKeys.add(child.getAstKey());
+        }
+        return new AstKey.DocumentKey(childKeys);
+    }
+
+    public List<RdfStatement> generate(EvaluationContext context) {
         List<RdfStatementLike> stmts = new ArrayList<>();
         for (TriplesMap tm : triplesMaps) {
-            var iter = tm.logicalSource.iterator();
-            if (iter == null) {
-                throw new BurpException(new RmlError(
-                        "Constant Triples Map without logical source",
-                        new Origin(this, Collections.emptyList()),
-                        RER.UnsupportedMapping
-                ));
-            }
-            for (var i : iter) {
-                stmts.addAll(tm.generate(i));
+            context.cancellationToken().throwIfCancelled();
+            if (tm.logicalSource == null) {
+                stmts.addAll(tm.generate(null, context));
+            } else {
+                var iter = tm.logicalSource.iterator();
+                if (iter != null) {
+                    for (var i : iter) {
+                        stmts.addAll(tm.generate(i, context));
+                    }
+                }
             }
         }
 
         return postProcessContainers(stmts);
+    }
+
+    public List<RdfStatement> generate() {
+        return generate(EvaluationContext.createDefault());
     }
 
     public static Term termItselfOrCollectionId(Term t) {
@@ -67,7 +92,7 @@ public class MappingDocument implements PlanNode {
         return t;
     }
 
-    private List<RdfStatement> postProcessContainers(List<RdfStatementLike> stmts) {
+    public List<RdfStatement> postProcessContainers(List<RdfStatementLike> stmts) {
         Map<IRITerm, Map<Term, CollectionOrContainerTerm>> containers = new HashMap<>();
         Map<IRITerm, Set<CollectionOrContainerTerm>> expandedContainer = new HashMap<>();
         List<RdfStatement> result = new ArrayList<>();
@@ -89,7 +114,7 @@ public class MappingDocument implements PlanNode {
             for (int index = 0; index < values.size(); index++) {
                 CollectionOrContainerTerm c = values.get(index);
                 if (c.getId() instanceof BlankNodeTerm) {
-                    BlankNodeTerm newId = new BlankNodeTerm("gathermap-" + (graph != null ? graph.toString() : "default") + "-" + index);
+                    BlankNodeTerm newId = new BlankNodeTerm("gathermap-" + (graph != null ? graph.toString() : "default") + "-" + index, c.targets(), c.lineage());
                     graphContainers.get(c.getId()).setId(newId);
                 }
             }
@@ -111,22 +136,30 @@ public class MappingDocument implements PlanNode {
                             boolean isLast = i == c.getElements().size() - 1;
                             Term element = c.getElements().get(i);
 
+                            OriginLineage elemLineage = element.lineage() != null ? (c.lineage() != null ? c.lineage().merge(element.lineage()) : element.lineage()) : c.lineage();
+                            if (elemLineage != null && graph != null && graph.lineage() != null) {
+                                elemLineage = elemLineage.merge(graph.lineage());
+                            }
+                            Set<LogicalTarget> elemTargets = unionLogicalTargets(c.targets(), element.targets(), graph != null ? graph.targets() : null);
+
                             containerStmts.add(new RdfStatement(
                                     (BlankNodeOrIRI) currentListId,
                                     iriTerm(RDF.first),
                                     termItselfOrCollectionId(element),
                                     graph,
-                                    null
+                                    elemTargets,
+                                    elemLineage
                             ));
 
-                            Term restObj = isLast ? iriTerm(RDF.nil) : new BlankNodeTerm(subject.toString() + "_" + (i + 1));
+                            Term restObj = isLast ? iriTerm(RDF.nil) : new BlankNodeTerm(subject.toString() + "_" + (i + 1), elemTargets, elemLineage);
 
                             containerStmts.add(new RdfStatement(
                                     (BlankNodeOrIRI) currentListId,
                                     iriTerm(RDF.rest),
                                     restObj,
                                     graph,
-                                    null
+                                    elemTargets,
+                                    elemLineage
                             ));
 
                             currentListId = restObj;
@@ -152,7 +185,8 @@ public class MappingDocument implements PlanNode {
                         it.getPredicate(),
                         rewrite(it.getObject()),
                         it.getGraph(),
-                        it.targets()
+                        it.targets(),
+                        it.lineage()
                 ))
                 .toList();
 
@@ -163,10 +197,20 @@ public class MappingDocument implements PlanNode {
     }
 
     private void emitContainerStmts(CollectionOrContainerTerm c, Term subject, IRITerm type, IRITerm graph, List<RdfStatement> containerStmts) {
-        containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, iriTerm(RDF.type), type, graph, null));
+        OriginLineage containerLineage = c.lineage();
+        if (containerLineage != null && graph != null && graph.lineage() != null) {
+            containerLineage = containerLineage.merge(graph.lineage());
+        }
+        Set<LogicalTarget> baseTargets = unionLogicalTargets(c.targets(), graph != null ? graph.targets() : null);
+        containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, iriTerm(RDF.type), type, graph, baseTargets, containerLineage));
         for (int i = 0; i < c.getElements().size(); i++) {
             Term element = c.getElements().get(i);
-            containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, rdfUnderscore(i + 1), termItselfOrCollectionId(element), graph, null));
+            OriginLineage elemLineage = element.lineage() != null ? (c.lineage() != null ? c.lineage().merge(element.lineage()) : element.lineage()) : c.lineage();
+            if (elemLineage != null && graph != null && graph.lineage() != null) {
+                elemLineage = elemLineage.merge(graph.lineage());
+            }
+            Set<LogicalTarget> elemTargets = unionLogicalTargets(c.targets(), element.targets(), graph != null ? graph.targets() : null);
+            containerStmts.add(new RdfStatement((BlankNodeOrIRI) subject, rdfUnderscore(i + 1), termItselfOrCollectionId(element), graph, elemTargets, elemLineage));
         }
     }
 
@@ -183,8 +227,11 @@ public class MappingDocument implements PlanNode {
             if (set.add(c)) {
                 Map<Term, CollectionOrContainerTerm> graphContainers = containers.computeIfAbsent(graph, k -> new HashMap<>());
                 if (graphContainers.containsKey(c.getId())) {
-                    graphContainers.get(c.getId()).getElements().addAll(c.getElements());
-                    replaceTermBy.accept(graphContainers.get(c.getId()));
+                    CollectionOrContainerTerm existing = graphContainers.get(c.getId());
+                    existing.getElements().addAll(c.getElements());
+                    existing.mergeLineage(c.lineage());
+                    existing.addTargets(c.targets());
+                    replaceTermBy.accept(existing);
                 } else {
                     graphContainers.put(c.getId(), c);
                 }

@@ -12,10 +12,8 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
 import org.apache.commons.io.IOUtils;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIFactory;
-import org.apache.jena.iri.Violation;
-import org.apache.jena.iri.ViolationCodes;
+import org.apache.jena.irix.IRIException;
+import org.apache.jena.irix.IRIx;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rfc3986.Chars3986;
 
@@ -26,7 +24,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -72,38 +69,50 @@ public final class Util {
         return new String(hexChars);
     }
 
+// TODO Remove once we are sure about RML Absolute URI/IRI RFC3986/3987 vs RDF Reference IRI
+//    https://www.w3.org/TR/rdf12-concepts/#reference-iris
+//    in rdf 1.1 it was already there but less clear.
+//
+//    public static boolean isValidAndAbsoluteIRI(String string) {
+//        return isValidAndAbsolute(string, IRIFactory.iriImplementation());
+//    }
+//
+//    public static boolean isValidAndAbsoluteURI(String string) {
+//        return isValidAndAbsolute(string, IRIFactory.uriImplementation());
+//    }
+//
+//    private static boolean isValidAndAbsolute(String string, IRIFactory factory) {
+//        IRI iri = factory.create(string);
+//        Iterator<Violation> violations = iri.violations(false);
+//        boolean hasViolations = false;
+//        while (violations.hasNext()) {
+//            Violation violation = violations.next();
+//            if (violation.getViolationCode() != ViolationCodes.LOWERCASE_PREFERRED) {
+//                hasViolations = true;
+//                break;
+//            }
+//        }
+//        return !hasViolations && iri.getScheme() != null && !iri.getScheme().trim().isEmpty();
+//    }
+
     public static boolean isValidAndAbsoluteIRI(String string) {
-        return isValidAndAbsolute(string, IRIFactory.iriImplementation());
+        if (string == null || string.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            IRIx iri = IRIx.create(string);
+            return iri.isAbsolute() || iri.isReference();
+        } catch (IRIException e) {
+            return false;
+        }
     }
 
     public static boolean isValidAndAbsoluteURI(String string) {
-        return isValidAndAbsolute(string, IRIFactory.uriImplementation());
-    }
-
-    private static boolean isValidAndAbsolute(String string, IRIFactory factory) {
-        IRI iri = factory.create(string);
-        Iterator<Violation> violations = iri.violations(false);
-        boolean hasViolations = false;
-        while (violations.hasNext()) {
-            Violation violation = violations.next();
-            if (violation.getViolationCode() != ViolationCodes.LOWERCASE_PREFERRED) {
-                hasViolations = true;
-                break;
-            }
+        // A valid URI must be strictly ASCII.
+        if (string != null && !string.chars().allMatch(c -> c < 128)) {
+            return false;
         }
-        return !hasViolations && iri.getScheme() != null && !iri.getScheme().trim().isEmpty();
-    }
-
-    public static boolean isAbsoluteAndValidIRI(String string) {
         return isValidAndAbsoluteIRI(string);
-    }
-
-    public static boolean isAbsoluteAndValidURI(String string) {
-        return isValidAndAbsoluteURI(string);
-    }
-
-    public static boolean isAbsolute(String string) {
-        return URI.create(string.toLowerCase()).isAbsolute();
     }
 
     public static String downloadFile(String url) {

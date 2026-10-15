@@ -1,0 +1,20 @@
+PREFIX rml: <http://w3id.org/rml/>
+PREFIX ex: <http://example.com/>
+
+ex:MissingPredicateTriplesMap a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [
+            a rml:RelativePathSource ;
+            rml:root rml:MappingDirectory ;
+            rml:path "student.csv"
+        ] ;
+        rml:referenceFormulation rml:CSV
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/student/{id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:objectMap [
+            rml:reference "name"
+        ]
+    ] .

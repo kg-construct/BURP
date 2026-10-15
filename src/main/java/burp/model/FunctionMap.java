@@ -1,14 +1,13 @@
 package burp.model;
 
+import burp.parse.loader.annotations.RdfType;
 import burp.vocabularies.RML;
+import burp.vocabularies.Rml;
 import org.apache.jena.rdf.model.Resource;
 import java.util.Set;
 
+@RdfType(Rml.FunctionMap)
 public class FunctionMap extends TermMap {
-    public FunctionMap() {
-        this.termType = RML.IRI;
-    }
-
     @Override
     public String getName() {
         return "function map";

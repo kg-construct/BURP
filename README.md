@@ -11,9 +11,10 @@ the RML specifications, their feasibility, and coverage of their test cases.
 BURP-Error is a fork of BURP that adds error handling to the RML processor, according to
 the [RML Execution Report](https://w3id.org/dre/rer). The project is a proof of concept, no maintenance guaranteed, but
 if you have any questions or issues, feel free to
-[open an issue on GitHub](https://github.com/jduchateau/BURP/issues/new).
+[open an issue on GitHub](https://github.com/kg-construct/BURP/issues/new).
 
-Warning: Joins are quadratic, in terms of iterations and number of multivalued join conditions values.
+> [!WARNING]
+> Joins are quadratic in terms of iterations and the number of multivalued join condition values.
 
 ## Coverage matrix
 
@@ -32,71 +33,101 @@ Warning: Joins are quadratic, in terms of iterations and number of multivalued j
 
 ### RML-IO-Registry coverage details
 
-BURP supports natively the following input sources:
+BURP natively supports the following input sources:
 
-- rml:FilePath or rml:RelativePathSource — local files (supports rml:root and rml:path)
-- rml:CSV — CSV files (including CSVW tables and their dialects: encoding, delimiter, header, nulls)
-- rml:JSONPath — JSON sources ([RFC 9535](https://www.rfc-editor.org/rfc/rfc9535) JSONPath iterator)
-- rml:XPath — XML sources (XPath 1.0 iterator; supports namespace/prefix mappings for XPath reference formulations)
-- rml:SPARQL Results (CSV/TSV/XML/JSON) — SPARQL result files, SPARQL endpoints/services, and data dumps (VOID/SD)
-- rml:SQL2008Query and rml:SQL2008Table — relational database sources
-  (via D2RQ properties such as d2rq:jdbcDSN, d2rq:jdbcDriver, username, password)
-- DCAT Distribution / CSVW Table — remote files via DCAT downloadURL or CSVW url
+- `rml:FilePath` or `rml:RelativePathSource` — local files (supports `rml:root` and `rml:path`)
+- `rml:CSV` — CSV files (including CSVW tables and their dialects: encoding, delimiter, header, nulls)
+- `rml:JSONPath` — JSON sources ([RFC 9535](https://www.rfc-editor.org/rfc/rfc9535) JSONPath iterator)
+- `rml:XPath` — XML sources (XPath 1.0 iterator; supports namespace/prefix mappings for XPath reference formulations)
+- `rml:SPARQL Results (CSV/TSV/XML/JSON)` — SPARQL result files, SPARQL endpoints/services, and data dumps (VOID/SD)
+- `rml:SQL2008Query` and `rml:SQL2008Table` — relational database sources (via D2RQ properties such as `d2rq:jdbcDSN`,
+  `d2rq:jdbcDriver`, username, password)
+- DCAT Distribution / CSVW Table — remote files via DCAT `downloadURL` or CSVW `url`
 
-- Extensions possible see extending BURP
+Extensible architecture: custom sources, reference formulations, and functions can be plugged in programmatically.
 
 ## About the RML Execution Report
 
 The RML Execution Report (RER) is a taxonomy for describing the execution of an RML mapping, defined at [https://w3id.org/dre/rer](https://w3id.org/dre/rer).
 
 BURP-Error can output the execution report using the `rer` vocabulary.
-In addition, if your mapping is in Turtle format, BURP-Error will also output the execution report in a textual format with code snippets or your mappings instead of the rdf 1.2 statements pointers ([ptr](https://w3id.org/dre/ptr)).
+In addition, if your mapping is in Turtle format, BURP-Error will also output the execution report in a textual format
+with code snippets of your mappings instead of RDF 1.2 statement pointers ([ptr](https://w3id.org/dre/ptr)).
 
-Notice; to locate prescicely the turtle token location, we use a custom turtle parser (in `turtleprov`) that admitedly is only 39/103 (37%) of RDF1.2 test cases and 217/313 (69%) of RDF1.1 test cases.
+> [!NOTE]
+> To locate the precise Turtle token coordinates, we use a custom Turtle parser (in `turtleprov`) that admittedly passes
+only 39/103 (37%) of RDF 1.2 test cases and 217/313 (69%) of RDF 1.1 test cases.
+
+## Using the BURP CLI
+
+Run using [JBang](https://www.jbang.dev/download/):
+
+```bash
+jbang burp@kg-construct -m <mappingFile> [-o <outputFile>] [-b <baseIRI>]
+```
+
+Download the fat JAR from [GitHub Releases](https://github.com/kg-construct/BURP/releases), and run with Java 21+:
+
+```bash
+java -jar burp.jar -m <mappingFile> [-o <outputFile>] [-b <baseIRI>]
+```
+
+If no `-o` / `--output` file is provided and the mapping does not specify RML-IO targets, the output is written to
+standard output (`stdout`).
+
+## Using BURP as a Library
+
+Available on [Maven Central](https://central.sonatype.com/artifact/io.github.kg-construct/burp):
+
+**Maven (`pom.xml`):**
+
+```xml
+<dependency>
+    <groupId>io.github.kg-construct</groupId>
+    <artifactId>burp</artifactId>
+    <version>0.1.4</version>
+</dependency>
+```
+
+**Gradle (Kotlin DSL):**
+
+```kotlin
+implementation("io.github.kg-construct:burp:0.1.4")
+```
+
+## Using the RML Dev Server (VS Code Extension)
+
+Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=uliege-dre.rml)
+or [Open VSX](https://open-vsx.org/extension/uliege-dre/rml).
+
+Features while editing RML mappings in Turtle:
+- Static validation of RML mappings
+- Live evaluation of non-constant terms directly inside the editor
+- Evaluate RML nodes with custom sample data
+- RML-FNML function and parameter auto-completion
+- RDF graph visualization
+- Fast mapping execution with caching and result table/graph preview
+- Preview source iterations in a table (for tabular data) or tree view (for hierarchical sources)
+- View execution traces
+
+Telemetry is collected to improve extension features and diagnostics.
 
 ## Building BURP
 
-To build the project and copy its dependencies, execute
+To build the project:
 
 ```bash
-$ mvn package 
-$ mvn dependency:copy-dependencies
+mvn package -DskipTests
 ```
 
-You can add `-DskipTests` after `mvn package` to skip the unit tests. The tests do rely on Docker for testing mappings on top of MySQL and PostgreSQL.
-
-Some libraries are available on GitHub's maven repository. Add a GitHub authentication token to your Apache Maven `settings.xml` file. More information can be found [here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry).
-
-## Using BURP
-
-You can run BURP using [JBang](https://jbang.dev):
+To build the deployable standalone fat JAR (`target/burp.jar`):
 
 ```bash
-$ jbang burp@kg-construct [-h] [-b=<baseIRI>] -m=<mappingFile> [-o=<outputFile>]
+mvn package -Pdeploy -DskipTests
 ```
 
-*Note: JBang will automatically download the required JDK and resolve all project dependencies on the first run.*
-
-If you don't have JBang installed yet, see the [JBang Installation Guide](https://jbang.dev/download) to install it.
-
-Alternatively, if you prefer to run it using a local pre-built fat JAR and standard Java, execute the following command:
-
-```bash
-$ java -jar burp.jar [-h] [-b=<baseIRI>] -m=<mappingFile> [-o=<outputFile>]
-```
-A fat jar is also provided with the [Apache Maven Shade Plugin](https://maven.apache.org/plugins/maven-shade-plugin/). It does not depend on the `dependency` folder.
-
-```
-Usage: burp [-h] [-b=<baseIRI>] -m=<mappingFile> [-o=<outputFile>]
-  -b, --baseIRI=<baseIRI>   Used in resolving relative IRIs produced by the RML mapping
-  -h, --help                Display a help message
-  -m, --mappingFile=<mappingFile>
-                            The RML mapping file
-  -o, --outputFile=<outputFile>
-                            The output file
-```
-
-If no outputFile is provided and the RML mapping does not rely on RML-IO for targets, then the output is written to the standard output.
+> [!NOTE]
+> Unit tests require Docker to run RML-IO-Registry tests using test-containers.
 
 ## Citation
 

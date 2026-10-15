@@ -1,0 +1,22 @@
+@prefix fno:     <https://w3id.org/function/ontology#> .
+@prefix grel:    <http://users.ugent.be/~bjdmeest/function/grel.ttl#> .
+@prefix burp-fn: <http://BURP.noname/function/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+
+burp-fn:toSafeIRI
+    a                   fno:Function ;
+    fno:name            "toSafeIRI" ;
+    rdfs:label          "toSafeIRI" ;
+    dcterms:description "Converts a string or term to an IRI-safe string." ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .
+
+burp-fn:toSafeURI
+    a                   fno:Function ;
+    fno:name            "toSafeURI" ;
+    rdfs:label          "toSafeURI" ;
+    dcterms:description "Converts a string or term to a URI-safe string." ;
+    fno:expects         ( grel:valueParam ) ;
+    fno:returns         ( grel:stringOut ) .

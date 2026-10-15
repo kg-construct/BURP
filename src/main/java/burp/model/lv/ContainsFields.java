@@ -7,6 +7,4 @@ public interface ContainsFields {
     List<IterableField> getIterableFields();
     List<ExpressionField> getExpressionFields();
 
-    void addField(Field field);
-
 }

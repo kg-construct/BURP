@@ -1,0 +1,24 @@
+@prefix rml: <http://w3id.org/rml/> .
+@prefix grel: <http://users.ugent.be/~bjdmeest/function/grel.ttl#> .
+@prefix ex: <http://example.com/> .
+
+<#TM> a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [ a rml:RelativePathSource ; rml:root rml:MappingDirectory ; rml:path "student.csv" ] ;
+        rml:referenceFormulation rml:CSV
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/{id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:upper ;
+        rml:objectMap [
+            rml:functionExecution [
+                rml:function grel:toUpperCase ;
+                rml:input [
+                    rml:parameter grel:valueParameter ;
+                    rml:inputValueMap [ rml:reference "name" ]
+                ]
+            ]
+        ]
+    ] .

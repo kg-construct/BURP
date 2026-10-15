@@ -110,16 +110,7 @@ public class TurtleParserTest {
         assertTrue(found);
     }
 
-    private static class ParseResult {
-        final Literal literal;
-        final ProvTriple provTriple;
-        final String line;
-
-        ParseResult(Literal literal, ProvTriple provTriple, String line) {
-            this.literal = literal;
-            this.provTriple = provTriple;
-            this.line = line;
-        }
+    private record ParseResult(Literal literal, ProvTriple provTriple, String line) {
     }
 
     private ParseResult parseSingleLiteral(String predicateLocalName, String objectSyntax) {

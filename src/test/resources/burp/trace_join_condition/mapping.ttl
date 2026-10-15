@@ -1,0 +1,38 @@
+@prefix ex: <http://example.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+
+ex:ChildMapping a rml:TriplesMap ;
+    rml:logicalSource [ a rml:LogicalSource ;
+        rml:referenceFormulation rml:JSONPath ;
+        rml:iterator "$[*]" ;
+        rml:source [ a rml:RelativePathSource ;
+            rml:root rml:MappingDirectory ;
+            rml:path "children.json"
+        ]
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.org/employee/{$.name}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:department ;
+        rml:objectMap [
+            rml:parentTriplesMap ex:ParentMapping ;
+            rml:joinCondition [
+                rml:child "$.deptId" ;
+                rml:parent "$.id"
+            ]
+        ]
+    ] .
+
+ex:ParentMapping a rml:TriplesMap ;
+    rml:logicalSource [ a rml:LogicalSource ;
+        rml:referenceFormulation rml:JSONPath ;
+        rml:iterator "$[*]" ;
+        rml:source [ a rml:RelativePathSource ;
+            rml:root rml:MappingDirectory ;
+            rml:path "parents.json"
+        ]
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.org/department/{$.name}"
+    ] .

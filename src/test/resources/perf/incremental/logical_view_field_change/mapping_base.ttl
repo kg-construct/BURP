@@ -1,0 +1,44 @@
+@prefix rml: <http://w3id.org/rml/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix ex: <http://example.com/> .
+
+ex:CsvSource a rml:LogicalSource ;
+  rml:source [
+    a rml:RelativePathSource , rml:Source ;
+    rml:root rml:MappingDirectory ;
+    rml:path "students.csv" ;
+  ] ;
+  rml:referenceFormulation rml:CSV .
+
+ex:StudentView a rml:LogicalView ;
+  rml:viewOn ex:CsvSource ;
+  rml:field [
+    a rml:ExpressionField ;
+    rml:fieldName "id" ;
+    rml:reference "id" ;
+  ] ;
+  rml:field [
+    a rml:ExpressionField ;
+    rml:fieldName "name" ;
+    rml:reference "name" ;
+  ] ;
+  # Referencing old column "legacy_status"
+  rml:field [
+    a rml:ExpressionField ;
+    rml:fieldName "status" ;
+    rml:reference "legacy_status" ;
+  ] .
+
+ex:StudentMapping a rml:TriplesMap ;
+  rml:logicalSource ex:StudentView ;
+  rml:subjectMap [
+    rml:template "http://example.com/student/{id}" ;
+  ] ;
+  rml:predicateObjectMap [
+    rml:predicate foaf:name ;
+    rml:objectMap [ rml:reference "name" ] ;
+  ] ;
+  rml:predicateObjectMap [
+    rml:predicate ex:enrollmentStatus ;
+    rml:objectMap [ rml:reference "status" ] ;
+  ] .

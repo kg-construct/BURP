@@ -1,0 +1,11 @@
+{
+  "people": [
+    {
+      "name": "Alice",
+      "items": [
+        {"type": "Book", "weight": "0.5"},
+        {"type": "Laptop", "weight": "2.0"}
+      ]
+    }
+  ]
+}

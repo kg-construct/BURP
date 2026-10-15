@@ -1,0 +1,14 @@
+PREFIX rml: <http://w3id.org/rml/>
+PREFIX ex: <http://example.com/>
+
+ex:ActiveTM a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [ a rml:RelativePathSource ; rml:path "student.csv" ] ;
+        rml:referenceFormulation rml:CSV
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/Student/{id}"
+    ] .
+
+ex:OrphanSubjectMap a rml:SubjectMap ;
+    rml:template "http://example.com/Orphan/{id}" .

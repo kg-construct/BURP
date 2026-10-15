@@ -60,7 +60,7 @@ public class CSVSourceProvider implements LogicalSourceProvider {
                                 new RmlError(
                                     "Provided Character Set " + r + " not supported.",
                                     new Origin(encodingStmt, StatementPart.Predicate, StatementPart.Object),
-                                    RER.Error, null
+                                    RER.Error
                                 )
                             );
                     }

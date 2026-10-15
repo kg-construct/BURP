@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/vscode-extension-tester/resources/extester.schema.json",
+  "setup": {
+    "storage": "./test-resources",
+    "extensionsDir": "./test-resources/extensions",
+    "settings": "./test-settings.json"
+  },
+  "run": {
+    "testFiles": [
+      "./out/ui-test/**/*.test.js"
+    ],
+    "storage": "./test-resources",
+    "extensionsDir": "./test-resources/extensions",
+    "settings": "./test-settings.json",
+    "mochaConfig": "./.mocharc.js",
+    "resources": [
+      "../src/test/resources/burp/rml_tc0009a/mapping.ttl"
+    ]
+  }
+}

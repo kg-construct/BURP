@@ -1,13 +1,20 @@
 package burp.reporting;
 
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
 
-public record TextFilePointer(Path path, PointRange range) implements RDFPointer {
+@NullMarked
+public record TextFilePointer(Path path, @Nullable PointRange range) implements RDFPointer {
 
     @Override
-    public @NonNull String toString() {
+    public Path file() {
+        return path;
+    }
+
+    @Override
+    public String toString() {
         return "TextFilePointer[path=" + path + ", range=" + range + "]";
     }
 }

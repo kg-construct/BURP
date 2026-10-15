@@ -195,6 +195,13 @@ rer:message
     rdfs:range       rdfs:Literal ;
     rdfs:isDefinedBy rer: .
 
+rer:error
+    a                owl:AnnotationProperty ;
+    rdfs:label       "error" ;
+    rdfs:comment     "Associates a SHACL shape or constraint with a specific RER error class." ;
+    rdfs:range       owl:Class ;
+    rdfs:isDefinedBy rer: .
+
 rer:potentialCause
     a                             owl:AnnotationProperty ;
     rdfs:label                    "Potential Cause" ;
@@ -673,6 +680,62 @@ rer:UnsupportedFunction
     rer:potentialConfusionError rer:FunctionExecutionError ;
     rdfs:isDefinedBy            rer: .
 
+rer:UnknownFunction
+    a                           owl:Class ;
+    rdfs:label                  "Unknown Function" ;
+    rdfs:subClassOf             rer:UnsupportedFunction ;
+    rdfs:comment                "The mapping references a function that is not known or not implemented." ;
+    rdfs:isDefinedBy            rer: .
+
+rer:ParameterError
+    a                           owl:Class ;
+    rdfs:label                  "Parameter Error" ;
+    rdfs:subClassOf             rer:MappingError ;
+    rdfs:comment                "Errors related to function parameters in the mapping." ;
+    rdfs:isDefinedBy            rer: .
+
+rer:DuplicateParameter
+    a                           owl:Class ;
+    rdfs:label                  "Duplicate Parameter" ;
+    rdfs:subClassOf             rer:ParameterError ;
+    rdfs:comment                "A parameter is bound multiple times for the same function execution." ;
+    rdfs:isDefinedBy            rer: .
+
+rer:InvalidParameter
+    a                           owl:Class ;
+    rdfs:label                  "Invalid Parameter" ;
+    rdfs:subClassOf             rer:ParameterError ;
+    rdfs:comment                "A parameter is not a recognized parameter for the specified function." ;
+    rdfs:isDefinedBy            rer: .
+
+rer:MissingParameter
+    a                           owl:Class ;
+    rdfs:label                  "Missing Parameter" ;
+    rdfs:subClassOf             rer:ParameterError ;
+    rdfs:comment                "A required parameter is missing from the function execution." ;
+    rdfs:isDefinedBy            rer: .
+
+rer:UnknownFunctionParameterIRI
+    a                           owl:Class ;
+    rdfs:label                  "Unknown Function Parameter IRI" ;
+    rdfs:subClassOf             rer:Warning ;
+    rdfs:comment                "The parameter uses a predicate IRI or unrecognized parameter IRI instead of the parameter definition IRI." ;
+    rdfs:isDefinedBy            rer: .
+
+rer:UnknownFunctionReturnIRI
+    a                           owl:Class ;
+    rdfs:label                  "Unknown Function Return IRI" ;
+    rdfs:subClassOf             rer:Warning ;
+    rdfs:comment                "The return map uses an output predicate IRI instead of the return definition IRI." ;
+    rdfs:isDefinedBy            rer: .
+
+rer:TemplateSyntaxError
+    a                           owl:Class ;
+    rdfs:label                  "Template Syntax Error" ;
+    rdfs:subClassOf             rer:SyntaxError, rer:MappingError ;
+    rdfs:comment                "The template string has invalid syntax (e.g. unclosed or nested braces, empty expressions)." ;
+    rdfs:isDefinedBy            rer: .
+
 rer:OutOfSpec
     a                           owl:Class ;
     rdfs:label                  "Out Of Spec" ;
@@ -781,7 +844,14 @@ rer:UnexpectedError
                        "Do not confuse with Configuration Error or Mapping Error, which are caused by user-provided configuration or mapping definitions." ;
     rdfs:isDefinedBy   rer: .
 
-
+rer:UnusedRmlElement
+    a                  owl:Class ;
+    rdfs:label         "Unused RML Element" ;
+    rdfs:subClassOf    rer:Warning ;
+    rdfs:comment       "An RML element is present in the mapping but not used by the RML Processor." ;
+    rer:potentialCause "An iri from the RML namespace is not needed or supported by the RML processor while being present in the mapping.";
+    rer:potentialSolution "Remove the unused RML element from the mapping." ;
+    rdfs:isDefinedBy   rer: .
 
 @prefix draw: <https://w3id.org/dre/drawio#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.

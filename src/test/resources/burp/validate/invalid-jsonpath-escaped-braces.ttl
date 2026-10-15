@@ -1,0 +1,12 @@
+PREFIX rml: <http://w3id.org/rml/>
+PREFIX ex: <http://example.com/>
+
+ex:TM a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [ a rml:RelativePathSource ; rml:path "student.json" ] ;
+        rml:referenceFormulation rml:JSONPath ;
+        rml:iterator "$[*]"
+    ] ;
+    rml:subjectMap [
+        rml:template 'http://example.com/{$["\\{inside\\}"].$$$}'
+    ] .

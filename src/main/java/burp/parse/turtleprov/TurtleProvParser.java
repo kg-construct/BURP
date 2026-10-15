@@ -3,6 +3,7 @@ package burp.parse.turtleprov;
 import burp.reporting.PointRange;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.Interval;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,21 +14,33 @@ import java.util.List;
 public class TurtleProvParser {
 
     public static ProvStore parseTurtleFromString(String turtleContent) {
+        return parseTurtleFromString(turtleContent, (String) null);
+    }
+
+    public static ProvStore parseTurtleFromString(String turtleContent, @Nullable String documentUri) {
         CharStream input = CharStreams.fromString(turtleContent);
-        return parse(input);
+        return parse(input, documentUri);
     }
 
     public static ProvStore parseTurtleFromPath(Path path) throws IOException {
         CharStream input = CharStreams.fromPath(path);
-        return parse(input);
+        return parse(input, path.toUri().toString());
     }
 
     public static ProvStore parseTurtleFromStream(InputStream stream) throws IOException {
+        return parseTurtleFromStream(stream, null);
+    }
+
+    public static ProvStore parseTurtleFromStream(InputStream stream, @Nullable String documentUri) throws IOException {
         CharStream input = CharStreams.fromStream(stream);
-        return parse(input);
+        return parse(input, documentUri);
     }
 
     private static ProvStore parse(CharStream input) {
+        return parse(input, null);
+    }
+
+    private static ProvStore parse(CharStream input, @Nullable String documentUri) {
         TurtleLexer lexer = new TurtleLexer(input);
         List<ProvStore.SyntaxError> syntaxErrors = new ArrayList<>();
 
@@ -92,7 +105,7 @@ public class TurtleProvParser {
         parser.removeErrorListeners();
         parser.addErrorListener(errorListener);
 
-        ProvTurtleVisitor visitor = new ProvTurtleVisitor();
+        ProvTurtleVisitor visitor = new ProvTurtleVisitor(documentUri);
         ProvStore store;
         try {
             store = visitor.visitTurtleDoc(parser.turtleDoc());
@@ -110,6 +123,7 @@ public class TurtleProvParser {
         if (store == null) {
             store = new ProvStore();
         }
+        store.setDocumentUri(documentUri);
         store.syntaxErrors.addAll(syntaxErrors);
         return store;
     }

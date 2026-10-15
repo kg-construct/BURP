@@ -2,6 +2,9 @@
 	path = src/test/resources/rdf-tests
 	url = https://github.com/w3c/rdf-tests.git
 	branch = main
+[submodule "rml-modules/.github"]
+	path = rml-modules/.github
+	url = https://github.com/kg-construct/.github.git
 [submodule "rml-modules/rml-core"]
 	path = rml-modules/rml-core
 	url = https://github.com/kg-construct/rml-core.git
@@ -20,3 +23,7 @@
 [submodule "rml-modules/rml-io-registry"]
 	path = rml-modules/rml-io-registry
 	url = https://github.com/kg-construct/rml-io-registry.git
+[submodule "rml-modules/rml-shacl"]
+	path = rml-modules/rml-shacl
+	url = https://github.com/jduchateau/rml-shacl.git
+	branch = rer-error-annotations
