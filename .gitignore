@@ -106,4 +106,6 @@ buildNumber.properties
 # Generated benchmark datasets
 src/test/resources/perf/**/*.json
 src/test/resources/perf/**/*.csv
+benchmarks/src/test/resources/perf/**/*.json
+benchmarks/src/test/resources/perf/**/*.csv
 krown/!/src/main/java/burp/parse/TemplateParser.java
