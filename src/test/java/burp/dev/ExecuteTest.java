@@ -5,14 +5,17 @@ import burp.dev.rml.RmlLanguageServer;
 import burp.dev.rml.service.eval.AllDataContext;
 import burp.dev.rml.service.eval.EvaluateParams;
 import burp.dev.rml.service.eval.EvaluateResult;
-import burp.dev.rml.service.selector.CursorSelector;
 import burp.dev.rml.service.execute.ExecuteParams;
 import burp.dev.rml.service.execute.ExecuteResult;
+import burp.dev.rml.service.selector.CursorSelector;
+import burp.dev.rml.service.selector.IriSelector;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -50,7 +53,7 @@ public class ExecuteTest {
 
     @Test
     public void testDevServerExecuteWithLogicalTargetAndGson() throws Exception {
-        File rmlttc = new File("/home/jakub/Documents/Dev/BURP/rml-modules/rml-io/test-cases/RMLTTC0001a/mapping.ttl");
+        File rmlttc = new File("/rml-modules/rml-io/test-cases/RMLTTC0001a/mapping.ttl");
         if (!rmlttc.exists()) {
             return;
         }
@@ -76,10 +79,10 @@ public class ExecuteTest {
         }
         assertThat(foundCustomTarget).isTrue();
 
-        // Crucial test: Gson serialization MUST succeed without StackOverflowError
+        // Gson serialization MUST succeed without StackOverflowError
         GsonBuilder builder = new GsonBuilder();
         DevServer.configureGson(builder);
-        com.google.gson.Gson gson = builder.create();
+        Gson gson = builder.create();
         String json = gson.toJson(result);
         assertThat(json).isNotEmpty();
         assertThat(json).contains("targetPath");
@@ -87,23 +90,23 @@ public class ExecuteTest {
 
     @Test
     public void testDevServerEvaluateWithLogicalTargetAndGson() throws Exception {
-        File rmlttc = new File("/home/jakub/Documents/Dev/BURP/rml-modules/rml-io/test-cases/RMLTTC0001a/mapping.ttl");
+        File rmlttc = new File("rml-modules/rml-io/test-cases/RMLTTC0001a/mapping.ttl");
         if (!rmlttc.exists()) {
             return;
         }
 
         RmlLanguageServer server = new RmlDevServerImpl();
         EvaluateParams params = new EvaluateParams(
-                new CursorSelector(rmlttc.getAbsolutePath(), new Position(6, 1)),
+                new IriSelector(rmlttc.toURI().toString(), "http://example.com/rules/#TriplesMap"),
                 new AllDataContext()
         );
 
-        java.util.List<EvaluateResult> results = server.evaluate(params).get();
+        List<EvaluateResult> results = server.evaluate(params).get();
         assertThat(results).isNotEmpty();
 
         GsonBuilder builder = new GsonBuilder();
         DevServer.configureGson(builder);
-        com.google.gson.Gson gson = builder.create();
+        Gson gson = builder.create();
 
         String json = gson.toJson(results);
         assertThat(json).isNotEmpty();
@@ -114,7 +117,7 @@ public class ExecuteTest {
 
     @Test
     public void testDevServerExecuteRMLTTC0001d() throws Exception {
-        File rmlttc = new File("/home/jakub/Documents/Dev/BURP/rml-modules/rml-io/test-cases/RMLTTC0001d/mapping.ttl");
+        File rmlttc = new File("rml-modules/rml-io/test-cases/RMLTTC0001d/mapping.ttl");
         if (!rmlttc.exists()) return;
 
         RmlLanguageServer server = new RmlDevServerImpl();
@@ -131,7 +134,7 @@ public class ExecuteTest {
 
     @Test
     public void testDevServerExecuteRMLTTC0002k() throws Exception {
-        File rmlttc = new File("/home/jakub/Documents/Dev/BURP/rml-modules/rml-io/test-cases/RMLTTC0002k/mapping.ttl");
+        File rmlttc = new File("rml-modules/rml-io/test-cases/RMLTTC0002k/mapping.ttl");
         if (!rmlttc.exists()) return;
 
         RmlLanguageServer server = new RmlDevServerImpl();

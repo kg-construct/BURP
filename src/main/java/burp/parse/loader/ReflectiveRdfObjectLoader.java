@@ -1,16 +1,13 @@
 package burp.parse.loader;
 
 import burp.model.AbstractPlanNode;
-import burp.model.PlanNode;
 import burp.model.rdf.BlankNodeTerm;
 import burp.model.rdf.IRITerm;
 import burp.model.rdf.LiteralTerm;
 import burp.model.rdf.Term;
-import burp.parse.RmlLoaderContext;
 import burp.parse.loader.annotations.*;
 import burp.reporting.*;
 import burp.vocabularies.RER;
-import burp.vocabularies.Rml;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 import org.jspecify.annotations.Nullable;
@@ -150,7 +147,7 @@ public class ReflectiveRdfObjectLoader {
      * @param <T>         the target object type
      * @return the mapped domain instance, or {@code null} if mapping could not resolve
      */
-    public <T> T map(Model model, Resource resource, Class<T> targetClass) {
+    public @Nullable <T> T map(Model model, Resource resource, Class<T> targetClass) {
         return mapInternal(model, resource, targetClass, true, null).instance();
     }
 
