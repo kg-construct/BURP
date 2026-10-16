@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -29,6 +29,12 @@ jobs:
           server-id: central
           server-username: MAVEN_USERNAME # env variable for username in deploy
           server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: 'rml-dev-server/package-lock.json'
       - name: Set project version from tag
         run: |
           TAG_VERSION="${{ github.ref_name }}"
@@ -46,6 +52,31 @@ jobs:
           # ASCII-armored secret key (TSK), e.g. from `gpg --armor --export-secret-keys YOUR_ID`
           MAVEN_GPG_KEY: ${{ secrets.GPG_ARMOR_KEY }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Package VS Code Extension (VSIX)
+        run: |
+          TAG_VERSION="${{ github.ref_name }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+          # Strip '-rc.*' to get VS Code compatible version https://code.visualstudio.com/api/working-with-extensions/publishing-extension#pre-release-extensions
+          TAG_VERSION_VS="${TAG_VERSION%%-*}"
+          
+          # Add --pre-release flag if this is a pre-release version
+          PRE_RELEASE_FLAG=""
+          if [[ "$TAG_VERSION" == *"-"* ]]; then
+            PRE_RELEASE_FLAG="--pre-release"
+          fi
+
+          cd rml-dev-server
+          # Sync package.json version with tag version
+          npm version "$TAG_VERSION_VS" --no-git-tag-version --allow-same-version
+          npm pkg set serverVersion="$TAG_VERSION"
+
+          # Bundle fat JAR with the extension
+          mkdir -p server
+          cp ../target/burp.jar server/burp.jar
+
+          # Install dependencies and package into target VSIX
+          npm ci
+          npm run package -- $PRE_RELEASE_FLAG --out "rml-dev-server-$TAG_VERSION.vsix"
       - name: JReleaser Release
         run: mvn jreleaser:full-release -B -Pdeploy
         env:

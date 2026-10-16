@@ -1,0 +1,16 @@
+/* Term Cell Container (for table display) */
+.bk-term-cell {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--bk-gap-xs);
+    font-family: var(--bk-font-family-mono);
+    font-size: var(--bk-font-size-sm);
+    line-height: var(--bk-line-height-normal);
+    word-break: break-word;
+}
+
+.bk-term-empty {
+    color: var(--bk-color-foreground-muted);
+    font-style: italic;
+}

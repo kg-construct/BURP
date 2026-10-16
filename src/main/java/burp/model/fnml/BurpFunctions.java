@@ -1,5 +1,6 @@
 package burp.model.fnml;
 
+import burp.model.context.EvaluationContext;
 import burp.model.rdf.LiteralTerm;
 import burp.model.rdf.Term;
 import burp.reporting.BurpException;
@@ -29,7 +30,7 @@ public class BurpFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String valueParam = "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam";
             Term term = getRequiredParameter(parameters, valueParam, origin);
             String termValue = (term instanceof LiteralTerm literal) ? literal.value() : term.toString();
@@ -48,7 +49,7 @@ public class BurpFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String valueParam = "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam";
             Term term = getRequiredParameter(parameters, valueParam, origin);
             String termValue = (term instanceof LiteralTerm literal) ? literal.value() : term.toString();

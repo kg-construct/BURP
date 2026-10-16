@@ -1,0 +1,299 @@
+{
+  "name": "rml",
+  "displayName": "RML: RDF Mapping Language",
+  "icon": "assets/rml-128.png",
+  "description": "A RDF Mapping Language (RML) Development Server with the BURP RML Processor",
+  "version": "0.1.4",
+  "serverVersion": "0.1.4",
+  "publisher": "uliege-dre",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kg-construct/BURP"
+  },
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "language server",
+    "semantic web",
+    "rml",
+    "rdf"
+  ],
+  "activationEvents": [
+    "onLanguage:turtle",
+    "onLanguage:rml",
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "rml-dev-server.healthCheck",
+        "title": "RML: Check Server Health",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.startServer",
+        "title": "RML: Start / Reconnect Server",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.stopServer",
+        "title": "RML: Stop Server",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.restartServer",
+        "title": "RML: Restart Server",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.showOutput",
+        "title": "RML: Show Output Channel",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.downloadServer",
+        "title": "RML: Download / Update BURP Server",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.openEvaluatorPanel",
+        "title": "RML: Open Evaluator & Value Inspector",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.openStructurePanel",
+        "title": "RML: Open Plan Node Hierarchy Panel",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.validateMapping",
+        "title": "RML: Validate Mapping Document",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.executeCurrent",
+        "title": "RML: Run Mapping",
+        "category": "RML",
+        "icon": "$(play)"
+      },
+      {
+        "command": "rml-dev-server.visualizeRdf",
+        "title": "RDF: Visualize Graph / Table",
+        "category": "RDF",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "rml-dev-server.traceIteration",
+        "title": "RML: Trace Iteration Dataflow",
+        "category": "RML"
+      },
+      {
+        "command": "rml-dev-server.traceQuad",
+        "title": "RML: Trace Output Quad Provenance",
+        "category": "RML"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "rml-dev-server.executeCurrent",
+          "when": "resourceExtname == .ttl || resourceLangId == turtle",
+          "group": "navigation@1"
+        },
+        {
+          "command": "rml-dev-server.visualizeRdf",
+          "when": "resourceExtname =~ /\\.(ttl|nt|nq|trig|n3)$/ || resourceLangId =~ /^(turtle|trig|n-triples|n-quads|n3)$/",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "rml-explorer",
+          "title": "RML Dev Server",
+          "icon": "$(telescope)"
+        }
+      ]
+    },
+    "views": {
+      "rml-explorer": [
+        {
+          "type": "webview",
+          "id": "rml-dev-server.evaluatorView",
+          "name": "Evaluator & Value Inspector"
+        },
+        {
+          "type": "webview",
+          "id": "rml-dev-server.structureView",
+          "name": "Plan Node Hierarchy",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "RML Dev Server Configuration",
+      "properties": {
+        "rml.burp.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the BURP executable, script, or JAR file (e.g. '/path/to/burp.jar'). Leave empty to use auto-detected local build, downloaded JAR, or system PATH."
+        },
+        "rml.java.path": {
+          "type": "string",
+          "default": "java",
+          "description": "Path to the Java executable used to run the BURP JAR file."
+        },
+        "rml.server.spawnProcess": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to spawn the BURP process automatically. Set to false when connecting to an already-running BURP dev server on 'rml.server.port' (mainly used by developers of BURP)."
+        },
+        "rml.server.port": {
+          "type": "integer",
+          "default": 0,
+          "description": "Dev server port number. If set to 0, an open port will be dynamically assigned by BURP."
+        },
+        "rml.server.extraArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Extra CLI arguments to pass to BURP when spawning the dev server."
+        },
+        "rml.server.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start the BURP Dev Server on extension activation."
+        },
+        "rml.baseIRI": {
+          "type": "string",
+          "default": "",
+          "description": "Base IRI used to resolve relative IRIs produced by the RML mapping."
+        },
+        "rml.inlineHints.enableEvaluation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show dynamically evaluated mapping values in editor inline hints. Static function parameter and join-source hints remain visible when disabled."
+        },
+        "rml.graph.backgroundMethod": {
+          "type": "string",
+          "enum": [
+            "smoothHull",
+            "bubbleset",
+            "concaveHull",
+            "gooey",
+            "disabled"
+          ],
+          "enumDescriptions": [
+            "Smooth Convex Hull (Catmull-Rom lozenge envelope)",
+            "BubbleSet (Obstacle-avoiding B-Spline contours)",
+            "Concave Hull (Alpha-shape conforming to cluster indentations)",
+            "Gooey Metaballs (Liquid SVG blur-and-threshold filter)",
+            "Disabled (Disable background envelopes and graph identifier nodes)"
+          ],
+          "default": "smoothHull",
+          "description": "Background hull rendering algorithm for non-default named RDF graphs in the Graph view."
+        },
+        "rml.nodeBackground": {
+          "type": "boolean",
+          "default": false,
+          "description": "Highlight the background of the active/selected AST plan node's source span in the editor."
+        },
+        "rml.nodeBackgroundAll": {
+          "type": "boolean",
+          "default": false,
+          "description": "Debug mode: highlight all AST plan nodes with distinct random background colors to inspect source spans."
+        },
+        "rml.telemetry.enabled": {
+          "type": "string",
+          "enum": [
+            "unspecified",
+            "enabled",
+            "disabled"
+          ],
+          "enumDescriptions": [
+            "Follow global VS Code telemetry setting (telemetry.telemetryLevel)",
+            "Enable telemetry for RML Dev Server",
+            "Disable telemetry for RML Dev Server"
+          ],
+          "default": "unspecified",
+          "description": "Control telemetry data collection for RML Dev Server.",
+          "tags": [
+            "telemetry",
+            "usesOnlineServices"
+          ]
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package-ext",
+    "compile:ts": "tsc -p ./",
+    "build": "node esbuild.mjs",
+    "build:prod": "node esbuild.mjs --production",
+    "build:extension": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node20 --sourcemap",
+    "build:webview": "esbuild src/webview/index.tsx --bundle --outfile=dist/webview.js --format=iife --loader:.ttf=dataurl --sourcemap",
+    "compile": "npm run compile:ts && npm run build",
+    "package-ext": "npm run compile:ts && npm run build:prod",
+    "package": "vsce package",
+    "watch": "node esbuild.mjs --watch",
+    "watch:ts": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "format": "prettier --write .",
+    "test": "vscode-test",
+    "ui-test:setup": "extest setup-tests && extest install-from-marketplace ajuvercr.semantic-web-lsp",
+    "ui-test": "npm run compile && extest setup-tests && extest install-from-marketplace ajuvercr.semantic-web-lsp && extest run-tests"
+  },
+  "devDependencies": {
+    "@posthog/types": "^1.416.0",
+    "@types/adm-zip": "^0.5.0",
+    "@types/chai": "^5.2.3",
+    "@types/d3": "^7.4.3",
+    "@types/mocha": "^10.0.10",
+    "@types/n3": "^1.26.4",
+    "@types/node": "26.6.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/tar": "^6.1.0",
+    "@types/vscode": "^1.125.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
+    "@vscode/vsce": "^4.0.0",
+    "chai": "^6.3.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "3.9.9",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vscode-extension-tester": "^8.27.0"
+  },
+  "overrides": {
+    "mocha": "^12.0.1"
+  },
+  "dependencies": {
+    "@tanstack/react-table": "^8.21.2",
+    "@vscode/codicons": "^0.0.41",
+    "adm-zip": "^0.6.1",
+    "axios": "^1.20.0",
+    "baukasten-ui": "^0.3.0",
+    "bubblesets-js": "^3.0.1",
+    "d3": "^7.9.0",
+    "jdk-utils": "^0.7.0",
+    "n3": "^2.13.12",
+    "posthog-js": "^1.438.9",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tar": "^7.5.22",
+    "vscode-jsonrpc": "^9.0.2"
+  }
+}

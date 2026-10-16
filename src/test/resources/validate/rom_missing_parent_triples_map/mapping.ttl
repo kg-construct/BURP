@@ -1,0 +1,24 @@
+PREFIX rml: <http://w3id.org/rml/>
+PREFIX ex: <http://example.com/>
+
+ex:TriplesMapChild a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [
+            a rml:RelativePathSource ;
+            rml:root rml:MappingDirectory ;
+            rml:path "child.csv"
+        ] ;
+        rml:referenceFormulation rml:CSV
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/child/{id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:hasParent ;
+        rml:objectMap [
+            rml:joinCondition [
+                rml:child "parentId" ;
+                rml:parent "id"
+            ]
+        ]
+    ] .

@@ -1,4 +1,4 @@
 package burp.model;
 
-public abstract class RMLTarget {
+public interface RMLTarget {
 }

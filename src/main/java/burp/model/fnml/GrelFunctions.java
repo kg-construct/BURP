@@ -1,6 +1,6 @@
 package burp.model.fnml;
 
-import burp.Main;
+import burp.model.context.EvaluationContext;
 import burp.model.rdf.LiteralTerm;
 import burp.reporting.BurpException;
 import burp.reporting.Origin;
@@ -56,7 +56,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             LiteralTerm a = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_a");
             LiteralTerm b = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_b");
             boolean out = (a != null && Boolean.TRUE.equals(a.booleanOrNull())) && (b != null && Boolean.TRUE.equals(b.booleanOrNull()));
@@ -72,7 +72,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             LiteralTerm a = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool");
             boolean out = !(a != null && Boolean.TRUE.equals(a.booleanOrNull()));
             return List.of(new Return(out, Map.of("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out)));
@@ -87,7 +87,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             LiteralTerm a = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_a");
             LiteralTerm b = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_b");
             boolean out = (a != null && Boolean.TRUE.equals(a.booleanOrNull())) || (b != null && Boolean.TRUE.equals(b.booleanOrNull()));
@@ -103,7 +103,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             LiteralTerm a = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_a");
             LiteralTerm b = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_bool_b");
             boolean valA = a != null && Boolean.TRUE.equals(a.booleanOrNull());
@@ -121,7 +121,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String f = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sep");
             String out = Strings.CS.removeEnd(s, f);
@@ -137,7 +137,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String f = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sub");
             boolean out = s != null && f != null && s.contains(f);
@@ -153,7 +153,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String p = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#param_regex");
             boolean out = s != null && p != null && s.matches(p);
@@ -169,7 +169,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String f = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sub");
             boolean out = s != null && f != null && s.endsWith(f);
@@ -185,7 +185,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String p = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#modeParam");
             String modeLower = p != null ? p.toLowerCase(Locale.getDefault()) : null;
@@ -223,7 +223,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             Integer out = s != null ? s.length() : null;
             return List.of(new Return(out, out != null ? Map.of("http://users.ugent.be/~bjdmeest/function/grel.ttl#output_number", out) : Map.of()));
@@ -238,7 +238,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             LiteralTerm s = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_dec_n");
             Object out = null;
             if (s != null && s.datatype() != null) {
@@ -270,7 +270,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             LiteralTerm s = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_dec_n");
             Object out = null;
             if (s != null && s.datatype() != null) {
@@ -302,7 +302,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             LiteralTerm s = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_dec_n");
             Object out = null;
             if (s != null && s.datatype() != null) {
@@ -334,7 +334,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String f = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sub");
             boolean out = s != null && f != null && s.startsWith(f);
@@ -350,7 +350,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             LiteralTerm from = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_int_i_from");
             LiteralTerm to = (LiteralTerm) parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_int_i_opt_to");
@@ -377,7 +377,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String f = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#param_find");
             String r = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#param_replace");
@@ -397,7 +397,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String out = s != null ? s.trim() : null;
             return List.of(new Return(out, out != null ? Map.of("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out) : Map.of()));
@@ -412,7 +412,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String valueParam = "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam";
             String string = getValueString(parameters, valueParam);
             if (string == null) {
@@ -443,21 +443,20 @@ public class GrelFunctions {
                     out = string.substring(from);
                 }
             } catch (StringIndexOutOfBoundsException e) {
+                out = null;
                 Map<Property, Object> parametersMap = new HashMap<>();
                 parametersMap.put(ResourceFactory.createProperty(valueParam), string);
                 parametersMap.put(ResourceFactory.createProperty(pIntIFrom), from);
                 if (to != null) {
                     parametersMap.put(ResourceFactory.createProperty(pIntIOptTo), to);
                 }
-                Main.report.getErrors().add(
-                        new RmlError(
-                                "String index out of bounds [" + from + ", " + (to != null ? to : "null") + "] in string (length " + string.length() + ") " + string,
-                                origin,
-                                RER.FunctionExecutionError,
-                                e,
-                                parametersMap
-                        )
-                );
+                context.report().getErrors().add(new RmlError(
+                        "String index out of bounds [" + from + ", " + (to != null ? to : "null") + "] in string (length " + string.length() + ") " + string,
+                        origin,
+                        RER.FunctionExecutionError,
+                        e,
+                        parametersMap
+                ));
             }
             return List.of(new Return(out, out != null ? Map.of("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out) : Map.of()));
         }
@@ -471,7 +470,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String out = s != null ? s.trim() : null;
             return List.of(new Return(out, out != null ? Map.of("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out) : Map.of()));
@@ -486,7 +485,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String out = s != null ? s.toLowerCase(Locale.getDefault()) : null;
             return List.of(new Return(out, out != null ? Map.of("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out) : Map.of()));
@@ -501,11 +500,11 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String valueParam = "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam";
             String string = getValueString(parameters, valueParam);
             if (string == null) {
-                Main.report.getErrors().add(
+                throw new BurpException(
                         new RmlError(
                                 "Missing parameter " + valueParam + " in " + getName() + " function, received: " + parameters,
                                 origin,
@@ -526,7 +525,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = getValueString(parameters, "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String out = s != null ? WordUtils.capitalizeFully(s.toLowerCase(Locale.getDefault())) : null;
             return List.of(new Return(out, out != null ? Map.of("http://users.ugent.be/~bjdmeest/function/grel.ttl#stringOut", out) : Map.of()));
@@ -541,7 +540,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String valueParam = "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam";
             String string = getValueString(parameters, valueParam);
             if (string == null) {
@@ -560,7 +559,7 @@ public class GrelFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String valueParam = "http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam";
             String string = getValueString(parameters, valueParam);
             if (string == null) {

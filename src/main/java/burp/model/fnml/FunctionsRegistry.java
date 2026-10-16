@@ -1,6 +1,6 @@
 package burp.model.fnml;
 
-import burp.Main;
+import burp.model.context.EvaluationContext;
 import burp.reporting.BurpException;
 import burp.reporting.Origin;
 import burp.reporting.RmlError;
@@ -13,12 +13,12 @@ import java.util.ServiceLoader;
 
 public class FunctionsRegistry {
 
-    public static Map<String, RMLFunction> functions = loadFunctions();
+    public static final Map<String, RMLFunction> functions = loadFunctions();
 
-    public static List<Return> execute(String function, Map<String, Object> map, Origin expressionOrigin) {
+    public static List<Return> execute(String function, Map<String, Object> inputValues, Origin expressionOrigin, EvaluationContext context) {
         RMLFunction f = functions.get(function);
         if (f != null) {
-            return f.apply(map, expressionOrigin);
+            return f.apply(inputValues, expressionOrigin, context);
         }
         throw new BurpException(
             new RmlError(
@@ -36,27 +36,7 @@ public class FunctionsRegistry {
         for (RMLFunction f : load) {
             if (!functionsMap.containsKey(f.getName())) {
                 functionsMap.put(f.getName(), f);
-            } else {
-                if (Main.report != null && Main.report.getErrors() != null) {
-                    Main.report.getErrors().add(
-                        new RmlError(
-                            "Function " + f.getName() + " already exists, not loading from service loader " + f + ".",
-                            null,
-                            RER.Warning
-                        )
-                    );
-                }
             }
-        }
-        
-        if (Main.report != null && Main.report.getErrors() != null) {
-            Main.report.getErrors().add(
-                new RmlError(
-                    "The following " + functionsMap.size() + " functions were loaded: " + String.join(", ", functionsMap.keySet()),
-                    null,
-                    RER.Information
-                )
-            );
         }
         
         return functionsMap;

@@ -8,12 +8,35 @@ import picocli.CommandLine.Option;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
-@Command(name = "burp", mixinStandardHelpOptions = true, description = "A Basic and Unassuming RML Processor (BURP)")
+@Command(name = "burp", description = "A Basic and Unassuming RML Processor (BURP)",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class)
 public class BURPConfiguration {
 
-    @Option(names = {"-m", "--mappingFile"}, required = true, description = "The RML mapping file")
+    @Option(names = {"-m", "--mappingFile"},
+            description = "The RML mapping file(s) (can specify multiple with -m or --mappingFile)",
+            arity = "0..*")
+    public List<String> mappingFiles = new java.util.ArrayList<>();
+
     public String mappingFile;
+
+    public List<String> getEffectiveMappingFiles() {
+        if (mappingFiles != null && !mappingFiles.isEmpty()) return mappingFiles;
+        if (mappingFile != null && !mappingFile.isBlank()) return List.of(mappingFile);
+        return List.of();
+    }
+
+    @Option(names = {"-v", "--validate"}, description = "Validate the RML mapping against SHACL shapes without executing it")
+    public boolean validate;
+
+    @Option(names = {"--color"}, arity = "0..1", fallbackValue = "true", description = "Enable or disable ANSI colors in report (default: auto-detect)")
+    public Boolean color;
+
+    @Option(names = {"-d", "--dev"}, arity = "0..1", fallbackValue = "-1", description = "Run dev server on optional port")
+    public Integer devPort;
+
+    public boolean isDevServer() { return devPort != null; }
 
     @Option(names = {"-o", "--outputFile"}, description = "The output file")
     public String outputFile;

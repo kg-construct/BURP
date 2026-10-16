@@ -1,5 +1,9 @@
 package burp.ls;
 
+import burp.reporting.Origin;
+import burp.reporting.RDFGraphPointer;
+import burp.reporting.StatementPart;
+import burp.reporting.StatementParts;
 import burp.vocabularies.D2RQ;
 import burp.vocabularies.RML;
 import com.google.auto.service.AutoService;
@@ -7,6 +11,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 
 import java.nio.file.Path;
+import java.util.List;
 
 @AutoService(LogicalSourceProvider.class)
 public class RDBSourceProvider implements LogicalSourceProvider {
@@ -36,11 +41,12 @@ public class RDBSourceProvider implements LogicalSourceProvider {
         Statement passwordStmt = sourceNode.getProperty(D2RQ.password);
         source.password = passwordStmt != null ? passwordStmt.getLiteral().getString() : null;
 
-        String query = ls.getProperty(RML.iterator).getLiteral().getString();
-        source.query = query; // TODO: Investigate we were previously replacing \\ by "" but the reason was lost.
-        source.queryStmt = ls.getProperty(RML.iterator);
+        Statement queryStmt = ls.getProperty(RML.iterator);
+        source.query = queryStmt.getLiteral().getString(); // TODO: Investigate we were previously replacing "\\" by "" but the reason was lost.
+        source.putOrigin("query", new Origin(List.of(StatementParts.from(queryStmt, StatementPart.Object))));
 
         source.getNulls().addAll(FileBaseSourceProvider.getNullValues(ls));
+        source.mappingDirectory = mappingDirectory;
         source.currentWorkingDirectory = currentWorkingDirectory;
 
         return source;

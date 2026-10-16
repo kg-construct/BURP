@@ -1,5 +1,6 @@
 package burp.model.fnml;
 
+import burp.model.context.EvaluationContext;
 import burp.reporting.Origin;
 import com.google.auto.service.AutoService;
 import java.net.URI;
@@ -15,7 +16,7 @@ public class ExampleFunctions {
         public String getName() { return "http://example.com/functions/helloworld"; }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             return List.of(new Return("Hello World!"));
         }
     }
@@ -27,7 +28,7 @@ public class ExampleFunctions {
         public String getName() { return "http://example.com/functions/schema"; }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String s = parameters.get("http://example.com/functions/stringParameter").toString();
             String out = "https://schema.org/" + s;
             return List.of(new Return(out, Map.of("http://example.com/functions/stringOutput", out)));
@@ -41,7 +42,7 @@ public class ExampleFunctions {
         public String getName() { return "http://example.com/functions/parseURL"; }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             try {
                 String s = parameters.get("http://example.com/functions/stringParameter").toString();
                 URI uri = new URI(s);

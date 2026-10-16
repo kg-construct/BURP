@@ -153,7 +153,7 @@ string
 // [22] iri ::= IRIREF | PrefixedName
 iri
     : IRIREF
-    | PrefixedName
+    | prefixedName
     ;
 
 // [24] BlankNode ::= BLANK_NODE_LABEL | ANON
@@ -234,7 +234,7 @@ PNAME_NS
     ;
 
 // [23] PrefixedName ::= PNAME_LN | PNAME_NS
-PrefixedName
+prefixedName
     : PNAME_LN
     | PNAME_NS
     ;
