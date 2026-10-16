@@ -1,5 +1,26 @@
 import * as vscode from 'vscode';
 
+export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
+    return {
+        enableScripts: true,
+        localResourceRoots: [
+            vscode.Uri.joinPath(extensionUri, 'dist'),
+            extensionUri
+        ]
+    };
+}
+
+export function getWebviewPanelOptions(extensionUri: vscode.Uri): vscode.WebviewPanelOptions & vscode.WebviewOptions {
+    return {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+        localResourceRoots: [
+            vscode.Uri.joinPath(extensionUri, 'dist'),
+            extensionUri
+        ]
+    };
+}
+
 export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri, viewType: string): string {
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'dist', 'webview.js'));
     const stylesUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'dist', 'webview.css'));

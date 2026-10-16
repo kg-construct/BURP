@@ -6,7 +6,7 @@ import {getConfiguration} from './config';
 export interface BurpTarget {
     type: 'jar';
     path: string;
-    source: 'config' | 'storage';
+    source: 'config' | 'storage' | 'local';
 }
 
 export function findBurpExecutable(context: vscode.ExtensionContext): BurpTarget | null {
@@ -27,6 +27,14 @@ export function findBurpExecutable(context: vscode.ExtensionContext): BurpTarget
         : null;
     if (versionedStorageJar && fs.existsSync(versionedStorageJar)) {
         return {type: 'jar', path: versionedStorageJar, source: 'storage'};
+    }
+
+    // 3. Integrated/bundled with extension in server/burp.jar
+    const localJar = context.asAbsolutePath
+        ? context.asAbsolutePath(path.join('server', 'burp.jar'))
+        : path.join(__dirname, '..', 'server', 'burp.jar');
+    if (fs.existsSync(localJar)) {
+        return {type: 'jar', path: localJar, source: 'local'};
     }
 
     return null;

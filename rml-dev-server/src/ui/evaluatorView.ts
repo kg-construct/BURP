@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import {RmlDevClient} from '../client';
 import {EvaluateParams, EvaluateResult, ReferenceDependency} from '../generated/types';
-import {getWebviewHtml} from './webviewHelper';
+import {getWebviewHtml, getWebviewOptions} from './webviewHelper';
 import {DEFAULT_PREFIXES} from '../webview/execution/rdfUtils';
 import {EvaluatorFromWebviewMessage, EvaluatorToWebviewMessage} from "../webview/protocol/evaluator";
 import {telemetry} from '../telemetry';
@@ -39,10 +39,7 @@ export class EvaluatorViewProvider implements vscode.WebviewViewProvider {
         token: vscode.CancellationToken
     ) {
         this.view = webviewView;
-        webviewView.webview.options = {
-            enableScripts: true,
-            localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'out')]
-        };
+        webviewView.webview.options = getWebviewOptions(this.extensionUri);
 
         webviewView.webview.html = getWebviewHtml(webviewView.webview, this.extensionUri, 'evaluator');
 

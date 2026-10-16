@@ -87,48 +87,16 @@ The extension will connect directly to port 8080 without spawning a local proces
 To produce a single universal `.vsix` package:
 
 ```bash
-npm run package
+# Create the fat jar
+mvn package -Pdeploy -DskipTests
+
+# Copy it
+cp target/burp.jar rml-dev-server/server/burp.jar
+
+# Package the extension
+npm --prefix rml-dev-server run package
 ```
 
-To produce platform-specific `.vsix` packages for all desktop platforms (excluding web):
+It seems the size limit for extensions was lift off, so excluding  `burp.jar` is unnecessary.
 
-```bash
-npm run package:all
-```
 
-Target platforms generated: `win32-x64`, `win32-arm64`, `linux-x64`, `linux-arm64`, `linux-armhf`, `alpine-x64`,
-`alpine-arm64`, `darwin-x64`, `darwin-arm64`.
-
-> **Note**: This explicitly excludes `web` (vscode.dev / github.dev), as the extension requires a Node.js runtime and
-> child process execution to run the BURP server.
-
-The standalone `burp.jar` is excluded via `.vscodeignore` to keep packages under 10MB. Users download the matching
-engine on-demand on first start.
-
----
-
-## Vendored `baukasten-ui` Dependency
-
-The webview uses the `<Tree />` component from [TypeFox/baukasten PR #44](https://github.com/TypeFox/baukasten/pull/44).
-Because this feature has not yet been released to npm (the latest npm release is `0.3.0`), a pre-built package tarball
-is temporarily vendored at `vendor/baukasten-ui-0.3.0.tgz` and installed via
-`"baukasten-ui": "file:./vendor/baukasten-ui-0.3.0.tgz"` in `package.json`.
-
-To rebuild or refresh this vendored tarball from upstream source:
-
-```bash
-git clone https://github.com/TypeFox/baukasten.git
-cd baukasten
-
-npm ci
-npm run build:baukasten
-
-mkdir -p /path/to/BURP/rml-dev-server/vendor
-npm pack packages/baukasten --pack-destination /path/to/BURP/rml-dev-server/vendor
-
-cd /path/to/BURP/rml-dev-server
-npm install
-```
-
-> **TODO / Next Release**: Once TypeFox publishes an official npm release containing PR #44 (e.g. `^0.4.0`), remove
-> `vendor/baukasten-ui-0.3.0.tgz` and revert `package.json` to the standard npm dependency.

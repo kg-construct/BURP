@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import {RmlDevClient} from '../client';
 import {StructureSelector, TraceIterationParams, TraceResult, TraceResultParams} from '../generated/types';
-import {getWebviewHtml, revealRangeInEditor} from './webviewHelper';
+import {getWebviewHtml, getWebviewPanelOptions, revealRangeInEditor} from './webviewHelper';
 import {TraceFromWebviewMessage, TraceQuadTarget, TraceToWebviewMessage} from '../webview/protocol/trace';
 import {shortenIri} from '../webview/execution/rdfUtils';
 import {roundToMagnitude, telemetry} from '../telemetry';
@@ -88,11 +88,7 @@ export class TraceProvider {
             'rml-dev-server.traceEditor',
             state.title,
             vscode.ViewColumn.Beside,
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-                localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'out')]
-            }
+            getWebviewPanelOptions(this.extensionUri)
         );
 
         this.panels.set(state.panelKey, panel);

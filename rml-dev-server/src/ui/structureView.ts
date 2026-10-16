@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import {RmlDevClient} from '../client';
 import {PlanNodeItem, PlanResult} from '../generated/types';
 import {isRmlDocument} from '../documentUtils';
-import {getWebviewHtml, revealRangeInEditor} from './webviewHelper';
+import {getWebviewHtml, getWebviewOptions, revealRangeInEditor} from './webviewHelper';
 import {PlanFromWebviewMessage, PlanToWebviewMessage} from "../webview/protocol/plan";
 import {telemetry} from '../telemetry';
 
@@ -36,10 +36,7 @@ export class StructureViewProvider implements vscode.WebviewViewProvider {
         token: vscode.CancellationToken
     ) {
         this.view = webviewView;
-        webviewView.webview.options = {
-            enableScripts: true,
-            localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'out')]
-        };
+        webviewView.webview.options = getWebviewOptions(this.extensionUri);
 
         webviewView.webview.html = getWebviewHtml(webviewView.webview, this.extensionUri, 'structure');
 

@@ -17,7 +17,6 @@ vsc-extension-quickstart.md
 extester.config.json
 test-settings.json
 .mocharc.js
-server/**
 node_modules/**
 dev.md
 posthog.json

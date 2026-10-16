@@ -89,7 +89,8 @@ export class ServerController implements vscode.Disposable {
             const actions = ['Open Settings', 'Show Logs', 'Retry'];
             vscode.window.showErrorMessage(`RML Dev Server Error: ${err.message}`, ...actions).then(async (choice) => {
                 if (choice === 'Open Settings') {
-                    vscode.commands.executeCommand('workbench.action.openSettings', 'rml');
+                    const extId = this.context.extension.id;
+                    vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${extId}`);
                 } else if (choice === 'Show Logs') {
                     this.outputChannel.show();
                 } else if (choice === 'Retry') {

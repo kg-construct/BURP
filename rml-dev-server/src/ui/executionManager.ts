@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import * as vscode from 'vscode';
 import {RmlDevClient} from '../client';
 import {ExecuteResult} from '../generated/types';
-import {getWebviewHtml} from './webviewHelper';
+import {getWebviewHtml, getWebviewPanelOptions} from './webviewHelper';
 import {DEFAULT_PREFIXES} from '../webview/execution/rdfUtils';
 import {getConfiguration} from '../config';
 import {ExecutionFromWebviewMessage} from "../webview/protocol/execution";
@@ -57,14 +57,7 @@ export class ExecutionManager {
                 'rml-dev-server.executionResult',
                 `Run: ${fileName}`,
                 vscode.ViewColumn.Beside,
-                {
-                    enableScripts: true,
-                    retainContextWhenHidden: true,
-                    localResourceRoots: [
-                        vscode.Uri.joinPath(this.extensionUri, 'out'),
-                        this.extensionUri
-                    ]
-                }
+                getWebviewPanelOptions(this.extensionUri)
             );
 
             this.panels.set(uriStr, panel);

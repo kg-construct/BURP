@@ -1,13 +1,13 @@
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as vscode from 'vscode';
-import { Parser, Quad, Term } from 'n3';
-import { getWebviewHtml } from './webviewHelper';
-import { DEFAULT_PREFIXES } from '../webview/execution/rdfUtils';
-import { getConfiguration } from '../config';
-import { ExecutionFromWebviewMessage, ExecutionToWebviewMessage } from "../webview/protocol/execution";
-import { ExecuteResult, RdfStatement } from '../generated/types';
-import { telemetry } from '../telemetry';
+import {Parser, Quad, Term} from 'n3';
+import {getWebviewHtml, getWebviewPanelOptions} from './webviewHelper';
+import {DEFAULT_PREFIXES} from '../webview/execution/rdfUtils';
+import {getConfiguration} from '../config';
+import {ExecutionFromWebviewMessage} from "../webview/protocol/execution";
+import {ExecuteResult, RdfStatement} from '../generated/types';
+import {telemetry} from '../telemetry';
 
 function n3TermToRdfTerm(term: Term): any {
     if (term.termType === 'NamedNode') {
@@ -78,14 +78,7 @@ export class RdfVisualizerManager {
                 'rml-dev-server.rdfVisualizer',
                 `RDF: ${fileName}`,
                 vscode.ViewColumn.Beside,
-                {
-                    enableScripts: true,
-                    retainContextWhenHidden: true,
-                    localResourceRoots: [
-                        vscode.Uri.joinPath(this.extensionUri, 'out'),
-                        this.extensionUri
-                    ]
-                }
+                getWebviewPanelOptions(this.extensionUri)
             );
 
             this.panels.set(uriStr, panel);

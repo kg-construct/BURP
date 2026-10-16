@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import {RmlDevClient} from '../client';
 import {SourceDataParams, SourceDataResult, StructureSelector} from '../generated/types';
-import {getWebviewHtml} from './webviewHelper';
+import {getWebviewHtml, getWebviewPanelOptions} from './webviewHelper';
 import {SourceFromWebviewMessage, SourceToWebviewMessage} from "../webview/protocol/source";
 import {telemetry} from '../telemetry';
 
@@ -78,14 +78,7 @@ export class SourceDataManager {
                 'rml-dev-server.sourceDataViewer',
                 `Table: ${title}`,
                 vscode.ViewColumn.Beside,
-                {
-                    enableScripts: true,
-                    retainContextWhenHidden: true,
-                    localResourceRoots: [
-                        vscode.Uri.joinPath(this.extensionUri, 'out'),
-                        this.extensionUri
-                    ]
-                }
+                getWebviewPanelOptions(this.extensionUri)
             );
 
             this.currentPanel.onDidDispose(() => {
