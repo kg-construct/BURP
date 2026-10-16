@@ -70,6 +70,10 @@ jobs:
           npm version "$TAG_VERSION_VS" --no-git-tag-version --allow-same-version
           npm pkg set serverVersion="$TAG_VERSION"
 
+          # Bundle fat JAR with the extension
+          mkdir -p server
+          cp ../target/burp.jar server/burp.jar
+
           # Install dependencies and package into target VSIX
           npm ci
           npm run package -- $PRE_RELEASE_FLAG --out "rml-dev-server-$TAG_VERSION.vsix"
