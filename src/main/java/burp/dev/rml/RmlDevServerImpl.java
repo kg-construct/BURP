@@ -5,14 +5,15 @@ import burp.dev.rml.service.eval.*;
 import burp.dev.rml.service.execute.ExecuteParams;
 import burp.dev.rml.service.execute.ExecuteResult;
 import burp.dev.rml.service.execute.RmlExecutionService;
+import burp.dev.rml.service.plan.*;
 import burp.dev.rml.service.source.SourceDataInspector;
 import burp.dev.rml.service.source.SourceDataParams;
 import burp.dev.rml.service.source.SourceDataResult;
-import burp.dev.rml.service.plan.*;
 import burp.dev.rml.service.trace.*;
 import burp.dev.rml.service.validator.RmlDiagnostic;
 import burp.dev.rml.service.validator.StaticMappingValidator;
 import burp.dev.rml.service.validator.ValidateParams;
+import burp.util.VersionProvider;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
@@ -109,6 +110,8 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
         capabilities.setInlayHintProvider(new InlayHintRegistrationOptions());
 
         InitializeResult result = new InitializeResult(capabilities);
+        String version = VersionProvider.getVersionString();
+        result.setServerInfo(new ServerInfo("BURP", version));
         return CompletableFuture.completedFuture(result);
     }
 
