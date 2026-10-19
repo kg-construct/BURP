@@ -1,8 +1,8 @@
 package burp.dev.rml.service.completion;
 
-import burp.dev.rml.service.plan.PlanNodeDescriptor;
 import burp.dev.rml.service.MappingWorkspace;
 import burp.dev.rml.service.RmlEvaluationResultFormatter;
+import burp.dev.rml.service.plan.PlanNodeDescriptor;
 import burp.dev.rml.service.selector.CursorSelector;
 import burp.model.*;
 import burp.model.fnml.FnmlOntologyRegistry;
@@ -288,7 +288,7 @@ public class ReferenceCompleter {
             String exampleVal = param.name() + status;
 
             // 1. Primary: offer parameter definition IRI (e.g. grel:valueParam, idlab-fn:_str)
-            if (paramCompact != null && matchesPrefix(paramCompact, param.iri().getURI(), param.iri().getLocalName(), effectivePrefix)) {
+            if (matchesPrefix(paramCompact, param.iri().getURI(), param.iri().getLocalName(), effectivePrefix)) {
                 if (seenCompletions.add(paramCompact)) {
                     CompletionItem item = new CompletionItem(paramCompact);
                     item.setKind(CompletionItemKind.Property);
@@ -389,20 +389,19 @@ public class ReferenceCompleter {
                     || (fullRef.startsWith("$.") && fullRef.substring(2).startsWith(effectivePrefix));
 
             if (matches) {
-                String literalGraphPointer = targetNode.getSourcePointers().stream()
-                        .map(PlanNodeDescriptor::getRdfPointerString)
-                        .findFirst()
-                        .orElse(null);
-
                 String shortFormulation = schemaInfo.referenceFormulation().replace("http://w3id.org/rml/", "");
-                String detail = !exampleVal.isEmpty() ? "[" + shortFormulation + "] example: " + exampleVal : "[" + shortFormulation + "]";
+                String detail = "[" + shortFormulation + "]";
+
+                if (!exampleVal.isEmpty()) detail += "\n\nexample: " + exampleVal;
+
+                var origin = schemaInfo.candidateOrigins().get(fullRef);
+                if (origin != null) {
+                    detail += "\n\nfrom: " + origin.type();
+                }
 
                 CompletionItem item = new CompletionItem(fullRef);
                 item.setKind(CompletionItemKind.Field);
                 item.setDetail(detail);
-                if (literalGraphPointer != null) {
-                    item.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, "**Origin Graph Pointer**:\n`" + literalGraphPointer + "`"));
-                }
                 item.setInsertText(fullRef);
                 if (targetRange != null) {
                     item.setTextEdit(Either.forLeft(new TextEdit(targetRange, fullRef)));

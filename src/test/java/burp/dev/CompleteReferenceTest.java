@@ -183,9 +183,6 @@ public class CompleteReferenceTest {
                 .as("Completion should contain the document TextEdit")
                 .isNotNull();
         assertThat(ageComp.getTextEdit().getLeft().getRange().getStart().getLine()).isEqualTo(18);
-        assertThat(ageComp.getDocumentation().getRight().getValue())
-                .as("Completion should contain the Origin Graph Pointer documentation")
-                .contains("reference");
     }
 
     @Test
