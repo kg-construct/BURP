@@ -9,7 +9,7 @@ A Visual Studio Code extension for the **RDF Mapping Language (RML)**, powered b
 - **Trace & Execution Matrix**: Inspect intermediate evaluation traces, records, and performance metrics.
 - **Evaluator & Value Inspector**: Interactively evaluate selectors, expressions, and references against data sources.
 - **RDF Visualizer**: View output RDF graphs and tabular representations with customizable hull clustering.
-- **Integrated Server**: Runs out-of-the-box by fetching the BURP processor on demand, with support for local builds and
+- **Integrated Server**: Bundled directly with the extension (`server/burp.jar`), with support for custom builds and
   external instances.
 
 ## How to use
@@ -18,19 +18,17 @@ Install the extension from the [VS Code Marketplace](https://marketplace.visuals
 or [Open VSX](https://open-vsx.org/extension/uliege-dre/rml).
 
 A Java 21+ runtime is required to execute the BURP processor (`java` command available on your `PATH`).
-If no compatible Java runtime is found on your system, the extension can automatically download and configure one for
-  you.
+If no compatible Java runtime is found on your system, the extension can automatically configure one for you.
 
-BURP will be downloaded by the extension on the first activation if not available
-in [extension folder](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_where-are-extensions-installed)
-`/`.
+BURP comes pre-bundled with the extension in `server/burp.jar` and can be customized via the extension settings below
+(e.g. to point to a custom JAR build or external instance).
 
 ## Extension Settings
 
 This extension contributes the following settings:
 
-* `rml.burp.path`: Path to an explicit BURP JAR or executable. If left empty, the auto-detected local build, downloaded
-  JAR, or `burp` on your system `PATH` will be used automatically.
+* `rml.burp.path`: Path to an explicit custom BURP JAR file (e.g. `/path/to/target/burp.jar`). If left empty, the
+  bundled `server/burp.jar` will be used automatically.
 * `rml.java.path`: Path to the Java executable used to run BURP (default: `java`).
 * `rml.server.spawnProcess`: Whether to spawn the BURP server process automatically (default: `true`).
 * `rml.server.port`: Dev server port number (default: `0` for dynamically assigned port).

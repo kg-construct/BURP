@@ -56,11 +56,6 @@
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.downloadServer",
-        "title": "RML: Download / Update BURP Server",
-        "category": "RML"
-      },
-      {
         "command": "rml-dev-server.openEvaluatorPanel",
         "title": "RML: Open Evaluator & Value Inspector",
         "category": "RML"
@@ -143,7 +138,7 @@
         "rml.burp.path": {
           "type": "string",
           "default": "",
-          "description": "Path to the BURP executable, script, or JAR file (e.g. '/path/to/burp.jar'). Leave empty to use auto-detected local build, downloaded JAR, or system PATH."
+          "description": "Path to an explicit custom BURP JAR file (e.g. '/path/to/target/burp.jar'). Leave empty to use the bundled 'server/burp.jar'."
         },
         "rml.java.path": {
           "type": "string",

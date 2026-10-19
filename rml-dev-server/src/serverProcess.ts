@@ -207,14 +207,6 @@ export class ServerProcess {
                 this.outputChannel.appendLine(
                     `WARNING: BURP server version mismatch. Running ${actualVersion}, expected ${expectedVersion}.`
                 );
-                vscode.window.showWarningMessage(
-                    `BURP Server version mismatch: running ${actualVersion}, but extension expects ${expectedVersion}.`,
-                    'Update Server'
-                ).then(choice => {
-                    if (choice === 'Update Server') {
-                        vscode.commands.executeCommand('rml-dev-server.downloadServer');
-                    }
-                });
             }
         } catch (err: any) {
             this.outputChannel.appendLine(`[ServerProcess] Could not determine BURP server version: ${err.message}`);

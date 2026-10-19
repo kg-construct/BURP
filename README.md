@@ -14,7 +14,7 @@ if you have any questions or issues, feel free to
 [open an issue on GitHub](https://github.com/kg-construct/BURP/issues/new).
 
 > [!WARNING]
-> Joins are quadratic in terms of iterations and the number of multivalued join condition values.
+> Compliance to the specifications and correctness of the result are the main goals of BURP, not performance.
 
 ## Coverage matrix
 

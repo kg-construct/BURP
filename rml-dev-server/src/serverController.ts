@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import {findBurpExecutable} from './burpDiscovery';
-import {downloadBurpServer} from './burpDownloader';
 import {RmlDevClient} from './client';
 import {getConfiguration} from './config';
 import {findCompatibleJavas} from './javaDiscovery';
@@ -36,23 +35,13 @@ export class ServerController implements vscode.Disposable {
             const target = findBurpExecutable(this.context);
             if (!target) {
                 this.statusBar.updateStatus('disconnected');
-                const choice = await vscode.window.showInformationMessage(
-                    'RML Dev Server requires the BURP engine. Would you like to download it from GitHub Releases?',
-                    'Download',
+                const choice = await vscode.window.showErrorMessage(
+                    'BURP server JAR could not be found. Please configure rml.burp.path in settings.',
                     'Configure Path',
                     'Cancel'
                 );
-                if (choice === 'Download') {
-                    try {
-                        await downloadBurpServer(this.context, this.outputChannel);
-                        return this.startOrConnect();
-                    } catch (downloadErr: any) {
-                        vscode.window.showErrorMessage(`Failed to download BURP Dev Server: ${downloadErr.message}`);
-                        return false;
-                    }
-                } else if (choice === 'Configure Path') {
+                if (choice === 'Configure Path') {
                     vscode.commands.executeCommand('workbench.action.openSettings', 'rml.burp.path');
-                    return false;
                 }
                 return false;
             }
@@ -220,33 +209,7 @@ export class ServerController implements vscode.Disposable {
             }),
             vscode.commands.registerCommand('rml-dev-server.restartServer', () => this.restart()),
             vscode.commands.registerCommand('rml-dev-server.healthCheck', () => this.healthCheck()),
-            vscode.commands.registerCommand('rml-dev-server.showOutput', () => this.outputChannel.show()),
-            vscode.commands.registerCommand('rml-dev-server.downloadServer', async () => {
-                try {
-                    await downloadBurpServer(this.context, this.outputChannel);
-                    if (this.serverProcess.isRunning()) {
-                        const restartChoice = await vscode.window.showInformationMessage(
-                            'BURP Dev Server downloaded. Restart server now?',
-                            'Restart',
-                            'Later'
-                        );
-                        if (restartChoice === 'Restart') {
-                            await this.restart();
-                        }
-                    } else {
-                        const startChoice = await vscode.window.showInformationMessage(
-                            'BURP Dev Server downloaded. Start server now?',
-                            'Start Server',
-                            'Later'
-                        );
-                        if (startChoice === 'Start Server') {
-                            await this.startOrConnect();
-                        }
-                    }
-                } catch (err: any) {
-                    vscode.window.showErrorMessage(`Failed to download BURP Server: ${err.message}`);
-                }
-            })
+            vscode.commands.registerCommand('rml-dev-server.showOutput', () => this.outputChannel.show())
         );
     }
 
