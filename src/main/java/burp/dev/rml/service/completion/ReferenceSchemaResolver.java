@@ -14,7 +14,7 @@ import java.util.Map;
 
 /**
  * Resolves contextual logical sources and coordinates modular schema providers
- * (LogicalViewSchemaProvider, JsonSchemaProvider, CsvSchemaProvider, SampledDataSchemaProvider).
+ * (LogicalViewSchemaProvider, JsonSchemaProvider, CsvSchemaProvider, JsonSampledSchemaProvider).
  */
 @NullMarked
 public final class ReferenceSchemaResolver {
@@ -51,7 +51,7 @@ public final class ReferenceSchemaResolver {
             AbstractLogicalSource ls,
             @Nullable Integer iterationSampleLimit
     ) {
-        SampledDataSchemaProvider sampledProvider = new SampledDataSchemaProvider(iterationSampleLimit);
+        JsonSampledSchemaProvider sampledProvider = new JsonSampledSchemaProvider(iterationSampleLimit);
 
         IterableField enclosingIter = targetNode != null ? targetNode.ancestor(IterableField.class) : null;
         if (enclosingIter != null && sampledProvider.supports(ls)) {

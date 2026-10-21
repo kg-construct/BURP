@@ -12,6 +12,10 @@ import org.jspecify.annotations.Nullable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Extracts candidate references and sample values from CSV file headers.
+ * When CSVW is implemented, declared column definitions can be extracted directly here.
+ */
 @NullMarked
 public class CsvSchemaProvider implements SchemaProvider {
 

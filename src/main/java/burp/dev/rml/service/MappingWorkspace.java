@@ -7,7 +7,6 @@ import burp.dev.rml.service.source.LspCodeLensProvider;
 import burp.dev.rml.service.hint.LspInlineHintProvider;
 import burp.dev.rml.service.selector.*;
 import burp.dev.rml.service.cache.DevServerCache;
-import burp.dev.rml.service.schema.SampledDataSchemaProvider;
 import burp.model.MappingDocument;
 import burp.model.PlanNode;
 import burp.model.PlanNodeIdRegistry;

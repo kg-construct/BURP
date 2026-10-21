@@ -262,6 +262,10 @@ export interface ReferencesDependenciesParams {
 export interface CsvSchemaProvider extends SchemaProvider {
 }
 
+export interface JsonSampledSchemaProvider extends SchemaProvider {
+    iterationSampleLimit?: number;
+}
+
 export interface JsonSchemaProvider extends SchemaProvider {
 }
 
@@ -273,10 +277,6 @@ export interface ReferenceCompletionOrigin {
     resource?: Resource;
     location?: string;
     graphPointer?: string;
-}
-
-export interface SampledDataSchemaProvider extends SchemaProvider {
-    iterationSampleLimit?: number;
 }
 
 export interface SchemaProvider {

@@ -3,7 +3,7 @@ package burp.dev;
 import burp.dev.rml.RmlDevServerImpl;
 import burp.dev.rml.service.MappingWorkspace;
 import burp.dev.rml.service.completion.ReferenceSchemaResolver.SchemaInfo;
-import burp.dev.rml.service.schema.SampledDataSchemaProvider;
+import burp.dev.rml.service.schema.JsonSampledSchemaProvider;
 import burp.dev.rml.service.validator.RmlDiagnostic;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.model.AbstractLogicalSource;
@@ -18,7 +18,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @NullMarked
-public class SampledDataSchemaProviderTest {
+public class JsonSampledSchemaProviderTest {
 
     @Test
     public void testProgressiveSamplingLimits() throws Exception {
@@ -31,20 +31,20 @@ public class SampledDataSchemaProviderTest {
         assertThat(logicalSource).isNotNull();
 
         // 1. iterationSampleLimit = 1: only fields from first record appear
-        SampledDataSchemaProvider provider1 = new SampledDataSchemaProvider(1);
+        JsonSampledSchemaProvider provider1 = new JsonSampledSchemaProvider(1);
         SchemaInfo schema1 = provider1.extractSchema(logicalSource);
         assertThat(schema1.candidateValues().keySet())
                 .contains("$.name", "$.id")
                 .doesNotContain("$.email");
 
         // 2. iterationSampleLimit = 2: new field 'email' from second record appears
-        SampledDataSchemaProvider provider2 = new SampledDataSchemaProvider(2);
+        JsonSampledSchemaProvider provider2 = new JsonSampledSchemaProvider(2);
         SchemaInfo schema2 = provider2.extractSchema(logicalSource);
         assertThat(schema2.candidateValues().keySet())
                 .contains("$.name", "$.id", "$.email");
 
         // 3. iterationSampleLimit = null (unlimited): exact same result as iterationSampleLimit = 2
-        SampledDataSchemaProvider providerUnlimited = new SampledDataSchemaProvider(null);
+        JsonSampledSchemaProvider providerUnlimited = new JsonSampledSchemaProvider(null);
         SchemaInfo schemaUnlimited = providerUnlimited.extractSchema(logicalSource);
         assertThat(schemaUnlimited.candidateValues()).isEqualTo(schema2.candidateValues());
     }
