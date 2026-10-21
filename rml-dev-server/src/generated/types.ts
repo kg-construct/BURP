@@ -7,6 +7,7 @@ export interface MappingWorkspace extends WorkspaceService {
     currentWorkingDirectory: Path;
     baseIri?: string;
     inlineHintsEvaluationEnabled: boolean;
+    iterationSampleLimit?: number;
     client?: LanguageClient;
     cache: DevServerCache;
     referenceCompleter: ReferenceCompleter;
@@ -35,6 +36,7 @@ export interface ResolvedNode {
 export interface RmlSettings {
     baseIRI?: string;
     inlineHints?: InlineHintsSettings;
+    iterationSampleLimit?: number;
 }
 
 export interface Settings {
@@ -274,7 +276,7 @@ export interface ReferenceCompletionOrigin {
 }
 
 export interface SampledDataSchemaProvider extends SchemaProvider {
-    maxSampledCount: number;
+    iterationSampleLimit?: number;
 }
 
 export interface SchemaProvider {

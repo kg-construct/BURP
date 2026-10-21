@@ -31,8 +31,15 @@ import java.util.Map;
 @NullMarked
 public class SampledDataSchemaProvider implements SchemaProvider {
 
-    // TODO create a config parameter
-    private final int maxSampledCount = 20;
+    private final @Nullable Integer iterationSampleLimit;
+
+    public SampledDataSchemaProvider(@Nullable Integer iterationSampleLimit) {
+        this.iterationSampleLimit = iterationSampleLimit;
+    }
+
+    public @Nullable Integer getIterationSampleLimit() {
+        return iterationSampleLimit;
+    }
 
     @Override
     public boolean supports(@Nullable AbstractLogicalSource logicalSource) {
@@ -73,7 +80,7 @@ public class SampledDataSchemaProvider implements SchemaProvider {
             if (it != null) {
                 Iterator<Iteration> iterIterator = it.iterator();
                 List<Iteration> sampledIters = new ArrayList<>();
-                while (iterIterator.hasNext() && sampledIters.size() < maxSampledCount) {
+                while (iterIterator.hasNext() && (iterationSampleLimit == null || sampledIters.size() < iterationSampleLimit)) {
                     sampledIters.add(iterIterator.next());
                 }
                 if (targetNode != null) {

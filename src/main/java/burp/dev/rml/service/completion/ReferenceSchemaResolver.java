@@ -20,15 +20,6 @@ import java.util.Map;
 public final class ReferenceSchemaResolver {
 
     public static final SqlSchemaProvider SQL_PROVIDER = new SqlSchemaProvider();
-    private static final SampledDataSchemaProvider SAMPLED_DATA_PROVIDER = new SampledDataSchemaProvider();
-
-    private static final List<SchemaProvider> PROVIDERS = List.of(
-            new LogicalViewSchemaProvider(),
-            new JsonSchemaProvider(),
-            new CsvSchemaProvider(),
-            SQL_PROVIDER,
-            SAMPLED_DATA_PROVIDER
-    );
 
     private ReferenceSchemaResolver() {
     }
@@ -55,14 +46,16 @@ public final class ReferenceSchemaResolver {
         return null;
     }
 
-    public static SchemaInfo extractSchemaInfo(AbstractLogicalSource ls) {
-        return extractSchemaInfo(null, ls);
-    }
+    public static SchemaInfo extractSchemaInfo(
+            @Nullable PlanNode targetNode,
+            AbstractLogicalSource ls,
+            @Nullable Integer iterationSampleLimit
+    ) {
+        SampledDataSchemaProvider sampledProvider = new SampledDataSchemaProvider(iterationSampleLimit);
 
-    public static SchemaInfo extractSchemaInfo(@Nullable PlanNode targetNode, AbstractLogicalSource ls) {
         IterableField enclosingIter = targetNode != null ? targetNode.ancestor(IterableField.class) : null;
-        if (enclosingIter != null && SAMPLED_DATA_PROVIDER.supports(ls)) {
-            return SAMPLED_DATA_PROVIDER.extractSchema(ls, targetNode);
+        if (enclosingIter != null && sampledProvider.supports(ls)) {
+            return sampledProvider.extractSchema(ls, targetNode);
         }
 
         Resource rf = ls.getReferenceFormulation();
@@ -72,7 +65,15 @@ public final class ReferenceSchemaResolver {
         Map<String, ReferenceCompletionOrigin> candidateOrigins = new LinkedHashMap<>();
         boolean hasKnownSchemaOrData = false;
 
-        for (SchemaProvider provider : PROVIDERS) {
+        List<SchemaProvider> providers = List.of(
+                new LogicalViewSchemaProvider(),
+                new JsonSchemaProvider(),
+                new CsvSchemaProvider(),
+                SQL_PROVIDER,
+                sampledProvider
+        );
+
+        for (SchemaProvider provider : providers) {
             if (provider.supports(ls)) {
                 SchemaInfo info = provider.extractSchema(ls);
                 if (info.hasKnownSchemaOrData()) {

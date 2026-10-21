@@ -51,7 +51,7 @@ public class ReferenceValidator {
         // 2. Validate all references (both standalone and inside templates)
         for (PlanNode node : allNodes) {
             if (node instanceof Reference r && !(node.getParent() instanceof RawReference)) {
-                validateReference(r, sqlProvider, diagnostics);
+                validateReference(r, sqlProvider, workspace.getIterationSampleLimit(), diagnostics);
             }
         }
     }
@@ -59,6 +59,7 @@ public class ReferenceValidator {
     private void validateReference(
             Reference refNode,
             SqlSchemaProvider sqlProvider,
+            @Nullable Integer iterationSampleLimit,
             List<RmlDiagnostic> diagnostics
     ) {
         String ref = refNode.getReference();
@@ -97,7 +98,7 @@ public class ReferenceValidator {
         if (ls == null) {
             return; // Without logical source we cannot validate the reference
         }
-        ReferenceSchemaResolver.SchemaInfo schemaInfo = ReferenceSchemaResolver.extractSchemaInfo(refNode, ls);
+        ReferenceSchemaResolver.SchemaInfo schemaInfo = ReferenceSchemaResolver.extractSchemaInfo(refNode, ls, iterationSampleLimit);
 
         // Syntax checking for JSONPath
         if (schemaInfo.referenceFormulation().equals(Rml.JSONPath)) {

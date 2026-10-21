@@ -225,6 +225,15 @@
             "telemetry",
             "usesOnlineServices"
           ]
+        },
+        "rml.iterationSampleLimit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": 20,
+          "minimum": 0,
+          "description": "Maximum number of iterations to sample when deducing reference formulation validation schemas. Set to null for unlimited."
         }
       }
     }

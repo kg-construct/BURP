@@ -141,7 +141,7 @@ export async function activate(context: vscode.ExtensionContext) {
             if (e.affectsConfiguration('rml.nodeBackgroundAll')) {
                 nodeHighlightManager?.update(vscode.window.activeTextEditor);
             }
-            if (e.affectsConfiguration('rml.baseIRI') || e.affectsConfiguration('rml')) {
+            if (e.affectsConfiguration('rml.baseIRI') || e.affectsConfiguration('rml.iterationSampleLimit') || e.affectsConfiguration('rml')) {
                 const config = getConfiguration();
                 if (client.isConnected()) {
                     await client.didChangeConfiguration({
@@ -150,10 +150,17 @@ export async function activate(context: vscode.ExtensionContext) {
                                 baseIRI: config.baseIRI,
                                 inlineHints: {
                                     enableEvaluation: config.inlineHintsEnableEvaluation
-                                }
+                                },
+                                iterationSampleLimit: config.iterationSampleLimit
                             }
                         }
                     });
+                }
+            }
+            if (e.affectsConfiguration('rml.iterationSampleLimit')) {
+                const editor = vscode.window.activeTextEditor;
+                if (editor) {
+                    validationManager.runValidation(editor.document);
                 }
             }
             if (e.affectsConfiguration('rml.inlineHints.enableEvaluation')) {

@@ -109,7 +109,7 @@ public class ReferenceCompleter {
             }
             // 3. Check if context is a Logical Source Reference
             else if (isReferenceContext(targetNode)) {
-                items = completeLogicalSourceReferences(targetNode, effectivePrefix, replaceRange);
+                items = completeLogicalSourceReferences(targetNode, effectivePrefix, replaceRange, workspace.getIterationSampleLimit());
             } else {
                 items = Collections.emptyList();
             }
@@ -372,11 +372,12 @@ public class ReferenceCompleter {
     private List<CompletionItem> completeLogicalSourceReferences(
             PlanNode targetNode,
             String effectivePrefix,
-            @Nullable Range targetRange
+            @Nullable Range targetRange,
+            @Nullable Integer iterationSampleLimit
     ) {
         AbstractLogicalSource ls = ReferenceSchemaResolver.resolveContextualLogicalSource(targetNode);
         if (ls == null) return Collections.emptyList(); // Without logical source we cannot complete references
-        ReferenceSchemaResolver.SchemaInfo schemaInfo = ReferenceSchemaResolver.extractSchemaInfo(targetNode, ls);
+        ReferenceSchemaResolver.SchemaInfo schemaInfo = ReferenceSchemaResolver.extractSchemaInfo(targetNode, ls, iterationSampleLimit);
 
         List<CompletionItem> results = new ArrayList<>();
         for (var entry : schemaInfo.candidateValues().entrySet()) {

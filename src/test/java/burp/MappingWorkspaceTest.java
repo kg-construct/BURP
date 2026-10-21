@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -73,5 +74,22 @@ public class MappingWorkspaceTest {
         assertThat(origin.sourceStatements().getFirst()).isInstanceOf(TextFilePointer.class);
         TextFilePointer tfp = (TextFilePointer) origin.sourceStatements().getFirst();
         assertThat(tfp.path()).isEqualTo(Path.of("/workspace/test_mapping.ttl"));
+    }
+
+    @Test
+    public void testUpdateSettingsIterationSampleLimit() {
+        MappingWorkspace workspace = new MappingWorkspace();
+        assertThat(workspace.getIterationSampleLimit()).isNull();
+
+        workspace.updateSettings(Map.of("rml", Map.of("iterationSampleLimit", 50)));
+        assertThat(workspace.getIterationSampleLimit()).isEqualTo(50);
+
+        Map<String, Object> rmlNullLimit = new java.util.HashMap<>();
+        rmlNullLimit.put("iterationSampleLimit", null);
+        workspace.updateSettings(Map.of("rml", rmlNullLimit));
+        assertThat(workspace.getIterationSampleLimit()).isNull();
+
+        workspace.updateSettings(Map.of("iterationSampleLimit", 10));
+        assertThat(workspace.getIterationSampleLimit()).isEqualTo(10);
     }
 }

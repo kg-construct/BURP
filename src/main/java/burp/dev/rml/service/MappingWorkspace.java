@@ -7,6 +7,7 @@ import burp.dev.rml.service.source.LspCodeLensProvider;
 import burp.dev.rml.service.hint.LspInlineHintProvider;
 import burp.dev.rml.service.selector.*;
 import burp.dev.rml.service.cache.DevServerCache;
+import burp.dev.rml.service.schema.SampledDataSchemaProvider;
 import burp.model.MappingDocument;
 import burp.model.PlanNode;
 import burp.model.PlanNodeIdRegistry;
@@ -16,6 +17,7 @@ import burp.parse.ValidationMode;
 import burp.reporting.BurpException;
 import burp.reporting.RmlExecutionReport;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import org.apache.jena.rdf.model.Model;
 import org.eclipse.lsp4j.*;
@@ -43,6 +45,7 @@ public class MappingWorkspace implements WorkspaceService {
     private Path currentWorkingDirectory = Path.of("");
     private @Nullable String baseIri = null;
     private boolean inlineHintsEvaluationEnabled = true;
+    private @Nullable Integer iterationSampleLimit = null;
     private @Nullable LanguageClient client = null;
 
     public void connect(LanguageClient client) {
@@ -90,10 +93,22 @@ public class MappingWorkspace implements WorkspaceService {
         return inlineHintsEvaluationEnabled;
     }
 
+    public @Nullable Integer getIterationSampleLimit() {
+        return iterationSampleLimit;
+    }
+
+    public void setIterationSampleLimit(@Nullable Integer iterationSampleLimit) {
+        this.iterationSampleLimit = iterationSampleLimit;
+    }
+
    public record Settings(@Nullable RmlSettings rml) {
     }
 
-    public record RmlSettings(@Nullable String baseIRI, @Nullable InlineHintsSettings inlineHints) {
+    public record RmlSettings(
+            @Nullable String baseIRI,
+            @Nullable InlineHintsSettings inlineHints,
+            @Nullable Integer iterationSampleLimit
+    ) {
     }
 
     public record InlineHintsSettings(@Nullable Boolean enableEvaluation) {
@@ -102,7 +117,7 @@ public class MappingWorkspace implements WorkspaceService {
     public void updateSettings(@Nullable Object rawSettings) {
         if (rawSettings == null) return;
         try {
-            Gson gson = new Gson();
+            Gson gson = new GsonBuilder().serializeNulls().create();
             JsonElement jsonElement = (rawSettings instanceof JsonElement je) ? je : gson.toJsonTree(rawSettings);
             Settings settings = gson.fromJson(jsonElement, Settings.class);
             if (settings != null && settings.rml != null && settings.rml.baseIRI != null) {
@@ -111,12 +126,22 @@ public class MappingWorkspace implements WorkspaceService {
             if (settings != null && settings.rml != null && settings.rml.inlineHints != null
                     && settings.rml.inlineHints.enableEvaluation != null) {
                 inlineHintsEvaluationEnabled = settings.rml.inlineHints.enableEvaluation;
-            } else if (jsonElement.isJsonObject()) {
+            }
+            if (jsonElement.isJsonObject()) {
                 var obj = jsonElement.getAsJsonObject();
-                if (obj.has("baseIRI")) {
-                    setBaseIri(obj.get("baseIRI").getAsString());
-                } else if (obj.has("baseIri")) {
-                    setBaseIri(obj.get("baseIri").getAsString());
+                var rmlObj = (obj.has("rml") && obj.get("rml").isJsonObject())
+                        ? obj.getAsJsonObject("rml")
+                        : obj;
+
+                if (rmlObj.has("baseIRI")) {
+                    setBaseIri(rmlObj.get("baseIRI").isJsonNull() ? null : rmlObj.get("baseIRI").getAsString());
+                } else if (rmlObj.has("baseIri")) {
+                    setBaseIri(rmlObj.get("baseIri").isJsonNull() ? null : rmlObj.get("baseIri").getAsString());
+                }
+
+                if (rmlObj.has("iterationSampleLimit")) {
+                    var elem = rmlObj.get("iterationSampleLimit");
+                    setIterationSampleLimit(elem.isJsonNull() ? null : elem.getAsInt());
                 }
             }
         } catch (Exception ignored) {

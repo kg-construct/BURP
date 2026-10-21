@@ -99,6 +99,7 @@ export class RmlDevClient {
                                 inlineHints: {
                                     enableEvaluation: config.get<boolean>('inlineHints.enableEvaluation', true)
                                 },
+                                iterationSampleLimit: config.get<number | null>('iterationSampleLimit', 20),
                                 graph: {
                                     backgroundMethod: config.get<string>('graph.backgroundMethod', 'smoothHull')
                                 }
@@ -106,6 +107,9 @@ export class RmlDevClient {
                         }
                         if (item.section === 'rml.baseIRI') {
                             return vscode.workspace.getConfiguration('rml', scope).get<string>('baseIRI', 'http://example.org/');
+                        }
+                        if (item.section === 'rml.iterationSampleLimit') {
+                            return vscode.workspace.getConfiguration('rml', scope).get<number | null>('iterationSampleLimit', 20);
                         }
                         return vscode.workspace.getConfiguration(item.section, scope);
                     });
@@ -133,7 +137,8 @@ export class RmlDevClient {
                                 baseIRI: config.baseIRI,
                                 inlineHints: {
                                     enableEvaluation: config.inlineHintsEnableEvaluation
-                                }
+                                },
+                                iterationSampleLimit: config.iterationSampleLimit
                             }
                         }
                     });
@@ -147,7 +152,8 @@ export class RmlDevClient {
                                 baseIRI: config.baseIRI,
                                 inlineHints: {
                                     enableEvaluation: config.inlineHintsEnableEvaluation
-                                }
+                                },
+                                iterationSampleLimit: config.iterationSampleLimit
                             }
                         }
                     });

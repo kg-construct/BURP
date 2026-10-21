@@ -13,6 +13,7 @@ export interface RmlConfiguration {
     nodeBackground: boolean;
     nodeBackgroundAll: boolean;
     telemetryEnabled: 'unspecified' | 'enabled' | 'disabled';
+    iterationSampleLimit: number | null;
 }
 
 export function getConfiguration(): RmlConfiguration {
@@ -29,6 +30,7 @@ export function getConfiguration(): RmlConfiguration {
         graphBackgroundMethod: config.get<string>('graph.backgroundMethod', 'smoothHull'),
         nodeBackground: config.get<boolean>('nodeBackground', false),
         nodeBackgroundAll: config.get<boolean>('nodeBackgroundAll', false),
-        telemetryEnabled: config.get<'unspecified' | 'enabled' | 'disabled'>('telemetry.enabled', 'unspecified')
+        telemetryEnabled: config.get<'unspecified' | 'enabled' | 'disabled'>('telemetry.enabled', 'unspecified'),
+        iterationSampleLimit: config.get<number | null>('iterationSampleLimit', 20)
     };
 }
