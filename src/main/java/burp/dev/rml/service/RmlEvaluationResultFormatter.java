@@ -9,6 +9,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Utility for formatting evaluated RDF terms and statements with prefix-aware URI compaction.
@@ -64,7 +65,37 @@ public final class RmlEvaluationResultFormatter {
         };
     }
 
+    private static final Set<String> COMPACT_NUMERIC_DATATYPES = Set.of(
+            "http://www.w3.org/2001/XMLSchema#integer",
+            "http://www.w3.org/2001/XMLSchema#int",
+            "http://www.w3.org/2001/XMLSchema#long",
+            "http://www.w3.org/2001/XMLSchema#short",
+            "http://www.w3.org/2001/XMLSchema#byte",
+            "http://www.w3.org/2001/XMLSchema#decimal",
+            "http://www.w3.org/2001/XMLSchema#double",
+            "http://www.w3.org/2001/XMLSchema#float",
+            "http://www.w3.org/2001/XMLSchema#nonNegativeInteger",
+            "http://www.w3.org/2001/XMLSchema#positiveInteger",
+            "http://www.w3.org/2001/XMLSchema#negativeInteger",
+            "http://www.w3.org/2001/XMLSchema#nonPositiveInteger",
+            "http://www.w3.org/2001/XMLSchema#unsignedInt",
+            "http://www.w3.org/2001/XMLSchema#unsignedLong",
+            "http://www.w3.org/2001/XMLSchema#unsignedShort",
+            "http://www.w3.org/2001/XMLSchema#unsignedByte"
+    );
+
+    /// Formats an RDF term using standard representation (preserving explicit datatypes for numbers).
     public static String formatTerm(@Nullable Term term, @Nullable Map<String, String> prefixMap, String defaultVal) {
+        return formatTerm(term, prefixMap, defaultVal, false);
+    }
+
+    /// Formats an RDF term using super-compact representation (unquoting numerics and booleans for interline hints).
+    public static String formatCompactTerm(@Nullable Term term, @Nullable Map<String, String> prefixMap, String defaultVal) {
+        return formatTerm(term, prefixMap, defaultVal, true);
+    }
+
+    /// Formats an RDF term with configurable literal compaction.
+    public static String formatTerm(@Nullable Term term, @Nullable Map<String, String> prefixMap, String defaultVal, boolean compactLiterals) {
         switch (term) {
             case null -> {
                 return defaultVal;
@@ -75,6 +106,9 @@ public final class RmlEvaluationResultFormatter {
             case LiteralTerm lit -> {
                 String dtUri = (lit.datatype() != null) ? lit.datatype().uri() : null;
                 if ("http://www.w3.org/2001/XMLSchema#boolean".equals(dtUri)) {
+                    return lit.value();
+                }
+                if (compactLiterals && dtUri != null && COMPACT_NUMERIC_DATATYPES.contains(dtUri)) {
                     return lit.value();
                 }
                 String dt = (dtUri != null && !"http://www.w3.org/2001/XMLSchema#string".equals(dtUri))
@@ -91,10 +125,10 @@ public final class RmlEvaluationResultFormatter {
             case burp.model.rdf.CollectionOrContainerTerm cc -> {
                 String prefix = "";
                 if (!cc.isIdGenerated() && cc.getId() != null) {
-                    prefix = formatTerm(cc.getId(), prefixMap, "") + " ";
+                    prefix = formatTerm(cc.getId(), prefixMap, "", compactLiterals) + " ";
                 }
                 String elementsFormatted = cc.getElements().stream()
-                        .map(el -> formatTerm(el, prefixMap, ""))
+                        .map(el -> formatTerm(el, prefixMap, "", compactLiterals))
                         .collect(java.util.stream.Collectors.joining(cc instanceof burp.model.rdf.RdfListTerm ? " " : ", "));
 
                 return switch (cc) {

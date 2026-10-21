@@ -22,6 +22,7 @@ import java.util.*;
 public final class FnmlOntologyRegistry {
 
     private static final Map<Resource, List<FnmlParameter>> FUNCTIONS = new HashMap<>();
+    private static final Map<Resource, String> FUNCTION_NAMES = new HashMap<>();
     private static final Map<Resource, FnmlParameter> PARAMETER_LOOKUP = new HashMap<>();
     private static final Map<Resource, List<FnmlOutput>> FUNCTION_OUTPUTS = new HashMap<>();
     private static final Map<Resource, FnmlOutput> OUTPUT_LOOKUP = new HashMap<>();
@@ -45,8 +46,10 @@ public final class FnmlOntologyRegistry {
                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-                SELECT ?function ?param ?predicate ?name ?label ?required ?type WHERE {
+                SELECT ?function ?functionName ?functionLabel ?param ?predicate ?name ?label ?required ?type WHERE {
                   ?function a fno:Function .
+                  OPTIONAL { ?function fno:name ?functionName . }
+                  OPTIONAL { ?function rdfs:label ?functionLabel . }
                   OPTIONAL {
                     ?function fno:expects ?list .
                     ?list rdf:rest*/rdf:first ?param .
@@ -68,6 +71,18 @@ public final class FnmlOntologyRegistry {
 
                 Resource funcRes = soln.getResource("function");
                 FUNCTIONS.putIfAbsent(funcRes, new ArrayList<>());
+
+                if (!FUNCTION_NAMES.containsKey(funcRes)) {
+                    String fname = null;
+                    if (soln.contains("functionName")) {
+                        fname = soln.getLiteral("functionName").getString();
+                    } else if (soln.contains("functionLabel")) {
+                        fname = soln.getLiteral("functionLabel").getString();
+                    }
+                    if (fname != null) {
+                        FUNCTION_NAMES.put(funcRes, fname);
+                    }
+                }
 
                 if (soln.contains("param") && soln.get("param").isURIResource()) {
                     Resource paramRes = soln.getResource("param");
@@ -193,7 +208,15 @@ public final class FnmlOntologyRegistry {
     }
 
     public static List<FnmlParameter> getParameters(Resource function) {
-        return FUNCTIONS.getOrDefault(function, Collections.emptyList());
+        List<FnmlParameter> params = FUNCTIONS.get(function);
+        if (params != null) return params;
+
+        for (Map.Entry<Resource, List<FnmlParameter>> entry : FUNCTIONS.entrySet()) {
+            if (entry.getKey().getURI().equals(function.getURI())) {
+                return entry.getValue();
+            }
+        }
+        return Collections.emptyList();
     }
 
     public static @Nullable FnmlParameter findMatchingParameter(Resource function, Resource parameter) {
@@ -244,6 +267,18 @@ public final class FnmlOntologyRegistry {
         }
 
         return missing;
+    }
+
+    public static @Nullable String getFunctionName(Resource function) {
+        String exact = FUNCTION_NAMES.get(function);
+        if (exact != null) return exact;
+
+        for (Map.Entry<Resource, String> entry : FUNCTION_NAMES.entrySet()) {
+            if (entry.getKey().getURI().equals(function.getURI())) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     public static @Nullable FnmlParameter findParameter(Resource parameter) {
