@@ -1,14 +1,18 @@
 package burp.dev.rml.service.eval;
 
-import burp.dev.rml.service.plan.PlanNodeDescriptor;
 import burp.dev.rml.service.MappingWorkspace;
 import burp.dev.rml.service.RmlEvaluationResultFormatter;
+import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
+import burp.dev.rml.service.plan.PlanNodeDescriptor;
+import burp.dev.rml.service.selector.CursorSelector;
 import burp.model.*;
 import burp.model.context.EvaluationContext;
 import burp.model.fnml.FunctionExecution;
 import burp.model.gathermap.GatherMap;
+import burp.model.join.ParentJoinIndex;
 import burp.reporting.RmlError;
 import burp.reporting.RmlExecutionReport;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.util.Positions;
 import org.jspecify.annotations.NullMarked;
@@ -25,6 +29,66 @@ import static burp.parse.ValidationMode.LENIENT;
  */
 @NullMarked
 public class InlineEvaluator {
+
+    public StepInlineIterationResult stepInlineIteration(
+            StepInlineIterationParams params,
+            MappingWorkspace workspace,
+            RmlEvaluator evaluator
+    ) {
+        String uri = params.structure().mappingFileUri();
+        Position cursor = params.structure() instanceof CursorSelector cs ? cs.position() : null;
+        if (cursor != null) {
+            workspace.setCursorPosition(uri, cursor);
+        }
+
+        try {
+            var resolved = workspace.resolveNode(params.structure());
+            TriplesMap anchorTm = null;
+            PlanNode target = resolved.targetNode();
+            while (target != null) {
+                if (target instanceof TriplesMap tm) {
+                    anchorTm = tm;
+                    break;
+                }
+                target = target.getParent();
+            }
+            if (anchorTm == null && !resolved.mappingDocument().triplesMaps.isEmpty()) {
+                anchorTm = resolved.mappingDocument().triplesMaps.getFirst();
+            }
+
+            EvaluationDataContext currentCtx = workspace.getInlineDataContext(uri);
+            if (currentCtx == null) {
+                currentCtx = new RangeDataContext(0, 1);
+            }
+            int currentIndex = 0;
+            if (currentCtx instanceof RangeDataContext rdc) {
+                currentIndex = rdc.startIndex();
+            }
+            int newIndex = Math.max(0, currentIndex + params.delta());
+            RangeDataContext newCtx = new RangeDataContext(newIndex, newIndex + 1);
+            workspace.setInlineDataContext(uri, newCtx);
+
+            Map<String, String> prefixMap = workspace.getPrefixMap(uri);
+            var resolution = CoherentIterationResolver.resolve(
+                    resolved.mappingDocument(),
+                    newCtx,
+                    null,
+                    anchorTm,
+                    cursor,
+                    evaluator,
+                    workspace.getInlineHintsEvaluationMode(),
+                    workspace.getJoinIndexLimit(),
+                    new HashMap<>(),
+                    prefixMap,
+                    workspace.getBaseIri()
+            );
+
+            return new StepInlineIterationResult(newCtx, newIndex, resolution.traceSummary());
+        } catch (Exception e) {
+            RangeDataContext fallbackCtx = new RangeDataContext(0, 1);
+            return new StepInlineIterationResult(fallbackCtx, 0, Collections.emptyList());
+        }
+    }
 
     public CompletableFuture<List<InlineEvaluateItem>> inlineEvaluate(
             @Nullable InlineEvaluateParams params,
@@ -46,7 +110,11 @@ public class InlineEvaluator {
         try {
             var mappingDocument = workspace.loadMappingWithStableIds(params.mappingFileUri());
             Map<String, String> prefixMap = workspace.getPrefixMap(params.mappingFileUri());
-            return evaluateItems(mappingDocument, params.dataContext(), params.range(), evaluator, workspace.getBaseIri(), prefixMap);
+
+            var mode = params.evaluationMode() != null ? params.evaluationMode() : workspace.getInlineHintsEvaluationMode();
+            var limit = params.joinIndexLimit() != null ? params.joinIndexLimit() : workspace.getJoinIndexLimit();
+
+            return evaluateItems(mappingDocument, params.dataContext(), params.range(), params.cursorPosition(), evaluator, workspace.getBaseIri(), prefixMap, mode, limit);
         } catch (Exception e) {
             return Collections.emptyList();
         }
@@ -56,9 +124,12 @@ public class InlineEvaluator {
             MappingDocument mappingDocument,
             @Nullable EvaluationDataContext dataContext,
             @Nullable Range requestedRange,
+            @Nullable Position cursorPosition,
             RmlEvaluator evaluator,
             @Nullable String fallbackBaseIri,
-            @Nullable Map<String, String> prefixMap
+            @Nullable Map<String, String> prefixMap,
+            InlineHintsEvaluationMode mode,
+            @Nullable Integer joinIndexLimit
     ) {
         if (mappingDocument.triplesMaps == null || mappingDocument.triplesMaps.isEmpty()) {
             return Collections.emptyList();
@@ -74,53 +145,40 @@ public class InlineEvaluator {
 
             // Pre-resolve all source iterations for multi-source joins and referencing object maps
             Map<AbstractLogicalSource, List<Iteration>> allSourceIterations = new HashMap<>();
-            for (TriplesMap map : mappingDocument.triplesMaps) {
-                if (map.logicalSource != null && !allSourceIterations.containsKey(map.logicalSource)) {
-                    try {
-                        var resolved = evaluator.resolveIterations(effectiveDataContext, map.logicalSource);
-                        allSourceIterations.put(map.logicalSource, resolved);
-                    } catch (Exception ignored) {
-                    }
-                }
-                if (map.predicateObjectMaps != null) {
-                    for (PredicateObjectMap pom : map.predicateObjectMaps) {
-                        if (pom.objectMaps != null) {
-                            for (BaseObjectMap bom : pom.objectMaps) {
-                                if (bom instanceof ReferencingObjectMap rom && rom.parentTriplesMap != null && rom.parentTriplesMap.logicalSource != null) {
-                                    AbstractLogicalSource parentLs = rom.parentTriplesMap.logicalSource;
-                                    if (!allSourceIterations.containsKey(parentLs)) {
-                                        try {
-                                            var resolved = evaluator.resolveIterations(effectiveDataContext, parentLs);
-                                            allSourceIterations.put(parentLs, resolved);
-                                        } catch (Exception ignored) {
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+
+            var resolution = CoherentIterationResolver.resolve(
+                    mappingDocument,
+                    effectiveDataContext,
+                    requestedRange,
+                    null,
+                    cursorPosition,
+                    evaluator,
+                    mode,
+                    joinIndexLimit,
+                    allSourceIterations,
+                    prefixMap,
+                    fallbackBaseIri
+            );
+            Map<TriplesMap, CoherentIterationResolver.AssignedIteration> assignedMap = resolution.assignedIterations();
+            Map<PlanNode, ParentJoinIndex> joinIndexes = resolution.joinIndexes();
 
             // Dynamic data evaluation of non-constant expressions
             for (TriplesMap tm : mappingDocument.triplesMaps) {
-                List<Iteration> iterations;
-                try {
-                    iterations = evaluator.resolveIterations(effectiveDataContext, tm);
-                } catch (Exception ignored) {
+                CoherentIterationResolver.AssignedIteration assigned = assignedMap.get(tm);
+                if (assigned == null) {
                     continue;
                 }
 
-                if (iterations.isEmpty()) {
-                    continue;
-                }
+                Iteration selectedIteration = assigned.iteration();
+                int iterationIndex = assigned.index();
+                IterationReason iterationReason = assigned.reason();
 
-                Iteration firstIteration = iterations.getFirst();
                 RmlExecutionReport report = new RmlExecutionReport();
                 EvaluationContext defaultContext = EvaluationContext.createDefault()
                         .withReport(report)
                         .withBaseIri(tm.getBaseIri() != null ? tm.getBaseIri() : fallbackBaseIri)
                         .withSourceIterations(allSourceIterations)
+                        .withJoinIndexes(joinIndexes)
                         .withValidationMode(LENIENT);
 
                 List<PlanNode> nodesToEvaluate = new ArrayList<>();
@@ -135,20 +193,44 @@ public class InlineEvaluator {
                         continue;
                     }
 
-                    EvaluationContexts.NodeEvaluationScope scope = EvaluationContexts.resolveNodeScope(
-                            node,
-                            effectiveDataContext,
-                            tm.logicalSource,
-                            firstIteration,
-                            defaultContext,
-                            evaluator
-                    );
+                    Iteration nodeIteration = selectedIteration;
+                    EvaluationContext nodeContext = defaultContext;
 
-                    if (scope == null) {
-                        continue;
+                    ParentMap foundParentMap = null;
+                    PlanNode curr = node;
+                    while (curr != null && !(curr instanceof TriplesMap)) {
+                        if (curr instanceof ParentMap pm) {
+                            foundParentMap = pm;
+                            break;
+                        }
+                        curr = curr.getParent();
                     }
 
-                    List<RmlEvaluationResult> evalResults = evaluator.evaluateNodeSafe(node, scope.iteration(), scope.context());
+                    if (foundParentMap != null && foundParentMap.getParent() instanceof JoinCondition jc && jc.getParent() instanceof ReferencingObjectMap rom) {
+                        var parentAssigned = assignedMap.get(rom.parentTriplesMap);
+                        if (parentAssigned != null) {
+                            nodeIteration = parentAssigned.iteration();
+                            String baseIri = EvaluationContexts.resolveBaseIri(rom.parentTriplesMap, defaultContext.baseIri());
+                            nodeContext = defaultContext.withBaseIri(baseIri);
+                        }
+                    } else {
+                        EvaluationContexts.NodeEvaluationScope scope = EvaluationContexts.resolveNodeScope(
+                                node,
+                                effectiveDataContext,
+                                tm.logicalSource,
+                                selectedIteration,
+                                defaultContext,
+                                evaluator
+                        );
+                        if (scope != null) {
+                            nodeIteration = scope.iteration();
+                            nodeContext = scope.context();
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    List<RmlEvaluationResult> evalResults = evaluator.evaluateNodeSafe(node, nodeIteration, nodeContext);
                     if (evalResults.isEmpty()) {
                         continue;
                     }
@@ -175,7 +257,8 @@ public class InlineEvaluator {
                                 evalResults,
                                 formattedValues,
                                 rawFormattedValues,
-                                diagnostics
+                                diagnostics,
+                                iterationReason
                         ));
                     }
                 }

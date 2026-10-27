@@ -190,4 +190,9 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
     public CompletableFuture<SourceDataResult> getSourceData(SourceDataParams params) {
         return logicalViewInspector.getSourceData(params, workspace);
     }
+
+    @Override
+    public CompletableFuture<StepInlineIterationResult> stepInlineIteration(StepInlineIterationParams params) {
+        return CompletableFuture.completedFuture(inlineEvaluator.stepInlineIteration(params, workspace, evaluator));
+    }
 }

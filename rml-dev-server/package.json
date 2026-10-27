@@ -91,6 +91,30 @@
         "command": "rml-dev-server.traceQuad",
         "title": "RML: Trace Output Quad Provenance",
         "category": "RML"
+      },
+      {
+        "command": "rml.nextInlineIteration",
+        "title": "RML: Next Inline Iteration",
+        "category": "RML",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "rml.previousInlineIteration",
+        "title": "RML: Previous Inline Iteration",
+        "category": "RML",
+        "icon": "$(arrow-left)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "rml.nextInlineIteration",
+        "key": "alt+]",
+        "when": "editorTextFocus && (resourceExtname == .ttl || resourceLangId == turtle)"
+      },
+      {
+        "command": "rml.previousInlineIteration",
+        "key": "alt+[",
+        "when": "editorTextFocus && (resourceExtname == .ttl || resourceLangId == turtle)"
       }
     ],
     "menus": {
@@ -104,6 +128,16 @@
           "command": "rml-dev-server.visualizeRdf",
           "when": "resourceExtname =~ /\\.(ttl|nt|nq|trig|n3)$/ || resourceLangId =~ /^(turtle|trig|n-triples|n-quads|n3)$/",
           "group": "navigation@2"
+        },
+        {
+          "command": "rml.previousInlineIteration",
+          "when": "resourceExtname == .ttl || resourceLangId == turtle",
+          "group": "navigation@3"
+        },
+        {
+          "command": "rml.nextInlineIteration",
+          "when": "resourceExtname == .ttl || resourceLangId == turtle",
+          "group": "navigation@4"
         }
       ]
     },
@@ -177,6 +211,28 @@
           "type": "boolean",
           "default": true,
           "description": "Show dynamically evaluated mapping values in editor inline hints. Static function parameter and join-source hints remain visible when disabled."
+        },
+        "rml.inlineHints.evaluationMode": {
+          "type": "string",
+          "enum": [
+            "trace",
+            "independentEvaluation"
+          ],
+          "enumDescriptions": [
+            "Evaluate iterations that produce the first coherent joined result across mappings (trace-like).",
+            "Evaluate each node independently on the first iteration of its own TriplesMap."
+          ],
+          "default": "trace",
+          "description": "Evaluation mode for inline hints: 'trace' resolves coherent iterations across joined mappings; 'independentEvaluation' evaluates each node independently."
+        },
+        "rml.inlineHints.joinIndexLimit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null,
+          "minimum": 0,
+          "description": "Maximum parent records to pre-index when resolving coherent trace joins. 0 or unset for unlimited."
         },
         "rml.graph.backgroundMethod": {
           "type": "string",

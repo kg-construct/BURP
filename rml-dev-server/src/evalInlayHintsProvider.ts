@@ -22,6 +22,10 @@ export class RmlEvalInlayHintsProvider implements vscode.InlayHintsProvider {
         this.refresh();
     }
 
+    public getDataContext(): TypedDataContext {
+        return this.dataContext;
+    }
+
     public refresh(): void {
         this.cache.clear();
         this.onDidChangeInlayHintsEmitter.fire();

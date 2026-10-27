@@ -9,6 +9,8 @@ export interface MappingWorkspace extends WorkspaceService {
     inlineHintsEvaluationEnabled: boolean;
     iterationSampleLimit?: number;
     client?: LanguageClient;
+    inlineHintsEvaluationMode: InlineHintsEvaluationMode;
+    joinIndexLimit: number;
     cache: DevServerCache;
     referenceCompleter: ReferenceCompleter;
     inlayHintProvider: LspInlineHintProvider;
@@ -19,6 +21,8 @@ export interface MappingWorkspace extends WorkspaceService {
 
 export interface InlineHintsSettings {
     enableEvaluation?: boolean;
+    evaluationMode?: InlineHintsEvaluationMode;
+    joinIndexLimit?: number;
 }
 
 export interface LoadedMapping {
@@ -86,6 +90,20 @@ export interface SchemaInfo {
 export interface AllDataContext extends EvaluationDataContext {
 }
 
+export interface CoherentIterationResolver {
+}
+
+export interface AssignedIteration {
+    iteration: Iteration;
+    index: number;
+    reason?: IterationReason;
+}
+
+export interface ResolutionResult {
+    assignedIterations: { [index: string]: AssignedIteration };
+    joinIndexes: { [index: string]: ParentJoinIndex };
+}
+
 export interface CustomDataContext extends EvaluationDataContext {
 }
 
@@ -101,6 +119,11 @@ export interface EvaluateResult {
     diagnostics: string[];
     rerDiagnostic?: string;
     prefixMap: { [index: string]: string };
+    traceSummary?: string[];
+    targetNodeType?: string;
+    targetParentTriplesMap?: string;
+    targetNodeSummary?: string;
+    evaluationMode?: InlineHintsEvaluationMode;
 }
 
 export interface EvaluationContexts {
@@ -122,15 +145,44 @@ export interface InlineEvaluateItem {
     formattedValues: string[];
     rawFormattedValues: string[];
     diagnostics: string[];
+    iterationIndex: number;
+    iterationReason?: IterationReason;
 }
 
 export interface InlineEvaluateParams {
     mappingFileUri: string;
     dataContext: EvaluationDataContext;
     range?: Range;
+    evaluationMode?: InlineHintsEvaluationMode;
+    joinIndexLimit?: number;
 }
 
 export interface InlineEvaluator {
+}
+
+export interface IterationReason {
+    iterationIndex: number;
+}
+
+export interface Direct extends IterationReason {
+}
+
+export interface MatchedJoin extends IterationReason {
+    sourceNodeId: string;
+    sourceIri?: string;
+    sourceIterationIndex: number;
+    joinConditionSummary?: string;
+}
+
+export interface StepInlineIterationParams {
+    structure: StructureSelector;
+    delta: number;
+}
+
+export interface StepInlineIterationResult {
+    dataContext: EvaluationDataContext;
+    activeIterationIndex: number;
+    traceSummary: string[];
 }
 
 export interface MultiSourceDataContext extends EvaluationDataContext {
@@ -194,6 +246,9 @@ export interface TargetExecutionResult {
     logicalTarget?: LogicalTargetInfo;
     statements: RdfStatement[];
     statementCount: number;
+}
+
+export interface ExpressionFormatter {
 }
 
 export interface JoinSourceHintProvider {
@@ -998,6 +1053,8 @@ export interface BaseObjectMap extends PlanNode, TermGenerator {
 
 export interface TypeDescriptor {
 }
+
+export type InlineHintsEvaluationMode = "INDEPENDENT_EVALUATION" | "TRACE";
 
 export type ErrorKind = "CONNECTION_ERROR" | "QUERY_ERROR";
 

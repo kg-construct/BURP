@@ -58,6 +58,13 @@ export class EvaluatorViewProvider implements vscode.WebviewViewProvider {
                 case 'refresh':
                     await this.evaluateCurrent();
                     break;
+                case 'stepInlineIteration':
+                    if (msg.delta > 0) {
+                        await vscode.commands.executeCommand('rml.nextInlineIteration');
+                    } else if (msg.delta < 0) {
+                        await vscode.commands.executeCommand('rml.previousInlineIteration');
+                    }
+                    break;
                 case 'telemetry':
                     telemetry.capture(msg.event, msg.properties);
                     break;
@@ -69,6 +76,11 @@ export class EvaluatorViewProvider implements vscode.WebviewViewProvider {
 
     private postMessage(msg: EvaluatorToWebviewMessage): Thenable<boolean> {
         return this.view ? this.view.webview.postMessage(msg) : Promise.resolve(false);
+    }
+
+    public setDataContext(context: TypedDataContext): void {
+        this.dataContext = context;
+        this.evaluateCurrent();
     }
 
     public async updateCursor(document: vscode.TextDocument, position: vscode.Position) {

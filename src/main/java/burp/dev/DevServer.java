@@ -110,6 +110,9 @@ public class DevServer {
             .registerSubtype(RawStringCustomDataContext.class, "rawString")
             .registerSubtype(ReferenceValuesCustomDataContext.class, "referenceValues")
             .registerSubtype(MultiSourceDataContext.class, "multiSource"));
+        builder.registerTypeAdapterFactory(RuntimeTypeAdapterFactory.of(burp.dev.rml.service.eval.IterationReason.class, "type")
+                .registerSubtype(burp.dev.rml.service.eval.IterationReason.Direct.class, "direct")
+                .registerSubtype(burp.dev.rml.service.eval.IterationReason.MatchedJoin.class, "matchedJoin"));
 
         builder.registerTypeHierarchyAdapter(org.apache.jena.rdf.model.RDFNode.class, (JsonSerializer<org.apache.jena.rdf.model.RDFNode>) (src, typeOfSrc, context) -> {
             if (src == null) return JsonNull.INSTANCE;

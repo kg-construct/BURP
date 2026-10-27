@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {Alert, Button, Input, Tag, TextArea} from 'baukasten-ui/core';
+import {Alert, Button, Icon, Input, Tag, Text, TextArea, Tooltip} from 'baukasten-ui/core';
 import {getVsCodeApi} from '../common/vscode';
-import {HeaderBar} from '../common/HeaderBar';
 import {RdfToken} from '../common/RdfToken';
 import {PrefixAccordion} from '../common/PrefixAccordion';
 import {EvaluatorFromWebviewMessage, EvaluatorToWebviewMessage} from "../protocol/evaluator";
@@ -107,10 +106,109 @@ export const EvaluatorApp: React.FC = () => {
         }
     };
 
+    const firstResult = results && results.length > 0 ? results[0] : undefined;
+    const evalMode = firstResult?.evaluationMode;
+    const isIndependent = evalMode === 'INDEPENDENT_EVALUATION';
+
     return (
         <div className="bk-app-container">
-            <HeaderBar cursor={cursor} onRefresh={handleRefresh}/>
-            <PrefixAccordion prefixes={prefixes}/>
+            {firstResult && firstResult.traceSummary && firstResult.traceSummary.length > 0 && (
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'var(--bk-gap-xs)',
+                    paddingBottom: 'var(--bk-gap-xl)',
+                    borderBottom: '1px solid var(--bk-color-border)'
+                }}>
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: 'var(--bk-gap-xs)'}}>
+                            <Text size="xs" weight="semibold" color="muted" style={{textTransform: 'uppercase'}}>
+                                Inline Evaluations
+                            </Text>
+                            <Tooltip
+                                content={
+                                    isIndependent
+                                        ? "Results shown are from the first iteration of each TriplesMap logical source."
+                                        : "Inlay hints in the Turtle editor are synchronized with this scope. Stepping forward/back follows join conditions between TriplesMaps."
+                                }
+                                variant="info"
+                            >
+                                <Button variant="ghost" size="xs" circular aria-label="Inline evaluation info">
+                                    <Icon name="info"/>
+                                </Button>
+                            </Tooltip>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: 'var(--bk-gap-xs)'}}>
+                            <Button
+                                variant="ghost"
+                                size="xs"
+                                circular
+                                title="Previous Inline Iteration"
+                                aria-label="Previous Inline Iteration"
+                                onClick={() => vscodeApi.postMessage({command: 'stepInlineIteration', delta: -1})}
+                            >
+                                <Icon name="chevron-left"/>
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="xs"
+                                circular
+                                title="Next Inline Iteration"
+                                aria-label="Next Inline Iteration"
+                                onClick={() => vscodeApi.postMessage({command: 'stepInlineIteration', delta: 1})}
+                            >
+                                <Icon name="chevron-right"/>
+                            </Button>
+                        </div>
+                    </div>
+                    {firstResult.traceSummary.map((line, lIdx) => renderTraceLine(line, lIdx))}
+                </div>
+            )}
+
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <Text size="xs" weight="semibold" color="muted" style={{textTransform: 'uppercase'}}>
+                    Value Inspector
+                </Text>
+                <Button size="sm" variant="secondary" onClick={handleRefresh} title="Refresh">
+                    ↻ Refresh
+                </Button>
+            </div>
+
+            {firstResult && (firstResult.targetNodeType || firstResult.targetParentTriplesMap) && (
+                <div
+                    style={{
+                        padding: 'var(--bk-padding-sm)',
+                        background: 'var(--bk-color-background-secondary)',
+                        borderRadius: 'var(--bk-radius-sm)',
+                        border: '1px solid var(--bk-color-border)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '3px'
+                    }}
+                >
+                    <div
+                        style={{display: 'flex', alignItems: 'center', gap: 'var(--bk-gap-xs)', flexWrap: 'wrap'}}>
+                        {firstResult.targetNodeType && (
+                            <Tag size="xs" variant="info">
+                                {firstResult.targetNodeType}
+                            </Tag>
+                        )}
+                        {firstResult.targetParentTriplesMap && (
+                            <Text size="xs" color="muted">
+                                in <span style={{
+                                fontFamily: 'monospace',
+                                fontWeight: 600
+                            }}>{firstResult.targetParentTriplesMap}</span>
+                            </Text>
+                        )}
+                    </div>
+                    {firstResult.targetNodeSummary && (
+                        <Text size="xs" monospace block color="muted" style={{wordBreak: 'break-all'}}>
+                            {firstResult.targetNodeSummary}
+                        </Text>
+                    )}
+                </div>
+            )}
 
             <div className="bk-controls-row">
                 <select
@@ -125,8 +223,8 @@ export const EvaluatorApp: React.FC = () => {
                 </select>
 
                 {mode === 'sample' && (
-                    <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                        <span style={{fontSize: '11px', color: 'var(--vscode-descriptionForeground)'}}>Iter:</span>
+                    <div style={{display: 'flex', alignItems: 'center', gap: 'var(--bk-gap-xs)'}}>
+                        <Text size="xs" color="muted">Iter:</Text>
                         <input
                             type="number"
                             min={0}
@@ -134,10 +232,10 @@ export const EvaluatorApp: React.FC = () => {
                             onChange={(e) => handleIterationIndexChange(parseInt(e.target.value, 10) || 0)}
                             style={{
                                 width: '50px',
-                                background: 'var(--vscode-input-background)',
-                                color: 'var(--vscode-input-foreground)',
-                                border: '1px solid var(--vscode-input-border)',
-                                borderRadius: '3px',
+                                background: 'var(--bk-color-input-background)',
+                                color: 'var(--bk-color-input-foreground)',
+                                border: '1px solid var(--bk-color-input-border)',
+                                borderRadius: 'var(--bk-radius-sm)',
                                 padding: '3px 6px',
                                 fontSize: '12px'
                             }}
@@ -205,7 +303,7 @@ export const EvaluatorApp: React.FC = () => {
 
                                 {iter.iterationData && (
                                     <div className="bk-section-block">
-                                        <Tag size="xs" color="info">INPUT</Tag>
+                                        <Tag size="xs" variant="info">INPUT</Tag>
                                         <pre className="bk-code-box">
                                             {formatJsonString(iter.iterationData)}
                                         </pre>
@@ -213,7 +311,7 @@ export const EvaluatorApp: React.FC = () => {
                                 )}
 
                                 <div className="bk-section-block">
-                                    <Tag size="xs" color="success">OUTPUT</Tag>
+                                    <Tag size="xs" variant="success">OUTPUT</Tag>
                                     {iter.generatedRdf && iter.generatedRdf.length > 0 ? (
                                         <div className="bk-token-stack">
                                             {iter.generatedRdf.map((rdf: any, rIdx: number) => (
@@ -229,9 +327,34 @@ export const EvaluatorApp: React.FC = () => {
                     ))
                 )}
             </div>
+
+            <PrefixAccordion prefixes={prefixes}/>
         </div>
     );
 };
+
+function renderTraceLine(line: string, index: number) {
+    const match = line.match(/^((?:<https?:\/\/[^>]+>|https?:\/\/\S+))\s+(.+)$/);
+    if (match) {
+        const [, iri, rest] = match;
+        return (
+            <div key={index} style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                <Text size="sm" monospace block style={{wordBreak: 'break-all'}}>
+                    {iri}
+                </Text>
+                <Text size="xs" monospace block color="muted"
+                      style={{paddingLeft: 'var(--bk-spacing-2)', wordBreak: 'break-all'}}>
+                    {rest}
+                </Text>
+            </div>
+        );
+    }
+    return (
+        <Text key={index} size="sm" monospace block style={{wordBreak: 'break-all'}}>
+            {line}
+        </Text>
+    );
+}
 
 function formatJsonString(raw: string): string {
     try {

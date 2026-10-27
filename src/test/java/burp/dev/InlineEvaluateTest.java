@@ -4,6 +4,7 @@ import burp.dev.rml.RmlDevServerImpl;
 import burp.dev.rml.RmlLanguageServer;
 import burp.dev.rml.service.MappingWorkspace;
 import burp.dev.rml.service.eval.*;
+import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
 import burp.dev.rml.service.validator.RmlDiagnostic;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.model.RawValue;
@@ -25,6 +26,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class InlineEvaluateTest {
 
+    private RmlDevServerImpl createServer() {
+        MappingWorkspace workspace = new MappingWorkspace();
+        workspace.setInlineHintsEvaluationMode(InlineHintsEvaluationMode.INDEPENDENT_EVALUATION);
+        return new RmlDevServerImpl(workspace);
+    }
+
     @Test
     public void testInlineEvaluateConcatMapping() throws ExecutionException, InterruptedException {
         InlineEvaluateParams params = new InlineEvaluateParams(
@@ -32,7 +39,7 @@ public class InlineEvaluateTest {
                 new AllDataContext()
         );
 
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
         List<InlineEvaluateItem> items = server.inlineEvaluate(params).get();
 
         assertThat(items).isNotNull().isNotEmpty();
@@ -91,7 +98,7 @@ public class InlineEvaluateTest {
                     ] .
                 """.formatted(unicodeEscape);
 
-        RmlDevServerImpl server = new RmlDevServerImpl();
+        RmlDevServerImpl server = createServer();
         server.getWorkspace().updateDocumentText(uri, mapping);
 
         List<InlayHint> hints = server.getTextDocumentService().inlayHint(new InlayHintParams(
@@ -119,7 +126,7 @@ public class InlineEvaluateTest {
 
     @Test
     public void disabledInlineHintEvaluation_keepsStaticFunctionAndJoinHints() throws Exception {
-        RmlDevServerImpl server = new RmlDevServerImpl();
+        RmlDevServerImpl server = createServer();
         server.getWorkspaceService().didChangeConfiguration(new DidChangeConfigurationParams(
                 Map.of("rml", Map.of("inlineHints", Map.of("enableEvaluation", false)))
         ));
@@ -153,7 +160,7 @@ public class InlineEvaluateTest {
                 filterRange
         );
 
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
         List<InlineEvaluateItem> items = server.inlineEvaluate(params).get();
 
         assertThat(items).isNotNull().isNotEmpty();
@@ -171,7 +178,7 @@ public class InlineEvaluateTest {
                 new AllDataContext()
         );
 
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
         List<InlineEvaluateItem> items = server.inlineEvaluate(params).get();
 
         assertThat(items).isNotNull().isNotEmpty();
@@ -206,7 +213,7 @@ public class InlineEvaluateTest {
                 new ReferenceValuesCustomDataContext(customValues)
         );
 
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
         List<InlineEvaluateItem> items = server.inlineEvaluate(params).get();
 
         assertThat(items).isNotNull().isNotEmpty();
@@ -224,7 +231,7 @@ public class InlineEvaluateTest {
                 new AllDataContext()
         );
 
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
         List<InlineEvaluateItem> items = server.inlineEvaluate(params).get();
 
         assertThat(items).isNotNull().isNotEmpty();
@@ -265,7 +272,7 @@ public class InlineEvaluateTest {
     @Test
     public void testJoinConditionSourceInlayHintsInRMLTC0009a() throws ExecutionException, InterruptedException {
         String uri = "rml-modules/rml-core/test-cases/RMLTC0009a-JSON/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         InlayHintParams hintParams = new InlayHintParams(
                 new TextDocumentIdentifier(uri),
@@ -292,7 +299,7 @@ public class InlineEvaluateTest {
     @Test
     public void testJoinConditionEvaluationHintsInRMLTC0009a() throws ExecutionException, InterruptedException {
         String uri = "rml-modules/rml-core/test-cases/RMLTC0009a-JSON/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // 1. Test inlineEvaluate endpoint
         InlineEvaluateParams evalParams = new InlineEvaluateParams(
@@ -347,7 +354,7 @@ public class InlineEvaluateTest {
     @Test
     public void testViewJoinInlayHintsAndEvaluation_RMLLVTC0006a() throws ExecutionException, InterruptedException {
         String uri = "rml-modules/rml-lv/test-cases/RMLLVTC0006a/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // 1. LSP Inlay Hints endpoint
         InlayHintParams hintParams = new InlayHintParams(
@@ -370,7 +377,7 @@ public class InlineEvaluateTest {
     @Test
     public void testViewJoinInlineEvaluate_RMLLVTC0006b_ThirdIteration() throws ExecutionException, InterruptedException {
         String uri = "rml-modules/rml-lv/test-cases/RMLLVTC0006b/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // 3rd iteration is index 2 (startIndex=2, endIndex=2) -> Bob (1999) with item "flower"
         InlineEvaluateParams params = new InlineEvaluateParams(
@@ -396,7 +403,7 @@ public class InlineEvaluateTest {
     @Test
     public void testReferencingObjectMapInlineEvaluation_RMLTC0009a() throws ExecutionException, InterruptedException {
         String uri = "src/test/resources/burp/rml_tc0009a/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         InlineEvaluateParams params = new InlineEvaluateParams(
                 uri,
@@ -420,7 +427,7 @@ public class InlineEvaluateTest {
     @Test
     public void testMultiSourceDataContext_JoinWithCustomData() throws ExecutionException, InterruptedException {
         String uri = "src/test/resources/burp/rml_tc0009a/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // Provide custom student and custom sport
         Map<String, Object> studentData = new HashMap<>();
@@ -466,7 +473,7 @@ public class InlineEvaluateTest {
         String filePathStr = "src/test/resources/burp/partially_valid_references/mapping.ttl";
         InlineEvaluateParams params = new InlineEvaluateParams(filePathStr, new AllDataContext());
 
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
         List<InlineEvaluateItem> items = server.inlineEvaluate(params).get();
         assertThat(items).flatMap(InlineEvaluateItem::values).anyMatch(v -> v instanceof LiteralTerm lt && lt.value().equals("Gordon"));
         assertThat(items).flatMap(InlineEvaluateItem::values).anyMatch(v -> v instanceof LiteralTerm lt && lt.value().equals("85"));
@@ -488,7 +495,7 @@ public class InlineEvaluateTest {
     @Test
     public void mapping_with_invalid_template_should_evaluate_other_nodes_in_lenient_mode() throws Exception {
         String filePathStr = "src/test/resources/burp/inline_eval_invalid_template/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // Inline evaluate in lenient mode:
         // SubjectMap (invalid template producing invalid IRI) should not produce terms,
@@ -508,7 +515,7 @@ public class InlineEvaluateTest {
     @Test
     public void mapping_with_invalid_template_should_report_diagnostic_without_constant_suggestion() throws Exception {
         String filePathStr = "src/test/resources/burp/inline_eval_invalid_template/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // LSP validate reports diagnostic for missing reference segment in template.
         List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
@@ -523,7 +530,7 @@ public class InlineEvaluateTest {
     @Test
     public void mapping_with_constant_like_template_should_suggest_constant_during_evaluation_and_produce_valid_iri() throws Exception {
         String filePathStr = "src/test/resources/burp/inline_eval_constant_template/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // 1. LSP validate reports syntax error that template lacks reference segment / should be constant
         List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
@@ -550,7 +557,7 @@ public class InlineEvaluateTest {
     @Test
     public void mapping_with_base_iri_on_triples_map_should_suggest_resolved_constant_and_produce_resolved_iri() throws Exception {
         String filePathStr = "src/test/resources/burp/inline_eval_constant_relative_template/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // LSP validate reports syntax error that template lacks reference segment / should be constant
         List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
@@ -574,7 +581,7 @@ public class InlineEvaluateTest {
     @Test
     public void mapping_with_base_iri_on_triples_map_should_produce_resolved_iri() throws Exception {
         String filePathStr = "src/test/resources/burp/inline_eval_relative_template/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // Inline evaluation in lenient mode uses TriplesMap BaseIRIScope to resolve relative template against baseIRI
         InlineEvaluateParams params = new InlineEvaluateParams(filePathStr, new AllDataContext());
@@ -593,7 +600,7 @@ public class InlineEvaluateTest {
     @Test
     public void mapping_should_produce_resolved_iri_from_config() throws Exception {
         String filePathStr = "src/test/resources/burp/inline_eval_relative_template_from_config/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         // Send config
         MappingWorkspace.Settings settings = new MappingWorkspace.Settings(new MappingWorkspace.RmlSettings("http://example.com/base/", null, null));
@@ -618,7 +625,7 @@ public class InlineEvaluateTest {
     @Test
     public void test1000recordsTemplateAndSegmentInlayHints() throws Exception {
         String filePathStr = "/home/jakub/Documents/Dev/RmlTests/1000records.rml.ttl";
-        RmlDevServerImpl server = new RmlDevServerImpl();
+        RmlDevServerImpl server = createServer();
         server.getWorkspace().setBaseIri("http://example.com/base/");
 
         InlineEvaluateParams params = new InlineEvaluateParams(filePathStr, new RangeDataContext(0, 1));
@@ -658,7 +665,7 @@ public class InlineEvaluateTest {
     @Test
     public void testThreeDistinctInlayHintsForTermMapTemplateAndReference() throws Exception {
         String uri = "src/test/resources/burp/eval_alice/mapping.ttl";
-        RmlLanguageServer server = new RmlDevServerImpl();
+        RmlLanguageServer server = createServer();
 
         InlayHintParams hintParams = new InlayHintParams(
                 new TextDocumentIdentifier(uri),

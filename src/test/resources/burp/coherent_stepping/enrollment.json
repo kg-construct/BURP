@@ -1,0 +1,12 @@
+{
+  "enrollments": [
+    {
+      "StudentID": 10,
+      "CourseID": 501
+    },
+    {
+      "StudentID": 30,
+      "CourseID": 502
+    }
+  ]
+}

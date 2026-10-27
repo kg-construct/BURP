@@ -1,12 +1,15 @@
 package burp.dev.rml.service;
 
 import burp.dev.NodeSelectorMatcher;
+import burp.dev.rml.service.cache.DevServerCache;
 import burp.dev.rml.service.completion.ReferenceCompleter;
+import burp.dev.rml.service.eval.EvaluationDataContext;
+import burp.dev.rml.service.eval.RangeDataContext;
 import burp.dev.rml.service.eval.RmlEvaluator;
-import burp.dev.rml.service.source.LspCodeLensProvider;
+import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
 import burp.dev.rml.service.hint.LspInlineHintProvider;
 import burp.dev.rml.service.selector.*;
-import burp.dev.rml.service.cache.DevServerCache;
+import burp.dev.rml.service.source.LspCodeLensProvider;
 import burp.model.MappingDocument;
 import burp.model.PlanNode;
 import burp.model.PlanNodeIdRegistry;
@@ -42,9 +45,11 @@ public class MappingWorkspace implements WorkspaceService {
     private final Map<String, String> openDocuments = new ConcurrentHashMap<>();
     private final Map<String, Map<String, String>> documentPrefixes = new ConcurrentHashMap<>();
     private Path currentWorkingDirectory = Path.of("");
-    private @Nullable String baseIri = null;
-    private boolean inlineHintsEvaluationEnabled = true;
-    private @Nullable Integer iterationSampleLimit = null;
+    private RmlSettings rmlSettings = new RmlSettings(
+            null,
+            new InlineHintsSettings(true, InlineHintsEvaluationMode.TRACE, null),
+            null
+    );
     private @Nullable LanguageClient client = null;
 
     public void connect(LanguageClient client) {
@@ -80,27 +85,95 @@ public class MappingWorkspace implements WorkspaceService {
         cache.invalidateAll();
     }
 
+    public RmlSettings getRmlSettings() {
+        return rmlSettings;
+    }
+
+    public void setRmlSettings(RmlSettings rmlSettings) {
+        this.rmlSettings = rmlSettings;
+    }
+
     public @Nullable String getBaseIri() {
-        return baseIri;
+        return rmlSettings.baseIRI();
     }
 
     public void setBaseIri(@Nullable String baseIri) {
-        this.baseIri = (baseIri != null && !baseIri.isBlank()) ? baseIri : null;
+        String sanitized = (baseIri != null && !baseIri.isBlank()) ? baseIri : null;
+        this.rmlSettings = new RmlSettings(sanitized, rmlSettings.inlineHints(), rmlSettings.iterationSampleLimit());
     }
 
     public boolean isInlineHintsEvaluationEnabled() {
-        return inlineHintsEvaluationEnabled;
+        return rmlSettings.inlineHints() == null || rmlSettings.inlineHints().enableEvaluation() == null || rmlSettings.inlineHints().enableEvaluation();
+    }
+
+    public void setInlineHintsEvaluationEnabled(boolean inlineHintsEvaluationEnabled) {
+        InlineHintsSettings current = rmlSettings.inlineHints();
+        InlineHintsSettings updated = new InlineHintsSettings(
+                inlineHintsEvaluationEnabled,
+                current != null ? current.evaluationMode() : InlineHintsEvaluationMode.TRACE,
+                current != null ? current.joinIndexLimit() : null
+        );
+        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), updated, rmlSettings.iterationSampleLimit());
+    }
+
+    public InlineHintsEvaluationMode getInlineHintsEvaluationMode() {
+        return (rmlSettings.inlineHints() != null && rmlSettings.inlineHints().evaluationMode() != null)
+                ? rmlSettings.inlineHints().evaluationMode()
+                : InlineHintsEvaluationMode.TRACE;
+    }
+
+    public void setInlineHintsEvaluationMode(InlineHintsEvaluationMode inlineHintsEvaluationMode) {
+        InlineHintsSettings current = rmlSettings.inlineHints();
+        InlineHintsSettings updated = new InlineHintsSettings(
+                current != null ? current.enableEvaluation() : true,
+                inlineHintsEvaluationMode,
+                current != null ? current.joinIndexLimit() : null
+        );
+        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), updated, rmlSettings.iterationSampleLimit());
+    }
+
+    public @Nullable Integer getJoinIndexLimit() {
+        return rmlSettings.inlineHints() != null ? rmlSettings.inlineHints().joinIndexLimit() : null;
+    }
+
+    public void setJoinIndexLimit(@Nullable Integer joinIndexLimit) {
+        InlineHintsSettings current = rmlSettings.inlineHints();
+        InlineHintsSettings updated = new InlineHintsSettings(
+                current != null ? current.enableEvaluation() : true,
+                current != null ? current.evaluationMode() : InlineHintsEvaluationMode.TRACE,
+                joinIndexLimit
+        );
+        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), updated, rmlSettings.iterationSampleLimit());
     }
 
     public @Nullable Integer getIterationSampleLimit() {
-        return iterationSampleLimit;
+        return rmlSettings.iterationSampleLimit();
     }
 
     public void setIterationSampleLimit(@Nullable Integer iterationSampleLimit) {
-        this.iterationSampleLimit = iterationSampleLimit;
+        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), rmlSettings.inlineHints(), iterationSampleLimit);
     }
 
-   public record Settings(@Nullable RmlSettings rml) {
+    private final Map<String, EvaluationDataContext> documentInlineDataContexts = new ConcurrentHashMap<>();
+    private final Map<String, Position> documentCursorPositions = new ConcurrentHashMap<>();
+
+    public EvaluationDataContext getInlineDataContext(String documentUri) {
+        return documentInlineDataContexts.getOrDefault(documentUri, new RangeDataContext(0, 1));
+    }
+
+    public void setInlineDataContext(String documentUri, EvaluationDataContext dataContext) {
+        documentInlineDataContexts.put(documentUri, dataContext);
+    }
+
+    public @Nullable Position getCursorPosition(String documentUri) {
+        return documentCursorPositions.get(documentUri);
+    }
+
+    public void setCursorPosition(String documentUri, Position position) {
+        documentCursorPositions.put(documentUri, position);
+    }
+
+    public record Settings(@Nullable RmlSettings rml) {
     }
 
     public record RmlSettings(
@@ -110,7 +183,11 @@ public class MappingWorkspace implements WorkspaceService {
     ) {
     }
 
-    public record InlineHintsSettings(@Nullable Boolean enableEvaluation) {
+    public record InlineHintsSettings(
+            @Nullable Boolean enableEvaluation,
+            @Nullable InlineHintsEvaluationMode evaluationMode,
+            @Nullable Integer joinIndexLimit
+    ) {
     }
 
     public void updateSettings(@Nullable Object rawSettings) {
@@ -119,29 +196,30 @@ public class MappingWorkspace implements WorkspaceService {
             Gson gson = new GsonBuilder().serializeNulls().create();
             JsonElement jsonElement = (rawSettings instanceof JsonElement je) ? je : gson.toJsonTree(rawSettings);
             Settings settings = gson.fromJson(jsonElement, Settings.class);
-            if (settings != null && settings.rml != null && settings.rml.baseIRI != null) {
-                setBaseIri(settings.rml.baseIRI);
-            }
-            if (settings != null && settings.rml != null && settings.rml.inlineHints != null
-                    && settings.rml.inlineHints.enableEvaluation != null) {
-                inlineHintsEvaluationEnabled = settings.rml.inlineHints.enableEvaluation;
-            }
-            if (jsonElement.isJsonObject()) {
-                var obj = jsonElement.getAsJsonObject();
-                var rmlObj = (obj.has("rml") && obj.get("rml").isJsonObject())
-                        ? obj.getAsJsonObject("rml")
-                        : obj;
+            RmlSettings incoming = (settings != null && settings.rml != null)
+                    ? settings.rml
+                    : gson.fromJson(jsonElement, RmlSettings.class);
 
-                if (rmlObj.has("baseIRI")) {
-                    setBaseIri(rmlObj.get("baseIRI").isJsonNull() ? null : rmlObj.get("baseIRI").getAsString());
-                } else if (rmlObj.has("baseIri")) {
-                    setBaseIri(rmlObj.get("baseIri").isJsonNull() ? null : rmlObj.get("baseIri").getAsString());
+            if (incoming != null) {
+                String newBase = incoming.baseIRI != null
+                        ? ((!incoming.baseIRI.isBlank()) ? incoming.baseIRI : null)
+                        : rmlSettings.baseIRI();
+                Integer newSampleLimit = incoming.iterationSampleLimit;
+
+                InlineHintsSettings currentHints = rmlSettings.inlineHints();
+                InlineHintsSettings incomingHints = incoming.inlineHints;
+                InlineHintsSettings newHints;
+                if (incomingHints != null) {
+                    newHints = new InlineHintsSettings(
+                            incomingHints.enableEvaluation != null ? incomingHints.enableEvaluation : (currentHints != null ? currentHints.enableEvaluation() : true),
+                            incomingHints.evaluationMode != null ? incomingHints.evaluationMode : (currentHints != null ? currentHints.evaluationMode() : InlineHintsEvaluationMode.TRACE),
+                            incomingHints.joinIndexLimit != null ? incomingHints.joinIndexLimit : (currentHints != null ? currentHints.joinIndexLimit() : null)
+                    );
+                } else {
+                    newHints = currentHints;
                 }
 
-                if (rmlObj.has("iterationSampleLimit")) {
-                    var elem = rmlObj.get("iterationSampleLimit");
-                    setIterationSampleLimit(elem.isJsonNull() ? null : elem.getAsInt());
-                }
+                this.rmlSettings = new RmlSettings(newBase, newHints, newSampleLimit);
             }
         } catch (Exception ignored) {
         }

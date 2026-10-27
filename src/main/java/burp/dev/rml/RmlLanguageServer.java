@@ -1,17 +1,14 @@
 package burp.dev.rml;
 
-import burp.dev.rml.service.eval.EvaluateParams;
-import burp.dev.rml.service.eval.EvaluateResult;
-import burp.dev.rml.service.eval.InlineEvaluateItem;
-import burp.dev.rml.service.eval.InlineEvaluateParams;
+import burp.dev.rml.service.eval.*;
 import burp.dev.rml.service.execute.ExecuteParams;
 import burp.dev.rml.service.execute.ExecuteResult;
-import burp.dev.rml.service.source.SourceDataParams;
-import burp.dev.rml.service.source.SourceDataResult;
 import burp.dev.rml.service.plan.PlanParams;
 import burp.dev.rml.service.plan.PlanResult;
 import burp.dev.rml.service.plan.ReferenceDependency;
 import burp.dev.rml.service.plan.ReferencesDependenciesParams;
+import burp.dev.rml.service.source.SourceDataParams;
+import burp.dev.rml.service.source.SourceDataResult;
 import burp.dev.rml.service.trace.TraceIterationParams;
 import burp.dev.rml.service.trace.TraceParams;
 import burp.dev.rml.service.trace.TraceResult;
@@ -89,6 +86,12 @@ public interface RmlLanguageServer extends LanguageServer {
      */
     @JsonRequest("rml/validate")
     CompletableFuture<List<RmlDiagnostic>> validate(ValidateParams params);
+
+    /**
+     * Steps the active inline evaluation iteration for the anchor TriplesMap referenced by structure.
+     */
+    @JsonRequest("rml/stepInlineIteration")
+    CompletableFuture<StepInlineIterationResult> stepInlineIteration(StepInlineIterationParams params);
 
     /**
      * Retrieves a windowed tabular or document dataset from a Logical Source or Logical View.

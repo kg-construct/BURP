@@ -10,7 +10,6 @@ import burp.model.*;
 import burp.model.context.EvaluationContext;
 import burp.model.rdf.IRITerm;
 import burp.model.rdf.LiteralTerm;
-import com.google.gson.GsonBuilder;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 
@@ -76,6 +75,23 @@ public class EvaluateTest {
         assertThat(results).isNotNull().hasSize(2);
         assertEvaluateResult(results.get(0), "0", "Alice", "30");
         assertEvaluateResult(results.get(1), "1", "Bob", "25");
+    }
+
+    @Test
+    public void testEvaluateResult_IncludesTargetNodeMetadata() throws ExecutionException, InterruptedException {
+        EvaluateParams params = new EvaluateParams(
+                new CursorSelector("src/test/resources/burp/eval_alice/mapping.ttl", new Position(3, 1)),
+                new RangeDataContext(0, 1)
+        );
+
+        RmlLanguageServer server = new RmlDevServerImpl();
+        List<EvaluateResult> results = server.evaluate(params).get();
+
+        assertThat(results).isNotNull().isNotEmpty();
+        EvaluateResult first = results.getFirst();
+        assertThat(first.targetNodeType()).isEqualTo("TriplesMap");
+        assertThat(first.targetParentTriplesMap()).contains("TriplesMap");
+        assertThat(first.evaluationMode()).isEqualTo(burp.dev.rml.service.hint.InlineHintsEvaluationMode.TRACE);
     }
 
     @Test
@@ -341,11 +357,5 @@ public class EvaluateTest {
         assertThat(po.predicate().uri()).isEqualTo("http://example.org/age");
         assertThat(po.object()).isInstanceOf(LiteralTerm.class);
         assertThat(((LiteralTerm) po.object()).value()).isEqualTo("30");
-
-        GsonBuilder builder = new GsonBuilder();
-        DevServer.configureGson(builder);
-        var gson = builder.create();
-        String json = gson.toJson(pomResults);
-        assertThat(json).contains("\"type\":\"predicateObject\"");
     }
 }

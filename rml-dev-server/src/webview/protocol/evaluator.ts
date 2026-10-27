@@ -18,6 +18,7 @@ export type EvaluatorToWebviewMessage =
 export type EvaluatorFromWebviewMessage =
     | { command: 'ready'; }
     | { command: 'refresh'; }
+    | { command: 'stepInlineIteration'; delta: number; }
     | { command: 'fetchDependencies'; }
     | { command: 'runEvaluation'; dataContext: TypedDataContext; }
     | TelemetryFromWebviewMessage;

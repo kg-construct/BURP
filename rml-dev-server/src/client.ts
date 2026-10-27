@@ -1,7 +1,7 @@
 import * as net from 'net';
 import * as vscode from 'vscode';
 import * as rpc from 'vscode-jsonrpc/node';
-import { getConfiguration } from './config';
+import {getConfiguration} from './config';
 import {
     EvaluateParams,
     EvaluateResult,
@@ -9,14 +9,16 @@ import {
     ExecuteResult,
     InlineEvaluateItem,
     InlineEvaluateParams,
-    SourceDataParams,
-    SourceDataResult,
     PlanParams,
     PlanResult,
     QuadChunkNotification,
     ReferenceDependency,
     ReferencesDependenciesParams,
     RmlDiagnostic,
+    SourceDataParams,
+    SourceDataResult,
+    StepInlineIterationParams,
+    StepInlineIterationResult,
     TraceIterationParams,
     TraceParams,
     TraceResult,
@@ -97,7 +99,9 @@ export class RmlDevClient {
                                     autoStart: config.get<boolean>('server.autoStart', true)
                                 },
                                 inlineHints: {
-                                    enableEvaluation: config.get<boolean>('inlineHints.enableEvaluation', true)
+                                    enableEvaluation: config.get<boolean>('inlineHints.enableEvaluation', true),
+                                    evaluationMode: config.get<string>('inlineHints.evaluationMode', 'trace'),
+                                    joinIndexLimit: config.get<number>('inlineHints.joinIndexLimit', 1000)
                                 },
                                 iterationSampleLimit: config.get<number | null>('iterationSampleLimit', 20),
                                 graph: {
@@ -136,7 +140,9 @@ export class RmlDevClient {
                             rml: {
                                 baseIRI: config.baseIRI,
                                 inlineHints: {
-                                    enableEvaluation: config.inlineHintsEnableEvaluation
+                                    enableEvaluation: config.inlineHintsEnableEvaluation,
+                                    evaluationMode: config.inlineHintsEvaluationMode,
+                                    joinIndexLimit: config.inlineHintsJoinIndexLimit
                                 },
                                 iterationSampleLimit: config.iterationSampleLimit
                             }
@@ -151,7 +157,9 @@ export class RmlDevClient {
                             rml: {
                                 baseIRI: config.baseIRI,
                                 inlineHints: {
-                                    enableEvaluation: config.inlineHintsEnableEvaluation
+                                    enableEvaluation: config.inlineHintsEnableEvaluation,
+                                    evaluationMode: config.inlineHintsEvaluationMode,
+                                    joinIndexLimit: config.inlineHintsJoinIndexLimit
                                 },
                                 iterationSampleLimit: config.iterationSampleLimit
                             }
@@ -301,6 +309,10 @@ export class RmlDevClient {
 
     public async inlineEvaluate(params: InlineEvaluateParams): Promise<InlineEvaluateItem[]> {
         return this.sendRpcRequest<InlineEvaluateItem[]>('rml/inlineEvaluate', params);
+    }
+
+    public async stepInlineIteration(params: StepInlineIterationParams): Promise<StepInlineIterationResult> {
+        return this.sendRpcRequest<StepInlineIterationResult>('rml/stepInlineIteration', params);
     }
 
     public async inlayHint(params: { textDocument: { uri: string }; range: { start: { line: number; character: number }; end: { line: number; character: number } } }): Promise<any[]> {

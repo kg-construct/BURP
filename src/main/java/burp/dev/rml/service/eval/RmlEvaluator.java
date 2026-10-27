@@ -1,7 +1,10 @@
 package burp.dev.rml.service.eval;
 
 import burp.dev.rml.service.MappingWorkspace;
+import burp.dev.rml.service.RmlEvaluationResultFormatter;
 import burp.dev.rml.service.cache.DevServerCache;
+import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
+import burp.dev.rml.service.selector.CursorSelector;
 import burp.ls.JSONSourceRFC;
 import burp.ls.LogicalSourceProvider;
 import burp.model.*;
@@ -13,6 +16,7 @@ import burp.reporting.BurpException;
 import burp.reporting.RmlError;
 import kotlinx.serialization.json.*;
 import org.apache.jena.rdf.model.Resource;
+import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -80,17 +84,26 @@ public class RmlEvaluator {
                 return CompletableFuture.completedFuture(List.of(errResult));
             }
 
-            Map<String, String> prefixMap = resolved.mappingDocument().prefixMap != null
-                    ? resolved.mappingDocument().prefixMap
-                    : Collections.emptyMap();
+            String fileUri = params.structure() != null ? params.structure().mappingFileUri() : null;
+            Map<String, String> prefixMap = (fileUri != null && !workspace.getPrefixMap(fileUri).isEmpty())
+                    ? workspace.getPrefixMap(fileUri)
+                    : (resolved.mappingDocument().prefixMap != null ? resolved.mappingDocument().prefixMap : Collections.emptyMap());
             String baseIri = resolveBaseIri(resolved.targetNode(), workspace.getBaseIri());
             EvaluationContext context = EvaluationContext.createDefault().withBaseIri(baseIri).withValidationMode(LENIENT);
 
             Map<AbstractLogicalSource, List<Iteration>> allSourceIterations = new HashMap<>();
+            Integer joinLimit = workspace.getJoinIndexLimit();
+            EvaluationDataContext parentDataContext = (joinLimit != null && joinLimit > 0)
+                    ? new RangeDataContext(0, joinLimit)
+                    : new AllDataContext();
+
             for (TriplesMap tm : resolved.mappingDocument().triplesMaps) {
                 if (tm.logicalSource != null && !allSourceIterations.containsKey(tm.logicalSource)) {
                     try {
-                        var resolvedIters = resolveIterations(params.dataContext(), tm.logicalSource);
+                        EvaluationDataContext srcContext = (params.dataContext() instanceof MultiSourceDataContext || tm.logicalSource == targetSource)
+                                ? params.dataContext()
+                                : parentDataContext;
+                        var resolvedIters = resolveIterations(srcContext, tm.logicalSource);
                         allSourceIterations.put(tm.logicalSource, resolvedIters);
                     } catch (Exception ignored) {
                     }
@@ -126,18 +139,57 @@ public class RmlEvaluator {
                 context = context.withJoinIndexes(joinIndexes);
             }
 
+            Position cursorPosition = params.structure() instanceof CursorSelector cs ? cs.position() : null;
+            var resolution = CoherentIterationResolver.resolve(
+                    resolved.mappingDocument(),
+                    params.dataContext(),
+                    null,
+                    resolved.targetNode(),
+                    cursorPosition,
+                    this,
+                    workspace.getInlineHintsEvaluationMode(),
+                    workspace.getJoinIndexLimit(),
+                    allSourceIterations,
+                    prefixMap,
+                    baseIri
+            );
+            List<String> traceSummary = resolution.traceSummary();
+
             PlanNode targetNode = resolved.targetNode();
             AstKey targetKey = cache != null ? targetNode.getAstKey() : null;
+
+            TriplesMap enclosingTm = null;
+            PlanNode curr = targetNode;
+            while (curr != null) {
+                if (curr instanceof TriplesMap tm) {
+                    enclosingTm = tm;
+                    break;
+                }
+                curr = curr.getParent();
+            }
+            String targetNodeType = targetNode.getClass().getSimpleName();
+            String targetParentTriplesMap = null;
+            if (enclosingTm != null) {
+                String raw = PlanNode.resourceToIriOrBNode(enclosingTm.getIri());
+                targetParentTriplesMap = RmlEvaluationResultFormatter.compactIri(raw, prefixMap);
+            }
+            String targetNodeSummary = computeNodeSummary(targetNode, prefixMap);
+            InlineHintsEvaluationMode evalMode = workspace.getInlineHintsEvaluationMode();
+
+            if (iterations.isEmpty()) {
+                EvaluateResult emptyResult = new EvaluateResult("0", "", Collections.emptyList(), Collections.emptyList(), null, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode);
+                return CompletableFuture.completedFuture(List.of(emptyResult));
+            }
             List<EvaluateResult> results = new ArrayList<>(iterations.size());
             for (int i = 0; i < iterations.size(); i++) {
                 Iteration iter = iterations.get(i);
                 int index = iter.getId() != null ? iter.getId().index() : i;
-                results.add(evaluateIteration(targetNode, targetKey, iter, index, context, prefixMap));
+                results.add(evaluateIteration(targetNode, targetKey, iter, index, context, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode));
             }
             return CompletableFuture.completedFuture(results);
         } catch (Exception e) {
             String errMsg = e.getMessage() != null ? e.getMessage() : e.toString();
-            EvaluateResult errResult = new EvaluateResult("0", "", Collections.emptyList(), List.of(errMsg), null, Collections.emptyMap());
+            EvaluateResult errResult = new EvaluateResult("0", "", Collections.emptyList(), List.of(errMsg), null, Collections.emptyMap(), null, null, null, null, null);
             return CompletableFuture.completedFuture(List.of(errResult));
         }
     }
@@ -302,16 +354,9 @@ public class RmlEvaluator {
     }
 
     /**
-     * Evaluates a single iteration for a target plan node and packages the evaluation result.
+     * Evaluates a single iteration for a target plan node with AST cache key, trace summary, and target node metadata.
      */
-    public EvaluateResult evaluateIteration(PlanNode targetNode, @Nullable Iteration iter, int index, EvaluationContext context, Map<String, String> prefixMap) {
-        return evaluateIteration(targetNode, null, iter, index, context, prefixMap);
-    }
-
-    /**
-     * Evaluates a single iteration for a target plan node with an optional AST cache key.
-     */
-    public EvaluateResult evaluateIteration(PlanNode targetNode, @Nullable AstKey targetKey, @Nullable Iteration iter, int index, EvaluationContext context, Map<String, String> prefixMap) {
+    public EvaluateResult evaluateIteration(PlanNode targetNode, @Nullable AstKey targetKey, @Nullable Iteration iter, int index, EvaluationContext context, Map<String, String> prefixMap, @Nullable List<String> traceSummary, @Nullable String targetNodeType, @Nullable String targetParentTriplesMap, @Nullable String targetNodeSummary, @Nullable InlineHintsEvaluationMode evaluationMode) {
         String iterationId = String.valueOf(index);
         String iterationData = iter != null ? iter.asString() : "";
         List<RmlEvaluationResult> results = evaluateNodeSafe(targetNode, targetKey, iter, context);
@@ -320,7 +365,57 @@ public class RmlEvaluator {
                 context.report().getErrors().stream().map(RmlError::message).toList() :
                 Collections.emptyList();
 
-        return new EvaluateResult(iterationId, iterationData, results, diagnostics, null, prefixMap);
+        return new EvaluateResult(iterationId, iterationData, results, diagnostics, null, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evaluationMode);
+    }
+
+    private @Nullable String computeNodeSummary(@Nullable PlanNode node, @Nullable Map<String, String> prefixMap) {
+        if (node == null) {
+            return null;
+        }
+        List<String> parts = new ArrayList<>();
+        for (PlanNodeAttribute attr : node.nodeAttributes()) {
+            if ("termType".equals(attr.key())) {
+                continue;
+            }
+            String val = attr.value();
+            if (val != null && !val.isBlank()) {
+                if (prefixMap != null) {
+                    val = RmlEvaluationResultFormatter.compactIri(val, prefixMap);
+                }
+                parts.add(attr.key() + ": " + val);
+            }
+        }
+        for (PlanNodeReference ref : node.nodeReferences()) {
+            PlanNode target = ref.target();
+            String targetResource = PlanNode.resourceToIriOrBNode(target.getIri());
+            String targetLabel = targetResource != null && prefixMap != null
+                    ? RmlEvaluationResultFormatter.compactIri(targetResource, prefixMap)
+                    : (targetResource != null ? targetResource : PlanNodeIdRegistry.getId(target));
+            parts.add(ref.role() + ": " + targetLabel);
+        }
+        if (node instanceof ReferencingObjectMap rom && !rom.joinConditions.isEmpty()) {
+            for (JoinCondition jc : rom.joinConditions) {
+                List<String> jcParts = new ArrayList<>();
+                for (PlanNodeAttribute jcAttr : jc.nodeAttributes()) {
+                    jcParts.add(jcAttr.key() + "=" + jcAttr.value());
+                }
+                if (!jcParts.isEmpty()) {
+                    parts.add(String.join(", ", jcParts));
+                }
+            }
+        }
+        if (parts.isEmpty()) {
+            for (PlanNodeAttribute attr : node.nodeAttributes()) {
+                String val = attr.value();
+                if (val != null && !val.isBlank()) {
+                    if (prefixMap != null) {
+                        val = RmlEvaluationResultFormatter.compactIri(val, prefixMap);
+                    }
+                    parts.add(attr.key() + ": " + val);
+                }
+            }
+        }
+        return parts.isEmpty() ? null : String.join(", ", parts);
     }
 
     /**

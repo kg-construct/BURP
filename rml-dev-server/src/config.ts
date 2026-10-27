@@ -9,6 +9,8 @@ export interface RmlConfiguration {
     autoStart: boolean;
     baseIRI: string;
     inlineHintsEnableEvaluation: boolean;
+    inlineHintsEvaluationMode: 'trace' | 'independentEvaluation';
+    inlineHintsJoinIndexLimit: number | null;
     graphBackgroundMethod: string;
     nodeBackground: boolean;
     nodeBackgroundAll: boolean;
@@ -27,6 +29,8 @@ export function getConfiguration(): RmlConfiguration {
         autoStart: config.get<boolean>('server.autoStart', true),
         baseIRI: config.get<string>('baseIRI', 'http://example.org/'),
         inlineHintsEnableEvaluation: config.get<boolean>('inlineHints.enableEvaluation', true),
+        inlineHintsEvaluationMode: config.get<'trace' | 'independentEvaluation'>('inlineHints.evaluationMode', 'trace'),
+        inlineHintsJoinIndexLimit: config.get<number | null>('inlineHints.joinIndexLimit', 1000),
         graphBackgroundMethod: config.get<string>('graph.backgroundMethod', 'smoothHull'),
         nodeBackground: config.get<boolean>('nodeBackground', false),
         nodeBackgroundAll: config.get<boolean>('nodeBackgroundAll', false),

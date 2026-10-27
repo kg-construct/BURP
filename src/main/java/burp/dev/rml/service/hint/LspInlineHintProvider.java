@@ -1,8 +1,8 @@
 package burp.dev.rml.service.hint;
 
 import burp.dev.rml.service.MappingWorkspace;
+import burp.dev.rml.service.eval.EvaluationDataContext;
 import burp.dev.rml.service.eval.InlineEvaluateItem;
-import burp.dev.rml.service.eval.RangeDataContext;
 import burp.dev.rml.service.eval.InlineEvaluator;
 import burp.dev.rml.service.eval.RmlEvaluator;
 import org.eclipse.lsp4j.*;
@@ -53,8 +53,20 @@ public class LspInlineHintProvider {
             addHints(hints, parameterHintProvider.extractInlayHints(mappingDocument, prefixMap), seenPositions);
 
             if (workspace.isInlineHintsEvaluationEnabled()) {
-                List<InlineEvaluateItem> items = inlineEvaluator.evaluateItems(mappingDocument, new RangeDataContext(0, 1), null, evaluator, workspace.getBaseIri(), prefixMap);
-                addHints(hints, extractEvaluationHints(items), seenPositions);
+                EvaluationDataContext docContext = workspace.getInlineDataContext(mappingFileUri);
+                Position cursor = workspace.getCursorPosition(mappingFileUri);
+                List<InlineEvaluateItem> items = inlineEvaluator.evaluateItems(
+                        mappingDocument,
+                        docContext,
+                        null,
+                        cursor,
+                        evaluator,
+                        workspace.getBaseIri(),
+                        prefixMap,
+                        workspace.getInlineHintsEvaluationMode(),
+                        workspace.getJoinIndexLimit()
+                );
+                addHints(hints, extractEvaluationHints(items, prefixMap), seenPositions);
             }
 
             return CompletableFuture.completedFuture(hints);
@@ -75,7 +87,7 @@ public class LspInlineHintProvider {
         }
     }
 
-    private List<InlayHint> extractEvaluationHints(List<InlineEvaluateItem> items) {
+    private List<InlayHint> extractEvaluationHints(List<InlineEvaluateItem> items, @Nullable Map<String, String> prefixMap) {
         List<InlayHint> hints = new ArrayList<>();
         for (InlineEvaluateItem item : items) {
             Range range = item.originRange();
@@ -92,8 +104,14 @@ public class LspInlineHintProvider {
             hint.setKind(InlayHintKind.Type);
 
             StringBuilder sb = new StringBuilder();
-            sb.append("**").append(item.type()).append(" Evaluation** (`").append(item.id()).append("`):\n```turtle\n")
-                    .append(display).append("\n```");
+            sb.append("**").append(item.type()).append(" Evaluation** (`").append(item.id()).append("`)\n");
+            String explanation = item.iterationReason() != null ? item.iterationReason().format(prefixMap) : null;
+            if (explanation != null) {
+                sb.append("*Iteration #").append(item.iterationIndex()).append(" (").append(explanation).append(")*\n");
+            } else {
+                sb.append("*Iteration #").append(item.iterationIndex()).append("*\n");
+            }
+            sb.append("```turtle\n").append(display).append("\n```");
             if (rawDisplay != null && !rawDisplay.equals(display)) {
                 sb.append("\n*Full Term*: `").append(rawDisplay).append("`");
             }

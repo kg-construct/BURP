@@ -16,6 +16,7 @@ import {SourceDataManager} from './ui/sourceDataManager';
 import {StructureViewProvider} from './ui/structureView';
 import {TraceProvider} from './ui/traceProvider';
 import {ValidationManager} from './validationManager';
+import {TypedDataContext} from './dataContext';
 import {telemetry} from './telemetry';
 
 let serverController: ServerController | null = null;
@@ -135,13 +136,69 @@ export async function activate(context: vscode.ExtensionContext) {
         })
     );
 
+    // Navigation commands
+    context.subscriptions.push(
+        vscode.commands.registerCommand('rml.nextInlineIteration', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || !client.isConnected()) {
+                return;
+            }
+            try {
+                const res = await client.stepInlineIteration({
+                    structure: {
+                        mappingFileUri: editor.document.uri.toString(),
+                        position: {line: editor.selection.active.line, character: editor.selection.active.character}
+                    } as any,
+                    delta: 1
+                });
+                const newContext: TypedDataContext = {
+                    type: 'range',
+                    startIndex: res.activeIterationIndex,
+                    endIndex: res.activeIterationIndex
+                };
+                inlayHintsProvider.setDataContext(newContext);
+                evaluatorViewProvider.setDataContext(newContext);
+            } catch (err) {
+                console.error('Failed to step next inline iteration:', err);
+            }
+        }),
+        vscode.commands.registerCommand('rml.previousInlineIteration', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || !client.isConnected()) {
+                return;
+            }
+            try {
+                const res = await client.stepInlineIteration({
+                    structure: {
+                        mappingFileUri: editor.document.uri.toString(),
+                        position: {line: editor.selection.active.line, character: editor.selection.active.character}
+                    } as any,
+                    delta: -1
+                });
+                const newContext: TypedDataContext = {
+                    type: 'range',
+                    startIndex: res.activeIterationIndex,
+                    endIndex: res.activeIterationIndex
+                };
+                inlayHintsProvider.setDataContext(newContext);
+                evaluatorViewProvider.setDataContext(newContext);
+            } catch (err) {
+                console.error('Failed to step previous inline iteration:', err);
+            }
+        })
+    );
+
     // Configuration updates
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             if (e.affectsConfiguration('rml.nodeBackgroundAll')) {
                 nodeHighlightManager?.update(vscode.window.activeTextEditor);
             }
-            if (e.affectsConfiguration('rml.baseIRI') || e.affectsConfiguration('rml.iterationSampleLimit') || e.affectsConfiguration('rml')) {
+            if (e.affectsConfiguration('rml.baseIRI') || e.affectsConfiguration('rml.iterationSampleLimit')
+                || e.affectsConfiguration('rml.inlineHints.enableEvaluation')
+                || e.affectsConfiguration('rml.inlineHints.evaluationMode')
+                || e.affectsConfiguration('rml.inlineHints.joinIndexLimit')
+                || e.affectsConfiguration('rml')) {
                 const config = getConfiguration();
                 if (client.isConnected()) {
                     await client.didChangeConfiguration({
@@ -149,7 +206,9 @@ export async function activate(context: vscode.ExtensionContext) {
                             rml: {
                                 baseIRI: config.baseIRI,
                                 inlineHints: {
-                                    enableEvaluation: config.inlineHintsEnableEvaluation
+                                    enableEvaluation: config.inlineHintsEnableEvaluation,
+                                    evaluationMode: config.inlineHintsEvaluationMode,
+                                    joinIndexLimit: config.inlineHintsJoinIndexLimit
                                 },
                                 iterationSampleLimit: config.iterationSampleLimit
                             }
@@ -163,7 +222,9 @@ export async function activate(context: vscode.ExtensionContext) {
                     validationManager.runValidation(editor.document);
                 }
             }
-            if (e.affectsConfiguration('rml.inlineHints.enableEvaluation')) {
+            if (e.affectsConfiguration('rml.inlineHints.enableEvaluation')
+                || e.affectsConfiguration('rml.inlineHints.evaluationMode')
+                || e.affectsConfiguration('rml.inlineHints.joinIndexLimit')) {
                 inlayHintsProvider.refresh();
             }
         })
