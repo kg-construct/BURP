@@ -1,0 +1,51 @@
+@prefix ex: <http://example.com/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix grel: <http://users.ugent.be/~bjdmeest/function/grel.ttl#> .
+@prefix idlab-fn: <https://w3id.org/imec/idlab/function#> .
+
+ex:TriplesMap1 a rml:TriplesMap ;
+    rml:logicalSource [ a rml:LogicalSource ;
+        rml:source [ a rml:RelativePathSource ;
+            rml:root rml:MappingDirectory ;
+            rml:path "student.csv"
+        ] ;
+        rml:referenceFormulation rml:CSV
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/student/{id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:roles ;
+        rml:objectMap [
+            rml:gather (
+                [
+                    rml:condition [
+                        rml:functionExecution [
+                            rml:function idlab-fn:equal ;
+                            rml:input [
+                                rml:parameterMap [ rml:constant grel:valueParam ] ;
+                                rml:inputValueMap [ rml:reference "role" ]
+                            ] , [
+                                rml:parameter grel:valueParam2 ;
+                                rml:inputValue "admin"
+                            ]
+                        ] ;
+                        rml:return idlab-fn:_boolOut
+                    ] ;
+                    rml:functionExecution [
+                        rml:function grel:toUpperCase ;
+                        rml:input [
+                            rml:parameter grel:valueParam ;
+                            rml:inputValueMap [ rml:reference "role" ]
+                        ]
+                    ]
+                ]
+                [
+                    rml:template "{name}";
+                    rml:termType rml:Literal;
+                ]
+            ) ;
+            rml:gatherAs rdf:List
+        ]
+    ] .

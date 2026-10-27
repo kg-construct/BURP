@@ -11,7 +11,7 @@ import burp.vocabularies.RER;
 import burp.vocabularies.RML;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -25,11 +25,19 @@ public class LogicalSourceFactory {
     private LogicalSourceFactory() {}
 
     public static LogicalSource create(Resource ls, Path mappingDirectory, Path currentWorkingDirectory) {
+        return create(ls, RmlLogicalSourceContext.of(mappingDirectory, currentWorkingDirectory));
+    }
+
+    public static LogicalSource create(Resource ls, @NonNull RmlLogicalSourceContext context) {
         Statement stmt = ls.getProperty(RML.referenceFormulation);
         Resource referenceFormulation = stmt.getObject().asResource();
         for (LogicalSourceProvider provider : LOADER) {
             if (provider.supports(referenceFormulation)) {
-                return provider.create(ls, mappingDirectory, currentWorkingDirectory);
+                LogicalSource source = provider.create(ls, context);
+                if (source != null && source.subject == null) {
+                    source.subject = ls;
+                }
+                return source;
             }
         }
 
@@ -49,8 +57,8 @@ public class LogicalSourceFactory {
     }
 
     public static List<Iteration> changeIterator(
-        @NotNull String iterationAsString,
-        @NotNull Resource referenceFormulation,
+        @NonNull String iterationAsString,
+        @NonNull Resource referenceFormulation,
         String iterator,
         Origin referenceFormulationOrigin
     ) {

@@ -1,0 +1,19 @@
+@prefix ex: <http://example.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+
+ex:TM a rml:TriplesMap ;
+    rml:baseIRI <http://example.com/base/> ;
+    rml:logicalSource [
+        rml:source [ a rml:RelativePathSource ; rml:root rml:MappingDirectory ; rml:path "data.json" ] ;
+        rml:referenceFormulation rml:JSONPath ;
+        rml:iterator "$[*]"
+    ] ;
+    rml:subjectMap [
+        rml:template "relative/person"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:name ;
+        rml:objectMap [
+            rml:reference "$.name"
+        ]
+    ] .

@@ -1,23 +1,37 @@
 package burp.model;
 
+import burp.model.context.EvaluationContext;
+import burp.model.key.AstKey;
+import burp.parse.loader.annotations.RdfId;
+import burp.parse.loader.annotations.RdfProperty;
+import burp.parse.loader.annotations.RdfShortcutProperty;
+import burp.parse.loader.annotations.RdfType;
+import burp.vocabularies.Rml;
+import org.apache.jena.rdf.model.Resource;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import burp.reporting.Origin;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class JoinCondition implements PlanNode, ReferenceHolder {
-    public ConcreteExpressionMap parentMap;
-    public ConcreteExpressionMap childMap;
-
-    private PlanNode parent = null;
-
-    @Override
-    public PlanNode getParent() {
-        return parent;
-    }
+@RdfType(Rml.JoinCondition)
+public class JoinCondition extends AbstractPlanNode {
+    @RdfId
+    public Resource subject;
 
     @Override
-    public void setParent(PlanNode parent) {
-        this.parent = parent;
+    public @NonNull Resource getIri() {
+        return subject;
     }
+    @RdfProperty(Rml.parentMap)
+    @RdfShortcutProperty(shortcutUri = Rml.parent, targetProperty = Rml.reference)
+    public ParentMap parentMap;
+
+    @RdfProperty(Rml.childMap)
+    @RdfShortcutProperty(shortcutUri = Rml.child, targetProperty = Rml.reference)
+    public ChildMap childMap;
 
     @Override
     public Iterable<PlanNode> children() {
@@ -33,23 +47,38 @@ public class JoinCondition implements PlanNode, ReferenceHolder {
     }
 
     @Override
-    public void compileReferences() {
-        ParentJoinReferenceScope parentScope = ancestor(ParentJoinReferenceScope.class);
-        if (parentScope != null && parentMap != null) {
-            for (RawReference ref : parentMap.descendants(RawReference.class).toList()) {
-                if (ref.getReference() != null && ref.getCompiledReference() == null) {
-                    ref.setCompiledReference(parentScope.buildParentJoinReference(ref.getReference(), ref.getOrigin()));
-                }
-            }
+    public void collectAttributes(AttributeCollector sink) {
+        if (childMap != null && childMap.expression != null) {
+            Origin orig = childMap.originOf("reference");
+            if (orig == null) orig = originOf("childMap");
+            String val = childMap.expression instanceof Reference r && r.getReference() != null
+                    ? r.getReference()
+                    : childMap.expression.toString();
+            sink.put("child", val, orig);
         }
-        
-        LocalReferenceScope localScope = ancestor(LocalReferenceScope.class);
-        if (localScope != null && childMap != null) {
-            for (RawReference ref : childMap.descendants(RawReference.class).toList()) {
-                if (ref.getReference() != null && ref.getCompiledReference() == null) {
-                    ref.setCompiledReference(localScope.buildLocalReference(ref.getReference(), ref.getOrigin()));
-                }
-            }
+        if (parentMap != null && parentMap.expression != null) {
+            Origin orig = parentMap.originOf("reference");
+            if (orig == null) orig = originOf("parentMap");
+            String val = parentMap.expression instanceof Reference r && r.getReference() != null
+                    ? r.getReference()
+                    : parentMap.expression.toString();
+            sink.put("parent", val, orig);
         }
+    }
+
+    @Override
+    public List<RmlEvaluationResult> evaluateNode(@Nullable Iteration iter, @NonNull EvaluationContext context) {
+        //TODO Good question what is the result of a join condition ?
+        //  booleans, pairs of matches, both ?
+        //  how to provide the iterations as we need multiple here.
+        return Collections.emptyList();
+    }
+
+    @Override
+    public AstKey computeAstKey() {
+        List<AstKey> childKeys = new ArrayList<>();
+        if (childMap != null) childKeys.add(childMap.getAstKey());
+        if (parentMap != null) childKeys.add(parentMap.getAstKey());
+        return new AstKey.JoinConditionKey(childKeys);
     }
 }

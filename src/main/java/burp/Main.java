@@ -1,9 +1,12 @@
 package burp;
 
+import burp.dev.DevServer;
 import burp.model.*;
+import burp.model.context.EvaluationContext;
 import burp.model.rdf.*;
-import burp.parse.Parse;
-import burp.parse.PlanWiring;
+import burp.parse.RmlLoader;
+import burp.processor.ExecutionOptions;
+import burp.processor.RmlProcessor;
 import burp.reporting.*;
 import burp.util.BURPConfiguration;
 import burp.util.Util;
@@ -33,7 +36,6 @@ public class Main {
     public static void main(String[] args) {
         Path cwd = Paths.get("").toAbsolutePath();
         int exit = doMain(args, cwd);
-        System.out.println("System exiting with code: " + exit);
         System.exit(exit);
     }
 
@@ -55,54 +57,113 @@ public class Main {
             return 1;
         }
 
+        if (conf.isDevServer()) {
+            return DevServer.runServerMode(conf);
+        }
+
+        List<String> mappingFiles = conf.mappingFiles;
+        if (mappingFiles.isEmpty()) {
+            System.err.println("Error: Missing required option: '--mappingFile=<mappingFile>'");
+            cmd.usage(System.err);
+            return 1;
+        }
+
+        if (conf.validate) {
+            return doValidate(conf, currentWorkingDirectory);
+        }
+
         return doMain(
-                conf.mappingFile,
+                mappingFiles,
                 conf.outputFile,
                 conf.getOutputFormat(),
                 conf.reportFile,
                 conf.baseIRI,
-                currentWorkingDirectory
+                currentWorkingDirectory,
+                conf.color
         );
     }
 
-    public static RmlExecutionReport report;
-    public static String baseIRI;
-    public static Path mappingFile;
+    public static int doValidate(BURPConfiguration conf, Path currentWorkingDirectory) {
+        RmlExecutionReport report = new RmlExecutionReport();
+        List<String> mappingFiles = conf.getEffectiveMappingFiles();
+        List<Path> mappingPaths = mappingFiles.stream().map(Path::of).toList();
+        boolean conforms;
+        try {
+            RmlLoader loader = new RmlLoader(mappingPaths)
+                    .withCurrentDirectory(currentWorkingDirectory)
+                    .withReport(report);
+            loader.loadMappingDocument();
+            conforms = report.getErrors().isEmpty();
+        } catch (BurpException e) {
+            conforms = false;
+        }
+
+        boolean useColors = conf.color != null ? conf.color : FileHighlight.hasColorSupport();
+        System.out.print(PlainTextReportGenerator.generateTextReport(report, useColors));
+
+        if (conf.reportFile != null && !conf.reportFile.isBlank()) {
+            RdfReportGenerator.generateRdfReport(report, conf.reportFile);
+        }
+
+        return conforms ? 0 : 1;
+    }
+
+    public static void reportConfigurationError(String message, String reportFilePath, Exception cause) {
+        RmlExecutionReport report = new RmlExecutionReport();
+        RmlError error = new RmlError(message, null, RER.ConfigurationError, cause);
+        report.getErrors().add(error);
+
+        System.out.print(PlainTextReportGenerator.generateTextReport(report));
+        if (reportFilePath != null && !reportFilePath.isBlank()) {
+            RdfReportGenerator.generateRdfReport(report, reportFilePath);
+        }
+    }
 
     public static int doMain(
             String mappingFilePath,
             String outputFilePath,
             Lang outputFormat,
             String reportFilePath,
-            String baseIRIValue,
+            String baseIRI,
             Path currentWorkingDirectory
     ) {
-        report = new RmlExecutionReport();
-        baseIRI = baseIRIValue;
-        mappingFile = Path.of(mappingFilePath);
+        return doMain(List.of(mappingFilePath), outputFilePath, outputFormat, reportFilePath, baseIRI, currentWorkingDirectory, null);
+    }
+
+    public static int doMain(
+            String mappingFilePath,
+            String outputFilePath,
+            Lang outputFormat,
+            String reportFilePath,
+            String baseIRI,
+            Path currentWorkingDirectory,
+            @org.jspecify.annotations.Nullable Boolean color
+    ) {
+        return doMain(List.of(mappingFilePath), outputFilePath, outputFormat, reportFilePath, baseIRI, currentWorkingDirectory, color);
+    }
+
+    public static int doMain(
+            List<String> mappingFilePaths,
+            String outputFilePath,
+            Lang outputFormat,
+            String reportFilePath,
+            String baseIRI,
+            Path currentWorkingDirectory,
+            @org.jspecify.annotations.Nullable Boolean color
+    ) {
+        RmlExecutionReport report = new RmlExecutionReport();
+        List<Path> mappingFiles = mappingFilePaths.stream().map(Path::of).toList();
 
         try {
-            Parse parser = new Parse();
-            List<TriplesMap> triplesMaps;
-            try {
-                triplesMaps = parser.parseMappingFile(mappingFile, currentWorkingDirectory);
-            } catch (BurpException burpException) {
-                throw burpException;
-            } catch (Exception e) {
-                throw new BurpException(new RmlError(
-                        "Unknown Error while Parsing " + mappingFilePath,
-                        new Origin(),
-                        RER.RDFMappingSyntaxError,
-                        e
-                ));
-            }
+            RmlLoader loader = new RmlLoader(mappingFiles)
+                    .withCurrentDirectory(currentWorkingDirectory)
+                    .withReport(report);
+            MappingDocument document;
+            document = loader.loadMappingDocument();
+            List<TriplesMap> triplesMaps = document.triplesMaps;
             if (triplesMaps.isEmpty()) {
                 report.getErrors().add(Errors.NoTriplesMap());
             }
-
-            // Wire AST tree
-            MappingDocument document = new MappingDocument(triplesMaps);
-            PlanWiring.wire(document);
             report.setExecutionPlan(document);
 
             Map<TriplesMap, Long> statementsPerMap = new HashMap<>();
@@ -111,7 +172,13 @@ public class Main {
             }
             report.getStatistics().setGeneratedStatementPerTriplesMap(statementsPerMap);
 
-            List<RdfStatement> statements = document.generate();
+            EvaluationContext evalCtx = EvaluationContext.createDefault().withReport(report).withBaseIri(baseIRI);
+            RmlProcessor processor = new RmlProcessor();
+            ExecutionOptions options = ExecutionOptions.builder()
+                    .baseIri(baseIRI)
+                    .useCache(false)
+                    .build();
+            Map<LogicalTarget, List<RdfStatement>> statementsByTarget = processor.executeToStatements(document, options, evalCtx);
 
             statementsPerMap = new HashMap<>();
             for (TriplesMap map : triplesMaps) {
@@ -119,19 +186,7 @@ public class Main {
             }
             report.getStatistics().setGeneratedStatementPerTriplesMap(statementsPerMap);
 
-            List<RdfStatement> defaultStatements = new ArrayList<>();
-            Map<LogicalTarget, List<RdfStatement>> statementsByTarget = new HashMap<>();
-
-            for (RdfStatement stmtLike : statements) {
-                if (stmtLike == null) continue;
-                if (stmtLike.targets() == null || stmtLike.targets().isEmpty()) {
-                    defaultStatements.add(stmtLike);
-                } else {
-                    for (LogicalTarget target : stmtLike.targets()) {
-                        statementsByTarget.computeIfAbsent(target, k -> new ArrayList<>()).add(stmtLike);
-                    }
-                }
-            }
+            List<RdfStatement> defaultStatements = statementsByTarget.getOrDefault(LogicalTarget.DEFAULT, Collections.emptyList());
 
             // Write default statements if there are any, or if we have an explicit output file (to create an empty file if needed)
             if (!defaultStatements.isEmpty() || outputFilePath != null) {
@@ -141,50 +196,53 @@ public class Main {
 
                 if (outputFilePath != null) {
                     try (FileOutputStream output = new FileOutputStream(outputFilePath)) {
-                        writeStatements(output, defaultStatements, lang, StandardCharsets.UTF_8);
+                        writeStatements(output, defaultStatements, lang, StandardCharsets.UTF_8, report);
                     }
                 } else {
-                    writeStatements(System.out, defaultStatements, lang, StandardCharsets.UTF_8);
+                    writeStatements(System.out, defaultStatements, lang, StandardCharsets.UTF_8, report);
                 }
             }
 
             // Write target statements
             for (var entry : statementsByTarget.entrySet()) {
                 LogicalTarget target = entry.getKey();
+                if (target.isDefault()) continue;
                 List<RdfStatement> stmts = entry.getValue();
-                RMLTarget t = target.getTarget();
+                RMLTarget t = target.target;
                 if (t instanceof FilePathTarget fpt) {
-                    File resolvedPath;
-                    if (RML.MappingDirectory.equals(fpt.getRoot())) {
-                        resolvedPath = mappingFile.getParent().resolve(fpt.getPath()).toFile();
-                    } else {
-                        resolvedPath = currentWorkingDirectory.resolve(fpt.getPath()).toFile();
-                    }
+                    File resolvedPath = fpt.getResolvedPath(currentWorkingDirectory, mappingFiles.getFirst());
 
                     Lang targetLang = null;
-                    if (target.getSerialization() != null)
-                        targetLang = getTargetLang(target.getSerialization(), resolvedPath);
+                    if (target.serialization != null)
+                        targetLang = getTargetLang(target.serialization, resolvedPath);
                     if (targetLang == null) targetLang = RDFLanguages.pathnameToLang(resolvedPath.getName());
                     if (targetLang == null) targetLang = Lang.NQ;
 
                     Charset targetEncoding = StandardCharsets.UTF_8;
-                    if (target.getEncoding() != null)
-                        targetEncoding = getStandardCharsets(target.getEncoding());
+                    if (target.encoding != null)
+                        targetEncoding = getStandardCharsets(target.encoding);
 
-                    if (resolvedPath.getParentFile() != null)
-                        resolvedPath.getParentFile().mkdirs();
+                    if (resolvedPath.getParentFile() != null) {
+                        boolean directoryCreated = resolvedPath.getParentFile().mkdirs();
+                        if (!directoryCreated) {
+                            System.out.print("Could not create directory " + resolvedPath.getParentFile() + " for file " + resolvedPath + ".");
+                        }
+                    }
 
                     final Lang finalLang = targetLang;
                     final Charset finalEncoding = targetEncoding;
-                    Util.writeCompressedFile(resolvedPath, target.getCompression(), output -> writeStatements(output, stmts, finalLang, finalEncoding));
+                    Util.writeCompressedFile(resolvedPath, target.compression, output -> writeStatements(output, stmts, finalLang, finalEncoding, report));
                 }
             }
         } catch (BurpException e) {
-            report.getErrors().add(e.getError());
+            if (!report.getErrors().contains(e.getError())) {
+                report.getErrors().add(e.getError());
+            }
         } catch (Exception e) {
             report.getErrors().add(Errors.UnexpectedError(e));
         } finally {
-            System.out.print(PlainTextReportGenerator.generateTextReport(report));
+            boolean useColors = color != null ? color : FileHighlight.hasColorSupport();
+            System.out.print(PlainTextReportGenerator.generateTextReport(report, useColors));
             if (reportFilePath != null && !reportFilePath.isBlank()) {
                 RdfReportGenerator.generateRdfReport(report, reportFilePath);
             }
@@ -199,6 +257,7 @@ public class Main {
             case "http://www.w3.org/ns/formats/N-Triples" -> Lang.NT;
             case "http://www.w3.org/ns/formats/Turtle" -> Lang.TURTLE;
             case "http://www.w3.org/ns/formats/JSON-LD" -> Lang.JSONLD;
+            case "http://www.w3.org/ns/formats/N3" -> Lang.N3;
             case "http://www.w3.org/ns/formats/RDF_XML" -> Lang.RDFXML;
             case "http://www.w3.org/ns/formats/RDF_JSON" -> Lang.RDFJSON;
             case "http://www.w3.org/ns/formats/TriG" -> Lang.TRIG;
@@ -212,14 +271,16 @@ public class Main {
         return StandardCharsets.UTF_8;
     }
 
-    private static void writeStatements(OutputStream output, List<RdfStatement> statements, Lang lang, Charset encoding) {
+    private static void writeStatements(OutputStream output, List<RdfStatement> statements, Lang lang, Charset encoding, RmlExecutionReport report) {
         if (lang == Lang.NQ || lang == Lang.NT) {
             NQuadsWriter.write(output, statements, encoding);
-            report.getStatistics().setGeneratedStatements((long) statements.size());
+            if (report != null) {
+                report.getStatistics().setGeneratedStatements((long) statements.size());
+            }
             return;
         }
 
-        Dataset ds = generateDataset(statements);
+        Dataset ds = generateDataset(statements, report);
         if (RDFLanguages.isQuads(lang)) {
             RDFDataMgr.write(output, ds, lang);
         } else {
@@ -227,7 +288,7 @@ public class Main {
         }
     }
 
-    private static Dataset generateDataset(List<RdfStatement> statements) {
+    private static Dataset generateDataset(List<RdfStatement> statements, RmlExecutionReport report) {
         Dataset ds = DatasetFactory.create();
 
         Map<String, Resource> bnodeMap = new HashMap<>();
@@ -281,7 +342,9 @@ public class Main {
         while (names.hasNext()) {
             count += ds.getNamedModel(names.next()).size();
         }
-        report.getStatistics().setGeneratedStatements(count);
+        if (report != null) {
+            report.getStatistics().setGeneratedStatements(count);
+        }
 
         return ds;
     }

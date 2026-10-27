@@ -27,8 +27,9 @@ public class CSVReference extends Reference {
                 new RmlError(
                     "Attribute " + reference + " does not exist.\n" +
                     "Available references are: " + availableRefs,
-                    origin,
-                    RER.ReferenceFormulationExecutionError
+                    emitOrigin("reference"),
+                    RER.ReferenceFormulationExecutionError,
+                    this
                 )
             );
         }

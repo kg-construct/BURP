@@ -4,7 +4,7 @@ public class BurpException extends RuntimeException {
     private final RmlError error;
 
     public BurpException(RmlError error) {
-        super(error.getMessage());
+        super(error.message());
         this.error = error;
     }
 

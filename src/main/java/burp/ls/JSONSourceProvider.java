@@ -45,6 +45,17 @@ public class JSONSourceProvider implements LogicalSourceProvider {
         jsonSource.compression = FileBaseSourceProvider.getCompression(source);
         jsonSource.getNulls().addAll(FileBaseSourceProvider.getNullValues(source));
 
+        Resource jsonSchemaRes = ls.getPropertyResourceValue(burp.vocabularies.BURP.jsonSchema);
+        if (jsonSchemaRes != null) {
+            FileBaseSourceProvider.FileAndOrigin schemaFileAndOrigin = FileBaseSourceProvider.getFile(jsonSchemaRes, mappingDirectory, currentWorkingDirectory);
+            jsonSource.jsonSchemaFile = schemaFileAndOrigin.file;
+        } else {
+            var schemaStmt = ls.getProperty(burp.vocabularies.BURP.jsonSchema);
+            if (schemaStmt != null && schemaStmt.getObject().isLiteral()) {
+                jsonSource.jsonSchemaString = schemaStmt.getString();
+            }
+        }
+
         return jsonSource;
     }
 
@@ -61,8 +72,8 @@ public class JSONSourceProvider implements LogicalSourceProvider {
                         )
                 );
             }
-            JsonPath jsonPath = new JsonPath(
-                    iterator, new AntlrJsonPathCompiler(listener), s -> null
+            JsonPath jsonPath = JSONSourceRFC.createJsonPathSilently(
+                    iterator, listener, s -> null
             );
             List<NodeListEntry> results = jsonPath.query(jsonContent);
             List<Iteration> iterationList = new ArrayList<>();
@@ -85,7 +96,7 @@ public class JSONSourceProvider implements LogicalSourceProvider {
                     Origin errOrigin = referenceFormulationOrigin;
                     if (literalPart != null && firstError.start() != null) {
                         PointRange newRange = literalPart.objectRange().plus(new PointRange(firstError.start()));
-                        errOrigin = new Origin(referenceFormulationOrigin.planNode(), Collections.singletonList(new LiteralPart(literalPart.stmt(), newRange)));
+                        errOrigin = new Origin(Collections.singletonList(new LiteralPart(literalPart.stmt(), newRange)));
                     }
                     String displayMsg = "Syntax error in JSONPath `" + iterator + "`";
                     if (firstError.start() != null) {

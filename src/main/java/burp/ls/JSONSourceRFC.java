@@ -7,7 +7,6 @@ import at.asitplus.jsonpath.core.NodeListEntry;
 import at.asitplus.jsonpath.implementation.AntlrJsonPathCompiler;
 import at.asitplus.jsonpath.implementation.AntlrJsonPathCompilerErrorListener;
 import burp.model.Iteration;
-import burp.model.PlanNode;
 import burp.model.Reference;
 import burp.parse.turtleprov.Point;
 import burp.reporting.*;
@@ -27,6 +26,8 @@ import org.bson.json.JsonWriterSettings;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,6 +39,30 @@ import static java.util.stream.Collectors.joining;
 public class JSONSourceRFC extends FileBasedLogicalSource {
     public String iterator;
     public StatementParts iteratorOrigin;
+    public SourceFile jsonSchemaFile = null;
+    public String jsonSchemaString = null;
+
+
+
+    /**
+     * Compiles a JsonPath expression without polluting stderr with ANTLR's default ConsoleErrorListener messages.
+     * Errors are still captured into the provided errorListener.
+     */
+    public static JsonPath createJsonPathSilently(
+            String expression,
+            AntlrJsonPathCompilerErrorListener errorListener,
+            kotlin.jvm.functions.Function1<? super String, ? extends JsonPathFunctionExtension> functionExtensionRetriever
+    ) {
+        synchronized (System.err) {
+            PrintStream originalErr = System.err;
+            try {
+                System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+                return new JsonPath(expression, new AntlrJsonPathCompiler(errorListener), functionExtensionRetriever);
+            } finally {
+                System.setErr(originalErr);
+            }
+        }
+    }
 
     @Override
     public Iterable<Iteration> iterator() {
@@ -62,7 +87,7 @@ public class JSONSourceRFC extends FileBasedLogicalSource {
             CapturingErrorListener listener = new CapturingErrorListener();
             JsonPath jsonPath;
             try {
-                jsonPath = new JsonPath(iterator, new AntlrJsonPathCompiler(listener), JsonPath.Companion.getDefaultFunctionExtensionRepository()::getExtension);
+                jsonPath = createJsonPathSilently(iterator, listener, JsonPath.Companion.getDefaultFunctionExtensionRepository()::getExtension);
             } catch (Exception e) {
                 if (!listener.getErrors().isEmpty()) {
                     JSONPathError firstError = listener.getErrors().getFirst();
@@ -73,15 +98,17 @@ public class JSONSourceRFC extends FileBasedLogicalSource {
             }
             List<NodeListEntry> results = jsonPath.query(jsonContent);
 
+            String sourceId = getSourceIdentifier();
+            int rowIdx = 0;
             List<Iteration> iterationList = new ArrayList<>();
             for (NodeListEntry it : results) {
-                iterationList.add(new JSONIteration(it, getNulls()));
+                iterationList.add(new JSONIteration(new burp.model.IterationId(sourceId, rowIdx++), it, getNulls()));
             }
             return iterationList;
         } catch (BurpException burpException) {
             throw burpException;
         } catch (Exception exception) {
-            throw new BurpException(new RmlError("Error in JSON preparation of iterator.", new Origin(this, List.of(iteratorOrigin)), RER.LogicalSourceError, exception, null));
+            throw new BurpException(new RmlError("Error in JSON preparation of iterator.", new Origin(List.of(iteratorOrigin)), RER.LogicalSourceError, exception, this));
         }
     }
 
@@ -94,6 +121,41 @@ public class JSONSourceRFC extends FileBasedLogicalSource {
     public Reference buildExportedReference(String reference, Origin origin) {
         return new JSONPathReference(reference, origin);
     }
+
+    public static Iteration createJsonIteration(JsonElement json, Set<Object> nulls) {
+        try {
+            JsonPath jsonPath = createJsonPathSilently("$", new CapturingErrorListener(), s -> null);
+            List<NodeListEntry> results = jsonPath.query(json);
+            if (!results.isEmpty()) {
+                return new JSONIteration(results.getFirst(), nulls);
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    public static List<JSONPathError> validateJsonPath(@Nullable String path) {
+        if (path == null || path.isBlank()) {
+            return Collections.emptyList();
+        }
+        String effective = path.trim();
+        if (!effective.startsWith("$")) {
+            effective = "$." + effective;
+        }
+        CapturingErrorListener listener = new CapturingErrorListener();
+        try {
+            createJsonPathSilently(
+                    effective,
+                    listener,
+                    JsonPath.Companion.getDefaultFunctionExtensionRepository()::getExtension
+            );
+        } catch (Exception e) {
+            if (listener.getErrors().isEmpty()) {
+                String msg = e.getMessage() != null ? e.getMessage() : "Invalid JSONPath syntax";
+                listener.getErrors().add(new JSONPathError(null, msg, true));
+            }
+        }
+        return listener.getErrors();
+    }
 }
 
 class JSONPathReference extends Reference {
@@ -104,19 +166,26 @@ class JSONPathReference extends Reference {
         JsonPath cp = null;
         CapturingErrorListener listener = new CapturingErrorListener();
         try {
-            if (reference != null) {
-                cp = new JsonPath(reference, new AntlrJsonPathCompiler(listener), JsonPath.Companion.getDefaultFunctionExtensionRepository()::getExtension);
+            if (reference != null && !reference.isBlank()) {
+                cp = JSONSourceRFC.createJsonPathSilently(reference, listener, JsonPath.Companion.getDefaultFunctionExtensionRepository()::getExtension);
             }
+
         } catch (BurpException be) {
             throw be;
         } catch (Exception ex) {
+            RDFGraphPointer rdfPointer = (origin != null && origin.sourceStatements() != null)
+                    ? origin.sourceStatements().stream()
+                            .filter(RDFGraphPointer.class::isInstance)
+                            .map(RDFGraphPointer.class::cast)
+                            .findFirst()
+                            .orElse(null)
+                    : null;
             if (!listener.getErrors().isEmpty()) {
                 JSONPathError firstError = listener.getErrors().getFirst();
-                RDFGraphPointer rdfPointer = origin.sourceStatements().stream().map(it -> it instanceof RDFGraphPointer gp ? gp : null).filter(Objects::nonNull).findFirst().orElseGet(null);
                 var error = firstError.getRmlError(ex, reference, rdfPointer, this);
                 throw new BurpException(error);
             }
-            throw new BurpException(new RmlError("Unexpected Error in JSONPath preprocessing.", origin, RER.Error, ex));
+            throw new BurpException(new RmlError("Syntax error in JSONPath `" + reference + "`: " + ex.getMessage(), origin, RER.ReferenceFormulationSyntaxError, ex));
         }
         this.compiledPath = cp;
     }
@@ -135,8 +204,8 @@ class JSONPathReference extends Reference {
                 JsonElement jsonElement = entry.getValue();
                 switch (jsonElement) {
                     case JsonArray jsonElements ->
-                        // TODO In the future we may want to support cdt:List and cdt:Map.
-                            throw new BurpException(new RmlError("Data error: reference retrieved an array with `" + reference + "`", origin, RER.ReferenceFormulationExecutionError));
+                        // TODO In the future we may want to support cdt:List and cdt:Map and rdf:JSON.
+                            throw new BurpException(new RmlError("Data error: reference retrieved an array with `" + reference + "`", emitOrigin("reference"), RER.ReferenceFormulationExecutionError, this));
                     case JsonObject jsonObject -> resultList.add(jsonElement.toString());
                     case JsonNull jsonNull -> {
                         // ignore nulls
@@ -152,7 +221,7 @@ class JSONPathReference extends Reference {
         } catch (BurpException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new BurpException(new RmlError("Unexpected Error in JSONPath evaluation.", origin, RER.ReferenceFormulationExecutionError, ex));
+            throw new BurpException(new RmlError("Unexpected Error in JSONPath evaluation.", emitOrigin("reference"), RER.ReferenceFormulationExecutionError, ex, this));
         }
         return resultList;
     }
@@ -178,42 +247,22 @@ class JSONPathReference extends Reference {
 class JSONIteration extends Iteration {
     public final NodeListEntry json;
 
-    public JSONIteration(NodeListEntry json, Set<Object> nulls) {
-        super(nulls);
+    public JSONIteration(burp.model.OriginLineage lineage, NodeListEntry json, Set<Object> nulls) {
+        super(lineage, nulls);
         this.json = json;
+    }
+
+    public JSONIteration(burp.model.IterationId id, NodeListEntry json, Set<Object> nulls) {
+        this(id != null ? burp.model.OriginLineage.of(id) : null, json, nulls);
+    }
+
+    public JSONIteration(NodeListEntry json, Set<Object> nulls) {
+        this((burp.model.OriginLineage) null, json, nulls);
     }
 
     @Override
     public String asString() {
         return json.getValue().toString();
-    }
-}
-
-record JSONPathError(@Nullable Point start, @NonNull String message, boolean isSyntaxError) {
-    @NonNull RmlError getRmlError(@NonNull Exception compilerException, @Nullable String jsonPath, @NonNull RDFGraphPointer jsonPathPtr, @NonNull PlanNode planNode) {
-        Origin origin = new Origin(planNode, List.of(jsonPathPtr));
-        if (start != null) {
-            LiteralPart literalPart;
-            switch (jsonPathPtr) {
-                case LiteralPart lp -> literalPart = lp;
-                case StatementParts sp -> literalPart = sp.toLiteralPart();
-                default -> literalPart = null;
-            }
-
-            if (literalPart != null) {
-                PointRange newRange = literalPart.objectRange().plus(new PointRange(start));
-                var newRangeLiteralPart = new LiteralPart(literalPart.stmt(), newRange);
-                origin = new Origin(planNode, List.of(newRangeLiteralPart));
-            }
-        }
-
-        return new RmlError(
-                message,
-                origin,
-                isSyntaxError ? RER.ReferenceFormulationSyntaxError : RER.ReferenceFormulationExecutionError,
-                compilerException,
-                null
-        );
     }
 }
 

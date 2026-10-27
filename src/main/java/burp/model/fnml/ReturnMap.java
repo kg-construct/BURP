@@ -1,13 +1,15 @@
 package burp.model.fnml;
 
 import burp.model.TermMap;
+import burp.parse.loader.annotations.RdfType;
 import burp.vocabularies.RML;
+import burp.vocabularies.Rml;
 import org.apache.jena.rdf.model.Resource;
 import java.util.Set;
 
+@RdfType(Rml.ReturnMap)
 public class ReturnMap extends TermMap {
     public ReturnMap() {
-        this.termType = RML.IRI;
     }
 
     @Override

@@ -5,7 +5,7 @@
 
     <groupId>io.github.kg-construct</groupId>
     <artifactId>burp</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
 
     <name>BURP</name>
     <!-- @formatter:off -->
@@ -47,23 +47,26 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jena.version>5.6.0</jena.version>
+        <jena.version>6.2.0</jena.version>
         <antlr.version>4.13.1</antlr.version>
+        <lsp4j.version>1.0.0</lsp4j.version>
         <testcontainers.version>2.0.5</testcontainers.version>
+        <rdf4j.version>5.3.2</rdf4j.version>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>burp.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
                 <includes>
                     <include>**/*.ttl</include>
                 </includes>
@@ -71,31 +74,17 @@
 
             <!-- shapes -->
             <resource>
-                <directory>rml-modules/rml-core/shapes</directory>
+                <directory>rml-modules/rml-shacl/generated/combinations</directory>
                 <targetPath>shapes</targetPath>
                 <includes>
-                    <include>core.ttl</include>
+                    <include>core+cc+fnml+io+io-registry+lv.ttl</include>
                 </includes>
             </resource>
             <resource>
-                <directory>rml-modules/rml-cc/shapes</directory>
+                <directory>rml-modules/rml-shacl/generated/modules</directory>
                 <targetPath>shapes</targetPath>
                 <includes>
-                    <include>cc.ttl</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>rml-modules/rml-lv/shapes</directory>
-                <targetPath>shapes</targetPath>
-                <includes>
-                    <include>lv.ttl</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>rml-modules/rml-io/shapes</directory>
-                <targetPath>shapes</targetPath>
-                <includes>
-                    <include>io.ttl</include>
+                    <include>*.ttl</include>
                 </includes>
             </resource>
 
@@ -169,6 +158,18 @@
 
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <rules>
+                        <requireJavaVersion>
+                            <version>[21,)</version>
+                        </requireJavaVersion>
+                    </rules>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
@@ -214,7 +215,19 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
+                <configuration>
+                    <mainClass>burp.vocabularies.VocabularyGenerator</mainClass>
+                </configuration>
                 <executions>
+                    <execution>
+                        <id>generate-rml</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>burp.vocabularies.VocabularyGenerator</mainClass>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>generate-ptr</id>
                         <phase>generate-sources</phase>
@@ -313,6 +326,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
+                <configuration>
+                    <argLine>--add-opens=java.base/java.nio=ALL-UNNAMED</argLine>
+                    <excludedGroups>perf</excludedGroups>
+                </configuration>
             </plugin>
 
 
@@ -326,6 +343,7 @@
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>dependency/</classpathPrefix>
                             <mainClass>burp.Main</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                 </configuration>
@@ -361,6 +379,59 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>cz.habarta.typescript-generator</groupId>
+                <artifactId>typescript-generator-maven-plugin</artifactId>
+                <version>4.1.1</version>
+                <configuration>
+                    <noFileComment>true</noFileComment>
+                    <jsonLibrary>gson</jsonLibrary>
+                    <classPatterns>
+                        <pattern>burp.dev.rml.service.**</pattern>
+                        <pattern>burp.model.RmlEvaluationResult</pattern>
+                        <pattern>burp.model.RdfStatement</pattern>
+                        <pattern>burp.model.RdfStatementSubjectGraph</pattern>
+                        <pattern>burp.model.RdfPredicateObject</pattern>
+                        <pattern>burp.model.RawValue</pattern>
+                        <pattern>burp.model.rdf.**</pattern>
+                        <pattern>burp.parse.turtleprov.Point</pattern>
+                        <pattern>burp.reporting.PointRange</pattern>
+                    </classPatterns>
+                    <outputFile>rml-dev-server/src/generated/types.ts</outputFile>
+                    <outputFileType>implementationFile</outputFileType>
+                    <outputKind>module</outputKind>
+                    <optionalProperties>useSpecifiedAnnotations</optionalProperties>
+                    <optionalAnnotations>
+                        <optionalAnnotation>org.jspecify.annotations.Nullable</optionalAnnotation>
+                    </optionalAnnotations>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-ts</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <ignoredUnusedDeclaredDependencies>
+                        <ignoredUnusedDeclaredDependency>com.mysql:mysql-connector-j</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>org.postgresql:postgresql</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>com.microsoft.sqlserver:mssql-jdbc</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>org.xerial:sqlite-jdbc</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>org.junit.jupiter:junit-jupiter-engine</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>org.apache.jena:jena-fuseki-main</ignoredUnusedDeclaredDependency>
+                    </ignoredUnusedDeclaredDependencies>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -388,6 +459,10 @@
                                         <transformer
                                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                             <mainClass>burp.Main</mainClass>
+                                            <manifestEntries>
+                                                <Implementation-Title>BURP</Implementation-Title>
+                                                <Implementation-Version>${project.version}</Implementation-Version>
+                                            </manifestEntries>
                                         </transformer>
                                         <transformer
                                                 implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
@@ -434,7 +509,7 @@
                     <plugin>
                         <groupId>dev.sigstore</groupId>
                         <artifactId>sigstore-maven-plugin</artifactId>
-                        <version>2.2.0</version>
+                        <version>2.3.0</version>
                         <executions>
                             <execution>
                                 <id>sign</id>
@@ -450,7 +525,7 @@
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.9.0</version>
+                        <version>0.12.0</version>
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
@@ -523,6 +598,17 @@
                                         </issues>
                                     </github>
                                 </release>
+                                <files>
+                                    <active>ALWAYS</active>
+                                    <artifacts>
+                                        <artifact>
+                                            <path>${project.basedir}/rml-dev-server/rml-dev-server-${project.version}.vsix</path>
+                                        </artifact>
+                                        <artifact>
+                                            <path>${project.build.directory}/burp.jar</path>
+                                        </artifact>
+                                    </artifacts>
+                                </files>
                                 <distributions>
                                     <burp>
                                         <active>ALWAYS</active>
@@ -562,10 +648,23 @@
                 </plugins>
             </build>
         </profile>
+
+        <profile>
+            <id>perf</id>
+            <modules>
+                <module>benchmarks</module>
+            </modules>
+        </profile>
     </profiles>
 
 
     <dependencies>
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
@@ -574,13 +673,18 @@
 
         <dependency>
             <groupId>org.apache.jena</groupId>
-            <artifactId>jena-arq</artifactId>
+            <artifactId>jena-core</artifactId>
             <version>${jena.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
-            <artifactId>jena-shacl</artifactId>
+            <artifactId>jena-arq</artifactId>
             <version>${jena.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.topbraid</groupId>
+            <artifactId>shacl</artifactId>
+            <version>1.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
@@ -599,21 +703,6 @@
             <version>5.12.0</version>
         </dependency>
         <dependency>
-            <groupId>com.univocity</groupId>
-            <artifactId>univocity-parsers</artifactId>
-            <version>2.9.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jayway.jsonpath</groupId>
-            <artifactId>json-path</artifactId>
-            <version>2.10.0</version>
-        </dependency>
-        <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>json-smart</artifactId>
-            <version>2.6.0</version>
-        </dependency>
-        <dependency>
             <groupId>at.asitplus</groupId>
             <artifactId>jsonpath4k-jvm</artifactId>
             <version>3.1.1</version>
@@ -624,34 +713,63 @@
             <version>1.0.8</version>
         </dependency>
         <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-serialization-json-jvm</artifactId>
             <version>1.6.3</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
-            <artifactId>bson-kotlinx</artifactId>
+            <artifactId>bson</artifactId>
             <version>5.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.21.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.14.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.28.0</version>
         </dependency>
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>9.3.0</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.2</version>
+            <version>42.7.13</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>13.2.1.jre11</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.46.0.0</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -669,21 +787,9 @@
             <version>33.4.8-jre</version>
         </dependency>
         <dependency>
-            <groupId>org.tukaani</groupId>
-            <artifactId>xz</artifactId>
-            <version>1.9</version>
-        </dependency>
-        <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
             <version>${antlr.version}</version>
-        </dependency>
-
-        <!-- From JitPack -->
-        <dependency>
-            <groupId>com.github.candil-data-fabric</groupId>
-            <artifactId>JNC</artifactId>
-            <version>1.3.0</version>
         </dependency>
 
         <!-- ServiceLoader Annotations -->
@@ -692,6 +798,18 @@
             <artifactId>auto-service-annotations</artifactId>
             <version>1.1.1</version>
             <scope>compile</scope>
+        </dependency>
+
+        <!-- Eclipse LSP4J for LSP support -->
+        <dependency>
+            <groupId>org.eclipse.lsp4j</groupId>
+            <artifactId>org.eclipse.lsp4j</artifactId>
+            <version>${lsp4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.lsp4j</groupId>
+            <artifactId>org.eclipse.lsp4j.jsonrpc</artifactId>
+            <version>${lsp4j.version}</version>
         </dependency>
 
         <!-- DEPENDENCIES FOR TESTS -->
@@ -711,6 +829,24 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
             <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.27.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-jdbc</artifactId>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -1,6 +1,5 @@
 package burp.reporting;
 
-import burp.Main;
 import burp.parse.turtleprov.ProvTurtleVisitor;
 import burp.vocabularies.RER;
 import org.apache.jena.ontology.OntClass;
@@ -8,14 +7,15 @@ import org.apache.jena.ontology.OntClass;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class PlainTextReportGenerator {
 
     public static String generateTextReport(RmlExecutionReport report) {
+        return generateTextReport(report, FileHighlight.hasColorSupport());
+    }
+
+    public static String generateTextReport(RmlExecutionReport report, boolean useColors) {
         StringBuilder sb = new StringBuilder();
 
         List<RmlError> errors = new ArrayList<>();
@@ -23,15 +23,15 @@ public class PlainTextReportGenerator {
         List<RmlError> info = new ArrayList<>();
 
         for (RmlError issue : report.getErrors()) {
-            OntClass logType = issue.getErrorType();
+            OntClass logType = issue.errorType();
             if (isOrParent(logType, RER.Information)) info.add(issue);
             else if (isOrParent(logType, RER.Warning)) warnings.add(issue);
             else errors.add(issue);
         }
 
-        printIssues(sb, errors, "Errors", Severity.ERROR);
-        printIssues(sb, warnings, "Warnings", Severity.WARNING);
-        printIssues(sb, info, "Information", Severity.INFORMATION);
+        printIssues(sb, errors, "Errors", Severity.ERROR, useColors);
+        printIssues(sb, warnings, "Warnings", Severity.WARNING, useColors);
+        printIssues(sb, info, "Information", Severity.INFORMATION, useColors);
 
         sb.append("Statistics:\n");
         int triplesMapsSize = 0;
@@ -45,10 +45,10 @@ public class PlainTextReportGenerator {
         if (report.getStatistics().getGeneratedStatementPerTriplesMap() != null) {
             for (var entry : report.getStatistics().getGeneratedStatementPerTriplesMap().entrySet()) {
                 sb.append("      * ")
-                  .append(entry.getKey().subject)
-                  .append("\t ")
-                  .append(entry.getValue())
-                  .append("\n");
+                        .append(entry.getKey().subject)
+                        .append("\t ")
+                        .append(entry.getValue())
+                        .append("\n");
             }
         }
 
@@ -59,24 +59,24 @@ public class PlainTextReportGenerator {
         return ontClass.equals(parent) || ontClass.hasSuperClass(ontClass);
     }
 
-    private static void printTracingInfo(StringBuilder sb, RmlError issue, Severity severity) {
-        if (issue.getOrigin() != null) {
-            Origin origin = issue.getOrigin();
+    private static void printTracingInfo(StringBuilder sb, RmlError issue, Severity severity, boolean useColors) {
+        if (issue.origin() != null) {
+            Origin origin = issue.origin();
             sb.append(prependIndent("In mapping", 4)).append(System.lineSeparator());
-            
-            Path file = Main.mappingFile != null ? Main.mappingFile.normalize() : null;
+
+            Path file = origin.file() != null ? origin.file().normalize() : null;
             List<PointRange> locations = new ArrayList<>();
             if (origin.sourceStatements() != null) {
                 for (RDFPointer ptr : origin.sourceStatements()) {
-                    if (ptr instanceof TextFilePointer tfp) {
-                        locations.add(tfp.range());
-                        if (tfp.path() != null) {
-                            file = tfp.path().normalize();
+                    if (ptr instanceof TextFilePointer(Path path, PointRange range)) {
+                        locations.add(range);
+                        if (file == null) {
+                            file = path.normalize();
                         }
                     }
                 }
             }
-            
+
             locations.addAll(ProvTurtleVisitor.retrieveTurtleLocation(origin.sourceStatements() != null ? origin.sourceStatements() : Collections.emptyList()));
 
             if (file == null) {
@@ -85,7 +85,7 @@ public class PlainTextReportGenerator {
 
             // Print file:line:col - line:col
             List<PointRange> sortedLocations = new ArrayList<>(locations);
-            sortedLocations.removeIf(l -> l == null || l.start() == null);
+            sortedLocations.removeIf(Objects::isNull);
             sortedLocations.sort(Comparator.comparing(PointRange::start));
 
             List<String> lineLocations = new ArrayList<>();
@@ -94,7 +94,7 @@ public class PlainTextReportGenerator {
             }
 
             // Print File Underlined extract
-            String highlight = FileHighlight.extractAndHighlight(file, locations, severity);
+            String highlight = FileHighlight.extractAndHighlight(file, locations, 1, severity, useColors);
             if (highlight != null) {
                 if (!lineLocations.isEmpty()) {
                     sb.append(lineLocations.getFirst()).append(System.lineSeparator());
@@ -108,25 +108,27 @@ public class PlainTextReportGenerator {
         }
     }
 
-    private static void printIssues(StringBuilder sb, List<RmlError> issues, String header, Severity severity) {
+    private static void printIssues(StringBuilder sb, List<RmlError> issues, String header, Severity severity, boolean useColors) {
         if (issues != null && !issues.isEmpty()) {
             sb.append(header).append(":").append(System.lineSeparator());
             for (int i = 0; i < issues.size(); i++) {
                 RmlError issue = issues.get(i);
-                String msg = issue.getMessage();
-                String msgColored;
-                switch (severity) {
-                    case WARNING -> msgColored = FileHighlight.ansiYellow(msg);
-                    case INFORMATION -> msgColored = FileHighlight.ansiCyan(msg);
-                    case null, default -> msgColored = FileHighlight.ansiRed(msg);
+                String msg = issue.message();
+                String msgColored = msg;
+                if (useColors) {
+                    switch (severity) {
+                        case WARNING -> msgColored = FileHighlight.ansiYellow(msg);
+                        case INFORMATION -> msgColored = FileHighlight.ansiCyan(msg);
+                        case null, default -> msgColored = FileHighlight.ansiRed(msg);
+                    }
                 }
                 sb.append(prependIndent(msgColored, 2)).append(System.lineSeparator());
-                printTracingInfo(sb, issue, severity);
-                appendErrorTypeHelp(sb, issue.getErrorType());
+                printTracingInfo(sb, issue, severity, useColors);
+                appendErrorTypeHelp(sb, issue.errorType());
 
-                if (issue.getException() != null) {
-                    sb.append(prependIndent("Exception: " + issue.getException(), 4)).append(System.lineSeparator());
-                    sb.append(prependIndent("StackTrace: " + getStackTraceAsString(issue.getException()), 4)).append(System.lineSeparator());
+                if (issue.exception() != null) {
+                    sb.append(prependIndent("Exception: " + issue.exception(), 4)).append(System.lineSeparator());
+                    sb.append(prependIndent("StackTrace: " + getStackTraceAsString(issue.exception()), 4)).append(System.lineSeparator());
                 }
                 // Add empty line between issues for better readability
                 if (i < issues.size() - 1) {
@@ -141,13 +143,13 @@ public class PlainTextReportGenerator {
         if (issueType == null) return;
         String label = issueType.getLabel(null);
         sb.append(prependIndent("is a " + label + " (" + issueType + ")", 4)).append(System.lineSeparator());
-        
+
         String comment = issueType.getComment(null);
         if (comment == null) {
             comment = "null";
         }
         sb.append(prependIndent(prependIndent(comment, "| "), 6)).append(System.lineSeparator());
-        
+
         var potentialSolution = issueType.getPropertyValue(RER.potentialSolution);
         if (potentialSolution != null) {
             sb.append(prependIndent("| Try to: " + potentialSolution, 6)).append(System.lineSeparator());

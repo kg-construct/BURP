@@ -26,7 +26,7 @@ public class Errors {
     }
 
     public static RmlError ReferenceFormulationExecutionError(String message, PlanNode planNode) {
-        return new RmlError(message, new Origin(planNode, null), RER.ReferenceFormulationExecutionError);
+        return new RmlError(message, new Origin(planNode.getSourcePointers()), RER.ReferenceFormulationExecutionError, planNode);
     }
 
 

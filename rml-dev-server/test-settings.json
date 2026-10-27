@@ -1,0 +1,16 @@
+{
+  "rml.burp.path": "/home/jakub/Documents/Dev/BURP/target/burp.jar",
+  "rml.java.path": "java",
+  "rml.server.spawnProcess": true,
+  "rml.server.autoStart": true,
+  "workbench.colorTheme": "Default Light Modern",
+  "workbench.startupEditor": "none",
+  "workbench.welcomePage.walkthroughs.openOnInstall": false,
+  "workbench.tips.enabled": false,
+  "workbench.enableExperiments": false,
+  "security.workspace.trust.enabled": false,
+  "telemetry.telemetryLevel": "off",
+  "update.mode": "none",
+  "git.enabled": false,
+  "git.autorefresh": false
+}

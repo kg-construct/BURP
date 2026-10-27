@@ -13,20 +13,27 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
 
 public class RDBSource extends LogicalSource {
+    public Path mappingDirectory;
     public Path currentWorkingDirectory;
+    @Nullable
     public String jdbcDriver;
-    @NonNull public String jdbcDSN;
+    @NonNull
+    public String jdbcDSN;
+    @Nullable
     public String password;
+    @Nullable
     public String username;
+    @NonNull
     public String query;
-    public Statement queryStmt;
 
     protected Resource referenceFormulation;
 
@@ -38,37 +45,50 @@ public class RDBSource extends LogicalSource {
     }
 
 
+    public Connection createConnection() throws SQLException, ClassNotFoundException {
+        Properties props = new Properties();
+        if (username != null && !username.isEmpty()) props.setProperty("user", username);
+        if (password != null && !password.isEmpty()) props.setProperty("password", password);
+
+        if (jdbcDriver != null) {
+            Class.forName(jdbcDriver);
+        }
+
+        String resolvedJdbcDSN = jdbcDSN;
+        if (resolvedJdbcDSN != null && resolvedJdbcDSN.startsWith("jdbc:sqlite:") && !resolvedJdbcDSN.startsWith("jdbc:sqlite::")) {
+            String pathPart = resolvedJdbcDSN.substring("jdbc:sqlite:".length());
+            Path path = Paths.get(pathPart);
+            if (!path.isAbsolute()) {
+                Path absolutePath = getAbsolutePath(path);
+                if (absolutePath != null) {
+                    resolvedJdbcDSN = "jdbc:sqlite:" + absolutePath;
+                }
+            }
+        }
+
+        return DriverManager.getConnection(resolvedJdbcDSN, props);
+    }
+
+    private @Nullable Path getAbsolutePath(Path path) {
+        Path absolutePath = null;
+        if (mappingDirectory != null && Files.exists(mappingDirectory.resolve(path))) {
+            absolutePath = mappingDirectory.resolve(path).toAbsolutePath();
+        } else if (currentWorkingDirectory != null && Files.exists(currentWorkingDirectory.resolve(path))) {
+            absolutePath = currentWorkingDirectory.resolve(path).toAbsolutePath();
+        } else if (mappingDirectory != null) {
+            absolutePath = mappingDirectory.resolve(path).toAbsolutePath();
+        } else if (currentWorkingDirectory != null) {
+            absolutePath = currentWorkingDirectory.resolve(path).toAbsolutePath();
+        }
+        return absolutePath;
+    }
+
     @Override
     public Iterable<Iteration> iterator() {
         Connection connection = null;
+        Origin queryOrigin = emitOrigin("query");
         try {
-            Properties props = new Properties();
-            if (username != null && !username.isEmpty()) props.setProperty("user", username);
-            if (password != null && !password.isEmpty()) props.setProperty("password", password);
-
-            if (jdbcDriver != null) {
-                try {
-                    Class.forName(jdbcDriver);
-                } catch (ClassNotFoundException e) {
-                    throw new BurpException(
-                            new RmlError("Problem querying database.", null, RER.Error, e)
-                    );
-                }
-            }
-
-            String resolvedJdbcDSN = jdbcDSN;
-            if (resolvedJdbcDSN.startsWith("jdbc:sqlite:") && !resolvedJdbcDSN.startsWith("jdbc:sqlite::")) {
-                Path userDir = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
-                if (!currentWorkingDirectory.toAbsolutePath().equals(userDir)) {
-                    String pathPart = resolvedJdbcDSN.substring("jdbc:sqlite:".length());
-                    Path path = Paths.get(pathPart);
-                    if (!path.isAbsolute()) {
-                        resolvedJdbcDSN = "jdbc:sqlite:" + currentWorkingDirectory.resolve(path).toAbsolutePath();
-                    }
-                }
-            }
-
-            connection = DriverManager.getConnection(resolvedJdbcDSN, props);
+            connection = createConnection();
 
             var statement = connection.createStatement();
             ResultSet resultset = statement.executeQuery(query);
@@ -91,8 +111,10 @@ public class RDBSource extends LogicalSource {
                         }
                         return goNext;
                     } catch (SQLException e) {
+
                         throw new BurpException(
-                                new RmlError("Problem querying database while iterating over rows.", null, RER.LogicalSourceError, e)
+                                new RmlError("Problem querying database while iterating over rows.",
+                                        queryOrigin, RER.LogicalSourceError, e, RDBSource.this)
                         );
                     }
                 }
@@ -110,8 +132,7 @@ public class RDBSource extends LogicalSource {
                 }
             }
             throw new BurpException(new RmlError("Syntax error in SQL query " + query,
-                    new Origin(queryStmt, StatementPart.Object),
-                    RER.ReferenceFormulationSyntaxError, e));
+                    queryOrigin, RER.ReferenceFormulationSyntaxError, e, this));
         } catch (BurpException e) {
             throw e;
         } catch (Exception e) {
@@ -122,8 +143,7 @@ public class RDBSource extends LogicalSource {
                 }
             }
             throw new BurpException(new RmlError("Error in RDB source. Query " + query,
-                    new Origin(queryStmt, StatementPart.Object),
-                    RER.LogicalSourceError, e));
+                    queryOrigin, RER.LogicalSourceError, e, this));
         }
     }
 
@@ -181,7 +201,7 @@ class RDBReference extends Reference {
         }
 
         if (matchedKey == null) {
-            throw new BurpException(new RmlError("Attribute " + columnName + " does not exist.", origin, RER.ReferenceFormulationExecutionError));
+            throw new BurpException(new RmlError("Attribute " + columnName + " does not exist.", emitOrigin("reference"), RER.ReferenceFormulationExecutionError, this));
         }
         return matchedKey;
     }

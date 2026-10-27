@@ -1,0 +1,17 @@
+PREFIX ex: <http://example.com/>
+PREFIX rml: <http://w3id.org/rml/>
+PREFIX d2rq: <http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#>
+
+<#TM> a rml:TriplesMap ;
+    rml:logicalSource [
+        a rml:LogicalSource ;
+        rml:referenceFormulation rml:SQL2008Query ;
+        rml:iterator "SELECT id, name FROM person" ;
+        rml:source [
+            a rml:Source, d2rq:Database ;
+            d2rq:jdbcDSN "jdbc:sqlite:student.db"
+        ]
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/{id}"
+    ] .
