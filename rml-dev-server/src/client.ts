@@ -54,6 +54,10 @@ export class RmlDevClient {
         return this.connection !== null && this.isInitialized;
     }
 
+    public getLatency(): number | null {
+        return this.lastLatencyMs;
+    }
+
     public onQuadChunk(executionId: string, callback: (chunk: QuadChunkNotification) => void): vscode.Disposable {
         return this.onQuadChunkReceived((notification) => {
             if (notification.executionId === executionId) {

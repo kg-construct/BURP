@@ -51,7 +51,7 @@ export class ServerController implements vscode.Disposable {
             this.statusBar.updateStatus('starting');
             const port = await this.serverProcess.start();
             await this.client.connect(port);
-            this.statusBar.updateStatus('connected', port);
+            this.statusBar.updateStatus('connected', port, this.client.getLatency() ?? undefined);
             this.outputChannel.appendLine(`[ServerController] Connected to BURP Dev Server on port ${port}.`);
 
             if (this.callbacks?.onConnected) {
@@ -129,6 +129,7 @@ export class ServerController implements vscode.Disposable {
 
         const health = await this.client.healthCheck(currentPort);
         if (health.ok) {
+            this.statusBar.updateStatus('connected', health.serverPort, health.latencyMs);
             vscode.window.showInformationMessage(
                 `RML Dev Server is healthy on port ${health.serverPort} (${health.latencyMs}ms latency).`
             );
@@ -202,14 +203,30 @@ export class ServerController implements vscode.Disposable {
 
     private registerCommands(): void {
         this.disposables.push(
-            vscode.commands.registerCommand('rml-dev-server.startServer', () => this.startOrConnect()),
-            vscode.commands.registerCommand('rml-dev-server.stopServer', async () => {
+            vscode.commands.registerCommand('rml.startServer', () => this.startOrConnect()),
+            vscode.commands.registerCommand('rml.stopServer', async () => {
                 await this.stop();
                 vscode.window.showInformationMessage('RML Dev Server stopped.');
             }),
-            vscode.commands.registerCommand('rml-dev-server.restartServer', () => this.restart()),
-            vscode.commands.registerCommand('rml-dev-server.healthCheck', () => this.healthCheck()),
-            vscode.commands.registerCommand('rml-dev-server.showOutput', () => this.outputChannel.show())
+            vscode.commands.registerCommand('rml.restartServer', () => this.restart()),
+            vscode.commands.registerCommand('rml.healthCheck', () => this.healthCheck()),
+            vscode.commands.registerCommand('rml.showOutput', () => this.outputChannel.show()),
+            vscode.commands.registerCommand('rml.clearCache', async () => {
+                if (!this.client.isConnected()) {
+                    vscode.window.showWarningMessage('RML Dev Server is not connected.');
+                    return;
+                }
+                try {
+                    await this.client.clearCache();
+                    vscode.window.showInformationMessage('RML execution cache cleared.');
+                } catch (err: any) {
+                    vscode.window.showErrorMessage(`Failed to clear cache: ${err.message}`);
+                }
+            }),
+            vscode.commands.registerCommand('rml.openSettings', () => {
+                const extId = this.context.extension?.id || 'uliege-dre.rml';
+                vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${extId}`);
+            })
         );
     }
 

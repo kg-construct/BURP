@@ -18,17 +18,17 @@ export function registerCommands(ctx: CommandContext): vscode.Disposable[] {
     const disposables: vscode.Disposable[] = [];
 
     disposables.push(
-        vscode.commands.registerCommand('rml-dev-server.openStructurePanel', async () => {
+        vscode.commands.registerCommand('rml.openStructurePanel', async () => {
             await vscode.commands.executeCommand('workbench.view.extension.rml-explorer');
         }),
-        vscode.commands.registerCommand('rml-dev-server.openEvaluatorPanel', async () => {
+        vscode.commands.registerCommand('rml.openEvaluatorPanel', async () => {
             await vscode.commands.executeCommand('workbench.view.extension.rml-explorer');
         })
     );
 
     disposables.push(
         vscode.commands.registerCommand(
-            'rml-dev-server.traceIteration',
+            'rml.traceIteration',
             async (mappingUri?: vscode.Uri | string, structure?: StructureSelector, iterationIndex?: number) => {
                 if (!mappingUri || !structure || iterationIndex === undefined) {
                     const editor = vscode.window.activeTextEditor;
@@ -50,7 +50,7 @@ export function registerCommands(ctx: CommandContext): vscode.Disposable[] {
             }
         ),
         vscode.commands.registerCommand(
-            'rml-dev-server.traceQuad',
+            'rml.traceQuad',
             async (mappingUri?: vscode.Uri | string, structure?: StructureSelector, quad?: TraceQuadTarget) => {
                 if (!mappingUri || !structure || !quad) {
                     vscode.window.showWarningMessage('Tracing a quad requires mapping URI, structure selector, and target quad.');
@@ -63,13 +63,13 @@ export function registerCommands(ctx: CommandContext): vscode.Disposable[] {
     );
 
     disposables.push(
-        vscode.commands.registerCommand('rml-dev-server.executeCurrent', async (uri?: vscode.Uri) => {
+        vscode.commands.registerCommand('rml.executeCurrent', async (uri?: vscode.Uri) => {
             const trigger_source: 'command_palette' | 'editor_title' =
                 uri instanceof vscode.Uri ? 'editor_title' : 'command_palette';
             telemetry.capture('run_mapping', { trigger_source });
             await ctx.executionManager.executeMapping(uri);
         }),
-        vscode.commands.registerCommand('rml-dev-server.visualizeRdf', async (uri?: vscode.Uri) => {
+        vscode.commands.registerCommand('rml.visualizeRdf', async (uri?: vscode.Uri) => {
             telemetry.capture('visualise_rdf');
             await ctx.rdfVisualizerManager.visualizeRdf(uri);
         })
@@ -92,11 +92,8 @@ export function registerCommands(ctx: CommandContext): vscode.Disposable[] {
     };
 
     const sourceDataCommandIds = [
-        'rml-dev-server.viewSourceData',
         'rml.viewSourceData',
-        'rml-dev-server.peekLogicalView',
         'rml.peekLogicalView',
-        'rml-dev-server.peekLogicalSource',
         'rml.peekLogicalSource'
     ];
     for (const cmd of sourceDataCommandIds) {

@@ -144,7 +144,7 @@ public class LspCodeLensProvider {
         String label = (ls instanceof LogicalView) ? "$(table) View Logical View Data" : "$(table) View Logical Source Data";
         return new Command(
                 label,
-                "rml-dev-server.viewSourceData",
+                "rml.viewSourceData",
                 List.of(selector)
         );
     }

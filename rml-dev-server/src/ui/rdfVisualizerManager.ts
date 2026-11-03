@@ -75,7 +75,7 @@ export class RdfVisualizerManager {
         let panel = this.panels.get(uriStr);
         if (!panel) {
             panel = vscode.window.createWebviewPanel(
-                'rml-dev-server.rdfVisualizer',
+                'rml.rdfVisualizer',
                 `RDF: ${fileName}`,
                 vscode.ViewColumn.Beside,
                 getWebviewPanelOptions(this.extensionUri)

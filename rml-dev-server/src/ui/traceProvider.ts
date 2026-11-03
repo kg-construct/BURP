@@ -85,7 +85,7 @@ export class TraceProvider {
         }
 
         panel = vscode.window.createWebviewPanel(
-            'rml-dev-server.traceEditor',
+            'rml.traceEditor',
             state.title,
             vscode.ViewColumn.Beside,
             getWebviewPanelOptions(this.extensionUri)

@@ -16,7 +16,7 @@ export class ValidationManager implements vscode.Disposable {
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('rml');
         this.disposables.push(this.diagnosticCollection);
         this.disposables.push(
-            vscode.commands.registerCommand('rml-dev-server.validateMapping', async () => {
+            vscode.commands.registerCommand('rml.validateMapping', async () => {
                 const editor = vscode.window.activeTextEditor;
                 if (editor && isRmlDocument(editor.document)) {
                     await this.runValidation(editor.document);

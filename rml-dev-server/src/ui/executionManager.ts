@@ -54,7 +54,7 @@ export class ExecutionManager {
         let panel = this.panels.get(uriStr);
         if (!panel) {
             panel = vscode.window.createWebviewPanel(
-                'rml-dev-server.executionResult',
+                'rml.executionResult',
                 `Run: ${fileName}`,
                 vscode.ViewColumn.Beside,
                 getWebviewPanelOptions(this.extensionUri)
@@ -88,14 +88,14 @@ export class ExecutionManager {
                     await this.executeMapping(targetUri);
                 } else if (msg.command === 'traceQuad') {
                     await vscode.commands.executeCommand(
-                        'rml-dev-server.traceQuad',
+                        'rml.traceQuad',
                         uriStr,
                         {type: 'document', textDocument: {uri: uriStr}},
                         msg.quad
                     );
                 } else if (msg.command === 'traceIteration') {
                     await vscode.commands.executeCommand(
-                        'rml-dev-server.traceIteration',
+                        'rml.traceIteration',
                         uriStr,
                         {type: 'document', textDocument: {uri: uriStr}},
                         msg.iterationIndex

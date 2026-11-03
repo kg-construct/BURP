@@ -75,7 +75,7 @@ export class SourceDataManager {
             await this.loadData(0, 50, true);
         } else {
             this.currentPanel = vscode.window.createWebviewPanel(
-                'rml-dev-server.sourceDataViewer',
+                'rml.sourceDataViewer',
                 `Table: ${title}`,
                 vscode.ViewColumn.Beside,
                 getWebviewPanelOptions(this.extensionUri)
@@ -103,7 +103,7 @@ export class SourceDataManager {
                     }
                 } else if (msg.command === 'traceIteration') {
                     vscode.commands.executeCommand(
-                        'rml-dev-server.traceIteration',
+                        'rml.traceIteration',
                         this.currentMappingUri,
                         this.currentSelector,
                         msg.iterationIndex

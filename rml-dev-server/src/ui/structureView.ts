@@ -7,7 +7,7 @@ import {PlanFromWebviewMessage, PlanToWebviewMessage} from "../webview/protocol/
 import {telemetry} from '../telemetry';
 
 export class StructureViewProvider implements vscode.WebviewViewProvider {
-    public static readonly viewType = 'rml-dev-server.structureView';
+    public static readonly viewType = 'rml.structureView';
     private view?: vscode.WebviewView;
     private client: RmlDevClient;
     private extensionUri: vscode.Uri;

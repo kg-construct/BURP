@@ -31,76 +31,86 @@
   "contributes": {
     "commands": [
       {
-        "command": "rml-dev-server.healthCheck",
-        "title": "RML: Check Server Health",
+        "command": "rml.healthCheck",
+        "title": "Check Server Health",
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.startServer",
-        "title": "RML: Start / Reconnect Server",
+        "command": "rml.startServer",
+        "title": "Start / Reconnect Server",
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.stopServer",
-        "title": "RML: Stop Server",
+        "command": "rml.stopServer",
+        "title": "Stop Server",
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.restartServer",
-        "title": "RML: Restart Server",
+        "command": "rml.restartServer",
+        "title": "Restart Server",
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.showOutput",
-        "title": "RML: Show Output Channel",
+        "command": "rml.showOutput",
+        "title": "Show Output Channel",
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.openEvaluatorPanel",
-        "title": "RML: Open Evaluator & Value Inspector",
+        "command": "rml.clearCache",
+        "title": "Clear Execution Cache",
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.openStructurePanel",
-        "title": "RML: Open Plan Node Hierarchy Panel",
+        "command": "rml.openSettings",
+        "title": "Open Settings",
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.validateMapping",
-        "title": "RML: Validate Mapping Document",
+        "command": "rml.openEvaluatorPanel",
+        "title": "Open Evaluator & Value Inspector",
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.executeCurrent",
-        "title": "RML: Run Mapping",
+        "command": "rml.openStructurePanel",
+        "title": "Open Plan Node Hierarchy Panel",
+        "category": "RML"
+      },
+      {
+        "command": "rml.validateMapping",
+        "title": "Validate Mapping Document",
+        "category": "RML"
+      },
+      {
+        "command": "rml.executeCurrent",
+        "title": "Run Mapping",
         "category": "RML",
         "icon": "$(play)"
       },
       {
-        "command": "rml-dev-server.visualizeRdf",
-        "title": "RDF: Visualize Graph / Table",
-        "category": "RDF",
+        "command": "rml.visualizeRdf",
+        "title": "Visualize RDF as Graph / Table",
+        "category": "RML",
         "icon": "$(type-hierarchy)"
       },
       {
-        "command": "rml-dev-server.traceIteration",
-        "title": "RML: Trace Iteration Dataflow",
+        "command": "rml.traceIteration",
+        "title": "Trace Iteration Dataflow",
         "category": "RML"
       },
       {
-        "command": "rml-dev-server.traceQuad",
-        "title": "RML: Trace Output Quad Provenance",
+        "command": "rml.traceQuad",
+        "title": "Trace Output Quad Provenance",
         "category": "RML"
       },
       {
         "command": "rml.nextInlineIteration",
-        "title": "RML: Next Inline Iteration",
+        "title": "Next Inline Iteration",
         "category": "RML",
         "icon": "$(arrow-right)"
       },
       {
         "command": "rml.previousInlineIteration",
-        "title": "RML: Previous Inline Iteration",
+        "title": "Previous Inline Iteration",
         "category": "RML",
         "icon": "$(arrow-left)"
       }
@@ -120,12 +130,12 @@
     "menus": {
       "editor/title": [
         {
-          "command": "rml-dev-server.executeCurrent",
+          "command": "rml.executeCurrent",
           "when": "resourceExtname == .ttl || resourceLangId == turtle",
           "group": "navigation@1"
         },
         {
-          "command": "rml-dev-server.visualizeRdf",
+          "command": "rml.visualizeRdf",
           "when": "resourceExtname =~ /\\.(ttl|nt|nq|trig|n3)$/ || resourceLangId =~ /^(turtle|trig|n-triples|n-quads|n3)$/",
           "group": "navigation@2"
         },
@@ -154,12 +164,12 @@
       "rml-explorer": [
         {
           "type": "webview",
-          "id": "rml-dev-server.evaluatorView",
+          "id": "rml.evaluatorView",
           "name": "Evaluator & Value Inspector"
         },
         {
           "type": "webview",
-          "id": "rml-dev-server.structureView",
+          "id": "rml.structureView",
           "name": "Plan Node Hierarchy",
           "visibility": "collapsed"
         }

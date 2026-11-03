@@ -10,7 +10,7 @@ import {TypedDataContext} from '../dataContext';
 export type EvaluatorMessage = EvaluatorToWebviewMessage;
 
 export class EvaluatorViewProvider implements vscode.WebviewViewProvider {
-    public static readonly viewType = 'rml-dev-server.evaluatorView';
+    public static readonly viewType = 'rml.evaluatorView';
     private view?: vscode.WebviewView;
     private client: RmlDevClient;
     private extensionUri: vscode.Uri;
