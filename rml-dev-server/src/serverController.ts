@@ -121,7 +121,7 @@ export class ServerController implements vscode.Disposable {
             }
         }
 
-        const currentPort = this.serverProcess.getPort() || getConfiguration().serverPort || 0;
+        const currentPort = this.serverProcess.getPort() || (!getConfiguration().spawnProcess ? getConfiguration().serverPort : 0);
         if (currentPort === 0) {
             vscode.window.showErrorMessage('RML Dev Server port is not determined.');
             return;

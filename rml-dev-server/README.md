@@ -31,7 +31,7 @@ This extension contributes the following settings:
   bundled `server/burp.jar` will be used automatically.
 * `rml.java.path`: Path to the Java executable used to run BURP (default: `java`).
 * `rml.server.spawnProcess`: Whether to spawn the BURP server process automatically (default: `true`).
-* `rml.server.port`: Dev server port number (default: `0` for dynamically assigned port).
+* `rml.server.port`: Dev server port number used when connecting to an already-running server (`spawnProcess` is `false`).
 * `rml.server.autoStart`: Automatically start the BURP Dev Server on extension activation (default: `true`).
 * `rml.server.extraArgs`: Extra command-line arguments to pass to BURP when spawning the server.
 * `rml.baseIRI`: Base IRI used to resolve relative IRIs produced by the mapping.

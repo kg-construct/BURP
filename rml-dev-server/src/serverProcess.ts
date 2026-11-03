@@ -156,9 +156,9 @@ export class ServerProcess {
         }
     }
 
-    private resolveBurpExecution(): { command: string; args: string[]; target?: BurpTarget } {
+    public resolveBurpExecution(): { command: string; args: string[]; target?: BurpTarget } {
         const config = getConfiguration();
-        const devArg = config.serverPort > 0 ? `-d=${config.serverPort}` : '-d';
+        const devArg = '-d';
 
         if (this.context) {
             const target = findBurpExecutable(this.context);

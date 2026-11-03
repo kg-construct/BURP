@@ -187,7 +187,7 @@
         "rml.server.port": {
           "type": "integer",
           "default": 0,
-          "description": "Dev server port number. If set to 0, an open port will be dynamically assigned by BURP."
+          "description": "Port of an already-running BURP dev server to connect to when 'rml.server.spawnProcess' is false. Ignored when starting the server automatically (a random available port is always used)."
         },
         "rml.server.extraArgs": {
           "type": "array",
