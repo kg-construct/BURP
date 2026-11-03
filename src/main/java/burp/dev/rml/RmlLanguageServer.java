@@ -94,6 +94,12 @@ public interface RmlLanguageServer extends LanguageServer {
     CompletableFuture<StepInlineIterationResult> stepInlineIteration(StepInlineIterationParams params);
 
     /**
+     * Updates the active evaluation data context for a mapping document on the server.
+     */
+    @JsonRequest("rml/setDataContext")
+    CompletableFuture<Void> setDataContext(SetDataContextParams params);
+
+    /**
      * Retrieves a windowed tabular or document dataset from a Logical Source or Logical View.
      */
     @JsonRequest("rml/source/data")

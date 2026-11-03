@@ -23,12 +23,8 @@ public final class RdfStatementSubjectGraph implements RdfStatementLike {
     ) {
         this.subject = Objects.requireNonNull(subject, "subject must not be null");
         this.graph = graph;
-        this.targets = targets != null ? targets : Set.of();
+        this.targets = targets;
         this.lineage = lineage;
-    }
-
-    public RdfStatementSubjectGraph(BlankNodeOrIRI subject, @Nullable IRITerm graph, Set<LogicalTarget> targets) {
-        this(subject, graph, targets, null);
     }
 
     public BlankNodeOrIRI getSubject() {

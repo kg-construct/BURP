@@ -9,11 +9,7 @@ import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -117,8 +113,8 @@ public interface PlanNode {
 
     AstKey computeAstKey();
 
-    default @Nullable <T extends PlanNode> T ancestor(Class<T> clazz) {
-        PlanNode p = getParent();
+    default @Nullable <T extends PlanNode> T ancestor(Class<T> clazz, boolean includeSelf) {
+        PlanNode p = includeSelf ? this : getParent();
         while (p != null) {
             if (clazz.isInstance(p)) {
                 return clazz.cast(p);
@@ -126,6 +122,10 @@ public interface PlanNode {
             p = p.getParent();
         }
         return null;
+    }
+
+    default @Nullable <T extends PlanNode> T ancestor(Class<T> clazz) {
+        return ancestor(clazz, false);
     }
 
     default <T extends PlanNode> Stream<T> descendants(Class<T> clazz) {

@@ -15,6 +15,7 @@ import {
     ReferenceDependency,
     ReferencesDependenciesParams,
     RmlDiagnostic,
+    SetDataContextParams,
     SourceDataParams,
     SourceDataResult,
     StepInlineIterationParams,
@@ -313,6 +314,10 @@ export class RmlDevClient {
 
     public async stepInlineIteration(params: StepInlineIterationParams): Promise<StepInlineIterationResult> {
         return this.sendRpcRequest<StepInlineIterationResult>('rml/stepInlineIteration', params);
+    }
+
+    public async setDataContext(params: SetDataContextParams): Promise<void> {
+        return this.sendRpcRequest<void>('rml/setDataContext', params);
     }
 
     public async inlayHint(params: { textDocument: { uri: string }; range: { start: { line: number; character: number }; end: { line: number; character: number } } }): Promise<any[]> {

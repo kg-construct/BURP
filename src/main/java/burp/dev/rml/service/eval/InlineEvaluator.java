@@ -43,23 +43,14 @@ public class InlineEvaluator {
 
         try {
             var resolved = workspace.resolveNode(params.structure());
-            TriplesMap anchorTm = null;
-            PlanNode target = resolved.targetNode();
-            while (target != null) {
-                if (target instanceof TriplesMap tm) {
-                    anchorTm = tm;
-                    break;
-                }
-                target = target.getParent();
-            }
+            TriplesMap anchorTm = resolved.targetNode() != null
+                    ? resolved.targetNode().ancestor(TriplesMap.class, true)
+                    : null;
             if (anchorTm == null && !resolved.mappingDocument().triplesMaps.isEmpty()) {
                 anchorTm = resolved.mappingDocument().triplesMaps.getFirst();
             }
 
             EvaluationDataContext currentCtx = workspace.getInlineDataContext(uri);
-            if (currentCtx == null) {
-                currentCtx = new RangeDataContext(0, 1);
-            }
             int currentIndex = 0;
             if (currentCtx instanceof RangeDataContext rdc) {
                 currentIndex = rdc.startIndex();
@@ -193,44 +184,20 @@ public class InlineEvaluator {
                         continue;
                     }
 
-                    Iteration nodeIteration = selectedIteration;
-                    EvaluationContext nodeContext = defaultContext;
-
-                    ParentMap foundParentMap = null;
-                    PlanNode curr = node;
-                    while (curr != null && !(curr instanceof TriplesMap)) {
-                        if (curr instanceof ParentMap pm) {
-                            foundParentMap = pm;
-                            break;
-                        }
-                        curr = curr.getParent();
+                    EvaluationContexts.NodeEvaluationScope scope = EvaluationContexts.resolveNodeScope(
+                            node,
+                            effectiveDataContext,
+                            tm.logicalSource,
+                            selectedIteration,
+                            defaultContext,
+                            assignedMap,
+                            evaluator
+                    );
+                    if (scope == null) {
+                        continue;
                     }
 
-                    if (foundParentMap != null && foundParentMap.getParent() instanceof JoinCondition jc && jc.getParent() instanceof ReferencingObjectMap rom) {
-                        var parentAssigned = assignedMap.get(rom.parentTriplesMap);
-                        if (parentAssigned != null) {
-                            nodeIteration = parentAssigned.iteration();
-                            String baseIri = EvaluationContexts.resolveBaseIri(rom.parentTriplesMap, defaultContext.baseIri());
-                            nodeContext = defaultContext.withBaseIri(baseIri);
-                        }
-                    } else {
-                        EvaluationContexts.NodeEvaluationScope scope = EvaluationContexts.resolveNodeScope(
-                                node,
-                                effectiveDataContext,
-                                tm.logicalSource,
-                                selectedIteration,
-                                defaultContext,
-                                evaluator
-                        );
-                        if (scope != null) {
-                            nodeIteration = scope.iteration();
-                            nodeContext = scope.context();
-                        } else {
-                            continue;
-                        }
-                    }
-
-                    List<RmlEvaluationResult> evalResults = evaluator.evaluateNodeSafe(node, nodeIteration, nodeContext);
+                    List<RmlEvaluationResult> evalResults = evaluator.evaluateNodeSafe(node, scope.iteration(), scope.context());
                     if (evalResults.isEmpty()) {
                         continue;
                     }

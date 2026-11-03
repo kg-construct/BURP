@@ -195,4 +195,10 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
     public CompletableFuture<StepInlineIterationResult> stepInlineIteration(StepInlineIterationParams params) {
         return CompletableFuture.completedFuture(inlineEvaluator.stepInlineIteration(params, workspace, evaluator));
     }
+
+    @Override
+    public CompletableFuture<Void> setDataContext(SetDataContextParams params) {
+        workspace.setInlineDataContext(params.mappingFileUri(), params.dataContext());
+        return CompletableFuture.completedFuture(null);
+    }
 }

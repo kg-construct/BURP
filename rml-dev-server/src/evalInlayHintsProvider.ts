@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
 import {RmlDevClient} from './client';
-import {getConfiguration} from './config';
-import {InlineEvaluateItem} from './generated/types';
 import {telemetry} from './telemetry';
 import {TypedDataContext} from './dataContext';
 
@@ -11,14 +9,25 @@ export class RmlEvalInlayHintsProvider implements vscode.InlayHintsProvider {
     public readonly onDidChangeInlayHints = this.onDidChangeInlayHintsEmitter.event;
 
     private cache = new Map<string, { version: number; hints: vscode.InlayHint[] }>();
+    private syncedContexts = new Map<string, TypedDataContext>();
     private dataContext: TypedDataContext = { type: 'range', startIndex: 0, endIndex: 0 };
 
     constructor(client: RmlDevClient) {
         this.client = client;
     }
 
-    public setDataContext(context: TypedDataContext): void {
+    public setDataContext(context: TypedDataContext, uri?: string): void {
         this.dataContext = context;
+        const targetUri = uri ?? vscode.window.activeTextEditor?.document.uri.toString();
+        if (targetUri && this.client.isConnected()) {
+            this.client.setDataContext({
+                mappingFileUri: targetUri,
+                dataContext: context
+            }).catch(err => {
+                console.error('[RmlEvalInlayHintsProvider] Failed to set data context:', err);
+            });
+            this.syncedContexts.set(targetUri, context);
+        }
         this.refresh();
     }
 
@@ -48,83 +57,47 @@ export class RmlEvalInlayHintsProvider implements vscode.InlayHintsProvider {
         try {
             await this.client.didOpenTextDocument(document);
 
-            const isDefaultContext = !this.dataContext || (this.dataContext.type === 'range' && this.dataContext.startIndex === 0 && this.dataContext.endIndex === 0);
-
-            const hints: vscode.InlayHint[] = [];
-
-            if (isDefaultContext || !getConfiguration().inlineHintsEnableEvaluation) {
-                // Use standard LSP textDocument/inlayHint
-                const lspHints = await this.client.inlayHint({
-                    textDocument: { uri: document.uri.toString() },
-                    range: {
-                        start: { line: range.start.line, character: range.start.character },
-                        end: { line: range.end.line, character: range.end.character }
-                    }
+            const docUri = document.uri.toString();
+            if (this.syncedContexts.get(docUri) !== this.dataContext) {
+                await this.client.setDataContext({
+                    mappingFileUri: docUri,
+                    dataContext: this.dataContext
                 });
-
-                if (token.isCancellationRequested || !lspHints) {
-                    return undefined;
-                }
-
-                for (const h of lspHints) {
-                    const label = typeof h.label === 'string' ? h.label : (Array.isArray(h.label) ? h.label.map((p: any) => p.value).join('') : '');
-                    const hintPos = new vscode.Position(h.position.line, h.position.character);
-                    const hint = new vscode.InlayHint(
-                        hintPos,
-                        label,
-                        h.kind === 2 ? vscode.InlayHintKind.Parameter : vscode.InlayHintKind.Type
-                    );
-                    hint.paddingLeft = h.paddingLeft;
-                    if (h.tooltip) {
-                        hint.tooltip = typeof h.tooltip === 'string'
-                            ? new vscode.MarkdownString(h.tooltip)
-                            : new vscode.MarkdownString(h.tooltip.value);
-                    }
-                    hints.push(hint);
-                }
-            } else {
-                // Use custom full document rml/inlineEvaluate for custom context override
-                const items: InlineEvaluateItem[] = await this.client.inlineEvaluate({
-                    mappingFileUri: document.uri.toString(),
-                    dataContext: this.dataContext,
-                    range: {
-                        start: { line: range.start.line, character: range.start.character },
-                        end: { line: range.end.line, character: range.end.character }
-                    }
-                });
-
-                if (token.isCancellationRequested || !items) {
-                    return undefined;
-                }
-
-                for (const item of items) {
-                    if (!item.originRange || !item.formattedValues || item.formattedValues.length === 0) {
-                        continue;
-                    }
-
-                    const display = item.formattedValues[0];
-                    const rawDisplay = item.rawFormattedValues?.[0];
-                    const hintPos = new vscode.Position(item.originRange.end.line, item.originRange.end.character);
-                    const isParam = item.type === 'ParameterMap';
-                    const hint = new vscode.InlayHint(
-                        hintPos,
-                        isParam ? ` : ${display}` : ` ⇾ ${display}`,
-                        isParam || item.type === 'ReferenceSegment' ? vscode.InlayHintKind.Parameter : vscode.InlayHintKind.Type
-                    );
-                    hint.paddingLeft = isParam;
-
-                    let tooltip = isParam
-                        ? `**FnO Parameter**: \`${display}\`\n\nParameter ID: \`${item.id}\``
-                        : `**${item.type} Evaluation** (\`${item.id}\`):\n\`\`\`turtle\n${display}\n\`\`\``;
-                    if (!isParam && rawDisplay && rawDisplay !== display) {
-                        tooltip += `\n*Full Term*: \`${rawDisplay}\``;
-                    }
-                    hint.tooltip = new vscode.MarkdownString(tooltip);
-                    hints.push(hint);
-                }
+                this.syncedContexts.set(docUri, this.dataContext);
             }
 
-            this.cache.set(document.uri.toString(), {
+            // Standard LSP textDocument/inlayHint
+            const lspHints = await this.client.inlayHint({
+                textDocument: {uri: docUri},
+                range: {
+                    start: {line: range.start.line, character: range.start.character},
+                    end: {line: range.end.line, character: range.end.character}
+                }
+            });
+
+            if (token.isCancellationRequested || !lspHints) {
+                return undefined;
+            }
+
+            const hints: vscode.InlayHint[] = [];
+            for (const h of lspHints) {
+                const label = typeof h.label === 'string' ? h.label : (Array.isArray(h.label) ? h.label.map((p: any) => p.value).join('') : '');
+                const hintPos = new vscode.Position(h.position.line, h.position.character);
+                const hint = new vscode.InlayHint(
+                    hintPos,
+                    label,
+                    h.kind === 2 ? vscode.InlayHintKind.Parameter : vscode.InlayHintKind.Type
+                );
+                hint.paddingLeft = h.paddingLeft;
+                if (h.tooltip) {
+                    hint.tooltip = typeof h.tooltip === 'string'
+                        ? new vscode.MarkdownString(h.tooltip)
+                        : new vscode.MarkdownString(h.tooltip.value);
+                }
+                hints.push(hint);
+            }
+
+            this.cache.set(docUri, {
                 version: document.version,
                 hints
             });

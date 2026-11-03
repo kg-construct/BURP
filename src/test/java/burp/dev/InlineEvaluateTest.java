@@ -81,7 +81,7 @@ public class InlineEvaluateTest {
         String mapping = """
                 @prefix ex: <http://example.org/> .
                 @prefix rml: <http://w3id.org/rml/> .
-
+                
                 ex:PersonMapping a rml:TriplesMap ;
                     rml:logicalSource [ a rml:LogicalSource ;
                         rml:referenceFormulation rml:JSONPath ;
@@ -349,6 +349,31 @@ public class InlineEvaluateTest {
                 .asString()
                 .contains("100")
                 .doesNotContain("10\"");
+    }
+
+    @Test
+    public void testJoinConditionEvaluationHintsInRMLTC0009a_Iteration1_NoParentMatch() throws Exception {
+        String uri = "rml-modules/rml-core/test-cases/RMLTC0009a-JSON/mapping.ttl";
+        MappingWorkspace workspace = new MappingWorkspace();
+        workspace.setInlineDataContext(uri, new RangeDataContext(1, 2));
+        RmlDevServerImpl server = new RmlDevServerImpl(workspace);
+
+        InlayHintParams hintParams = new InlayHintParams(
+                new TextDocumentIdentifier(uri),
+                new Range(new Position(0, 0), new Position(100, 0))
+        );
+        List<InlayHint> hints = server.getTextDocumentService().inlayHint(hintParams).get();
+
+        // We use InlayHintKind.Type for inline evaluate values and logical source are .Parameter
+        // Line 22 (0-indexed 21) is child $.Sport; for Demi Moore Sport is null/missing
+        assertThat(hints)
+                .filteredOn(h -> h.getPosition().getLine() == 21 && h.getKind() != InlayHintKind.Parameter)
+                .isEmpty();
+
+        // Line 23 (0-indexed 22) is parent $.ID; no join match
+        assertThat(hints)
+                .filteredOn(h -> h.getPosition().getLine() == 22 && h.getKind() != InlayHintKind.Parameter)
+                .isEmpty();
     }
 
     @Test
@@ -686,5 +711,34 @@ public class InlineEvaluateTest {
                 .extracting(h -> h.getLabel().getLeft())
                 .anyMatch(l -> l.contains("http://example.org/person/Alice"))
                 .anyMatch(l -> l.contains("Alice"));
+    }
+
+    @Test
+    public void testSetDataContextUpdatesInlayHints() throws Exception {
+        RmlDevServerImpl server = createServer();
+        String uri = "src/test/resources/burp/BURPFNMLTC-CSV-Concat/mapping.ttl";
+
+        InlayHintParams hintParams = new InlayHintParams(
+                new TextDocumentIdentifier(uri),
+                new Range(new Position(0, 0), new Position(100, 0))
+        );
+
+        // 1. Initial hints with default context produce Gaston
+        List<InlayHint> defaultHints = server.getTextDocumentService().inlayHint(hintParams).get();
+        assertThat(defaultHints).isNotNull().isNotEmpty();
+        assertThat(defaultHints).extracting(h -> h.getLabel().getLeft())
+                .anyMatch(l -> l.contains("Gaston"))
+                .noneMatch(l -> l.contains("Venus"));
+
+        // 2. Set custom reference values data context via rml/setDataContext
+        Map<String, Object> customValues = Map.of("Id", "10", "Name", "Venus", "Class", "Pro");
+        server.setDataContext(new SetDataContextParams(uri, new ReferenceValuesCustomDataContext(customValues))).get();
+
+        // 3. New hints produce Venus and no longer Gaston
+        List<InlayHint> customHints = server.getTextDocumentService().inlayHint(hintParams).get();
+        assertThat(customHints).isNotNull().isNotEmpty();
+        assertThat(customHints).extracting(h -> h.getLabel().getLeft())
+                .anyMatch(l -> l.contains("Venus"))
+                .noneMatch(l -> l.contains("Gaston"));
     }
 }

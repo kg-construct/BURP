@@ -40,7 +40,8 @@ export async function activate(context: vscode.ExtensionContext) {
         client,
         context.extensionUri,
         (ctx) => {
-            inlayHintsProvider.setDataContext(ctx);
+            const activeUri = vscode.window.activeTextEditor?.document.uri.toString();
+            inlayHintsProvider.setDataContext(ctx, activeUri);
         },
         () => structureViewProvider.getSelectedNodeType()
     );
@@ -156,7 +157,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     startIndex: res.activeIterationIndex,
                     endIndex: res.activeIterationIndex
                 };
-                inlayHintsProvider.setDataContext(newContext);
+                inlayHintsProvider.setDataContext(newContext, editor.document.uri.toString());
                 evaluatorViewProvider.setDataContext(newContext);
             } catch (err) {
                 console.error('Failed to step next inline iteration:', err);
@@ -180,7 +181,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     startIndex: res.activeIterationIndex,
                     endIndex: res.activeIterationIndex
                 };
-                inlayHintsProvider.setDataContext(newContext);
+                inlayHintsProvider.setDataContext(newContext, editor.document.uri.toString());
                 evaluatorViewProvider.setDataContext(newContext);
             } catch (err) {
                 console.error('Failed to step previous inline iteration:', err);

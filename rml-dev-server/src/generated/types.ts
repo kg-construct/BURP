@@ -5,12 +5,10 @@ export interface MappingWorkspace extends WorkspaceService {
     openDocuments: { [index: string]: string };
     documentPrefixes: { [index: string]: { [index: string]: string } };
     currentWorkingDirectory: Path;
-    baseIri?: string;
-    inlineHintsEvaluationEnabled: boolean;
-    iterationSampleLimit?: number;
+    rmlSettings: RmlSettings;
     client?: LanguageClient;
-    inlineHintsEvaluationMode: InlineHintsEvaluationMode;
-    joinIndexLimit: number;
+    documentInlineDataContexts: { [index: string]: EvaluationDataContext };
+    documentCursorPositions: { [index: string]: Position };
     cache: DevServerCache;
     referenceCompleter: ReferenceCompleter;
     inlayHintProvider: LspInlineHintProvider;
@@ -96,12 +94,14 @@ export interface CoherentIterationResolver {
 export interface AssignedIteration {
     iteration: Iteration;
     index: number;
-    reason?: IterationReason;
+    reason: IterationReason;
 }
 
 export interface ResolutionResult {
     assignedIterations: { [index: string]: AssignedIteration };
+    unmatchedTriplesMaps: TriplesMap[];
     joinIndexes: { [index: string]: ParentJoinIndex };
+    traceSummary: string[];
 }
 
 export interface CustomDataContext extends EvaluationDataContext {
@@ -145,7 +145,6 @@ export interface InlineEvaluateItem {
     formattedValues: string[];
     rawFormattedValues: string[];
     diagnostics: string[];
-    iterationIndex: number;
     iterationReason?: IterationReason;
 }
 
@@ -153,6 +152,7 @@ export interface InlineEvaluateParams {
     mappingFileUri: string;
     dataContext: EvaluationDataContext;
     range?: Range;
+    cursorPosition?: Position;
     evaluationMode?: InlineHintsEvaluationMode;
     joinIndexLimit?: number;
 }
@@ -161,28 +161,18 @@ export interface InlineEvaluator {
 }
 
 export interface IterationReason {
-    iterationIndex: number;
 }
 
 export interface Direct extends IterationReason {
+    iterationIndex: number;
 }
 
 export interface MatchedJoin extends IterationReason {
     sourceNodeId: string;
     sourceIri?: string;
     sourceIterationIndex: number;
+    iterationIndex: number;
     joinConditionSummary?: string;
-}
-
-export interface StepInlineIterationParams {
-    structure: StructureSelector;
-    delta: number;
-}
-
-export interface StepInlineIterationResult {
-    dataContext: EvaluationDataContext;
-    activeIterationIndex: number;
-    traceSummary: string[];
 }
 
 export interface MultiSourceDataContext extends EvaluationDataContext {
@@ -206,6 +196,22 @@ export interface ReferenceValuesCustomDataContext extends CustomDataContext {
 
 export interface RmlEvaluator {
     cache?: DevServerCache;
+}
+
+export interface SetDataContextParams {
+    mappingFileUri: string;
+    dataContext: EvaluationDataContext;
+}
+
+export interface StepInlineIterationParams {
+    structure: StructureSelector;
+    delta: number;
+}
+
+export interface StepInlineIterationResult {
+    dataContext: EvaluationDataContext;
+    activeIterationIndex: number;
+    traceSummary: string[];
 }
 
 export interface ExecuteParams {
@@ -698,15 +704,15 @@ export interface Range {
     end: Position;
 }
 
+export interface Position {
+    line: number;
+    character: number;
+}
+
 export interface Resource extends RDFNode {
 }
 
 export interface Exception extends Throwable {
-}
-
-export interface Position {
-    line: number;
-    character: number;
 }
 
 export interface TextDocumentIdentifier {
@@ -774,6 +780,16 @@ export interface ParentJoinIndex {
     index: Multimap<CompositeJoinKey, Iteration>;
 }
 
+export interface TriplesMap extends AbstractPlanNode, BaseIRIScope, LocalReferenceScope, LogicalTargetScope {
+    subject: Resource;
+    logicalSource: AbstractLogicalSource;
+    subjectMap: SubjectMap;
+    predicateObjectMaps: PredicateObjectMap[];
+    baseIRI: string;
+    logicalTargets: LogicalTarget[];
+    countGeneratedStatements: number;
+}
+
 export interface BlankNodeScope {
     counter: number;
     idMap: { [index: string]: string };
@@ -812,16 +828,6 @@ export interface Comparable<T> {
 export interface Iterable<T> {
 }
 
-export interface TriplesMap extends AbstractPlanNode, BaseIRIScope, LocalReferenceScope, LogicalTargetScope {
-    subject: Resource;
-    logicalSource: AbstractLogicalSource;
-    subjectMap: SubjectMap;
-    predicateObjectMaps: PredicateObjectMap[];
-    baseIRI: string;
-    logicalTargets: LogicalTarget[];
-    countGeneratedStatements: number;
-}
-
 export interface Origin {
     sourceStatements?: RDFPointer[];
 }
@@ -836,6 +842,26 @@ export interface RmlError {
     exception?: Exception;
     context: { [index: string]: any };
     planNode?: PlanNode;
+}
+
+export interface AbstractLogicalSource extends AbstractPlanNode, FormulationIterable, FieldParent, ExportedReferenceScope, LogicalTargetScope {
+    subject: Resource;
+    nulls: any[];
+    logicalTargets: LogicalTarget[];
+}
+
+export interface SubjectMap extends TermMap {
+    classes: Resource[];
+    graphMaps: GraphMap[];
+}
+
+export interface BaseIRIScope extends PlanNode {
+}
+
+export interface LocalReferenceScope extends PlanNode {
+}
+
+export interface LogicalTargetScope extends PlanNode {
 }
 
 export interface AtomicBoolean extends Serializable {
@@ -860,26 +886,6 @@ export interface StackTraceElement extends Serializable {
 }
 
 export interface RMLTarget {
-}
-
-export interface AbstractLogicalSource extends AbstractPlanNode, FormulationIterable, FieldParent, ExportedReferenceScope, LogicalTargetScope {
-    subject: Resource;
-    nulls: any[];
-    logicalTargets: LogicalTarget[];
-}
-
-export interface SubjectMap extends TermMap {
-    classes: Resource[];
-    graphMaps: GraphMap[];
-}
-
-export interface BaseIRIScope extends PlanNode {
-}
-
-export interface LocalReferenceScope extends PlanNode {
-}
-
-export interface LogicalTargetScope extends PlanNode {
 }
 
 export interface TypeDecider {
