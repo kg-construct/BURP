@@ -300,6 +300,14 @@
           "default": 20,
           "minimum": 0,
           "description": "Maximum number of iterations to sample when deducing reference formulation validation schemas. Set to null for unlimited."
+        },
+        "rml.ontologies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "List of file paths or URLs to target OWL/RDFS ontologies used for term validation and autocompletion."
         }
       }
     }

@@ -6,11 +6,13 @@ export interface MappingWorkspace extends WorkspaceService {
     documentPrefixes: { [index: string]: { [index: string]: string } };
     currentWorkingDirectory: Path;
     rmlSettings: RmlSettings;
+    swlsSettings: SwlsSettings;
     client?: LanguageClient;
     documentInlineDataContexts: { [index: string]: EvaluationDataContext };
     documentCursorPositions: { [index: string]: Position };
+    documentOntologies: { [index: string]: OntologyRegistry };
     cache: DevServerCache;
-    referenceCompleter: ReferenceCompleter;
+    mappingCompleter: MappingCompleter;
     inlayHintProvider: LspInlineHintProvider;
     codeLensProvider: LspCodeLensProvider;
     evaluator: RmlEvaluator;
@@ -39,10 +41,16 @@ export interface RmlSettings {
     baseIRI?: string;
     inlineHints?: InlineHintsSettings;
     iterationSampleLimit?: number;
+    ontologies?: string[];
 }
 
 export interface Settings {
     rml?: RmlSettings;
+    swls?: SwlsSettings;
+}
+
+export interface SwlsSettings {
+    ontologies?: string[];
 }
 
 export interface RmlEvaluationResultFormatter {
@@ -72,7 +80,42 @@ export interface ParentJoinCacheKey {
     dataContext?: EvaluationDataContext;
 }
 
-export interface ReferenceCompleter {
+export interface CompletionContext {
+    uri: string;
+    position: Position;
+    effectivePrefix: string;
+    replaceRange?: Range;
+    loadedMapping: LoadedMapping;
+    targetNode?: PlanNode;
+    prefixMap: { [index: string]: string };
+    workspace: MappingWorkspace;
+}
+
+export interface CompletionContextResolver {
+}
+
+export interface CompletionContributor {
+}
+
+export interface FunctionCompleter extends CompletionContributor {
+}
+
+export interface MappingCompleter {
+    referenceCompleter: ReferenceCompleter;
+    functionCompleter: FunctionCompleter;
+    ontologyCompleter: OntologyCompleter;
+    contextResolver: CompletionContextResolver;
+    completers: CompletionContributor[];
+}
+
+export interface ParameterCompleter extends CompletionContributor {
+    functionCompleter: FunctionCompleter;
+}
+
+export interface ParentTriplesMapCompleter extends CompletionContributor {
+}
+
+export interface ReferenceCompleter extends CompletionContributor {
 }
 
 export interface ReferenceSchemaResolver {
@@ -83,6 +126,33 @@ export interface SchemaInfo {
     candidateValues: { [index: string]: string };
     candidateOrigins: { [index: string]: ReferenceCompletionOrigin };
     hasKnownSchemaOrData: boolean;
+}
+
+export interface DatatypeCompleter extends CompletionContributor {
+    ontologyCompleter: OntologyCompleter;
+}
+
+export interface OntologyCompleter {
+}
+
+export interface ScoredCandidate {
+    candidate: PropertyCandidate;
+    fuzzyScore: number;
+    isAlreadyPresent: boolean;
+}
+
+export interface ScoredClass {
+    cls: Resource;
+    compactIri: string;
+    fuzzyScore: number;
+}
+
+export interface PredicateCompleter extends CompletionContributor {
+    ontologyCompleter: OntologyCompleter;
+}
+
+export interface SubjectClassCompleter extends CompletionContributor {
+    ontologyCompleter: OntologyCompleter;
 }
 
 export interface AllDataContext extends EvaluationDataContext {
@@ -196,6 +266,7 @@ export interface ReferenceValuesCustomDataContext extends CustomDataContext {
 
 export interface RmlEvaluator {
     cache?: DevServerCache;
+    runtimeOntologyValidator: RuntimeOntologyValidator;
 }
 
 export interface SetDataContextParams {
@@ -267,6 +338,43 @@ export interface LspInlineHintProvider {
 }
 
 export interface ParameterHintProvider {
+}
+
+export interface OntologyConformanceChecker {
+}
+
+export interface Issue {
+    errorType: Resource;
+    message: string;
+}
+
+export interface OntologyLoader {
+}
+
+export interface OntologyRegistry {
+    ontModel: OntModel;
+}
+
+export interface PropertyCandidate {
+    property: Resource;
+    compactIri: string;
+    label?: string;
+    comment?: string;
+    expectedRange?: Resource;
+    isObjectProperty: boolean;
+    isDatatypeProperty: boolean;
+    inheritanceDistance: number;
+    definedOnClass?: Resource;
+}
+
+export interface PropertyConstraint {
+    predicate: Resource;
+    isKnownProperty: boolean;
+    isDomainCompatible: boolean;
+    declaredDomains: Resource[];
+    expectedRange?: Resource;
+    isObjectProperty: boolean;
+    isDatatypeProperty: boolean;
 }
 
 export interface PlanAttributeItem {
@@ -521,6 +629,9 @@ export interface TraceValue {
 export interface FunctionExecutionValidator {
 }
 
+export interface OntologyValidator {
+}
+
 export interface ReferenceValidator {
 }
 
@@ -532,10 +643,14 @@ export interface RmlDiagnostic {
     source?: string;
 }
 
+export interface RuntimeOntologyValidator {
+}
+
 export interface StaticMappingValidator {
     referenceValidator: ReferenceValidator;
     functionExecutionValidator: FunctionExecutionValidator;
     unusedElementValidator: UnusedElementValidator;
+    ontologyValidator: OntologyValidator;
 }
 
 export interface UnusedElementValidator {
@@ -681,6 +796,19 @@ export interface PlanNode {
 export interface AstKey {
 }
 
+export interface Position {
+    line: number;
+    character: number;
+}
+
+export interface Range {
+    start: Position;
+    end: Position;
+}
+
+export interface Resource extends RDFNode {
+}
+
 export interface Iteration {
     nulls: any[];
     lineage?: OriginLineage;
@@ -699,17 +827,7 @@ export interface EvaluationContext {
     templateSafety: TemplateReferenceSafety;
 }
 
-export interface Range {
-    start: Position;
-    end: Position;
-}
-
-export interface Position {
-    line: number;
-    character: number;
-}
-
-export interface Resource extends RDFNode {
+export interface OntModel extends Model, MutableModel<OntModel>, PrefixedModel<OntModel>, IOModel<OntModel>, CreateClasses, CreateRanges, CreateDisjoint, CreateSWRL {
 }
 
 export interface Exception extends Throwable {
@@ -780,6 +898,9 @@ export interface ParentJoinIndex {
     index: Multimap<CompositeJoinKey, Iteration>;
 }
 
+export interface RDFNode extends FrontsNode {
+}
+
 export interface TriplesMap extends AbstractPlanNode, BaseIRIScope, LocalReferenceScope, LogicalTargetScope {
     subject: Resource;
     logicalSource: AbstractLogicalSource;
@@ -799,7 +920,16 @@ export interface CancellationToken {
     cancelled: AtomicBoolean;
 }
 
-export interface RDFNode extends FrontsNode {
+export interface CreateClasses {
+}
+
+export interface CreateRanges {
+}
+
+export interface CreateDisjoint {
+}
+
+export interface CreateSWRL {
 }
 
 export interface Throwable extends Serializable {
@@ -844,6 +974,9 @@ export interface RmlError {
     planNode?: PlanNode;
 }
 
+export interface FrontsNode {
+}
+
 export interface AbstractLogicalSource extends AbstractPlanNode, FormulationIterable, FieldParent, ExportedReferenceScope, LogicalTargetScope {
     subject: Resource;
     nulls: any[];
@@ -868,7 +1001,13 @@ export interface AtomicBoolean extends Serializable {
     value: number;
 }
 
-export interface FrontsNode {
+export interface MutableModel<R> extends Model {
+}
+
+export interface PrefixedModel<R> extends PrefixMapping {
+}
+
+export interface IOModel<R> extends Model {
 }
 
 export interface Serializable {

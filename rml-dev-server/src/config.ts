@@ -16,6 +16,7 @@ export interface RmlConfiguration {
     nodeBackgroundAll: boolean;
     telemetryEnabled: 'unspecified' | 'enabled' | 'disabled';
     iterationSampleLimit: number | null;
+    ontologies: string[];
 }
 
 export function getConfiguration(): RmlConfiguration {
@@ -35,6 +36,7 @@ export function getConfiguration(): RmlConfiguration {
         nodeBackground: config.get<boolean>('nodeBackground', false),
         nodeBackgroundAll: config.get<boolean>('nodeBackgroundAll', false),
         telemetryEnabled: config.get<'unspecified' | 'enabled' | 'disabled'>('telemetry.enabled', 'unspecified'),
-        iterationSampleLimit: config.get<number | null>('iterationSampleLimit', 20)
+        iterationSampleLimit: config.get<number | null>('iterationSampleLimit', 20),
+        ontologies: config.get<string[]>('ontologies', [])
     };
 }

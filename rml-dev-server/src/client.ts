@@ -109,10 +109,20 @@ export class RmlDevClient {
                                     joinIndexLimit: config.get<number>('inlineHints.joinIndexLimit', 1000)
                                 },
                                 iterationSampleLimit: config.get<number | null>('iterationSampleLimit', 20),
+                                ontologies: config.get<string[]>('ontologies', []),
                                 graph: {
                                     backgroundMethod: config.get<string>('graph.backgroundMethod', 'smoothHull')
                                 }
                             };
+                        }
+                        if (item.section === 'swls') {
+                            const config = vscode.workspace.getConfiguration('swls', scope);
+                            return {
+                                ontologies: config.get<string[]>('ontologies', [])
+                            };
+                        }
+                        if (item.section === 'swls.ontologies') {
+                            return vscode.workspace.getConfiguration('swls', scope).get<string[]>('ontologies', []);
                         }
                         if (item.section === 'rml.baseIRI') {
                             return vscode.workspace.getConfiguration('rml', scope).get<string>('baseIRI', 'http://example.org/');
