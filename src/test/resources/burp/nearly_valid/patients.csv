@@ -1,0 +1,4 @@
+ID,Name,Age,BirthDate,doctorID
+1,Alice,30,1993-04-12,101
+2,Bob,-5,12/04/1995,102
+3,Charlie,not_a_number,2001-08-20,101

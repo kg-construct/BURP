@@ -7,6 +7,7 @@ import burp.model.rdf.LiteralTerm;
 import burp.model.rdf.Term;
 import burp.parse.loader.annotations.*;
 import burp.reporting.*;
+import burp.vocabularies.BURP;
 import burp.vocabularies.RER;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
@@ -171,7 +172,7 @@ public class ReflectiveRdfObjectLoader {
             boolean allowUnwrap,
             @Nullable Statement incomingStatement
     ) {
-        if (resource == null || targetClass == null) {
+        if (resource == null || targetClass == null || isHole(resource)) {
             return MappingResult.of(null, null);
         }
 
@@ -350,6 +351,10 @@ public class ReflectiveRdfObjectLoader {
         }
 
         return new TypeDecider.Decision(targetClass, null);
+    }
+
+    private boolean isHole(@Nullable RDFNode node) {
+        return node != null && node.isURIResource() && BURP.hole.getURI().equals(node.asResource().getURI());
     }
 
     private boolean isSynthetic(@Nullable Resource resource) {
@@ -598,7 +603,7 @@ public class ReflectiveRdfObjectLoader {
      */
     private Object mapSyntheticShortcut(Model model, RDFNode shortcutValue, Class<?> targetType, String targetPropertyUri, Statement shortcutStmt) {
         Model synthModel = ModelFactory.createDefaultModel();
-        Resource synthRes = synthModel.createResource("urn:burp:synth:" + UUID.randomUUID());
+        Resource synthRes = synthModel.createResource(BURP.synthBase + UUID.randomUUID());
         Property targetProp = synthModel.createProperty(targetPropertyUri);
         synthRes.addProperty(targetProp, shortcutValue);
 
@@ -688,6 +693,9 @@ public class ReflectiveRdfObjectLoader {
      * @return the mapped Java value
      */
     private Object mapNodeValue(Model model, RDFNode node, Class<?> targetType, @Nullable Statement stmt) {
+        if (isHole(node)) {
+            return null;
+        }
         if (targetType.equals(String.class)) {
             if (node.isLiteral()) return node.asLiteral().getLexicalForm();
             if (node.isURIResource()) return node.asResource().getURI();
@@ -737,6 +745,9 @@ public class ReflectiveRdfObjectLoader {
     public static Term toRmlTerm(RDFNode node) {
         if (node == null) return null;
         if (node.isURIResource()) {
+            if (BURP.hole.getURI().equals(node.asResource().getURI())) {
+                return null;
+            }
             return new IRITerm(node.asResource().getURI());
         }
         if (node.isLiteral()) {

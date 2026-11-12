@@ -4,6 +4,7 @@ import burp.parse.turtleprov.ProvStore;
 import burp.parse.turtleprov.ProvTriple;
 import burp.parse.turtleprov.TurtleNodeKind;
 import burp.parse.turtleprov.TurtleProvParser;
+import burp.vocabularies.BURP;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.vocabulary.XSD;
 import org.junit.jupiter.api.Test;
@@ -316,5 +317,46 @@ public class TurtleParserTest {
         assertNotNull(error.range().end());
         assertEquals(1, error.range().end().line);
         assertEquals(45, error.range().end().column);
+    }
+
+    @Test
+    public void testIncompleteVerbRecovery() {
+        String turtle = """
+                @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+                @prefix rml: <http://w3id.org/rml/> .
+
+                <http://example.com/base/TriplesMap1> a rml:TriplesMap;
+                  rml:logicalSource [ a rml:LogicalSource;
+                      rml:iterator "$.students[*]";
+                      rml:referenceFormulation rml:JSONPath;
+                      rml:source [ a rml:RelativePathSource;
+                          rml:root rml:MappingDirectory;
+                          rml:path "student.json"
+                        ]
+                    ];
+                  rml:predicateObjectMap [
+                      rml:objectMap [
+                          rml:reference "$.Name"
+                        ];
+                      rml:predicate
+                    ];
+                  rml:subjectMap [
+                      rml:template "http://example.com/{$.Name}"
+                    ] .
+                """;
+        ProvStore store = TurtleProvParser.parseTurtleFromString(turtle);
+        assertNotNull(store);
+        boolean hasSubjectMap = store.getTriples().stream()
+                .anyMatch(t -> "http://w3id.org/rml/subjectMap".equals(t.statement().getPredicate().getURI()));
+        boolean hasPom = store.getTriples().stream()
+                .anyMatch(t -> "http://w3id.org/rml/predicateObjectMap".equals(t.statement().getPredicate().getURI()));
+        boolean hasSyntheticPredicate = store.getTriples().stream()
+                .anyMatch(t -> "http://w3id.org/rml/predicate".equals(t.statement().getPredicate().getURI())
+                        && t.statement().getObject().isResource()
+                        && BURP.hole.getURI().equals(t.statement().getObject().asResource().getURI()));
+
+        assertTrue(hasSubjectMap, "Should retain rml:subjectMap despite incomplete predicate in earlier POM");
+        assertTrue(hasPom, "Should retain rml:predicateObjectMap");
+        assertTrue(hasSyntheticPredicate, "Should generate synthetic placeholder statement for incomplete predicate");
     }
 }

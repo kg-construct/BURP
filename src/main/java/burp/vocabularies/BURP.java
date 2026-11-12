@@ -7,6 +7,8 @@ import org.apache.jena.rdf.model.ResourceFactory;
 public class BURP {
     public static final String NS = "http://BURP.noname/";
     public static final String base_uri = NS;
+    public static final String synthBase = "urn:burp:synth:";
+
     private static Property property(String local) {
         return ResourceFactory.createProperty(NS + local);
     }
@@ -44,6 +46,8 @@ public class BURP {
     public static final Resource TestTurtleAnnotation = resource("TestTurtleAnnotation");
 
     public static final Property jsonSchema = property("jsonSchema");
+
+    public static final Resource hole = ResourceFactory.createResource(synthBase + "hole");
 
     /**
      * Indicate the allowed term types of an Expression Map.

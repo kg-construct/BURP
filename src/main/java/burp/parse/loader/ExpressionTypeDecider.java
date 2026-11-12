@@ -5,9 +5,12 @@ import burp.model.RDFNodeConstant;
 import burp.model.RawReference;
 import burp.model.Template;
 import burp.model.fnml.FunctionExecution;
+import burp.vocabularies.BURP;
 import burp.vocabularies.RML;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -23,22 +26,32 @@ public class ExpressionTypeDecider implements TypeDecider {
         return decision != null ? decision.concreteClass() : null;
     }
 
+    private static boolean isHole(@Nullable Statement stmt) {
+        if (stmt == null) return false;
+        RDFNode obj = stmt.getObject();
+        return obj.isURIResource() && BURP.hole.getURI().equals(obj.asResource().getURI());
+    }
+
     @Override
     public @Nullable Decision decideType(Model model, Resource resource, Class<?> targetClass) {
         if (!Expression.class.isAssignableFrom(targetClass) || resource == null) {
             return null;
         }
-        if (resource.hasProperty(RML.functionExecution)) {
-            return new Decision(FunctionExecution.class, resource.getProperty(RML.functionExecution));
+        Statement feStmt = resource.getProperty(RML.functionExecution);
+        if (feStmt != null && !isHole(feStmt)) {
+            return new Decision(FunctionExecution.class, feStmt);
         }
-        if (resource.hasProperty(RML.template)) {
-            return new Decision(Template.class, resource.getProperty(RML.template));
+        Statement tmplStmt = resource.getProperty(RML.template);
+        if (tmplStmt != null && !isHole(tmplStmt)) {
+            return new Decision(Template.class, tmplStmt);
         }
-        if (resource.hasProperty(RML.reference)) {
-            return new Decision(RawReference.class, resource.getProperty(RML.reference));
+        Statement refStmt = resource.getProperty(RML.reference);
+        if (refStmt != null && !isHole(refStmt)) {
+            return new Decision(RawReference.class, refStmt);
         }
-        if (resource.hasProperty(RML.constant)) {
-            return new Decision(RDFNodeConstant.class, resource.getProperty(RML.constant));
+        Statement constStmt = resource.getProperty(RML.constant);
+        if (constStmt != null && !isHole(constStmt)) {
+            return new Decision(RDFNodeConstant.class, constStmt);
         }
         return null;
     }

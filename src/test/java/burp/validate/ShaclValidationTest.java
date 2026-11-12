@@ -1,5 +1,6 @@
 package burp.validate;
 
+import burp.dev.rml.RmlDevServerImpl;
 import burp.dev.rml.service.validator.RmlDiagnostic;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.parse.RmlLoader;
@@ -280,7 +281,7 @@ public class ShaclValidationTest {
     @Test
     public void testValidateShaclShapeMissingLogicalSourceViaServer() throws Exception {
         Path mappingPath = testResourcesDir.resolve("missing_logical_source/mapping.ttl");
-        burp.dev.rml.RmlDevServerImpl server = new burp.dev.rml.RmlDevServerImpl();
+        RmlDevServerImpl server = new RmlDevServerImpl();
         List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(mappingPath.toUri().toString())).get();
         assertThat(diagnostics).anyMatch(d ->
                 d.severity() == DiagnosticSeverity.Error &&
@@ -291,7 +292,7 @@ public class ShaclValidationTest {
     @Test
     public void testValidateShaclShapeMissingSubjectMapViaServer() throws Exception {
         Path mappingPath = testResourcesDir.resolve("missing_subject_map/mapping.ttl");
-        burp.dev.rml.RmlDevServerImpl server = new burp.dev.rml.RmlDevServerImpl();
+        RmlDevServerImpl server = new RmlDevServerImpl();
         List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(mappingPath.toUri().toString())).get();
         assertThat(diagnostics).anyMatch(d ->
                 d.severity() == DiagnosticSeverity.Error &&

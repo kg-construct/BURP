@@ -1,6 +1,7 @@
 package burp.parse.turtleprov;
 
 import burp.reporting.*;
+import burp.vocabularies.BURP;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -24,7 +25,11 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         }
         List<PointRange> locations = new ArrayList<>();
         for (var item : sourceStatements) {
-            if (item instanceof RDFGraphPointer gp) {
+            if (item instanceof TextFilePointer tfp) {
+                if (tfp.range() != null) {
+                    locations.add(tfp.range());
+                }
+            } else if (item instanceof RDFGraphPointer gp) {
                 var stmt = gp.stmt();
                 if (stmt == null || stmt.getModel() == null) {
                     continue;
@@ -76,6 +81,7 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
 
     public ProvTurtleVisitor(@Nullable String documentUri) {
         this.documentUri = documentUri;
+        this.baseURI = documentUri;
         this.store.setDocumentUri(documentUri);
     }
 
@@ -156,7 +162,13 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
     @Override
     public ProvStore visitTurtleDoc(TurtleParser.TurtleDocContext ctx) {
         for (TurtleParser.StatementContext stmt : ctx.statement()) {
-            visit(stmt);
+            try {
+                visit(stmt);
+            } catch (TurtleProvException e) {
+                store.syntaxErrors.add(new ProvStore.SyntaxError(e, stmt.getText()));
+            } catch (Exception e) {
+                store.syntaxErrors.add(new ProvStore.SyntaxError(e.getMessage(), stmt.getText(), getRange(stmt)));
+            }
         }
         return store;
     }
@@ -232,10 +244,12 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
 
         if (subjectCtx != null && predicateObjectListCtx != null) {
             Pair<Resource, NodeInfo> subject = (Pair<Resource, NodeInfo>) visitSubject(subjectCtx);
-            visitPredicateObjectList(predicateObjectListCtx, subject);
+            if (subject != null) {
+                visitPredicateObjectList(predicateObjectListCtx, subject);
+            }
         } else if (blankNodePropertyListCtx != null) {
             Pair<Resource, NodeInfo> blankNode = (Pair<Resource, NodeInfo>) visitBlankNodePropertyList(blankNodePropertyListCtx);
-            if (predicateObjectListCtx != null) {
+            if (predicateObjectListCtx != null && blankNode != null) {
                 visitPredicateObjectList(predicateObjectListCtx, blankNode);
             }
         }
@@ -244,9 +258,11 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
 
     @Override
     public Object visitSubject(TurtleParser.SubjectContext ctx) {
+        if (ctx == null) return null;
         if (ctx.iri() != null) return visitIri(ctx.iri());
         if (ctx.BlankNode() != null) return visitBlankNodeTerminal(ctx.BlankNode());
         if (ctx.collection() != null) return visitCollection(ctx.collection());
+        if (ctx.getText() == null || ctx.getText().isBlank()) return null;
         throw new TurtleProvException("Unknown subject type", getRange(ctx));
     }
 
@@ -469,12 +485,36 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
         List<TurtleParser.ObjectListContext> objectLists = ctx.objectList();
 
         for (int i = 0; i < verbs.size(); i++) {
-            Pair<Property, NodeInfo> predicate = (Pair<Property, NodeInfo>) visitVerb(verbs.get(i));
-            List<Pair<RDFNode, NodeInfo>> objects = (List<Pair<RDFNode, NodeInfo>>) visitObjectList(objectLists.get(i));
+            try {
+                TurtleParser.VerbContext verbCtx = verbs.get(i);
+                var predicate = (Pair<Property, NodeInfo>) visitVerb(verbCtx);
+                if (predicate == null || predicate.first() == null) {
+                    continue;
+                }
 
-            for (Pair<RDFNode, NodeInfo> obj : objects) {
-                Statement stmt = model.createStatement(subject.first(), predicate.first(), obj.first());
-                store.getTriples().add(new ProvTriple(stmt, subject.second(), predicate.second(), obj.second(), documentUri));
+                if (i >= objectLists.size() || objectLists.get(i) == null) {
+                    Statement stmt = model.createStatement(subject.first(), predicate.first(), BURP.hole);
+                    store.getTriples().add(new ProvTriple(stmt, subject.second(), predicate.second(), predicate.second(), documentUri));
+                    continue;
+                }
+
+                var objects = (List<Pair<RDFNode, NodeInfo>>) visitObjectList(objectLists.get(i));
+                if (objects == null || objects.isEmpty()) {
+                    Statement stmt = model.createStatement(subject.first(), predicate.first(), BURP.hole);
+                    store.getTriples().add(new ProvTriple(stmt, subject.second(), predicate.second(), predicate.second(), documentUri));
+                    continue;
+                }
+
+                for (Pair<RDFNode, NodeInfo> obj : objects) {
+                    if (obj != null && obj.first() != null) {
+                        Statement stmt = model.createStatement(subject.first(), predicate.first(), obj.first());
+                        store.getTriples().add(new ProvTriple(stmt, subject.second(), predicate.second(), obj.second(), documentUri));
+                    }
+                }
+            } catch (TurtleProvException e) {
+                store.syntaxErrors.add(new ProvStore.SyntaxError(e, verbs.get(i).getText()));
+            } catch (Exception e) {
+                store.syntaxErrors.add(new ProvStore.SyntaxError(e.getMessage(), verbs.get(i).getText(), getRange(verbs.get(i))));
             }
         }
     }
@@ -482,8 +522,10 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
     @Override
     @SuppressWarnings("unchecked")
     public Object visitVerb(TurtleParser.VerbContext ctx) {
+        if (ctx == null) return null;
         if (ctx.iri() != null) {
             Pair<Resource, NodeInfo> iriPair = (Pair<Resource, NodeInfo>) visitIri(ctx.iri());
+            if (iriPair == null || iriPair.first() == null) return null;
             Property property = model.createProperty(iriPair.first().getURI());
             return new Pair<>(property, iriPair.second());
         } else if ("a".equals(ctx.getText())) {
@@ -493,6 +535,9 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
             );
             return new Pair<>(RDF.type, nodeInfo);
         } else {
+            if (ctx.getText() == null || ctx.getText().isBlank()) {
+                return null;
+            }
             throw new TurtleProvException("Unknown verb type: " + ctx.getText(), getRange(ctx));
         }
     }
@@ -501,23 +546,39 @@ public class ProvTurtleVisitor extends TurtleBaseVisitor<Object> {
     @SuppressWarnings("unchecked")
     public Object visitObjectList(TurtleParser.ObjectListContext ctx) {
         List<Pair<RDFNode, NodeInfo>> result = new ArrayList<>();
+        if (ctx == null || ctx.object_() == null) {
+            return result;
+        }
         for (TurtleParser.Object_Context objCtx : ctx.object_()) {
-            result.add((Pair<RDFNode, NodeInfo>) visitObject_(objCtx));
+            try {
+                Pair<RDFNode, NodeInfo> obj = (Pair<RDFNode, NodeInfo>) visitObject_(objCtx);
+                if (obj != null && obj.first() != null) {
+                    result.add(obj);
+                }
+            } catch (TurtleProvException e) {
+                store.syntaxErrors.add(new ProvStore.SyntaxError(e, objCtx.getText()));
+            } catch (Exception e) {
+                store.syntaxErrors.add(new ProvStore.SyntaxError(e.getMessage(), objCtx.getText(), getRange(objCtx)));
+            }
         }
         return result;
     }
 
     @Override
     public Object visitObject_(TurtleParser.Object_Context ctx) {
+        if (ctx == null) return null;
         if (ctx.iri() != null) return visitIri(ctx.iri());
         if (ctx.BlankNode() != null) return visitBlankNodeTerminal(ctx.BlankNode());
         if (ctx.collection() != null) return visitCollection(ctx.collection());
         if (ctx.blankNodePropertyList() != null) return visitBlankNodePropertyList(ctx.blankNodePropertyList());
         if (ctx.literal() != null) return visitLiteral(ctx.literal());
         if (ctx.tripleTerm() != null)
-            throw new TurtleProvException("RDF-star / RDF 1.2 triple terms are not supported", getRange(ctx));
+            throw new TurtleProvException("RDF 1.2 Turtle: triple terms are not supported", getRange(ctx));
         if (ctx.reifiedTriple() != null)
-            throw new TurtleProvException("RDF-star / RDF 1.2 reified triples are not supported", getRange(ctx));
+            throw new TurtleProvException("RDF 1.2 Turtle: reified triples are not supported", getRange(ctx));
+        if (ctx.getText() == null || ctx.getText().isBlank()) {
+            return null;
+        }
         throw new TurtleProvException("Unknown object type: " + ctx.getText(), getRange(ctx));
     }
 

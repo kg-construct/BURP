@@ -45,6 +45,20 @@ public class ProvStore {
             this(line, charPositionInLine, message, offendingSymbol, null);
         }
 
+        public SyntaxError(String message, String offendingSymbol, @Nullable PointRange range) {
+            this(
+                    range != null ? range.start().line + 1 : 0,
+                    range != null ? range.start().column : 0,
+                    message,
+                    offendingSymbol,
+                    range
+            );
+        }
+
+        public SyntaxError(TurtleProvException e, String offendingSymbol) {
+            this(e.getMessage(), offendingSymbol, e.getRange());
+        }
+
         @Override
         public @NonNull String toString() {
             return "line " + line + ":" + charPositionInLine + " " + message;

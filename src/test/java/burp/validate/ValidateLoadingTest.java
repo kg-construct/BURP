@@ -50,4 +50,22 @@ public class ValidateLoadingTest {
                 .filteredOn(d -> d.severity() == DiagnosticSeverity.Error && "RML_LOAD_ERROR".equals(d.rerCodeUri()))
                 .satisfiesExactly(d -> assertThat(d.range()).isNull());
     }
+
+    @Test
+    public void testValidateSyntaxErrorPosition() throws Exception {
+        String uri = toUri("src/test/resources/burp/nearly_valid/incomplete_class.ttl");
+        RmlDevServerImpl server = new RmlDevServerImpl();
+        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+
+        List<RmlDiagnostic> syntaxErrors = diagnostics.stream()
+                .filter(d -> d.severity() == DiagnosticSeverity.Error && d.message().contains("mismatched input ']'"))
+                .toList();
+
+        assertThat(syntaxErrors).hasSize(1);
+        RmlDiagnostic synErr = syntaxErrors.getFirst();
+        assertThat(synErr.range()).isNotNull();
+        // Offending token ']' is on line 11 (0-based, line 12 1-based), column 2
+        assertThat(synErr.range().getStart().getLine()).isEqualTo(11);
+        assertThat(synErr.range().getStart().getCharacter()).isEqualTo(2);
+    }
 }

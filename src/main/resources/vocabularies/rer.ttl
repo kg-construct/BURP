@@ -853,6 +853,34 @@ rer:UnusedRmlElement
     rer:potentialSolution "Remove the unused RML element from the mapping." ;
     rdfs:isDefinedBy   rer: .
 
+rer:OntologyWarning
+    a                  owl:Class ;
+    rdfs:subClassOf    rer:Warning ;
+    rdfs:label         "Ontology Warning" ;
+    rdfs:comment       "Warnings related to target ontology conformance." ;
+    rdfs:isDefinedBy   rer: .
+
+rer:OntologyDomainMismatch
+    a                  owl:Class ;
+    rdfs:subClassOf    rer:OntologyWarning ;
+    rdfs:label         "Ontology Domain Mismatch" ;
+    rdfs:comment       "Predicate is not declared for the subject class or its superclasses in the target ontology." ;
+    rdfs:isDefinedBy   rer: .
+
+rer:OntologyTermTypeMismatch
+    a                  owl:Class ;
+    rdfs:subClassOf    rer:OntologyWarning ;
+    rdfs:label         "Ontology Term Type Mismatch" ;
+    rdfs:comment       "Term type is incompatible with ontology property kind (e.g. literal used for owl:ObjectProperty)." ;
+    rdfs:isDefinedBy   rer: .
+
+rer:OntologyDatatypeMismatch
+    a                  owl:Class ;
+    rdfs:subClassOf    rer:OntologyWarning ;
+    rdfs:label         "Ontology Datatype Mismatch" ;
+    rdfs:comment       "Object datatype violates declared rdfs:range in the target ontology." ;
+    rdfs:isDefinedBy   rer: .
+
 @prefix draw: <https://w3id.org/dre/drawio#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 

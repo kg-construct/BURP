@@ -110,13 +110,11 @@ public class TurtleProvParser {
         try {
             store = visitor.visitTurtleDoc(parser.turtleDoc());
         } catch (TurtleProvException e) {
-            int line = e.getRange() != null ? e.getRange().start().line + 1 : 0;
-            int col = e.getRange() != null ? e.getRange().start().column : 0;
-            syntaxErrors.add(new ProvStore.SyntaxError(line, col, e.getMessage(), "AST Traversal", e.getRange()));
+            syntaxErrors.add(new ProvStore.SyntaxError(e, ""));
             store = visitor.getStore();
         } catch (Exception e) {
             // AST traversal failed due to missing nodes or unsupported constructs
-            syntaxErrors.add(new ProvStore.SyntaxError(0, 0, e.getMessage(), "AST Traversal"));
+            syntaxErrors.add(new ProvStore.SyntaxError(0, 0, e.getMessage(), ""));
             store = visitor.getStore();
         }
 

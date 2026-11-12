@@ -349,11 +349,12 @@ public class RmlLoader {
 
     private Model parseStringToModel(String content, @Nullable Path path) {
         try {
-            ProvStore provStore = TurtleProvParser.parseTurtleFromString(content, path != null ? path.toUri().toString() : null);
+            Path effectivePath = path != null ? path : (this.mappingPath != null ? this.mappingPath : Path.of("mapping.ttl"));
+            ProvStore provStore = TurtleProvParser.parseTurtleFromString(content, effectivePath.toUri().toString());
             if (!provStore.getSyntaxErrors().isEmpty()) {
                 var rmlSyntaxErrors = provStore.getSyntaxErrors().stream().map(error -> {
-                    TextFilePointer tfp = path != null ? new TextFilePointer(path, error.range()) : null;
-                    Origin origin = tfp != null ? new Origin(List.of(tfp)) : null;
+                    TextFilePointer tfp = new TextFilePointer(effectivePath, error.range());
+                    Origin origin = new Origin(List.of(tfp));
                     return new RmlError(error.message(), origin, RER.RDFMappingSyntaxError);
                 }).toList();
                 if (this.report != null) {
