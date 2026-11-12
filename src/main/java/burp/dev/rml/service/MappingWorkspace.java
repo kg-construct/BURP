@@ -2,12 +2,14 @@ package burp.dev.rml.service;
 
 import burp.dev.NodeSelectorMatcher;
 import burp.dev.rml.service.cache.DevServerCache;
-import burp.dev.rml.service.completion.ReferenceCompleter;
+import burp.dev.rml.service.completion.MappingCompleter;
 import burp.dev.rml.service.eval.EvaluationDataContext;
 import burp.dev.rml.service.eval.RangeDataContext;
 import burp.dev.rml.service.eval.RmlEvaluator;
 import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
 import burp.dev.rml.service.hint.LspInlineHintProvider;
+import burp.dev.rml.service.ontology.OntologyLoader;
+import burp.dev.rml.service.ontology.OntologyRegistry;
 import burp.dev.rml.service.selector.*;
 import burp.dev.rml.service.source.LspCodeLensProvider;
 import burp.model.MappingDocument;
@@ -48,8 +50,10 @@ public class MappingWorkspace implements WorkspaceService {
     private RmlSettings rmlSettings = new RmlSettings(
             null,
             new InlineHintsSettings(true, InlineHintsEvaluationMode.TRACE, null),
+            null,
             null
     );
+    private SwlsSettings swlsSettings = new SwlsSettings(null);
     private @Nullable LanguageClient client = null;
 
     public void connect(LanguageClient client) {
@@ -61,13 +65,19 @@ public class MappingWorkspace implements WorkspaceService {
         if (client == null) {
             return;
         }
-        ConfigurationItem item = new ConfigurationItem();
-        item.setSection("rml");
-        ConfigurationParams params = new ConfigurationParams(List.of(item));
+        ConfigurationItem rmlItem = new ConfigurationItem();
+        rmlItem.setSection("rml");
+        ConfigurationItem swlsItem = new ConfigurationItem();
+        swlsItem.setSection("swls");
+        ConfigurationParams params = new ConfigurationParams(List.of(rmlItem, swlsItem));
         try {
             client.configuration(params).thenAccept(results -> {
-                if (results != null && !results.isEmpty() && results.getFirst() != null) {
-                    updateSettings(results.getFirst());
+                if (results != null) {
+                    for (Object res : results) {
+                        if (res != null) {
+                            updateSettings(res);
+                        }
+                    }
                 }
             }).exceptionally(ex -> null);
         } catch (Exception ignored) {
@@ -83,6 +93,7 @@ public class MappingWorkspace implements WorkspaceService {
     @Override
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
         cache.invalidateAll();
+        clearOntologyRegistries();
     }
 
     public RmlSettings getRmlSettings() {
@@ -99,7 +110,7 @@ public class MappingWorkspace implements WorkspaceService {
 
     public void setBaseIri(@Nullable String baseIri) {
         String sanitized = (baseIri != null && !baseIri.isBlank()) ? baseIri : null;
-        this.rmlSettings = new RmlSettings(sanitized, rmlSettings.inlineHints(), rmlSettings.iterationSampleLimit());
+        this.rmlSettings = new RmlSettings(sanitized, rmlSettings.inlineHints(), rmlSettings.iterationSampleLimit(), rmlSettings.ontologies());
     }
 
     public boolean isInlineHintsEvaluationEnabled() {
@@ -113,7 +124,7 @@ public class MappingWorkspace implements WorkspaceService {
                 current != null ? current.evaluationMode() : InlineHintsEvaluationMode.TRACE,
                 current != null ? current.joinIndexLimit() : null
         );
-        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), updated, rmlSettings.iterationSampleLimit());
+        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), updated, rmlSettings.iterationSampleLimit(), rmlSettings.ontologies());
     }
 
     public InlineHintsEvaluationMode getInlineHintsEvaluationMode() {
@@ -129,7 +140,7 @@ public class MappingWorkspace implements WorkspaceService {
                 inlineHintsEvaluationMode,
                 current != null ? current.joinIndexLimit() : null
         );
-        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), updated, rmlSettings.iterationSampleLimit());
+        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), updated, rmlSettings.iterationSampleLimit(), rmlSettings.ontologies());
     }
 
     public @Nullable Integer getJoinIndexLimit() {
@@ -143,7 +154,7 @@ public class MappingWorkspace implements WorkspaceService {
                 current != null ? current.evaluationMode() : InlineHintsEvaluationMode.TRACE,
                 joinIndexLimit
         );
-        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), updated, rmlSettings.iterationSampleLimit());
+        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), updated, rmlSettings.iterationSampleLimit(), rmlSettings.ontologies());
     }
 
     public @Nullable Integer getIterationSampleLimit() {
@@ -151,7 +162,7 @@ public class MappingWorkspace implements WorkspaceService {
     }
 
     public void setIterationSampleLimit(@Nullable Integer iterationSampleLimit) {
-        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), rmlSettings.inlineHints(), iterationSampleLimit);
+        this.rmlSettings = new RmlSettings(rmlSettings.baseIRI(), rmlSettings.inlineHints(), iterationSampleLimit, rmlSettings.ontologies());
     }
 
     private final Map<String, EvaluationDataContext> documentInlineDataContexts = new ConcurrentHashMap<>();
@@ -173,13 +184,20 @@ public class MappingWorkspace implements WorkspaceService {
         documentCursorPositions.put(documentUri, position);
     }
 
-    public record Settings(@Nullable RmlSettings rml) {
+    public record SwlsSettings(@Nullable List<String> ontologies) {
+    }
+
+    public record Settings(
+            @Nullable RmlSettings rml,
+            @Nullable SwlsSettings swls
+    ) {
     }
 
     public record RmlSettings(
             @Nullable String baseIRI,
             @Nullable InlineHintsSettings inlineHints,
-            @Nullable Integer iterationSampleLimit
+            @Nullable Integer iterationSampleLimit,
+            @Nullable List<String> ontologies
     ) {
     }
 
@@ -190,21 +208,52 @@ public class MappingWorkspace implements WorkspaceService {
     ) {
     }
 
+    public List<String> getConfiguredOntologies() {
+        Set<String> all = new LinkedHashSet<>();
+        if (rmlSettings.ontologies() != null) {
+            all.addAll(rmlSettings.ontologies());
+        }
+        if (swlsSettings.ontologies() != null) {
+            all.addAll(swlsSettings.ontologies());
+        }
+        return new ArrayList<>(all);
+    }
+
+    public SwlsSettings getSwlsSettings() {
+        return swlsSettings;
+    }
+
     public void updateSettings(@Nullable Object rawSettings) {
         if (rawSettings == null) return;
         try {
             Gson gson = new GsonBuilder().serializeNulls().create();
             JsonElement jsonElement = (rawSettings instanceof JsonElement je) ? je : gson.toJsonTree(rawSettings);
             Settings settings = gson.fromJson(jsonElement, Settings.class);
+
+            // Check swls settings
+            SwlsSettings incomingSwls = (settings != null && settings.swls != null)
+                    ? settings.swls
+                    : gson.fromJson(jsonElement, SwlsSettings.class);
+            if (incomingSwls != null && incomingSwls.ontologies() != null) {
+                this.swlsSettings = incomingSwls;
+                clearOntologyRegistries();
+            }
+
+            // Check rml settings
             RmlSettings incoming = (settings != null && settings.rml != null)
                     ? settings.rml
                     : gson.fromJson(jsonElement, RmlSettings.class);
 
-            if (incoming != null) {
+            if (incoming != null && (incoming.baseIRI != null || incoming.inlineHints != null || incoming.iterationSampleLimit != null || incoming.ontologies != null)) {
                 String newBase = incoming.baseIRI != null
                         ? ((!incoming.baseIRI.isBlank()) ? incoming.baseIRI : null)
                         : rmlSettings.baseIRI();
-                Integer newSampleLimit = incoming.iterationSampleLimit;
+                Integer newSampleLimit = incoming.iterationSampleLimit != null
+                        ? incoming.iterationSampleLimit
+                        : rmlSettings.iterationSampleLimit();
+                List<String> newOntologies = incoming.ontologies != null
+                        ? incoming.ontologies
+                        : rmlSettings.ontologies();
 
                 InlineHintsSettings currentHints = rmlSettings.inlineHints();
                 InlineHintsSettings incomingHints = incoming.inlineHints;
@@ -219,7 +268,8 @@ public class MappingWorkspace implements WorkspaceService {
                     newHints = currentHints;
                 }
 
-                this.rmlSettings = new RmlSettings(newBase, newHints, newSampleLimit);
+                this.rmlSettings = new RmlSettings(newBase, newHints, newSampleLimit, newOntologies);
+                clearOntologyRegistries();
             }
         } catch (Exception ignored) {
         }
@@ -235,14 +285,35 @@ public class MappingWorkspace implements WorkspaceService {
 
     public void updateDocumentText(String uri, String text) {
         openDocuments.put(uri, text);
+        invalidateOntologyRegistry(uri);
     }
 
     public void removeDocument(String uri) {
         openDocuments.remove(uri);
+        invalidateOntologyRegistry(uri);
+    }
+
+    private final Map<String, OntologyRegistry> documentOntologies = new ConcurrentHashMap<>();
+
+    public OntologyRegistry getOntologyRegistry(@Nullable Model mappingModel, @Nullable String mappingFileUri) {
+        if (mappingFileUri != null) {
+            return documentOntologies.computeIfAbsent(mappingFileUri, uri ->
+                    OntologyLoader.loadForWorkspace(this, mappingModel, uri)
+            );
+        }
+        return OntologyLoader.loadForWorkspace(this, mappingModel, null);
+    }
+
+    public void invalidateOntologyRegistry(String mappingFileUri) {
+        documentOntologies.remove(mappingFileUri);
+    }
+
+    public void clearOntologyRegistries() {
+        documentOntologies.clear();
     }
 
     private final DevServerCache cache = new DevServerCache();
-    private final ReferenceCompleter referenceCompleter = new ReferenceCompleter();
+    private final MappingCompleter mappingCompleter = new MappingCompleter();
     private final LspInlineHintProvider inlayHintProvider = new LspInlineHintProvider();
     private final LspCodeLensProvider codeLensProvider = new LspCodeLensProvider();
     private final RmlEvaluator evaluator = new RmlEvaluator(cache);
@@ -261,12 +332,14 @@ public class MappingWorkspace implements WorkspaceService {
         public void didChange(DidChangeTextDocumentParams params) {
             if (!params.getContentChanges().isEmpty()) {
                 openDocuments.put(params.getTextDocument().getUri(), params.getContentChanges().getFirst().getText());
+                invalidateOntologyRegistry(params.getTextDocument().getUri());
             }
         }
 
         @Override
         public void didClose(DidCloseTextDocumentParams params) {
             openDocuments.remove(params.getTextDocument().getUri());
+            invalidateOntologyRegistry(params.getTextDocument().getUri());
         }
 
         @Override
@@ -274,11 +347,12 @@ public class MappingWorkspace implements WorkspaceService {
             if (params.getText() != null) {
                 openDocuments.put(params.getTextDocument().getUri(), params.getText());
             }
+            invalidateOntologyRegistry(params.getTextDocument().getUri());
         }
 
         @Override
         public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
-            return referenceCompleter.complete(params, MappingWorkspace.this);
+            return mappingCompleter.complete(params, MappingWorkspace.this);
         }
 
         @Override
@@ -327,7 +401,7 @@ public class MappingWorkspace implements WorkspaceService {
         return loadMappingDetailed(mappingFileUri, ValidationMode.LENIENT);
     }
 
-    public LoadedMapping loadMappingDetailed(String mappingFileUri, ValidationMode validationMode) throws Exception {
+    public LoadedMapping loadMappingDetailed(String mappingFileUri, ValidationMode validationMode) {
         String documentText = getOpenDocumentText(mappingFileUri);
         Path mappingPath = normalizePath(mappingFileUri);
         if (!mappingPath.isAbsolute()) {

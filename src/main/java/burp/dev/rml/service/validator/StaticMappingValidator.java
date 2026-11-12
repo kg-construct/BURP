@@ -26,9 +26,10 @@ public class StaticMappingValidator {
     private final ReferenceValidator referenceValidator;
     private final FunctionExecutionValidator functionExecutionValidator;
     private final UnusedElementValidator unusedElementValidator;
+    private final OntologyValidator ontologyValidator;
 
     public StaticMappingValidator() {
-        this(new ReferenceValidator(), new FunctionExecutionValidator(), new UnusedElementValidator());
+        this(new ReferenceValidator(), new FunctionExecutionValidator(), new UnusedElementValidator(), new OntologyValidator());
     }
 
     public StaticMappingValidator(
@@ -36,9 +37,19 @@ public class StaticMappingValidator {
             FunctionExecutionValidator functionExecutionValidator,
             UnusedElementValidator unusedElementValidator
     ) {
+        this(referenceValidator, functionExecutionValidator, unusedElementValidator, new OntologyValidator());
+    }
+
+    public StaticMappingValidator(
+            ReferenceValidator referenceValidator,
+            FunctionExecutionValidator functionExecutionValidator,
+            UnusedElementValidator unusedElementValidator,
+            OntologyValidator ontologyValidator
+    ) {
         this.referenceValidator = referenceValidator;
         this.functionExecutionValidator = functionExecutionValidator;
         this.unusedElementValidator = unusedElementValidator;
+        this.ontologyValidator = ontologyValidator;
     }
 
     public CompletableFuture<List<RmlDiagnostic>> validate(
@@ -75,6 +86,10 @@ public class StaticMappingValidator {
                 Set<Statement> accessed = loaded.loader().getReflectiveLoader().getAccessedStatements();
                 unusedElementValidator.validate(loaded.model(), accessed, diagnostics);
             }
+
+            // 5. Validate target ontology conformance
+            var ontRegistry = workspace.getOntologyRegistry(loaded.model(), params.mappingFileUri());
+            ontologyValidator.validate(loaded.document().triplesMaps, ontRegistry, prefixMap, diagnostics);
 
             // Deduplicate and sort diagnostics
             List<RmlDiagnostic> deduplicated = deduplicateAndSort(diagnostics);

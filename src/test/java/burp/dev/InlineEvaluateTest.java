@@ -628,7 +628,7 @@ public class InlineEvaluateTest {
         RmlLanguageServer server = createServer();
 
         // Send config
-        MappingWorkspace.Settings settings = new MappingWorkspace.Settings(new MappingWorkspace.RmlSettings("http://example.com/base/", null, null));
+        MappingWorkspace.Settings settings = new MappingWorkspace.Settings(new MappingWorkspace.RmlSettings("http://example.com/base/", null, null, null), null);
         var gson = new Gson();
         JsonElement settingsJson = gson.toJsonTree(settings);
         server.getWorkspaceService().didChangeConfiguration(new DidChangeConfigurationParams(settingsJson));

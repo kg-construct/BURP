@@ -90,7 +90,7 @@ public class EvaluateTest {
         assertThat(results).isNotNull().isNotEmpty();
         EvaluateResult first = results.getFirst();
         assertThat(first.targetNodeType()).isEqualTo("TriplesMap");
-        assertThat(first.targetParentTriplesMap()).contains("TriplesMap");
+        assertThat(first.targetParentTriplesMap()).contains("PersonMapping");
         assertThat(first.evaluationMode()).isEqualTo(burp.dev.rml.service.hint.InlineHintsEvaluationMode.TRACE);
     }
 

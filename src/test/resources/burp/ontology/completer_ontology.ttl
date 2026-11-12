@@ -1,0 +1,31 @@
+PREFIX ex:   <http://example.org/>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+ex:LivingBeing a owl:Class .
+
+ex:Person a owl:Class ;
+    rdfs:subClassOf ex:LivingBeing .
+
+ex:Patient a owl:Class ;
+    rdfs:subClassOf ex:Person .
+
+ex:Doctor a owl:Class ;
+    rdfs:subClassOf ex:Person .
+
+ex:dnaSequence a owl:DatatypeProperty ;
+    rdfs:domain ex:LivingBeing ;
+    rdfs:range xsd:string .
+
+ex:name a owl:DatatypeProperty ;
+    rdfs:domain ex:Person ;
+    rdfs:range xsd:string .
+
+ex:patientId a owl:DatatypeProperty ;
+    rdfs:domain ex:Patient ;
+    rdfs:range xsd:integer .
+
+ex:treatedBy a owl:ObjectProperty ;
+    rdfs:domain ex:Patient ;
+    rdfs:range ex:Doctor .

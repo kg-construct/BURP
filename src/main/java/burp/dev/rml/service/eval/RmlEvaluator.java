@@ -5,6 +5,7 @@ import burp.dev.rml.service.RmlEvaluationResultFormatter;
 import burp.dev.rml.service.cache.DevServerCache;
 import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
 import burp.dev.rml.service.selector.CursorSelector;
+import burp.dev.rml.service.validator.RuntimeOntologyValidator;
 import burp.ls.JSONSourceRFC;
 import burp.ls.LogicalSourceProvider;
 import burp.model.*;
@@ -43,6 +44,7 @@ import static burp.parse.ValidationMode.LENIENT;
 public class RmlEvaluator {
 
     private final @Nullable DevServerCache cache;
+    private final RuntimeOntologyValidator runtimeOntologyValidator = new RuntimeOntologyValidator();
 
     public RmlEvaluator() {
         this(null);
@@ -180,11 +182,26 @@ public class RmlEvaluator {
                 EvaluateResult emptyResult = new EvaluateResult("0", "", Collections.emptyList(), Collections.emptyList(), null, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode);
                 return CompletableFuture.completedFuture(List.of(emptyResult));
             }
+
+            var ontRegistry = workspace.getOntologyRegistry(null, fileUri);
+            Integer sampleLimit = workspace.getIterationSampleLimit();
+
             List<EvaluateResult> results = new ArrayList<>(iterations.size());
             for (int i = 0; i < iterations.size(); i++) {
                 Iteration iter = iterations.get(i);
                 int index = iter.getId() != null ? iter.getId().index() : i;
-                results.add(evaluateIteration(targetNode, targetKey, iter, index, context, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode));
+                EvaluateResult er = evaluateIteration(targetNode, targetKey, iter, index, context, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode);
+                if (enclosingTm != null && ontRegistry != null) {
+                    var ontErrors = runtimeOntologyValidator.validateResults(enclosingTm, er.generatedRdf(), ontRegistry, prefixMap, sampleLimit);
+                    if (!ontErrors.isEmpty()) {
+                        List<String> combinedDiags = new ArrayList<>(er.diagnostics());
+                        for (burp.reporting.RmlError err : ontErrors) {
+                            combinedDiags.add(err.message());
+                        }
+                        er = new EvaluateResult(er.iterationId(), er.iterationData(), er.generatedRdf(), combinedDiags, er.rerDiagnostic(), er.prefixMap(), er.traceSummary(), er.targetNodeType(), er.targetParentTriplesMap(), er.targetNodeSummary(), er.evaluationMode());
+                    }
+                }
+                results.add(er);
             }
             return CompletableFuture.completedFuture(results);
         } catch (Exception e) {
@@ -224,9 +241,6 @@ public class RmlEvaluator {
         if (dataContext instanceof MultiSourceDataContext msd) {
             String matchedKey = findMatchingSourceKey(msd, logicalSource);
             EvaluationDataContext matchedContext = msd.getForSource(matchedKey);
-            if (matchedContext == null) {
-                return Collections.emptyList();
-            }
             return resolveIterations(matchedContext, logicalSource);
         }
 
@@ -378,7 +392,7 @@ public class RmlEvaluator {
                 continue;
             }
             String val = attr.value();
-            if (val != null && !val.isBlank()) {
+            if (!val.isBlank()) {
                 if (prefixMap != null) {
                     val = RmlEvaluationResultFormatter.compactIri(val, prefixMap);
                 }
@@ -407,7 +421,7 @@ public class RmlEvaluator {
         if (parts.isEmpty()) {
             for (PlanNodeAttribute attr : node.nodeAttributes()) {
                 String val = attr.value();
-                if (val != null && !val.isBlank()) {
+                if (!val.isBlank()) {
                     if (prefixMap != null) {
                         val = RmlEvaluationResultFormatter.compactIri(val, prefixMap);
                     }
@@ -494,7 +508,7 @@ public class RmlEvaluator {
         }
         String lsId = PlanNodeIdRegistry.getId(logicalSource);
         String lsIri = PlanNode.resourceToIriOrBNode(logicalSource.getIri());
-        if (lsIri != null && msd.sources().containsKey(lsIri)) {
+        if (msd.sources().containsKey(lsIri)) {
             return lsIri;
         }
         if (msd.sources().containsKey(lsId)) {
@@ -506,6 +520,6 @@ public class RmlEvaluator {
                 return k;
             }
         }
-        return fileName != null ? fileName : (lsIri != null ? lsIri : lsId);
+        return fileName != null ? fileName : lsIri;
     }
 }
