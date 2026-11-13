@@ -19,12 +19,12 @@ suite('RML Dev Server Logical View Table Preview Test', function () {
         const mappingUri = getTestMappingUri('eval_logicalview/mapping.ttl');
         const doc = await vscode.workspace.openTextDocument(mappingUri);
         await vscode.window.showTextDocument(doc);
-        await ctx.client.didOpenTextDocument(doc);
 
-        // 1. CodeLens verification
-        const lenses = await ctx.client.codeLens({
-            textDocument: { uri: doc.uri.toString() }
-        });
+        // 1. CodeLens verification via standard LSP
+        const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>(
+            'vscode.executeCodeLensProvider',
+            doc.uri
+        );
 
         assert.ok(lenses, 'Expected CodeLenses to be returned');
         assert.ok(lenses.length >= 2, `Expected at least 2 CodeLenses, got ${lenses.length}`);

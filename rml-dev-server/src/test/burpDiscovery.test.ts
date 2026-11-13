@@ -4,10 +4,16 @@ import * as vscode from 'vscode';
 import {findBurpExecutable} from '../burpDiscovery';
 
 suite('BURP Discovery Tests', () => {
+    setup(async () => {
+        const config = vscode.workspace.getConfiguration('rml');
+        await config.update('burp.path', '', vscode.ConfigurationTarget.Global);
+    });
+
     test('findBurpExecutable returns null when storage and config are empty', () => {
         const mockContext = {
             globalStorageUri: vscode.Uri.file('/nonexistent/mock/storage'),
-            extension: {packageJSON: {version: '0.1.4', serverVersion: '0.1.4'}}
+            extension: {packageJSON: {version: '0.1.4', serverVersion: '0.1.4'}},
+            asAbsolutePath: (rel: string) => path.join('/nonexistent/mock', rel)
         } as unknown as vscode.ExtensionContext;
 
         const target = findBurpExecutable(mockContext);

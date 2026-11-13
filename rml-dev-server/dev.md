@@ -84,19 +84,56 @@ The extension will connect directly to port 8080 without spawning a local proces
 
 ## Packaging the Extension
 
-To produce a single universal `.vsix` package:
+The extension bundles the backend `burp.jar` directly inside the `.vsix` package.
+
+### 1. Versioning in `package.json`
+
+Before packaging, verify the version configuration in `rml-dev-server/package.json`:
+
+- **`version`**: The extension version published to the VS Code Marketplace and Open VSX.
+  > **Note**: VS Code Marketplace requires strict `MAJOR.MINOR.PATCH` and rejects standard SemVer prerelease suffixes like `-alpha`, `-beta`, or `-rc`.
+- **`serverVersion`**: The BURP backend version expected / bundled inside `server/burp.jar`.
+
+### 2. Build and Bundle the Backend Fat JAR
 
 ```bash
-# Create the fat jar
+# Build the shaded fat jar (from repo root)
 mvn package -Pdeploy -DskipTests
 
-# Copy it
+# Copy to the extension server directory
+mkdir -p rml-dev-server/server
 cp target/burp.jar rml-dev-server/server/burp.jar
-
-# Package the extension
-npm --prefix rml-dev-server run package
 ```
 
-It seems the size limit for extensions was lift off, so excluding  `burp.jar` is unnecessary.
+### 3. Package the VSIX
+
+From the `rml-dev-server/` directory:
+
+```bash
+# Compile TypeScript and React webview assets
+npm run compile
+```
+
+#### Pre-Release Package (Early Version)
+
+Pass the `--pre-release` flag so the VSIX manifest is tagged for the pre-release channel:
+
+```bash
+npx vsce package --pre-release --out rml-dev-server-0.0.3.vsix
+```
+
+#### Stable Release Package
+
+```bash
+npx vsce package
+```
+
+### 4. Manual Store Upload
+
+Upload the generated `.vsix` to the store portals:
+
+1. **Visual Studio Marketplace**: Go to [marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage) $\to$ select publisher `uliege-dre` $\to$ **New Extension** $\to$ **Visual Studio Code** $\to$ upload `rml-dev-server-0.0.3.vsix`. (The Marketplace detects the `--pre-release` flag in the manifest automatically).
+2. **Open VSX Registry**: Go to [open-vsx.org](https://open-vsx.org) $\to$ **Publish Extension** $\to$ upload `rml-dev-server-0.0.3.vsix`.
+
 
 

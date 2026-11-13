@@ -34,12 +34,13 @@ suite('RML Dev Server Inlay Hints Test', function () {
         const doc = await vscode.workspace.openTextDocument(mappingUri);
         await vscode.window.showTextDocument(doc);
 
-        await ctx.client.didOpenTextDocument(doc);
-
-        // 5. Execute Inlay Hints Provider on the entire document range
+        // 5. Execute standard Inlay Hints command on the entire document range
         const fullRange = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(doc.lineCount, 0));
-        const cancellationSource = new vscode.CancellationTokenSource();
-        const hints = await hintsProvider.provideInlayHints(doc, fullRange, cancellationSource.token);
+        const hints = await vscode.commands.executeCommand<vscode.InlayHint[]>(
+            'vscode.executeInlayHintProvider',
+            doc.uri,
+            fullRange
+        );
 
         assert.ok(hints, 'Expected inlay hints array to be returned');
         assert.ok(hints.length > 0, `Expected at least one inlay hint, got ${hints.length}`);
@@ -72,7 +73,11 @@ suite('RML Dev Server Inlay Hints Test', function () {
             referenceValues: { Id: '10', Name: 'Venus', Class: 'Pro' }
         } as any);
 
-        const customHints = await hintsProvider.provideInlayHints(doc, fullRange, cancellationSource.token);
+        const customHints = await vscode.commands.executeCommand<vscode.InlayHint[]>(
+            'vscode.executeInlayHintProvider',
+            doc.uri,
+            fullRange
+        );
         assert.ok(customHints && customHints.length > 0, 'Expected custom hints');
 
         const customLabels = customHints.map(h => typeof h.label === 'string' ? h.label : h.label.map(p => p.value).join(''));
@@ -87,12 +92,13 @@ suite('RML Dev Server Inlay Hints Test', function () {
 
         const config = vscode.workspace.getConfiguration('rml');
         await config.update('inlineHints.enableEvaluation', false, vscode.ConfigurationTarget.Global);
-        await ctx.client.didChangeConfiguration({
-            settings: { rml: { inlineHints: { enableEvaluation: false } } }
-        });
         hintsProvider.refresh();
 
-        const staticHints = await hintsProvider.provideInlayHints(doc, fullRange, cancellationSource.token);
+        const staticHints = await vscode.commands.executeCommand<vscode.InlayHint[]>(
+            'vscode.executeInlayHintProvider',
+            doc.uri,
+            fullRange
+        );
         assert.ok(staticHints && staticHints.length > 0, 'Expected static hints when inline evaluation is disabled');
         const staticLabels = staticHints.map(h => typeof h.label === 'string' ? h.label : h.label.map(p => p.value).join(''));
         assert.ok(staticLabels.some(l => l.includes('input string (xsd:string)')), `Expected static function parameter hint in: ${staticLabels.join(', ')}`);

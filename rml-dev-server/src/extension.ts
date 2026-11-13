@@ -55,7 +55,6 @@ export async function activate(context: vscode.ExtensionContext) {
         onConnected: async () => {
             const editor = vscode.window.activeTextEditor;
             if (editor && isRmlDocument(editor.document)) {
-                await client.didOpenTextDocument(editor.document);
                 const pos = editor.selection.active;
                 structureViewProvider.updateCursor(editor.document, pos);
                 evaluatorViewProvider.updateCursor(editor.document, pos);
@@ -107,32 +106,21 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.onDidChangeActiveTextEditor((editor) => syncEditorState(editor))
     );
 
-    // Document Synchronization & Validation
+    // Document Synchronization (refresh local inlay hints on open/change)
     context.subscriptions.push(
-        vscode.workspace.onDidOpenTextDocument(async (doc) => {
+        vscode.workspace.onDidOpenTextDocument((doc) => {
             if (isRmlDocument(doc)) {
-                await client.didOpenTextDocument(doc);
                 inlayHintsProvider.refresh();
-                validationManager.scheduleValidation(doc);
             }
         }),
-        vscode.workspace.onDidChangeTextDocument(async (e) => {
+        vscode.workspace.onDidChangeTextDocument((e) => {
             if (isRmlDocument(e.document)) {
-                await client.didChangeTextDocument(e);
                 inlayHintsProvider.refresh();
-                validationManager.scheduleValidation(e.document);
             }
         }),
-        vscode.workspace.onDidSaveTextDocument(async (doc) => {
-            if (isRmlDocument(doc)) {
-                await client.didSaveTextDocument(doc);
-                validationManager.runValidation(doc);
-            }
-        }),
-        vscode.workspace.onDidCloseTextDocument(async (doc) => {
+        vscode.workspace.onDidCloseTextDocument((doc) => {
             if (isRmlDocument(doc)) {
                 validationManager.clear(doc.uri);
-                await client.didCloseTextDocument(doc);
             }
         })
     );
@@ -189,38 +177,16 @@ export async function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    // Configuration updates
+    // Configuration updates (LanguageClient automatically synchronizes 'rml' and 'swls' configuration sections)
     context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration(async (e) => {
+        vscode.workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration('rml.nodeBackgroundAll')) {
                 nodeHighlightManager?.update(vscode.window.activeTextEditor);
             }
-            if (e.affectsConfiguration('rml.baseIRI') || e.affectsConfiguration('rml.iterationSampleLimit')
-                || e.affectsConfiguration('rml.inlineHints.enableEvaluation')
-                || e.affectsConfiguration('rml.inlineHints.evaluationMode')
-                || e.affectsConfiguration('rml.inlineHints.joinIndexLimit')
-                || e.affectsConfiguration('rml')) {
-                const config = getConfiguration();
-                if (client.isConnected()) {
-                    await client.didChangeConfiguration({
-                        settings: {
-                            rml: {
-                                baseIRI: config.baseIRI,
-                                inlineHints: {
-                                    enableEvaluation: config.inlineHintsEnableEvaluation,
-                                    evaluationMode: config.inlineHintsEvaluationMode,
-                                    joinIndexLimit: config.inlineHintsJoinIndexLimit
-                                },
-                                iterationSampleLimit: config.iterationSampleLimit
-                            }
-                        }
-                    });
-                }
-            }
             if (e.affectsConfiguration('rml.iterationSampleLimit')) {
                 const editor = vscode.window.activeTextEditor;
-                if (editor) {
-                    validationManager.runValidation(editor.document);
+                if (editor && isRmlDocument(editor.document)) {
+                    void editor.document.save();
                 }
             }
             if (e.affectsConfiguration('rml.inlineHints.enableEvaluation')

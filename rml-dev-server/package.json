@@ -3,7 +3,7 @@
   "displayName": "RML: RDF Mapping Language",
   "icon": "assets/rml-128.png",
   "description": "A RDF Mapping Language (RML) Development Server with the BURP RML Processor",
-  "version": "0.1.4",
+  "version": "0.0.3",
   "serverVersion": "0.1.4",
   "publisher": "uliege-dre",
   "repository": {
@@ -29,6 +29,18 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "languages": [
+      {
+        "id": "turtle",
+        "aliases": ["Turtle", "turtle"],
+        "extensions": [".ttl"]
+      },
+      {
+        "id": "rml",
+        "aliases": ["RML", "rml"],
+        "extensions": [".rml"]
+      }
+    ],
     "commands": [
       {
         "command": "rml.healthCheck",
@@ -372,6 +384,8 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tar": "^7.5.22",
-    "vscode-jsonrpc": "^9.0.2"
+    "vscode-jsonrpc": "^9.0.2",
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver-protocol": "^3.18.5"
   }
 }

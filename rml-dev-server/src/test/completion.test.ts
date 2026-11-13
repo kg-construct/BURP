@@ -1,40 +1,25 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import {RmlCompletionItemProvider} from '../completionProvider';
 import {getTestMappingUri, setupTestServer, teardownTestServer, TestContext} from './testHelper';
 
 suite('RML Dev Server Reference Completion Test', function () {
     this.timeout(45000);
 
     let ctx: TestContext;
-    let providerDisposable: vscode.Disposable;
 
     setup(async () => {
         ctx = await setupTestServer('Completion Test Output');
     });
 
     teardown(async () => {
-        if (providerDisposable) {
-            providerDisposable.dispose();
-        }
         await teardownTestServer(ctx);
     });
 
     test('Opens file, positions cursor, triggers completion, and tests completion application result', async function () {
-        // 1. Register completion provider for testing
-        const completionProvider = new RmlCompletionItemProvider(ctx.client);
-        providerDisposable = vscode.languages.registerCompletionItemProvider(
-            [{ language: 'turtle' }, { pattern: '**/*.ttl' }],
-            completionProvider,
-            '"', '$', '{', '}', '/', ':', '.', '_', '@'
-        );
-
-        // 2. Open the complete_reference_schema/mapping.ttl file in an editor
+        // 1. Open the complete_reference_schema/mapping.ttl file in an editor
         const mappingUri = getTestMappingUri('complete_reference_schema/mapping.ttl');
         const doc = await vscode.workspace.openTextDocument(mappingUri);
         const editor = await vscode.window.showTextDocument(doc);
-
-        await ctx.client.didOpenTextDocument(doc);
 
         // Test 1: Position cursor inside rml:reference "$.fake" (line 23, character 28 right after '$.f')
         const targetPos = new vscode.Position(23, 28);

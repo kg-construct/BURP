@@ -8,6 +8,7 @@ export interface MappingWorkspace extends WorkspaceService {
     rmlSettings: RmlSettings;
     swlsSettings: SwlsSettings;
     client?: LanguageClient;
+    validationService: RmlValidationService;
     documentInlineDataContexts: { [index: string]: EvaluationDataContext };
     documentCursorPositions: { [index: string]: Position };
     documentOntologies: { [index: string]: OntologyRegistry };
@@ -266,7 +267,6 @@ export interface ReferenceValuesCustomDataContext extends CustomDataContext {
 
 export interface RmlEvaluator {
     cache?: DevServerCache;
-    runtimeOntologyValidator: RuntimeOntologyValidator;
 }
 
 export interface SetDataContextParams {
@@ -626,13 +626,16 @@ export interface TraceValue {
     derivedFromValueIds: string[];
 }
 
-export interface FunctionExecutionValidator {
+export interface FunctionExecutionValidator extends MappingValidator {
 }
 
-export interface OntologyValidator {
+export interface MappingValidator {
 }
 
-export interface ReferenceValidator {
+export interface OntologyValidator extends MappingValidator {
+}
+
+export interface ReferenceValidator extends MappingValidator {
 }
 
 export interface RmlDiagnostic {
@@ -643,21 +646,38 @@ export interface RmlDiagnostic {
     source?: string;
 }
 
-export interface RuntimeOntologyValidator {
+export interface RmlValidationService {
+    validators: MappingValidator[];
+    debounceDelayMs: number;
+    documentValidatorDiagnostics: { [index: string]: { [index: string]: Diagnostic[] } };
+    lastPublishedDiagnostics: { [index: string]: Diagnostic[] };
+    documentVersions: { [index: string]: number };
+    pendingDynamicTasks: { [index: string]: ScheduledFuture<any> };
+    debounceExecutor: ScheduledExecutorService;
+    lastToastTimes: { [index: string]: number };
+    lastToastMessages: { [index: string]: string };
+    documentsWithActiveUnlocatedErrors: string[];
 }
 
-export interface StaticMappingValidator {
-    referenceValidator: ReferenceValidator;
-    functionExecutionValidator: FunctionExecutionValidator;
-    unusedElementValidator: UnusedElementValidator;
-    ontologyValidator: OntologyValidator;
+export interface Partitioned {
+    located: Diagnostic[];
+    unlocated: RmlDiagnostic[];
 }
 
-export interface UnusedElementValidator {
+export interface SyntaxAndReportValidator extends MappingValidator {
+}
+
+export interface UnusedElementValidator extends MappingValidator {
 }
 
 export interface ValidateParams {
     mappingFileUri: string;
+}
+
+export interface ValidationContext {
+    loaded: LoadedMapping;
+    mappingFileUri: string;
+    workspace: MappingWorkspace;
 }
 
 export interface RawValue extends RmlEvaluationResult {
@@ -842,6 +862,9 @@ export interface OriginLineage {
     joined: IterationId[];
 }
 
+export interface ScheduledExecutorService extends ExecutorService {
+}
+
 export interface RdfStatementLike extends RmlEvaluationResult {
 }
 
@@ -944,6 +967,24 @@ export interface IterationId {
     index: number;
 }
 
+export interface Diagnostic {
+    range: Range;
+    severity: DiagnosticSeverity;
+    code: Either<string, number>;
+    codeDescription: DiagnosticCodeDescription;
+    source: string;
+    message: Either<string, MarkupContent>;
+    tags: DiagnosticTag[];
+    relatedInformation: DiagnosticRelatedInformation[];
+    data: any;
+}
+
+export interface ScheduledFuture<V> extends Delayed, Future<V> {
+}
+
+export interface ExecutorService extends Executor, AutoCloseable {
+}
+
 export interface LogicalTarget {
     subject: Resource;
     target?: RMLTarget;
@@ -1022,6 +1063,19 @@ export interface StackTraceElement extends Serializable {
     fileName: string;
     lineNumber: number;
     format: number;
+}
+
+export interface DiagnosticCodeDescription {
+    href: string;
+}
+
+export interface Delayed extends Comparable<Delayed> {
+}
+
+export interface Executor {
+}
+
+export interface AutoCloseable {
 }
 
 export interface RMLTarget {
@@ -1109,6 +1163,24 @@ export interface PredicateObjectMap extends AbstractPlanNode, LogicalTargetScope
     graphMaps: GraphMap[];
 }
 
+export interface Either<L, R> {
+    left: L;
+    right: R;
+}
+
+export interface MarkupContent {
+    kind: string;
+    value: string;
+}
+
+export interface DiagnosticRelatedInformation {
+    location: Location;
+    message: string;
+}
+
+export interface Future<V> {
+}
+
 export interface RDFPointer {
 }
 
@@ -1144,6 +1216,11 @@ export interface ExpressionMap extends AbstractPlanNode, LogicalTargetScope {
 }
 
 export interface TermGenerator extends PlanNode {
+}
+
+export interface Location {
+    uri: string;
+    range: Range;
 }
 
 export interface OfField<F> extends TypeDescriptor {
@@ -1205,10 +1282,14 @@ export type ErrorKind = "CONNECTION_ERROR" | "QUERY_ERROR";
 
 export type PlanNodeStage = "LOGICAL_SOURCE" | "REFERENCE" | "INPUT_PARAMETER" | "FUNCTION" | "TEMPLATE_EXPRESSION" | "TERM_MAP" | "PREDICATE_OBJECT_MAP" | "TRIPLES_MAP" | "OTHER";
 
+export type ValidationExecutionPolicy = "IMMEDIATE" | "DEBOUNCED_ASYNC";
+
 export type DiagnosticSeverity = "Error" | "Warning" | "Information" | "Hint";
 
 export type ValidationMode = "STRICT" | "LENIENT" | "NONE";
 
 export type TemplateReferenceSafety = "UNSAFE" | "SAFE_IRI" | "SAFE_URI";
+
+export type DiagnosticTag = "Unnecessary" | "Deprecated";
 
 export type StatementPart = "Subject" | "Predicate" | "Object";

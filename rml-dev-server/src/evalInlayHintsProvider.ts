@@ -55,8 +55,6 @@ export class RmlEvalInlayHintsProvider implements vscode.InlayHintsProvider {
         }
 
         try {
-            await this.client.didOpenTextDocument(document);
-
             const docUri = document.uri.toString();
             if (this.syncedContexts.get(docUri) !== this.dataContext) {
                 await this.client.setDataContext({

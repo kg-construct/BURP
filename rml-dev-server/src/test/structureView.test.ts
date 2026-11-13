@@ -20,7 +20,6 @@ suite('RML Dev Server Structure View & Bidirectional Navigation Test', function 
         const mappingUri = getTestMappingUri('eval_alice/mapping.ttl');
         const doc = await vscode.workspace.openTextDocument(mappingUri);
         const editor = await vscode.window.showTextDocument(doc);
-        await ctx.client.didOpenTextDocument(doc);
 
         // 2. Move editor cursor to line 19 (rml:reference "$.age") -> line 18 (0-indexed)
         const targetPos = new vscode.Position(18, 20);
@@ -46,7 +45,6 @@ suite('RML Dev Server Structure View & Bidirectional Navigation Test', function 
         const mappingUri = getTestMappingUri('eval_alice/mapping.ttl');
         const doc = await vscode.workspace.openTextDocument(mappingUri);
         const editor = await vscode.window.showTextDocument(doc);
-        await ctx.client.didOpenTextDocument(doc);
 
         // 2. Retrieve plan tree
         const planResult = await ctx.client.plan({
