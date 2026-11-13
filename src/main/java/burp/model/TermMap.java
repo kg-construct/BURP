@@ -138,12 +138,7 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
                     ),
                     this
             );
-            if (context.validationMode() == ValidationMode.STRICT) {
-                throw new BurpException(error);
-            }
-            if (!context.report().getErrors().contains(error)) {
-                context.report().getErrors().add(error);
-            }
+            context.report().emit(error, context.validationMode());
             return Collections.emptyList();
         }
     }
@@ -166,12 +161,7 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
                     RER.InvalidIRI,
                     this
             );
-            if (context.validationMode() == ValidationMode.STRICT) {
-                throw new BurpException(error);
-            }
-            if (!context.report().getErrors().contains(error)) {
-                context.report().getErrors().add(error);
-            }
+            context.report().emit(error, context.validationMode());
             return null;
         }
     }
@@ -218,12 +208,7 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
                     RER.InvalidIRI,
                     this
             );
-            if (context.validationMode() == ValidationMode.STRICT) {
-                throw new BurpException(error);
-            }
-            if (!context.report().getErrors().contains(error)) {
-                context.report().getErrors().add(error);
-            }
+            context.report().emit(error, context.validationMode());
             return null;
         }
     }
@@ -269,12 +254,7 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
                     RER.InvalidURI,
                     this
             );
-            if (context.validationMode() == ValidationMode.STRICT) {
-                throw new BurpException(error);
-            }
-            if (!context.report().getErrors().contains(error)) {
-                context.report().getErrors().add(error);
-            }
+            context.report().emit(error, context.validationMode());
             return null;
         }
     }
@@ -290,13 +270,7 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
                     Map.of(RML.constant, ResourceFactory.createResource(resolvedIri)),
                     this
             );
-            if (context.validationMode() == ValidationMode.LENIENT) {
-                if (!context.report().getErrors().contains(error)) {
-                    context.report().getErrors().add(error);
-                }
-            } else if (context.validationMode() == ValidationMode.STRICT) {
-                throw new BurpException(error);
-            }
+            context.report().emit(error, context.validationMode());
         }
     }
 

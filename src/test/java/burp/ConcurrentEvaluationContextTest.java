@@ -199,7 +199,7 @@ public class ConcurrentEvaluationContextTest {
                     latch.await();
                     EvaluationContext ctx = EvaluationContext.createDefault();
                     for (int k = 0; k < errorCount; k++) {
-                        ctx.report().getErrors().add(new RmlError("Error " + k, null, RER.ExecutionError));
+                        ctx.report().addLog(new RmlError("Error " + k, null, RER.ExecutionError));
                     }
                     return ctx.report().getErrors().size();
                 }));

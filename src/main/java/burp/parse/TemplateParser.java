@@ -251,11 +251,9 @@ public class TemplateParser {
                     : new Origin(Collections.singletonList(new LiteralPart(stmt, range)));
             RmlError error = new RmlError(message, origin, errorType, null, Collections.emptyMap(), templateObj);
 
-            if (report != null && !report.getErrors().contains(error)) {
-                report.getErrors().add(error);
-            }
-
-            if (validationMode == ValidationMode.STRICT) {
+            if (report != null) {
+                report.emit(error, validationMode);
+            } else if (validationMode == ValidationMode.STRICT) {
                 throw new BurpException(error);
             }
         }

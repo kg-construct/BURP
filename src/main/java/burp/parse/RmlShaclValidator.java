@@ -84,7 +84,7 @@ public class RmlShaclValidator {
 
                         Origin origin = !focusOrigins.isEmpty() ? new Origin(focusOrigins) : null;
                         OntClass errorType = extractRerError(vr, shapesModel);
-                        report.getErrors().add(
+                        report.addLog(
                                 new RmlError(
                                         msg.toString(),
                                         origin,
@@ -98,7 +98,7 @@ public class RmlShaclValidator {
             return true;
         } catch (Exception e) {
             if (report != null) {
-                report.getErrors().add(new RmlError("SHACL validation failed with exception: " + e.getMessage(), null, RER.MappingError, e));
+                report.addLog(new RmlError("SHACL validation failed with exception: " + e.getMessage(), null, RER.MappingError, e));
             }
             return false;
         }

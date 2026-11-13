@@ -111,7 +111,7 @@ public class Main {
     public static void reportConfigurationError(String message, String reportFilePath, Exception cause) {
         RmlExecutionReport report = new RmlExecutionReport();
         RmlError error = new RmlError(message, null, RER.ConfigurationError, cause);
-        report.getErrors().add(error);
+        report.addLog(error);
 
         System.out.print(PlainTextReportGenerator.generateTextReport(report));
         if (reportFilePath != null && !reportFilePath.isBlank()) {
@@ -162,7 +162,7 @@ public class Main {
             document = loader.loadMappingDocument();
             List<TriplesMap> triplesMaps = document.triplesMaps;
             if (triplesMaps.isEmpty()) {
-                report.getErrors().add(Errors.NoTriplesMap());
+                report.addLog(Errors.NoTriplesMap());
             }
             report.setExecutionPlan(document);
 
@@ -236,10 +236,10 @@ public class Main {
             }
         } catch (BurpException e) {
             if (!report.getErrors().contains(e.getError())) {
-                report.getErrors().add(e.getError());
+                report.addLog(e.getError());
             }
         } catch (Exception e) {
-            report.getErrors().add(Errors.UnexpectedError(e));
+            report.addLog(Errors.UnexpectedError(e));
         } finally {
             boolean useColors = color != null ? color : FileHighlight.hasColorSupport();
             System.out.print(PlainTextReportGenerator.generateTextReport(report, useColors));

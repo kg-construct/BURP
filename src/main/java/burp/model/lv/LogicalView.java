@@ -338,10 +338,9 @@ public class LogicalView extends AbstractLogicalSource implements ContainsFields
             ValidationMode validationMode
     ) {
         RmlError err = new RmlError(message, new Origin(node.getSourcePointers()), RER.MappingError, node);
-        if (report != null && !report.getErrors().contains(err)) {
-            report.getErrors().add(err);
-        }
-        if (validationMode == ValidationMode.STRICT) {
+        if (report != null) {
+            report.emit(err, validationMode);
+        } else if (validationMode == ValidationMode.STRICT) {
             throw new BurpException(err);
         }
     }

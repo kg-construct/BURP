@@ -450,7 +450,7 @@ public class GrelFunctions {
                 if (to != null) {
                     parametersMap.put(ResourceFactory.createProperty(pIntIOptTo), to);
                 }
-                context.report().getErrors().add(new RmlError(
+                context.report().addLog(new RmlError(
                         "String index out of bounds [" + from + ", " + (to != null ? to : "null") + "] in string (length " + string.length() + ") " + string,
                         origin,
                         RER.FunctionExecutionError,

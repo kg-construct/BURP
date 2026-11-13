@@ -459,7 +459,7 @@ public class RmlEvaluator {
             return eval;
         } catch (BurpException e) {
             if (context != null && e.getError() != null) {
-                context.report().getErrors().add(e.getError());
+                context.report().addLog(e.getError());
             }
             return Collections.emptyList();
         } catch (Exception e) {

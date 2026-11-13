@@ -87,8 +87,8 @@ public class PlanWiring {
             try {
                 holder.compileReferences();
             } catch (BurpException be) {
-                if (report != null && be.getError() != null && !report.getErrors().contains(be.getError())) {
-                    report.getErrors().add(be.getError());
+                if (report != null && be.getError() != null) {
+                    report.addLog(be.getError());
                 }
                 if (validationMode == ValidationMode.STRICT) {
                     throw be;

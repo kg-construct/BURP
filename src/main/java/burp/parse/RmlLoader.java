@@ -44,7 +44,7 @@ public class RmlLoader {
 
     private Path mappingDirectory = EMPTY_PATH;
     private Path currentDirectory = EMPTY_PATH;
-    private @Nullable RmlExecutionReport report;
+    private RmlExecutionReport report = new RmlExecutionReport();
     private ValidationMode validationMode = ValidationMode.STRICT;
     private Map<String, String> prefixMap = new HashMap<>();
 
@@ -109,7 +109,7 @@ public class RmlLoader {
     }
 
     public RmlLoader withReport(@Nullable RmlExecutionReport report) {
-        this.report = report;
+        this.report = report != null ? report : new RmlExecutionReport();
         updateContext();
         return this;
     }
@@ -326,9 +326,7 @@ public class RmlLoader {
                     Origin origin = new Origin(List.of(tfp));
                     return new RmlError(error.message(), origin, RER.RDFMappingSyntaxError);
                 }).toList();
-                if (this.report != null) {
-                    this.report.getErrors().addAll(rmlSyntaxErrors);
-                }
+                rmlSyntaxErrors.forEach(this.report::addLog);
                 if (validationMode == ValidationMode.STRICT) {
                     throw new BurpException(rmlSyntaxErrors.getFirst());
                 }
@@ -357,9 +355,7 @@ public class RmlLoader {
                     Origin origin = new Origin(List.of(tfp));
                     return new RmlError(error.message(), origin, RER.RDFMappingSyntaxError);
                 }).toList();
-                if (this.report != null) {
-                    this.report.getErrors().addAll(rmlSyntaxErrors);
-                }
+                rmlSyntaxErrors.forEach(this.report::addLog);
                 if (validationMode == ValidationMode.STRICT) {
                     throw new BurpException(rmlSyntaxErrors.getFirst());
                 }

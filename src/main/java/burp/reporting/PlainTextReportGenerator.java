@@ -23,7 +23,8 @@ public class PlainTextReportGenerator {
         List<RmlError> warnings = new ArrayList<>();
         List<RmlError> info = new ArrayList<>();
 
-        for (RmlError issue : report.getErrors()) {
+        for (AggregatedRmlError agg : report.getAggregatedLogs()) {
+            RmlError issue = agg.primary();
             OntClass logType = issue.errorType();
             if (isOrParent(logType, RER.Information)) info.add(issue);
             else if (isOrParent(logType, RER.Warning)) warnings.add(issue);

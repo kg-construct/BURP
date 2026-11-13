@@ -15,7 +15,7 @@ import java.nio.file.Path;
 public record RmlLoaderContext(
         Path mappingDirectory,
         Path currentWorkingDirectory,
-        @Nullable RmlExecutionReport report,
+        RmlExecutionReport report,
         ValidationMode validationMode
 ) implements RmlLogicalSourceContext, RdfLoaderContext {
 
@@ -29,7 +29,7 @@ public record RmlLoaderContext(
     ) {
         this.mappingDirectory = mappingDirectory != null ? mappingDirectory : EMPTY_PATH;
         this.currentWorkingDirectory = currentWorkingDirectory != null ? currentWorkingDirectory : EMPTY_PATH;
-        this.report = report;
+        this.report = report != null ? report : new RmlExecutionReport();
         this.validationMode = validationMode != null ? validationMode : ValidationMode.STRICT;
     }
 }
