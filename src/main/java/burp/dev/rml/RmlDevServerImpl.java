@@ -11,7 +11,7 @@ import burp.dev.rml.service.source.SourceDataParams;
 import burp.dev.rml.service.source.SourceDataResult;
 import burp.dev.rml.service.trace.*;
 import burp.dev.rml.service.validator.RmlDiagnostic;
-import burp.dev.rml.service.validator.StaticMappingValidator;
+import burp.dev.rml.service.validator.RmlValidationService;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.util.VersionProvider;
 import org.eclipse.lsp4j.*;
@@ -37,7 +37,7 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
     private final RmlTracer tracer;
     private final PlanInspector planInspector;
     private final InlineEvaluator inlineEvaluator;
-    private final StaticMappingValidator validator;
+    private final RmlValidationService validationService;
     private final SourceDataInspector logicalViewInspector;
     private final RmlExecutionService executionService = new RmlExecutionService();
     private @Nullable LanguageClient client;
@@ -47,7 +47,7 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
     }
 
     public RmlDevServerImpl(MappingWorkspace workspace) {
-        this(workspace, new RmlEvaluator(workspace.getCache()), new RmlTracer(), new PlanInspector(), new InlineEvaluator(), new StaticMappingValidator(), new SourceDataInspector());
+        this(workspace, new RmlEvaluator(workspace.getCache()), new RmlTracer(), new PlanInspector(), new InlineEvaluator(), new RmlValidationService(), new SourceDataInspector());
     }
 
     public RmlDevServerImpl(
@@ -56,7 +56,7 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
             RmlTracer tracer,
             PlanInspector planInspector,
             InlineEvaluator inlineEvaluator,
-            StaticMappingValidator validator,
+            RmlValidationService validationService,
             SourceDataInspector logicalViewInspector
     ) {
         this.workspace = workspace;
@@ -64,8 +64,9 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
         this.tracer = tracer;
         this.planInspector = planInspector;
         this.inlineEvaluator = inlineEvaluator;
-        this.validator = validator;
+        this.validationService = validationService;
         this.logicalViewInspector = logicalViewInspector;
+        this.workspace.setValidationService(validationService);
     }
 
     public MappingWorkspace getWorkspace() {
@@ -108,6 +109,7 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
         completionOptions.setTriggerCharacters(List.of("\"", "$", "{", "}", "/", ":", ".", "_", "@"));
         capabilities.setCompletionProvider(completionOptions);
         capabilities.setInlayHintProvider(new InlayHintRegistrationOptions());
+        capabilities.setCodeLensProvider(new CodeLensOptions(false));
 
         InitializeResult result = new InitializeResult(capabilities);
         String version = VersionProvider.getVersionString();
@@ -117,6 +119,7 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
 
     @Override
     public CompletableFuture<Object> shutdown() {
+        workspace.shutdown();
         return CompletableFuture.completedFuture(null);
     }
 
@@ -183,7 +186,7 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
 
     @Override
     public CompletableFuture<List<RmlDiagnostic>> validate(ValidateParams params) {
-        return validator.validate(params, workspace);
+        return validationService.validate(params, workspace);
     }
 
     @Override

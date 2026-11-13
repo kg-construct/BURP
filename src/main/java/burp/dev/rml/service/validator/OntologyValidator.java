@@ -17,14 +17,35 @@ import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /// Validates constant predicates, static term types, and datatypes against target ontologies.
 @NullMarked
-public class OntologyValidator {
+public class OntologyValidator implements MappingValidator {
+
+    public static final String ID = "ontology-constants";
+
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    @Override
+    public ValidationExecutionPolicy getExecutionPolicy() {
+        return ValidationExecutionPolicy.IMMEDIATE;
+    }
+
+    @Override
+    public List<RmlDiagnostic> validate(ValidationContext context) {
+        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+        Map<String, String> prefixMap = new HashMap<>(context.loaded().document().prefixMap);
+        if (context.loaded().model() != null) {
+            prefixMap.putAll(context.loaded().model().getNsPrefixMap());
+        }
+        var ontRegistry = context.workspace().getOntologyRegistry(context.loaded().model(), context.mappingFileUri());
+        validate(context.loaded().document().triplesMaps, ontRegistry, prefixMap, diagnostics);
+        return diagnostics;
+    }
 
     public void validate(
             List<TriplesMap> triplesMaps,

@@ -33,7 +33,32 @@ import java.util.*;
  * - Errors on missing required parameters defined in the ontology.
  */
 @NullMarked
-public class FunctionExecutionValidator {
+public class FunctionExecutionValidator implements MappingValidator {
+
+    public static final String ID = "fno";
+
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    @Override
+    public ValidationExecutionPolicy getExecutionPolicy() {
+        return ValidationExecutionPolicy.IMMEDIATE;
+    }
+
+    @Override
+    public List<RmlDiagnostic> validate(ValidationContext context) {
+        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+        List<PlanNode> allNodes = new ArrayList<>();
+        context.workspace().collectAllNodes(context.loaded().document(), allNodes);
+        Map<String, String> prefixMap = new HashMap<>(context.loaded().document().prefixMap);
+        if (context.loaded().model() != null) {
+            prefixMap.putAll(context.loaded().model().getNsPrefixMap());
+        }
+        validate(allNodes, diagnostics, prefixMap);
+        return diagnostics;
+    }
 
     public void validate(List<PlanNode> allNodes, List<RmlDiagnostic> diagnostics) {
         validate(allNodes, diagnostics, Collections.emptyMap());

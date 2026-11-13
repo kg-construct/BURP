@@ -303,16 +303,24 @@ public class NearlyValidMappingTest {
         var registry = server.getWorkspace().getOntologyRegistry(loaded.model(), uri);
         var prefixMap = server.getWorkspace().getPrefixMap(uri);
 
-        // 1. Static validation: checks declared terms against ontology.ttl
-        List<RmlDiagnostic> staticDiagnostics = server.validate(new ValidateParams(uri)).get();
+        // 1. Static and Dynamic validation (server.validate runs both immediate and async validators)
+        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
 
-        assertThat(staticDiagnostics)
+        // Static checks:
+        assertThat(diagnostics)
                 .filteredOn(d -> burp.vocabularies.RER.OntologyDatatypeMismatch.getURI().equals(d.rerCodeUri()))
                 .isNotEmpty(); // ex:name declared as xsd:integer on string range property
 
-        assertThat(staticDiagnostics)
+        assertThat(diagnostics)
                 .filteredOn(d -> burp.vocabularies.RER.OntologyDomainMismatch.getURI().equals(d.rerCodeUri()))
                 .isNotEmpty(); // ex:treatedBy declared on ex:DoctorMapping (domain is ex:Patient)
+
+        // Dynamic checks from sampled source data:
+        assertThat(diagnostics)
+                .extracting(RmlDiagnostic::message)
+                .anyMatch(msg -> msg.contains("[row 2]") && msg.contains("'12/04/1995'") && msg.contains("xsd:date"))
+                .anyMatch(msg -> msg.contains("[row 2]") && msg.contains("'-5'") && msg.contains("xsd:nonNegativeInteger"))
+                .anyMatch(msg -> msg.contains("[row 3]") && msg.contains("'not_a_number'") && msg.contains("xsd:nonNegativeInteger"));
 
         // 2. Dynamic evaluation: checks runtime generated terms against ontology
         burp.model.TriplesMap doctorTm = loaded.document().triplesMaps.stream()

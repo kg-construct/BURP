@@ -3,6 +3,7 @@ package burp.validate;
 import burp.dev.rml.RmlDevServerImpl;
 import burp.dev.rml.service.validator.RmlDiagnostic;
 import burp.dev.rml.service.validator.ValidateParams;
+import burp.vocabularies.RER;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ public class ValidateLoadingTest {
         List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
 
         assertThat(diagnostics)
-                .filteredOn(d -> d.severity() == DiagnosticSeverity.Error && "RML_LOAD_ERROR".equals(d.rerCodeUri()))
+                .filteredOn(d -> d.severity() == DiagnosticSeverity.Error && RER.UnsupportedMapping.getURI().equals(d.rerCodeUri()))
                 .satisfiesExactly(d -> {
                     assertThat(d.message()).isEqualTo("Failed to validate mapping: RelativePathSource specified root http://w3id.org/rml/MappingDircetory is not supported.");
                     assertThat(d.range()).isNotNull();
@@ -47,7 +48,7 @@ public class ValidateLoadingTest {
         List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
 
         assertThat(diagnostics)
-                .filteredOn(d -> d.severity() == DiagnosticSeverity.Error && "RML_LOAD_ERROR".equals(d.rerCodeUri()))
+                .filteredOn(d -> d.severity() == DiagnosticSeverity.Error && RER.CannotReadMappingDocument.getURI().equals(d.rerCodeUri()))
                 .satisfiesExactly(d -> assertThat(d.range()).isNull());
     }
 

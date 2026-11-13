@@ -758,6 +758,15 @@ rer:ReferenceFormulationSyntaxError
     rer:potentialConfusionError rer:ReferenceFormulationExecutionError ;
     rdfs:isDefinedBy            rer: .
 
+rer:IteratorSyntaxError
+    a                           owl:Class ;
+    rdfs:label                  "Iterator Syntax Error" ;
+    rdfs:subClassOf             rer:ReferenceFormulationSyntaxError, rer:LogicalSourceError ;
+    rdfs:comment                "An error indicating that a query or logical source iterator expression has invalid syntax." ;
+    rer:potentialCause          "The SQL query or iterator expression in the logical source is malformed." ;
+    rer:potentialSolution       "Correct the query or iterator syntax according to the dialect rules." ;
+    rdfs:isDefinedBy            rer: .
+
 rer:NoTriplesMap
     a                           owl:Class ;
     rdfs:label                  "No Triples Map" ;

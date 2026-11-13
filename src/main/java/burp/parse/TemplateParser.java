@@ -239,7 +239,7 @@ public class TemplateParser {
         }
 
         private void emitSyntaxError(String message, int startOffset, int endOffset) {
-            emitError(message, startOffset, endOffset, RER.ReferenceFormulationSyntaxError);
+            emitError(message, startOffset, endOffset, RER.TemplateSyntaxError);
         }
 
         private void emitError(String message, int startOffset, int endOffset, OntClass errorType) {

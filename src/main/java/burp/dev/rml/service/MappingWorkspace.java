@@ -18,6 +18,7 @@ import burp.model.PlanNodeIdRegistry;
 import burp.model.TriplesMap;
 import burp.parse.RmlLoader;
 import burp.parse.ValidationMode;
+import burp.dev.rml.service.validator.RmlValidationService;
 import burp.reporting.BurpException;
 import burp.reporting.RmlExecutionReport;
 import com.google.gson.Gson;
@@ -35,8 +36,7 @@ import org.jspecify.annotations.Nullable;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 /**
  * Manages in-memory document buffers, file parsing, AST tree wiring, and structure selector resolution.
@@ -55,6 +55,20 @@ public class MappingWorkspace implements WorkspaceService {
     );
     private SwlsSettings swlsSettings = new SwlsSettings(null);
     private @Nullable LanguageClient client = null;
+
+    private RmlValidationService validationService = new RmlValidationService();
+
+    public RmlValidationService getValidationService() {
+        return validationService;
+    }
+
+    public void setValidationService(RmlValidationService validationService) {
+        this.validationService = validationService;
+    }
+
+    public void shutdown() {
+        validationService.shutdown();
+    }
 
     public void connect(LanguageClient client) {
         this.client = client;
@@ -322,32 +336,45 @@ public class MappingWorkspace implements WorkspaceService {
         return cache;
     }
 
+    public RmlEvaluator getEvaluator() {
+        return evaluator;
+    }
+
     private final TextDocumentService textDocumentService = new TextDocumentService() {
         @Override
         public void didOpen(DidOpenTextDocumentParams params) {
-            openDocuments.put(params.getTextDocument().getUri(), params.getTextDocument().getText());
+            String uri = params.getTextDocument().getUri();
+            openDocuments.put(uri, params.getTextDocument().getText());
+            invalidateOntologyRegistry(uri);
+            validationService.onDocumentOpened(uri, MappingWorkspace.this, client);
         }
 
         @Override
         public void didChange(DidChangeTextDocumentParams params) {
+            String uri = params.getTextDocument().getUri();
             if (!params.getContentChanges().isEmpty()) {
-                openDocuments.put(params.getTextDocument().getUri(), params.getContentChanges().getFirst().getText());
-                invalidateOntologyRegistry(params.getTextDocument().getUri());
+                openDocuments.put(uri, params.getContentChanges().getFirst().getText());
+                invalidateOntologyRegistry(uri);
+                validationService.onDocumentChanged(uri, MappingWorkspace.this, client);
             }
         }
 
         @Override
         public void didClose(DidCloseTextDocumentParams params) {
-            openDocuments.remove(params.getTextDocument().getUri());
-            invalidateOntologyRegistry(params.getTextDocument().getUri());
+            String uri = params.getTextDocument().getUri();
+            openDocuments.remove(uri);
+            invalidateOntologyRegistry(uri);
+            validationService.onDocumentClosed(uri, client);
         }
 
         @Override
         public void didSave(DidSaveTextDocumentParams params) {
+            String uri = params.getTextDocument().getUri();
             if (params.getText() != null) {
-                openDocuments.put(params.getTextDocument().getUri(), params.getText());
+                openDocuments.put(uri, params.getText());
             }
-            invalidateOntologyRegistry(params.getTextDocument().getUri());
+            invalidateOntologyRegistry(uri);
+            validationService.onDocumentSaved(uri, MappingWorkspace.this, client);
         }
 
         @Override

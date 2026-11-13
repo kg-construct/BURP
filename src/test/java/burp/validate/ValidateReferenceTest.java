@@ -41,7 +41,7 @@ public class ValidateReferenceTest {
         List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
                 d.severity() == DiagnosticSeverity.Error &&
-                        RER.ReferenceFormulationSyntaxError.getURI().equals(d.rerCodeUri()) &&
+                        RER.TemplateSyntaxError.getURI().equals(d.rerCodeUri()) &&
                         d.message().contains("Empty reference expression '{}'")
         );
     }

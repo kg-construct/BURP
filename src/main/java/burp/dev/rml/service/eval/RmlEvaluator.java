@@ -5,7 +5,6 @@ import burp.dev.rml.service.RmlEvaluationResultFormatter;
 import burp.dev.rml.service.cache.DevServerCache;
 import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
 import burp.dev.rml.service.selector.CursorSelector;
-import burp.dev.rml.service.validator.RuntimeOntologyValidator;
 import burp.ls.JSONSourceRFC;
 import burp.ls.LogicalSourceProvider;
 import burp.model.*;
@@ -44,7 +43,6 @@ import static burp.parse.ValidationMode.LENIENT;
 public class RmlEvaluator {
 
     private final @Nullable DevServerCache cache;
-    private final RuntimeOntologyValidator runtimeOntologyValidator = new RuntimeOntologyValidator();
 
     public RmlEvaluator() {
         this(null);
@@ -191,16 +189,6 @@ public class RmlEvaluator {
                 Iteration iter = iterations.get(i);
                 int index = iter.getId() != null ? iter.getId().index() : i;
                 EvaluateResult er = evaluateIteration(targetNode, targetKey, iter, index, context, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode);
-                if (enclosingTm != null && ontRegistry != null) {
-                    var ontErrors = runtimeOntologyValidator.validateResults(enclosingTm, er.generatedRdf(), ontRegistry, prefixMap, sampleLimit);
-                    if (!ontErrors.isEmpty()) {
-                        List<String> combinedDiags = new ArrayList<>(er.diagnostics());
-                        for (burp.reporting.RmlError err : ontErrors) {
-                            combinedDiags.add(err.message());
-                        }
-                        er = new EvaluateResult(er.iterationId(), er.iterationData(), er.generatedRdf(), combinedDiags, er.rerDiagnostic(), er.prefixMap(), er.traceSummary(), er.targetNodeType(), er.targetParentTriplesMap(), er.targetNodeSummary(), er.evaluationMode());
-                    }
-                }
                 results.add(er);
             }
             return CompletableFuture.completedFuture(results);

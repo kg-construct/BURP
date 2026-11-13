@@ -318,7 +318,7 @@ public class RmlLoader {
             try {
                 provStore = TurtleProvParser.parseTurtleFromPath(path);
             } catch (IOException e) {
-                throw new BurpException(new RmlError("Could not load mapping file: " + path, null, RER.ConfigurationError, e));
+                throw new BurpException(new RmlError("Could not load mapping file: " + path, null, RER.CannotReadMappingDocument, e));
             }
             if (!provStore.getSyntaxErrors().isEmpty()) {
                 var rmlSyntaxErrors = provStore.getSyntaxErrors().stream().map(error -> {
@@ -341,7 +341,7 @@ public class RmlLoader {
                 this.prefixMap = new HashMap<>(model.getNsPrefixMap());
                 return model;
             } catch (RiotNotFoundException e) {
-                throw new BurpException(new RmlError("Could not load mapping file: " + path, null, RER.ConfigurationError, e));
+                throw new BurpException(new RmlError("Could not load mapping file: " + path, null, RER.CannotReadMappingDocument, e));
             }
 
         }

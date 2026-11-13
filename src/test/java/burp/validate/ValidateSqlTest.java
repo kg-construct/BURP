@@ -59,7 +59,7 @@ public class ValidateSqlTest {
 
         assertThat(diagnostics).anyMatch(d ->
                 d.severity() == DiagnosticSeverity.Error &&
-                RER.ReferenceFormulationSyntaxError.getURI().equals(d.rerCodeUri())
+                RER.IteratorSyntaxError.getURI().equals(d.rerCodeUri())
         );
 
         assertThat(diagnostics).noneMatch(d ->

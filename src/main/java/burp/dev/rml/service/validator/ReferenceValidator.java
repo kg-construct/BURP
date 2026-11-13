@@ -20,6 +20,7 @@ import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,7 +31,28 @@ import java.util.Set;
  * Template string syntax validation is handled by TemplateParser during loading.
  */
 @NullMarked
-public class ReferenceValidator {
+public class ReferenceValidator implements MappingValidator {
+
+    public static final String ID = "data-references";
+
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    @Override
+    public ValidationExecutionPolicy getExecutionPolicy() {
+        return ValidationExecutionPolicy.DEBOUNCED_ASYNC;
+    }
+
+    @Override
+    public List<RmlDiagnostic> validate(ValidationContext context) {
+        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+        List<PlanNode> allNodes = new ArrayList<>();
+        context.workspace().collectAllNodes(context.loaded().document(), allNodes);
+        validate(allNodes, context.loaded().document().triplesMaps, context.workspace(), diagnostics);
+        return diagnostics;
+    }
 
     public void validate(
             List<PlanNode> allNodes,
@@ -198,7 +220,7 @@ public class ReferenceValidator {
             diagnostics.add(new RmlDiagnostic(
                     sourceRange,
                     DiagnosticSeverity.Error,
-                    RER.ReferenceFormulationSyntaxError.getURI(),
+                    RER.IteratorSyntaxError.getURI(),
                     error.message(),
                     "BURP Validator"
             ));

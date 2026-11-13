@@ -12,6 +12,7 @@ import org.apache.jena.vocabulary.RDF;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -21,7 +22,29 @@ import java.util.Set;
  * by comparing parsed Model statements against statements accessed during AST construction.
  */
 @NullMarked
-public class UnusedElementValidator {
+public class UnusedElementValidator implements MappingValidator {
+
+    public static final String ID = "unused-elements";
+
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    @Override
+    public ValidationExecutionPolicy getExecutionPolicy() {
+        return ValidationExecutionPolicy.IMMEDIATE;
+    }
+
+    @Override
+    public List<RmlDiagnostic> validate(ValidationContext context) {
+        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+        if (context.loaded().model() != null) {
+            Set<Statement> accessed = context.loaded().loader().getReflectiveLoader().getAccessedStatements();
+            validate(context.loaded().model(), accessed, diagnostics);
+        }
+        return diagnostics;
+    }
 
     public void validate(
             Model model,
