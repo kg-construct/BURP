@@ -216,7 +216,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>burp.vocabularies.VocabularyGenerator</mainClass>
+                    <mainClass>burp.vocabularies.RmlVocabularyGenerator</mainClass>
                 </configuration>
                 <executions>
                     <execution>
@@ -225,79 +225,37 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>burp.vocabularies.VocabularyGenerator</mainClass>
+                            <mainClass>burp.vocabularies.RmlVocabularyGenerator</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-rml-ont</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>burp.vocabularies.RmlOntVocabularyGenerator</mainClass>
                         </configuration>
                     </execution>
                     <execution>
                         <id>generate-ptr</id>
-                        <phase>generate-sources</phase>
                         <goals>
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>jena.schemagen</mainClass>
-                            <arguments>
-                                <argument>-i</argument>
-                                <argument>${project.basedir}/src/main/resources/vocabularies/ptr.ttl</argument>
-                                <argument>-e</argument>
-                                <argument>TURTLE</argument>
-                                <argument>-o</argument>
-                                <argument>${project.build.directory}/generated-sources/vocabularies</argument>
-                                <argument>--package</argument>
-                                <argument>burp.vocabularies</argument>
-                                <argument>-n</argument>
-                                <argument>PTR</argument>
-                                <argument>--ontology</argument>
-                                <argument>--rdfs</argument>
-                                <argument>--inference</argument>
-                                <argument>-a</argument>
-                                <argument>https://w3id.org/dre/ptr#</argument>
-                            </arguments>
-                            <includePluginDependencies>true</includePluginDependencies>
+                            <mainClass>burp.vocabularies.PtrVocabularyGenerator</mainClass>
                         </configuration>
                     </execution>
                     <execution>
                         <id>generate-rer</id>
-                        <phase>generate-sources</phase>
                         <goals>
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>jena.schemagen</mainClass>
-                            <arguments>
-                                <argument>-i</argument>
-                                <argument>${project.basedir}/src/main/resources/vocabularies/rer.ttl</argument>
-                                <argument>-e</argument>
-                                <argument>TURTLE</argument>
-                                <argument>-o</argument>
-                                <argument>${project.build.directory}/generated-sources/vocabularies</argument>
-                                <argument>--package</argument>
-                                <argument>burp.vocabularies</argument>
-                                <argument>-n</argument>
-                                <argument>RER</argument>
-                                <argument>--ontology</argument>
-                                <argument>--inference</argument>
-                                <argument>--import</argument>
-                                <argument>${project.basedir}/src/main/resources/vocabularies/ptr.ttl</argument>
-                                <argument>-a</argument>
-                                <argument>https://w3id.org/dre/rer#</argument>
-                                <argument>--declarations</argument>
-                                <argument>
-                                    static{M_MODEL.read(RER.class.getClassLoader().getResourceAsStream("vocabularies/rer.ttl"),
-                                    RER.NS, "TURTLE");}
-                                </argument>
-                            </arguments>
-                            <includePluginDependencies>true</includePluginDependencies>
+                            <mainClass>burp.vocabularies.RerVocabularyGenerator</mainClass>
                         </configuration>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.jena</groupId>
-                        <artifactId>jena-cmds</artifactId>
-                        <version>${jena.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 
             <!-- Build Helper Plugin to add generated sources -->
@@ -314,7 +272,6 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${project.build.directory}/generated-sources/vocabularies</source>
                                 <source>${project.build.directory}/generated-sources/antlr4</source>
                             </sources>
                         </configuration>

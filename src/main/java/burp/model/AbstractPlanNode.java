@@ -6,7 +6,7 @@ import burp.reporting.Origin;
 import burp.reporting.PointRange;
 import burp.reporting.RDFPointer;
 import burp.reporting.RmlError;
-import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontapi.model.OntClass;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

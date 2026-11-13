@@ -16,11 +16,11 @@ public class InputValueMap extends TermMap {
 
     @Override
     public Set<Resource> getAllowedTermTypes() {
-        return Set.of(RML.IRI, RML.URI, RML.BLANKNODE, RML.LITERAL, BURP.CollectionOrContainer);
+        return Set.of(RML.IRI, RML.URI, RML.BlankNode, RML.Literal, BURP.CollectionOrContainer);
     }
 
     @Override
     public Resource getDefaultTermType() {
-        return RML.LITERAL;
+        return RML.Literal;
     }
 }

@@ -2,7 +2,8 @@ package burp.reporting;
 
 import burp.parse.turtleprov.ProvTurtleVisitor;
 import burp.vocabularies.RER;
-import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontapi.model.OntClass;
+import org.apache.jena.rdf.model.Statement;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -56,7 +57,7 @@ public class PlainTextReportGenerator {
     }
 
     private static boolean isOrParent(OntClass ontClass, OntClass parent) {
-        return ontClass.equals(parent) || ontClass.hasSuperClass(ontClass);
+        return ontClass.equals(parent) || RER.superClassesOf(ontClass).contains(parent.getURI());
     }
 
     private static void printTracingInfo(StringBuilder sb, RmlError issue, Severity severity, boolean useColors) {
@@ -150,9 +151,9 @@ public class PlainTextReportGenerator {
         }
         sb.append(prependIndent(prependIndent(comment, "| "), 6)).append(System.lineSeparator());
 
-        var potentialSolution = issueType.getPropertyValue(RER.potentialSolution);
+        Statement potentialSolution = issueType.getProperty(RER.potentialSolution);
         if (potentialSolution != null) {
-            sb.append(prependIndent("| Try to: " + potentialSolution, 6)).append(System.lineSeparator());
+            sb.append(prependIndent("| Try to: " + potentialSolution.getObject(), 6)).append(System.lineSeparator());
         }
     }
 

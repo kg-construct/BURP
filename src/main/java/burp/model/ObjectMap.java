@@ -20,7 +20,7 @@ public final class ObjectMap extends TermMap implements BaseObjectMap {
 
     @Override
     public Set<Resource> getAllowedTermTypes() {
-        return Set.of(RML.IRI, RML.URI, RML.BLANKNODE, RML.LITERAL, BURP.CollectionOrContainer);
+        return Set.of(RML.IRI, RML.URI, RML.BlankNode, RML.Literal, BURP.CollectionOrContainer);
     }
 
     @Override
@@ -29,7 +29,7 @@ public final class ObjectMap extends TermMap implements BaseObjectMap {
                 || expression instanceof Reference
                 || expression instanceof FunctionExecution
                 || expression instanceof RDFNodeConstant nc && nc.constant instanceof LiteralTerm) {
-            return RML.LITERAL;
+            return RML.Literal;
         }
         return RML.IRI;
     }

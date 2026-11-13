@@ -70,7 +70,7 @@ public class OntologyValidatorTest {
         pom.predicateMaps.add(pm);
 
         ObjectMap om = new ObjectMap();
-        om.termType = RML.LITERAL;
+        om.termType = RML.Literal;
         pom.objectMaps.add(om);
         tm.predicateObjectMaps.add(pom);
 

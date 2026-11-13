@@ -37,10 +37,10 @@ public class FileBaseSourceProvider {
 
     public static Charset getEncoding(Resource source) {
         Resource enc = source.getPropertyResourceValue(RML.encoding);
-        if (enc == null || RML.UTF8.equals(enc)) {
+        if (enc == null || RML.UTF_8.equals(enc)) {
             return StandardCharsets.UTF_8;
         }
-        if (RML.UTF16.equals(enc)) {
+        if (RML.UTF_16.equals(enc)) {
             return StandardCharsets.UTF_16;
         }
         throw new BurpException(
@@ -54,7 +54,7 @@ public class FileBaseSourceProvider {
 
     public static List<Object> getNullValues(Resource source) {
         List<Object> os = new ArrayList<>();
-        source.listProperties(RML.NULL).forEachRemaining(stmt -> {
+        source.listProperties(RML.null_).forEachRemaining(stmt -> {
             RDFNode obj = stmt.getObject();
             // WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR SPARQL SOURCES
             if (obj.isResource()) {

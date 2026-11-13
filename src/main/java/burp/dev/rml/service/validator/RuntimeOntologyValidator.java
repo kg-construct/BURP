@@ -10,7 +10,7 @@ import burp.model.rdf.LiteralTerm;
 import burp.model.rdf.Term;
 import burp.reporting.RmlError;
 import burp.vocabularies.RML;
-import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontapi.model.OntClass;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.jspecify.annotations.NullMarked;
@@ -60,7 +60,7 @@ public class RuntimeOntologyValidator {
             Resource litDatatype = null;
 
             if (obj instanceof LiteralTerm lit) {
-                termType = RML.LITERAL;
+                termType = RML.Literal;
                 lexical = lit.value();
                 if (lit.datatype() != null) {
                     litDatatype = ResourceFactory.createResource(lit.datatype().uri());
@@ -68,7 +68,7 @@ public class RuntimeOntologyValidator {
             } else if (obj instanceof IRITerm) {
                 termType = RML.IRI;
             } else {
-                termType = RML.BLANKNODE;
+                termType = RML.BlankNode;
             }
 
             List<OntologyConformanceChecker.Issue> issues = OntologyConformanceChecker.check(

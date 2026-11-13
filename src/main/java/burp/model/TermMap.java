@@ -70,7 +70,7 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
 
     public Resource getDefaultTermType() {
         if (expression == null) {
-            return RML.BLANKNODE;
+            return RML.BlankNode;
         }
         return RML.IRI;
     }
@@ -86,7 +86,7 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
             if (expression == null) {
                 return gatherMap.generateTerms(i, null, context);
             } else {
-                var generatedIds = generateExpressionTerms(i, Set.of(RML.LITERAL), context).stream()
+                var generatedIds = generateExpressionTerms(i, Set.of(RML.Literal), context).stream()
                         .filter(it -> it instanceof BlankNodeOrIRI)
                         .map(it -> (BlankNodeOrIRI) it)
                         .toList();
@@ -121,9 +121,9 @@ public abstract class TermMap extends ExpressionMap implements TermGenerator {
             return (List<Term>) (List<?>) generateURIs(i, context);
         } else if (RML.UnsafeIRI.equals(effectiveTermType) && allowed.contains(RML.IRI)) {
             return (List<Term>) (List<?>) generateUnsafeIRIs(i, context);
-        } else if (RML.BLANKNODE.equals(effectiveTermType) && allowed.contains(RML.BLANKNODE)) {
+        } else if (RML.BlankNode.equals(effectiveTermType) && allowed.contains(RML.BlankNode)) {
             return (List<Term>) (List<?>) generateBlankNodes(i, context);
-        } else if (RML.LITERAL.equals(effectiveTermType) && allowed.contains(RML.LITERAL)) {
+        } else if (RML.Literal.equals(effectiveTermType) && allowed.contains(RML.Literal)) {
             return (List<Term>) (List<?>) generateLiterals(i, datatypeMap, languageMap, context);
         } else {
             RmlError error = new RmlError(

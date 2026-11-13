@@ -62,7 +62,7 @@ public class SPARQLFileSource extends FileBasedLogicalSource {
     @Override
     public Reference buildExportedReference(String reference, Origin origin) {
         if (isTSV) return new SPARQLTSVReference(reference, origin);
-        boolean isCSV = burp.vocabularies.RML.SPARQL_Results_CSV.equals(referenceFormulation);
+        boolean isCSV = burp.vocabularies.Formats.SPARQL_Results_CSV.equals(referenceFormulation);
         return new SPARQLReference(reference, origin, isCSV);
     }
 }

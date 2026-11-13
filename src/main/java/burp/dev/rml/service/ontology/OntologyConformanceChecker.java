@@ -62,7 +62,7 @@ public class OntologyConformanceChecker {
 
         // 2. Term Type Check
         if (constraint.isObjectProperty()) {
-            if (termType != null && termType.equals(RML.LITERAL)) {
+            if (termType != null && termType.equals(RML.Literal)) {
                 issues.add(new Issue(
                         RER.OntologyTermTypeMismatch,
                         "Term type rml:Literal is incompatible with object property " + predCompact + " (expected IRI or BlankNode)."
@@ -74,7 +74,7 @@ public class OntologyConformanceChecker {
                 ));
             }
         } else if (constraint.isDatatypeProperty()) {
-            if (termType != null && (termType.equals(RML.IRI) || termType.equals(RML.URI) || termType.equals(RML.BLANKNODE))) {
+            if (termType != null && (termType.equals(RML.IRI) || termType.equals(RML.URI) || termType.equals(RML.BlankNode))) {
                 String termTypeCompact = RmlEvaluationResultFormatter.compactIri(termType.getURI(), prefixMap);
                 issues.add(new Issue(
                         RER.OntologyTermTypeMismatch,

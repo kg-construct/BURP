@@ -16,6 +16,6 @@ public class GraphMap extends TermMap {
 
     @Override
     public Set<Resource> getAllowedTermTypes() {
-        return Set.of(RML.IRI, RML.URI, RML.BLANKNODE);
+        return Set.of(RML.IRI, RML.URI, RML.BlankNode);
     }
 }

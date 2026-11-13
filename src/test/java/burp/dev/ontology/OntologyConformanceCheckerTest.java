@@ -62,7 +62,7 @@ public class OntologyConformanceCheckerTest {
         List<OntologyConformanceChecker.Issue> issues = OntologyConformanceChecker.check(
                 Set.of(patient),
                 treatedBy,
-                RML.LITERAL,
+                RML.Literal,
                 null,
                 null,
                 null,

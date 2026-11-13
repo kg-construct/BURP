@@ -2,7 +2,8 @@ package burp.parse;
 
 import burp.reporting.*;
 import burp.vocabularies.RER;
-import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontapi.model.OntClass;
+import org.apache.jena.ontapi.model.OntModel;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDFS;
 import org.jspecify.annotations.NullMarked;
@@ -170,10 +171,11 @@ public class RmlShaclValidator {
 
     private static @Nullable OntClass findRerClass(String uri) {
         try {
-            org.apache.jena.ontology.OntModel ontModel = (org.apache.jena.ontology.OntModel) RER.NAMESPACE.getModel();
-            OntClass cls = ontModel.getOntClass(uri);
-            if (cls != null) return cls;
-            return ontModel.createClass(uri);
+            if (RER.NAMESPACE.getModel() instanceof OntModel ontModel) {
+                OntClass cls = ontModel.getOntClass(uri);
+                if (cls != null) return cls;
+                return ontModel.createOntClass(uri);
+            }
         } catch (Exception ignored) {
         }
         return null;

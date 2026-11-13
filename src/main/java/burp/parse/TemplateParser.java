@@ -11,7 +11,7 @@ import burp.parse.turtleprov.Point;
 import burp.parse.turtleprov.RDF12Converter;
 import burp.reporting.*;
 import burp.vocabularies.RER;
-import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontapi.model.OntClass;
 import org.apache.jena.rdf.model.Statement;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;

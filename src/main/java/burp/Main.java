@@ -266,8 +266,8 @@ public class Main {
     }
 
     private static @NonNull Charset getStandardCharsets(Resource encoding) {
-        if (encoding.equals(RML.UTF8)) return StandardCharsets.UTF_8;
-        else if (encoding.equals(RML.UTF16)) return StandardCharsets.UTF_16;
+        if (encoding.equals(RML.UTF_8)) return StandardCharsets.UTF_8;
+        else if (encoding.equals(RML.UTF_16)) return StandardCharsets.UTF_16;
         return StandardCharsets.UTF_8;
     }
 

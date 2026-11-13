@@ -42,7 +42,7 @@ public final class Rml {
     public static final String LogicalViewJoin = NS + "LogicalViewJoin";
     public static final String MappingDirectory = NS + "MappingDirectory";
     public static final String Namespace = NS + "Namespace";
-    public static final String NonNullableAnnotation = NS + "NonNullableAnnotation";
+    public static final String NotNullAnnotation = NS + "NotNullAnnotation";
     public static final String ObjectMap = NS + "ObjectMap";
     public static final String ParameterMap = NS + "ParameterMap";
     public static final String ParentMap = NS + "ParentMap";

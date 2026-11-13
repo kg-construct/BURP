@@ -1,7 +1,7 @@
 package burp.reporting;
 
 import burp.model.PlanNode;
-import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontapi.model.OntClass;
 import org.apache.jena.rdf.model.Property;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;

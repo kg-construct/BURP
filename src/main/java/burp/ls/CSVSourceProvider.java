@@ -116,7 +116,7 @@ public class CSVSourceProvider implements LogicalSourceProvider {
     }
 
     private Set<Object> getNulls(Resource ls, Resource resource) {
-        if (resource.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.NULL)) {
+        if (resource.hasProperty(CSVW.NULL) && !ls.hasProperty(RML.null_)) {
             return resource.listProperties(CSVW.NULL).mapWith(t -> {
                 if (t.getObject().isResource()) {
                     // WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR

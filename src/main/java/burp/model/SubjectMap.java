@@ -37,6 +37,6 @@ public class SubjectMap extends TermMap {
 
     @Override
     public @NonNull Set<Resource> getAllowedTermTypes() {
-        return Set.of(RML.IRI, RML.URI, RML.BLANKNODE, BURP.CollectionOrContainer);
+        return Set.of(RML.IRI, RML.URI, RML.BlankNode, BURP.CollectionOrContainer);
     }
 }
