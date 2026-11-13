@@ -109,3 +109,6 @@ git push origin v0.1.4-rc.3
 git tag v0.1.4
 git push origin v0.1.4
 ```
+
+For manual packaging of the VS Code extension (`.vsix`) and pre-release flags,
+see [rml-dev-server/dev.md](rml-dev-server/dev.md#packaging-the-extension).

@@ -66,9 +66,11 @@ jobs:
           fi
 
           cd rml-dev-server
-          # Sync package.json version with tag version
-          npm version "$TAG_VERSION_VS" --no-git-tag-version --allow-same-version
+          # Sync package.json version with server tag version
           npm pkg set serverVersion="$TAG_VERSION"
+          
+          # Do not sync extension version as vscode marketplace has limited semver support
+          # npm version "$TAG_VERSION_VS" --no-git-tag-version --allow-same-version
 
           # Bundle fat JAR with the extension
           mkdir -p server
@@ -76,7 +78,7 @@ jobs:
 
           # Install dependencies and package into target VSIX
           npm ci
-          npm run package -- $PRE_RELEASE_FLAG --out "rml-dev-server-$TAG_VERSION.vsix"
+          npm run package -- $PRE_RELEASE_FLAG
       - name: JReleaser Release
         run: mvn jreleaser:full-release -B -Pdeploy
         env:

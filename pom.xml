@@ -602,7 +602,7 @@
                                     <active>ALWAYS</active>
                                     <artifacts>
                                         <artifact>
-                                            <path>${project.basedir}/rml-dev-server/rml-dev-server-${project.version}.vsix</path>
+                                            <path>${project.basedir}/rml-dev-server/rml-*.vsix</path>
                                         </artifact>
                                         <artifact>
                                             <path>${project.build.directory}/burp.jar</path>
