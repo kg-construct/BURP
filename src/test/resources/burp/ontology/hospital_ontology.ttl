@@ -2,8 +2,12 @@ PREFIX ex:   <http://example.org/>
 PREFIX owl:  <http://www.w3.org/2002/07/owl#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
 
-ex:Person a owl:Class .
+ex:LivingBeing a owl:Class .
+
+ex:Person a owl:Class ;
+    rdfs:subClassOf ex:LivingBeing .
 
 ex:Patient a owl:Class ;
     rdfs:subClassOf ex:Person .
@@ -13,9 +17,29 @@ ex:Doctor a owl:Class ;
 
 ex:Hospital a owl:Class .
 
+ex:dnaSequence a owl:DatatypeProperty ;
+    rdfs:domain ex:LivingBeing ;
+    rdfs:range xsd:string .
+
 ex:name a owl:DatatypeProperty ;
     rdfs:domain ex:Person ;
     rdfs:range xsd:string .
+
+ex:age a owl:DatatypeProperty ;
+    rdfs:domain ex:Person ;
+    rdfs:range xsd:integer .
+
+ex:count a owl:DatatypeProperty ;
+    rdfs:domain ex:Person ;
+    rdfs:range xsd:nonNegativeInteger .
+
+ex:birthDate a owl:DatatypeProperty ;
+    rdfs:domain ex:Person ;
+    rdfs:range xsd:date .
+
+ex:location a owl:DatatypeProperty ;
+    rdfs:domain ex:Person ;
+    rdfs:range geo:wktLiteral .
 
 ex:patientId a owl:DatatypeProperty ;
     rdfs:domain ex:Patient ;

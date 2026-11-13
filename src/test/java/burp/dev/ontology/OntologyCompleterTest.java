@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class OntologyCompleterTest {
 
-    private static final Path ONTOLOGY_PATH = Path.of("src/test/resources/burp/ontology/completer_ontology.ttl");
+    private static final Path ONTOLOGY_PATH = Path.of("src/test/resources/burp/ontology/hospital_ontology.ttl");
 
     private OntologyRegistry registry;
     private OntologyCompleter completer;

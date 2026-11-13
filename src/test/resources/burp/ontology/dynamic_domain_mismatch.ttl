@@ -1,0 +1,27 @@
+@prefix ex: <http://example.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> owl:imports <./hospital_ontology.ttl> .
+
+ex:PatientMapping a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [
+            a rml:FilePath ;
+            rml:root rml:MappingDirectory ;
+            rml:path "dynamic_domain_mismatch.csv" ;
+        ] ;
+        rml:referenceFormulation rml:CSV ;
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.org/patient/{id}" ;
+        rml:class ex:Patient ;
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicateMap [
+            rml:template "http://example.org/{pred}" ;
+        ] ;
+        rml:objectMap [
+            rml:template "http://example.org/hospital/{hospital}" ;
+        ] ;
+    ] .

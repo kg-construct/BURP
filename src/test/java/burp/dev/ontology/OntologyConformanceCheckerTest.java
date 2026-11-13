@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class OntologyConformanceCheckerTest {
 
-    private static final Path ONTOLOGY_PATH = Path.of("src/test/resources/burp/ontology/conformance_ontology.ttl");
+    private static final Path ONTOLOGY_PATH = Path.of("src/test/resources/burp/ontology/hospital_ontology.ttl");
 
     private OntologyRegistry registry;
     private final Map<String, String> prefixMap = Map.of("ex", "http://example.org/", "xsd", "http://www.w3.org/2001/XMLSchema#");
@@ -211,5 +211,30 @@ public class OntologyConformanceCheckerTest {
         assertThat(issues)
                 .extracting(OntologyConformanceChecker.Issue::errorType)
                 .contains(RER.OntologyDatatypeMismatch);
+    }
+
+    @Test
+    public void testDateFormatViolation() {
+        Resource person = ResourceFactory.createResource("http://example.org/Person");
+        Resource birthDate = ResourceFactory.createResource("http://example.org/birthDate");
+
+        // European date format "12/04/1995" on xsd:date
+        List<OntologyConformanceChecker.Issue> issues = OntologyConformanceChecker.check(
+                Set.of(person),
+                birthDate,
+                null,
+                null,
+                "12/04/1995",
+                null,
+                registry,
+                prefixMap
+        );
+
+        assertThat(issues)
+                .extracting(OntologyConformanceChecker.Issue::errorType)
+                .contains(RER.OntologyDatatypeMismatch);
+        assertThat(issues.getFirst().message())
+                .contains("12/04/1995")
+                .contains("xsd:date");
     }
 }
