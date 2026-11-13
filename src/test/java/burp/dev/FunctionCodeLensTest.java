@@ -37,4 +37,29 @@ public class FunctionCodeLensTest {
                 .extracting(l -> l.getRange().getStart().getLine())
                 .containsExactlyInAnyOrder(14, 19);
     }
+
+    @Test
+    public void testFunctionCodeLensWithDatatypeInExpressionMap() throws ExecutionException, InterruptedException {
+        RmlDevServerImpl server = new RmlDevServerImpl();
+        String mappingUri = "src/test/resources/burp/fnml_datatype/mapping.ttl";
+
+        List<? extends CodeLens> lenses = server.getTextDocumentService()
+                .codeLens(new CodeLensParams(new TextDocumentIdentifier(mappingUri)))
+                .get();
+
+        assertThat(lenses).isNotNull().isNotEmpty();
+
+        // Exactly one CodeLens should be created on the inline function execution (line 14, 0-based).
+        // rml:datatype (line 21, 0-based) must NOT receive a CodeLens.
+        assertThat(lenses)
+                .filteredOn(l -> l.getCommand() != null && l.getCommand().getTitle().startsWith("concat("))
+                .hasSize(1)
+                .allSatisfy(l -> {
+                    String title = l.getCommand().getTitle();
+                    assertThat(title)
+                            .isEqualTo("concat(input string = Name, other input string = Class)");
+                })
+                .extracting(l -> l.getRange().getStart().getLine())
+                .containsExactly(14);
+    }
 }

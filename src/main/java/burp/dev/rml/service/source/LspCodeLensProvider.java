@@ -101,7 +101,7 @@ public class LspCodeLensProvider {
     private List<Range> getFunctionRanges(FunctionExecution fe) {
         List<Range> ranges = new ArrayList<>();
 
-        // 1. Definition site (subject of functionMap declaration)
+        // Definition site (subject of functionMap declaration)
         Origin defOrigin = fe.emitOrigin("functionMap", StatementPart.Subject);
         if (defOrigin.sourceStatements() != null) {
             List<PointRange> defRanges = ProvTurtleVisitor.retrieveTurtleLocation(defOrigin.sourceStatements());
@@ -110,9 +110,9 @@ public class LspCodeLensProvider {
             }
         }
 
-        // 2. Usage site (object of parent's functionExecution reference)
+        // Usage site (object of parent's functionExecution reference)
         if (fe.getParent() instanceof AbstractPlanNode parent) {
-            Origin usageOrigin = parent.emitOrigin("functionExecution", StatementPart.Object);
+            Origin usageOrigin = parent.emitOrigin("expression", StatementPart.Object);
             if (usageOrigin.sourceStatements() != null) {
                 List<PointRange> usageRanges = ProvTurtleVisitor.retrieveTurtleLocation(usageOrigin.sourceStatements());
                 if (!usageRanges.isEmpty()) {
