@@ -2,12 +2,30 @@ package burp.dev.rml.service.execute;
 
 import burp.dev.rml.RmlLanguageClient;
 import burp.dev.rml.service.MappingWorkspace;
+import burp.dev.rml.service.ontology.OntologyConformanceChecker;
+import burp.dev.rml.service.ontology.OntologyRegistry;
+import burp.dev.rml.service.validator.MappingValidator;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.model.LogicalTarget;
+import burp.model.RdfPredicateObject;
 import burp.model.RdfStatement;
 import burp.model.TriplesMap;
+import burp.model.context.EvaluationContext;
+import burp.model.rdf.IRITerm;
+import burp.model.rdf.LiteralTerm;
+import burp.model.rdf.Term;
+import burp.parse.ValidationMode;
+import burp.processor.EvaluatedStatementContext;
 import burp.processor.ExecutionOptions;
 import burp.processor.RmlProcessor;
+import burp.reporting.Origin;
+import burp.reporting.RmlError;
+import burp.reporting.RmlExecutionReport;
+import burp.reporting.Severity;
+import burp.vocabularies.RER;
+import burp.vocabularies.RML;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.eclipse.lsp4j.ConfigurationItem;
 import org.eclipse.lsp4j.ConfigurationParams;
 import org.eclipse.lsp4j.jsonrpc.Endpoint;
@@ -63,12 +81,23 @@ public class RmlExecutionService {
                     baseIri = workspace.getBaseIri();
                 }
 
+                Map<String, String> prefixMap = workspace.getPrefixMap(mappingFileUri);
+                OntologyRegistry ontologyRegistry = workspace.getOntologyRegistry(null, mappingFileUri);
+                RmlExecutionReport report = new RmlExecutionReport();
+                Consumer<EvaluatedStatementContext> observer = createConformanceObserver(report, ontologyRegistry, prefixMap);
+
                 RmlProcessor processor = new RmlProcessor(workspace.getCache());
                 ExecutionOptions options = ExecutionOptions.builder()
                         .useCache(true)
                         .focusStructure(params.structure())
                         .baseIri(baseIri)
+                        .statementObserver(observer)
                         .build();
+                EvaluationContext evalContext = EvaluationContext.createDefault()
+                        .withReport(report)
+                        .withBaseIri(baseIri)
+                        .withValidationMode(ValidationMode.LENIENT)
+                        .withStatementObserver(observer);
 
                 String executionId = params.executionId() != null ? params.executionId() : UUID.randomUUID().toString();
 
@@ -94,7 +123,7 @@ public class RmlExecutionService {
                     }
                 }
 
-                processor.execute(document, options, (target, stmt) -> {
+                processor.execute(document, options, evalContext, (target, stmt) -> {
                     targetStatements.computeIfAbsent(target, k -> new ArrayList<>()).add(stmt);
 
                     if (notifyQuadChunk != null) {
@@ -163,14 +192,83 @@ public class RmlExecutionService {
                     ));
                 }
 
-                Map<String, String> prefixMap = workspace.getPrefixMap(mappingFileUri);
+                List<RmlErrorDto> errorDtos = report.getAggregatedLogs().stream()
+                        .map(agg -> RmlErrorDto.from(agg, "BURP Execution"))
+                        .toList();
                 String reportMsg = String.format("Execution complete. Generated %d statements across %d targets.", totalStatements, targets.size());
-                return new ExecuteResult(targets, reportMsg, prefixMap, logicalSources);
+                return new ExecuteResult(targets, reportMsg, prefixMap, logicalSources, errorDtos);
 
             } catch (Exception e) {
                 String errMsg = e.getMessage() != null ? e.getMessage() : e.toString();
-                return new ExecuteResult(Collections.emptyMap(), "Execution error: " + errMsg, Collections.emptyMap(), Collections.emptyMap());
+                RmlErrorDto errDto = new RmlErrorDto(
+                        errMsg,
+                        RER.UnexpectedError.getURI(),
+                        Collections.emptyList(),
+                        Severity.ERROR.name(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        0,
+                        "BURP Execution"
+                );
+                return new ExecuteResult(Collections.emptyMap(), "Execution error: " + errMsg, Collections.emptyMap(), Collections.emptyMap(), List.of(errDto));
             }
         });
+    }
+
+    private static Consumer<EvaluatedStatementContext> createConformanceObserver(
+            RmlExecutionReport report,
+            OntologyRegistry registry,
+            Map<String, String> prefixMap
+    ) {
+        return ctx -> {
+            if (!(ctx.evaluationResult() instanceof RdfPredicateObject po)) {
+                return;
+            }
+            Set<Resource> subjectClasses = ctx.triplesMap().subjectMap != null
+                    ? new LinkedHashSet<>(ctx.triplesMap().subjectMap.classes)
+                    : Collections.emptySet();
+            Resource predicate = ResourceFactory.createResource(po.predicate().uri());
+            Term objTerm = po.object();
+            Resource termType;
+            String lexical = null;
+            Resource litDatatype = null;
+
+            if (objTerm instanceof LiteralTerm lit) {
+                termType = RML.Literal;
+                lexical = lit.value();
+                if (lit.datatype() != null) {
+                    litDatatype = ResourceFactory.createResource(lit.datatype().uri());
+                }
+            } else if (objTerm instanceof IRITerm) {
+                termType = RML.IRI;
+            } else {
+                termType = RML.BlankNode;
+            }
+
+            List<OntologyConformanceChecker.Issue> issues = OntologyConformanceChecker.check(
+                    subjectClasses, predicate, termType, null, lexical, litDatatype, registry, prefixMap
+            );
+            if (issues.isEmpty()) {
+                return;
+            }
+
+            Origin pmOrigin = ctx.predicateMap() != null ? MappingValidator.resolveNodeOrigin(ctx.predicateMap(), "constant") : null;
+            Origin omOrigin = ctx.objectMap() != null ? MappingValidator.resolveNodeOrigin(ctx.objectMap(), "constant") : null;
+            for (var issue : issues) {
+                Origin issueOrigin = issue.errorType().equals(RER.OntologyDomainMismatch)
+                        ? pmOrigin
+                        : (omOrigin != null ? omOrigin : pmOrigin);
+                report.addLog(new RmlError(
+                        issue.message(),
+                        issueOrigin,
+                        issue.errorType(),
+                        null,
+                        null,
+                        issue.errorType().equals(RER.OntologyDomainMismatch) ? ctx.predicateMap() : ctx.objectMap(),
+                        ctx.originLineage(),
+                        ctx.evaluationResult()
+                ));
+            }
+        };
     }
 }

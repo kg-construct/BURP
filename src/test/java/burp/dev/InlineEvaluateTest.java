@@ -5,7 +5,7 @@ import burp.dev.rml.RmlLanguageServer;
 import burp.dev.rml.service.MappingWorkspace;
 import burp.dev.rml.service.eval.*;
 import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.model.RawValue;
 import burp.model.rdf.IRITerm;
@@ -513,7 +513,7 @@ public class InlineEvaluateTest {
         assertThat(hintLabels).anyMatch(l -> l.contains("Gordon"));
         assertThat(hintLabels).anyMatch(l -> l.contains("85"));
 
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
         assertThat(diagnostics).anyMatch(d -> d.message().contains("email"));
     }
 
@@ -543,10 +543,10 @@ public class InlineEvaluateTest {
         RmlLanguageServer server = createServer();
 
         // LSP validate reports diagnostic for missing reference segment in template.
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Error
-                        && RER.TemplateSyntaxError.getURI().equals(d.rerCodeUri())
+                "ERROR".equals(d.severity())
+                        && RER.TemplateSyntaxError.getURI().equals(d.errorTypeUri())
                         && d.message().contains("rml:constant")
         );
         assertThat(diagnostics).noneMatch(d -> d.message().contains("Use rml:constant <"));
@@ -558,10 +558,10 @@ public class InlineEvaluateTest {
         RmlLanguageServer server = createServer();
 
         // 1. LSP validate reports syntax error that template lacks reference segment / should be constant
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Error &&
-                        RER.TemplateSyntaxError.getURI().equals(d.rerCodeUri())
+                "ERROR".equals(d.severity()) &&
+                        RER.TemplateSyntaxError.getURI().equals(d.errorTypeUri())
         );
 
         // 2. Evaluation in lenient mode produces the valid IRI and suggests rml:constant
@@ -585,10 +585,10 @@ public class InlineEvaluateTest {
         RmlLanguageServer server = createServer();
 
         // LSP validate reports syntax error that template lacks reference segment / should be constant
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(filePathStr)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Error &&
-                        RER.TemplateSyntaxError.getURI().equals(d.rerCodeUri())
+                "ERROR".equals(d.severity()) &&
+                        RER.TemplateSyntaxError.getURI().equals(d.errorTypeUri())
         );
 
         // Inline evaluation in lenient mode uses TriplesMap BaseIRIScope to resolve relative template against baseIRI

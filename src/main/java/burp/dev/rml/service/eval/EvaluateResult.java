@@ -1,6 +1,7 @@
 package burp.dev.rml.service.eval;
 
 import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.model.RmlEvaluationResult;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -19,8 +20,7 @@ public record EvaluateResult(
     String iterationId,
     String iterationData,
     List<RmlEvaluationResult> generatedRdf,
-    List<String> diagnostics,
-    @Nullable String rerDiagnostic,
+    List<RmlErrorDto> errors,
     Map<String, String> prefixMap,
     @Nullable List<String> traceSummary,
     @Nullable String targetNodeType,
@@ -32,23 +32,20 @@ public record EvaluateResult(
             String iterationId,
             String iterationData,
             List<RmlEvaluationResult> generatedRdf,
-            List<String> diagnostics,
-            @Nullable String rerDiagnostic,
+            List<RmlErrorDto> errors,
             Map<String, String> prefixMap,
             @Nullable List<String> traceSummary
     ) {
-        this(iterationId, iterationData, generatedRdf, diagnostics, rerDiagnostic, prefixMap, traceSummary, null, null, null, null);
+        this(iterationId, iterationData, generatedRdf, errors, prefixMap, traceSummary, null, null, null, null);
     }
 
     public EvaluateResult(
             String iterationId,
             String iterationData,
             List<RmlEvaluationResult> generatedRdf,
-            List<String> diagnostics,
-            @Nullable String rerDiagnostic,
+            List<RmlErrorDto> errors,
             Map<String, String> prefixMap
     ) {
-        this(iterationId, iterationData, generatedRdf, diagnostics, rerDiagnostic, prefixMap, null, null, null, null, null);
+        this(iterationId, iterationData, generatedRdf, errors, prefixMap, null, null, null, null, null);
     }
 }
-

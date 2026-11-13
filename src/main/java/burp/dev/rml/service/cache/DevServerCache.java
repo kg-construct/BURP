@@ -43,6 +43,9 @@ public class DevServerCache {
     public record CustomSourceCacheKey(AstKey sourceKey, CustomDataContext customContext) {
     }
 
+    public record RangeSourceCacheKey(AstKey sourceKey, RangeDataContext rangeContext) {
+    }
+
     private final Cache<AstKey, List<Iteration>> sourceIterationCache = CacheBuilder.newBuilder()
             .maximumSize(SOURCE_ITER_MAX_SIZE)
             .softValues()
@@ -51,6 +54,13 @@ public class DevServerCache {
             .build();
 
     private final Cache<CustomSourceCacheKey, List<Iteration>> customIterationCache = CacheBuilder.newBuilder()
+            .maximumSize(SOURCE_ITER_MAX_SIZE)
+            .softValues()
+            .expireAfterAccess(10, TimeUnit.MINUTES)
+            .recordStats()
+            .build();
+
+    private final Cache<RangeSourceCacheKey, List<Iteration>> rangeIterationCache = CacheBuilder.newBuilder()
             .maximumSize(SOURCE_ITER_MAX_SIZE)
             .softValues()
             .expireAfterAccess(10, TimeUnit.MINUTES)
@@ -70,7 +80,7 @@ public class DevServerCache {
             .build();
 
     // Tier 3: Node Evaluation Memoization
-    public record NodeMemoCacheKey(AstKey nodeKey, int iterationKey) {
+    public record NodeMemoCacheKey(AstKey nodeKey, int iterationKey, @Nullable String baseIri) {
     }
 
     private final Cache<NodeMemoCacheKey, List<RmlEvaluationResult>> nodeMemoCache = CacheBuilder.newBuilder()
@@ -99,6 +109,7 @@ public class DevServerCache {
     public CacheStats getStats() {
         return sourceIterationCache.stats()
                 .plus(customIterationCache.stats())
+                .plus(rangeIterationCache.stats())
                 .plus(parentJoinCache.stats())
                 .plus(nodeMemoCache.stats())
                 .plus(sqlSchemaCache.stats());
@@ -123,6 +134,10 @@ public class DevServerCache {
             if (dataContext instanceof RangeDataContext rdc) {
                 return sliceIterations(fullList, rdc);
             }
+        }
+
+        if (dataContext instanceof RangeDataContext rdc) {
+            return rangeIterationCache.getIfPresent(new RangeSourceCacheKey(sourceKey, rdc));
         }
 
         return null;
@@ -155,6 +170,8 @@ public class DevServerCache {
         AstKey sourceKey = source.getAstKey();
         if (dataContext instanceof CustomDataContext cdc) {
             customIterationCache.put(new CustomSourceCacheKey(sourceKey, cdc), iterations);
+        } else if (dataContext instanceof RangeDataContext rdc) {
+            rangeIterationCache.put(new RangeSourceCacheKey(sourceKey, rdc), iterations);
         } else {
             sourceIterationCache.put(sourceKey, iterations);
         }
@@ -189,19 +206,35 @@ public class DevServerCache {
     }
 
     public @Nullable List<RmlEvaluationResult> getEvaluation(AstKey nodeKey, int iterationId) {
-        return nodeMemoCache.getIfPresent(new NodeMemoCacheKey(nodeKey, iterationId));
+        return getEvaluation(nodeKey, iterationId, null);
+    }
+
+    public @Nullable List<RmlEvaluationResult> getEvaluation(AstKey nodeKey, int iterationId, @Nullable String baseIri) {
+        return nodeMemoCache.getIfPresent(new NodeMemoCacheKey(nodeKey, iterationId, baseIri));
     }
 
     public @Nullable List<RmlEvaluationResult> getEvaluation(PlanNode node, int iterationId) {
-        return getEvaluation(node.getAstKey(), iterationId);
+        return getEvaluation(node.getAstKey(), iterationId, null);
+    }
+
+    public @Nullable List<RmlEvaluationResult> getEvaluation(PlanNode node, int iterationId, @Nullable String baseIri) {
+        return getEvaluation(node.getAstKey(), iterationId, baseIri);
     }
 
     public void putEvaluation(AstKey nodeKey, int iterationId, List<RmlEvaluationResult> results) {
-        nodeMemoCache.put(new NodeMemoCacheKey(nodeKey, iterationId), results);
+        putEvaluation(nodeKey, iterationId, null, results);
+    }
+
+    public void putEvaluation(AstKey nodeKey, int iterationId, @Nullable String baseIri, List<RmlEvaluationResult> results) {
+        nodeMemoCache.put(new NodeMemoCacheKey(nodeKey, iterationId, baseIri), results);
     }
 
     public void putEvaluation(PlanNode node, int iterationId, List<RmlEvaluationResult> results) {
-        putEvaluation(node.getAstKey(), iterationId, results);
+        putEvaluation(node.getAstKey(), iterationId, null, results);
+    }
+
+    public void putEvaluation(PlanNode node, int iterationId, @Nullable String baseIri, List<RmlEvaluationResult> results) {
+        putEvaluation(node.getAstKey(), iterationId, baseIri, results);
     }
 
     public @Nullable CachedSchema getSqlSchema(String key) {
@@ -255,6 +288,7 @@ public class DevServerCache {
     public void invalidateAll() {
         sourceIterationCache.invalidateAll();
         customIterationCache.invalidateAll();
+        rangeIterationCache.invalidateAll();
         parentJoinCache.invalidateAll();
         nodeMemoCache.invalidateAll();
         sqlSchemaCache.invalidateAll();

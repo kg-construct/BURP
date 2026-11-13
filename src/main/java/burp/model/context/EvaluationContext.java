@@ -8,11 +8,13 @@ import burp.model.RmlEvaluationResult;
 import burp.model.TemplateReferenceSafety;
 import burp.model.join.ParentJoinIndex;
 import burp.parse.ValidationMode;
+import burp.processor.EvaluatedStatementContext;
 import burp.reporting.RmlExecutionReport;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Unified, immutable evaluation context available to AST nodes during evaluation.
@@ -30,7 +32,8 @@ public record EvaluationContext(
         Map<String, List<RmlEvaluationResult>> nodeOverrides,
         Map<PlanNode, ParentJoinIndex> joinIndexes,
         ValidationMode validationMode,
-        TemplateReferenceSafety templateSafety
+        TemplateReferenceSafety templateSafety,
+        @Nullable Consumer<EvaluatedStatementContext> statementObserver
 ) {
     public EvaluationContext {
         activeTargets = Set.copyOf(activeTargets);
@@ -50,7 +53,8 @@ public record EvaluationContext(
                 Collections.emptyMap(),
                 Collections.emptyMap(),
                 ValidationMode.STRICT,
-                TemplateReferenceSafety.UNSAFE
+                TemplateReferenceSafety.UNSAFE,
+                null
         );
     }
 
@@ -69,48 +73,52 @@ public record EvaluationContext(
     }
 
     public EvaluationContext withReport(RmlExecutionReport newReport) {
-        return new EvaluationContext(newReport, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety);
+        return new EvaluationContext(newReport, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety, statementObserver);
     }
 
     public EvaluationContext withBaseIri(@Nullable String newBaseIri) {
-        return new EvaluationContext(report, newBaseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety);
+        return new EvaluationContext(report, newBaseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety, statementObserver);
     }
 
     public EvaluationContext withBlankNodeScope(BlankNodeScope newScope) {
-        return new EvaluationContext(report, baseIri, newScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety);
+        return new EvaluationContext(report, baseIri, newScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety, statementObserver);
     }
 
     public EvaluationContext withTargets(Set<LogicalTarget> targets) {
-        return new EvaluationContext(report, baseIri, blankNodeScope, targets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety);
+        return new EvaluationContext(report, baseIri, blankNodeScope, targets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety, statementObserver);
     }
 
     public EvaluationContext withCancellationToken(CancellationToken newToken) {
-        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, newToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety);
+        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, newToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety, statementObserver);
     }
 
     public EvaluationContext withValidationMode(ValidationMode newValidationMode) {
-        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, newValidationMode, templateSafety);
+        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, newValidationMode, templateSafety, statementObserver);
     }
 
     public EvaluationContext withTemplateSafety(TemplateReferenceSafety safety) {
-        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, safety);
+        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, safety, statementObserver);
+    }
+
+    public EvaluationContext withStatementObserver(@Nullable Consumer<EvaluatedStatementContext> observer) {
+        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, joinIndexes, validationMode, templateSafety, observer);
     }
 
     public EvaluationContext withSourceIterations(Map<AbstractLogicalSource, List<Iteration>> newSourceIterations) {
         Map<AbstractLogicalSource, List<Iteration>> merged = new HashMap<>(sourceIterations);
         merged.putAll(newSourceIterations);
-        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, merged, nodeOverrides, joinIndexes, validationMode, templateSafety);
+        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, merged, nodeOverrides, joinIndexes, validationMode, templateSafety, statementObserver);
     }
 
     public EvaluationContext withNodeOverrides(Map<String, List<RmlEvaluationResult>> newOverrides) {
         Map<String, List<RmlEvaluationResult>> merged = new HashMap<>(nodeOverrides);
         merged.putAll(newOverrides);
-        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, merged, joinIndexes, validationMode, templateSafety);
+        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, merged, joinIndexes, validationMode, templateSafety, statementObserver);
     }
 
     public EvaluationContext withJoinIndexes(Map<PlanNode, ParentJoinIndex> newIndexes) {
         Map<PlanNode, ParentJoinIndex> merged = new HashMap<>(joinIndexes);
         merged.putAll(newIndexes);
-        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, merged, validationMode, templateSafety);
+        return new EvaluationContext(report, baseIri, blankNodeScope, activeTargets, cancellationToken, sourceIterations, nodeOverrides, merged, validationMode, templateSafety, statementObserver);
     }
 }

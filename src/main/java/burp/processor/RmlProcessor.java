@@ -63,7 +63,8 @@ public class RmlProcessor {
         RmlExecutionReport report = new RmlExecutionReport();
         EvaluationContext context = EvaluationContext.createDefault()
                 .withReport(report)
-                .withBaseIri(options.baseIri());
+                .withBaseIri(options.baseIri())
+                .withStatementObserver(options.statementObserver());
         return executeToStatements(document, options, context);
     }
 
@@ -76,6 +77,9 @@ public class RmlProcessor {
         Objects.requireNonNull(options, "ExecutionOptions must not be null");
         Objects.requireNonNull(context, "EvaluationContext must not be null");
 
+        if (options.statementObserver() != null && context.statementObserver() == null) {
+            context = context.withStatementObserver(options.statementObserver());
+        }
         context = configureContextCache(document, options, context);
 
         List<TriplesMap> executionOrder = determineExecutionOrder(document, options.focusStructure());
@@ -123,7 +127,8 @@ public class RmlProcessor {
         RmlExecutionReport report = new RmlExecutionReport();
         EvaluationContext context = EvaluationContext.createDefault()
                 .withReport(report)
-                .withBaseIri(options.baseIri());
+                .withBaseIri(options.baseIri())
+                .withStatementObserver(options.statementObserver());
         execute(document, options, context, consumer);
     }
 

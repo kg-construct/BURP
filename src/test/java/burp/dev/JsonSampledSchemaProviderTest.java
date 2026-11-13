@@ -4,7 +4,7 @@ import burp.dev.rml.RmlDevServerImpl;
 import burp.dev.rml.service.MappingWorkspace;
 import burp.dev.rml.service.completion.ReferenceSchemaResolver.SchemaInfo;
 import burp.dev.rml.service.schema.JsonSampledSchemaProvider;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.model.AbstractLogicalSource;
 import burp.vocabularies.RER;
@@ -78,30 +78,30 @@ public class JsonSampledSchemaProviderTest {
 
         server.getWorkspace().updateDocumentText(uri, mappingWithEmail);
 
-        // With iterationSampleLimit = 1, $.email is not sampled -> warning emitted
+        // With iterationSampleLimit = 1, $.email is not sampled -> error emitted
         server.getWorkspace().setIterationSampleLimit(1);
-        List<RmlDiagnostic> diags1 = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diags1 = server.validate(new ValidateParams(uri)).get();
         assertThat(diags1)
-                .filteredOn(d -> d.severity() == DiagnosticSeverity.Warning
-                        && RER.ReferenceFormulationExecutionError.getURI().equals(d.rerCodeUri()))
+                .filteredOn(d -> "ERROR".equals(d.severity())
+                        && RER.ReferenceFormulationExecutionError.getURI().equals(d.errorTypeUri()))
                 .hasSize(1)
                 .first()
                 .satisfies(d -> assertThat(d.message()).contains("$.email"));
 
-        // With iterationSampleLimit = 2, $.email is sampled -> no warning
+        // With iterationSampleLimit = 2, $.email is sampled -> no error
         server.getWorkspace().setIterationSampleLimit(2);
-        List<RmlDiagnostic> diags2 = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diags2 = server.validate(new ValidateParams(uri)).get();
         assertThat(diags2)
-                .filteredOn(d -> d.severity() == DiagnosticSeverity.Warning
-                        && RER.ReferenceFormulationExecutionError.getURI().equals(d.rerCodeUri()))
+                .filteredOn(d -> "ERROR".equals(d.severity())
+                        && RER.ReferenceFormulationExecutionError.getURI().equals(d.errorTypeUri()))
                 .isEmpty();
 
         // With iterationSampleLimit = null (unlimited), $.email is sampled -> no warning
         server.getWorkspace().setIterationSampleLimit(null);
-        List<RmlDiagnostic> diagsUnlimited = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagsUnlimited = server.validate(new ValidateParams(uri)).get();
         assertThat(diagsUnlimited)
-                .filteredOn(d -> d.severity() == DiagnosticSeverity.Warning
-                        && RER.ReferenceFormulationExecutionError.getURI().equals(d.rerCodeUri()))
+                .filteredOn(d -> "WARNING".equals(d.severity())
+                        && RER.ReferenceFormulationExecutionError.getURI().equals(d.errorTypeUri()))
                 .isEmpty();
     }
 }

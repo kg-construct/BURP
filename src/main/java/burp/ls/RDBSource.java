@@ -229,6 +229,6 @@ class RDBIteration extends Iteration {
 
     @Override
     public String asString() {
-        throw new UnsupportedOperationException("Not implemented. Does this make sense in the context of LV?");
+        return values.toString();
     }
 }

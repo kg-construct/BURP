@@ -1,7 +1,7 @@
 package burp.validate;
 
 import burp.dev.rml.RmlDevServerImpl;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.vocabularies.RER;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -23,10 +23,10 @@ public class ValidateUnusedElementTest {
     public void testValidateUnusedRmlElements() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/unused-element.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Warning &&
-                        RER.UnusedRmlElement.getURI().equals(d.rerCodeUri()) &&
+                "WARNING".equals(d.severity()) &&
+                        RER.UnusedRmlElement.getURI().equals(d.errorTypeUri()) &&
                 d.message().contains("OrphanSubjectMap")
         );
     }
@@ -35,12 +35,13 @@ public class ValidateUnusedElementTest {
     public void testValidateUnusedAnonymousGatherElement() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate_unused_gather/mapping.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Warning &&
-                        RER.UnusedRmlElement.getURI().equals(d.rerCodeUri()) &&
+                "WARNING".equals(d.severity()) &&
+                        RER.UnusedRmlElement.getURI().equals(d.errorTypeUri()) &&
                 d.message().contains("Unused RML element") &&
-                d.range().getStart().getLine() == 12
+                !d.ranges().isEmpty() &&
+                d.ranges().getFirst().start().line() == 12
         );
     }
 
@@ -48,9 +49,9 @@ public class ValidateUnusedElementTest {
     public void testValidateActiveLogicalSourceDoesNotFlagFilePathAsUnused() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/invalid-param.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).noneMatch(d ->
-                RER.UnusedRmlElement.getURI().equals(d.rerCodeUri()) &&
+                RER.UnusedRmlElement.getURI().equals(d.errorTypeUri()) &&
                 (d.message().contains("RelativePathSource") || d.message().contains("FilePath"))
         );
     }

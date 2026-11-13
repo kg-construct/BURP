@@ -1,6 +1,8 @@
 package burp.dev.rml.service.validator;
 
 import burp.parse.turtleprov.ProvTurtleVisitor;
+import burp.reporting.Origin;
+import burp.reporting.RmlError;
 import burp.reporting.StatementPart;
 import burp.reporting.StatementParts;
 import burp.vocabularies.RER;
@@ -9,7 +11,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.RDF;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
@@ -32,24 +33,29 @@ public class UnusedElementValidator implements MappingValidator {
     }
 
     @Override
+    public String getSourceName() {
+        return "RML Loader Accessed Statements";
+    }
+
+    @Override
     public ValidationExecutionPolicy getExecutionPolicy() {
         return ValidationExecutionPolicy.IMMEDIATE;
     }
 
     @Override
-    public List<RmlDiagnostic> validate(ValidationContext context) {
-        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+    public List<RmlError> validate(ValidationContext context) {
+        List<RmlError> errors = new ArrayList<>();
         if (context.loaded().model() != null) {
             Set<Statement> accessed = context.loaded().loader().getReflectiveLoader().getAccessedStatements();
-            validate(context.loaded().model(), accessed, diagnostics);
+            validate(context.loaded().model(), accessed, errors);
         }
-        return diagnostics;
+        return errors;
     }
 
     public void validate(
             Model model,
             Set<Statement> accessedStatements,
-            List<RmlDiagnostic> diagnostics
+            List<RmlError> errors
     ) {
         StmtIterator it = model.listStatements();
         while (it.hasNext()) {
@@ -63,21 +69,15 @@ public class UnusedElementValidator implements MappingValidator {
 
             if ((isRmlPredicate || isRmlType) && !accessedStatements.contains(stmt)) {
                 var predicatePart = StatementParts.from(stmt, StatementPart.Predicate);
-                var ranges = ProvTurtleVisitor.retrieveTurtleLocation(Collections.singletonList(predicatePart));
-                if (!ranges.isEmpty()) {
-                    var lspRange = ranges.getFirst().toLsp();
-                    diagnostics.add(new RmlDiagnostic(
-                            lspRange,
-                            DiagnosticSeverity.Warning,
-                            RER.UnusedRmlElement.getURI(),
+                var pointers = Collections.singletonList(predicatePart);
+                if (!ProvTurtleVisitor.retrieveTurtleLocation(pointers).isEmpty()) {
+                    errors.add(new RmlError(
                             "Unused RML element (" + predUri + ") on <" + stmt.getSubject() + "> is not referenced by any active TriplesMap.",
-                            "RML Loader Accessed Statements"
+                            new Origin(pointers),
+                            RER.UnusedRmlElement
                     ));
                 }
             }
         }
-
-
     }
 }
-

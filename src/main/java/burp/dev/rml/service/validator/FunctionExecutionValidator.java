@@ -1,6 +1,5 @@
 package burp.dev.rml.service.validator;
 
-import burp.dev.rml.service.plan.PlanNodeDescriptor;
 import burp.dev.rml.service.RmlEvaluationResultFormatter;
 import burp.model.Input;
 import burp.model.PlanNode;
@@ -12,14 +11,10 @@ import burp.model.fnml.FunctionExecution;
 import burp.model.fnml.FunctionsRegistry;
 import burp.model.rdf.IRITerm;
 import burp.reporting.Origin;
-import burp.reporting.StatementPart;
-import burp.parse.turtleprov.ProvTurtleVisitor;
-import burp.reporting.PointRange;
+import burp.reporting.RmlError;
 import burp.vocabularies.RER;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -48,35 +43,30 @@ public class FunctionExecutionValidator implements MappingValidator {
     }
 
     @Override
-    public List<RmlDiagnostic> validate(ValidationContext context) {
-        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+    public List<RmlError> validate(ValidationContext context) {
+        List<RmlError> errors = new ArrayList<>();
         List<PlanNode> allNodes = new ArrayList<>();
         context.workspace().collectAllNodes(context.loaded().document(), allNodes);
         Map<String, String> prefixMap = new HashMap<>(context.loaded().document().prefixMap);
         if (context.loaded().model() != null) {
             prefixMap.putAll(context.loaded().model().getNsPrefixMap());
         }
-        validate(allNodes, diagnostics, prefixMap);
-        return diagnostics;
+        validate(allNodes, errors, prefixMap);
+        return errors;
     }
 
-    public void validate(List<PlanNode> allNodes, List<RmlDiagnostic> diagnostics) {
-        validate(allNodes, diagnostics, Collections.emptyMap());
+    public void validate(List<PlanNode> allNodes, List<RmlError> errors) {
+        validate(allNodes, errors, Collections.emptyMap());
     }
 
-    public void validate(List<PlanNode> allNodes, List<RmlDiagnostic> diagnostics, @Nullable Map<String, String> prefixMap) {
+    public void validate(List<PlanNode> allNodes, List<RmlError> errors, @Nullable Map<String, String> prefixMap) {
         for (PlanNode node : allNodes) {
             if (node instanceof FunctionExecution fe) {
-                Range feRange = PlanNodeDescriptor.getFirstRangeForNode(fe);
-                if (feRange == null) continue;
+                Origin feOrigin = MappingValidator.firstNodeRangeOrigin(fe);
+                if (feOrigin == null) continue;
 
-                Range funcRange = null;
-                Origin funcOrigin = fe.emitOrigin("functionMap", StatementPart.Object);
-                if (funcOrigin.sourceStatements() != null) {
-                    List<PointRange> ranges = ProvTurtleVisitor.retrieveTurtleLocation(funcOrigin.sourceStatements());
-                    if (!ranges.isEmpty()) funcRange = ranges.getFirst().toLsp();
-                }
-                if (funcRange == null) funcRange = feRange;
+                Origin funcOrigin = MappingValidator.resolveNodeOrigin(fe, "functionMap");
+                if (funcOrigin == null) funcOrigin = feOrigin;
 
                 String functionUri = null;
                 Resource funcResource = null;
@@ -93,12 +83,10 @@ public class FunctionExecutionValidator implements MappingValidator {
                 if (functionUri != null) {
                     boolean isImplemented = FunctionsRegistry.functions.containsKey(functionUri);
                     if (!isImplemented) {
-                        diagnostics.add(new RmlDiagnostic(
-                                funcRange,
-                                DiagnosticSeverity.Warning,
-                                RER.UnknownFunction.getURI(),
+                        errors.add(new RmlError(
                                 "Unknown or unimplemented function: " + funcDisplay + ".",
-                                "BURP Validator"
+                                funcOrigin,
+                                RER.UnknownFunction
                         ));
                     }
                 }
@@ -106,16 +94,12 @@ public class FunctionExecutionValidator implements MappingValidator {
                 // 2. Validate parameter bindings (duplicates & ontology parameter validity)
                 Set<Resource> boundParams = new HashSet<>();
                 for (Input in : fe.inputs) {
-                    Range inRange = null;
+                    Origin inOrigin = null;
                     if (in.parameterMap != null) {
-                        Origin inOrigin = in.emitOrigin("parameterMap", StatementPart.Object);
-                        if (inOrigin.sourceStatements() != null) {
-                            List<PointRange> ranges = ProvTurtleVisitor.retrieveTurtleLocation(inOrigin.sourceStatements());
-                            if (!ranges.isEmpty()) inRange = ranges.getFirst().toLsp();
-                        }
-                        if (inRange == null) inRange = PlanNodeDescriptor.getFirstRangeForNode(in.parameterMap);
+                        inOrigin = MappingValidator.resolveNodeOrigin(in, "parameterMap");
+                        if (inOrigin == null) inOrigin = MappingValidator.firstNodeRangeOrigin(in.parameterMap);
                     }
-                    if (inRange == null) inRange = feRange;
+                    if (inOrigin == null) inOrigin = feOrigin;
 
                     Resource paramResource = null;
                     if (in.parameterMap != null && in.parameterMap.expression instanceof RDFNodeConstant c) {
@@ -129,12 +113,10 @@ public class FunctionExecutionValidator implements MappingValidator {
 
                         // Check duplicate parameter bindings
                         if (!boundParams.add(paramResource)) {
-                            diagnostics.add(new RmlDiagnostic(
-                                    inRange,
-                                    DiagnosticSeverity.Error,
-                                    RER.DuplicateParameter.getURI(),
+                            errors.add(new RmlError(
                                     "Duplicate parameter binding: parameter " + paramDisplay + " is bound multiple times.",
-                                    "BURP Validator"
+                                    inOrigin,
+                                    RER.DuplicateParameter
                             ));
                         }
 
@@ -142,21 +124,17 @@ public class FunctionExecutionValidator implements MappingValidator {
                         if (funcResource != null && FnmlOntologyRegistry.isDeclaredFunction(funcResource)) {
                             FnmlParameter matched = FnmlOntologyRegistry.findMatchingParameter(funcResource, paramResource);
                             if (matched == null) {
-                                diagnostics.add(new RmlDiagnostic(
-                                        inRange,
-                                        DiagnosticSeverity.Warning,
-                                        RER.InvalidParameter.getURI(),
+                                errors.add(new RmlError(
                                         "Parameter " + paramDisplay + " is not a recognized parameter for function " + funcDisplay + ".",
-                                        "BURP Validator"
+                                        inOrigin,
+                                        RER.InvalidParameter
                                 ));
                             } else if (matched.isUsingPredicateWhenParamDefined(paramResource)) {
                                 String paramDefDisplay = RmlEvaluationResultFormatter.compactIri(matched.iri().getURI(), prefixMap);
-                                diagnostics.add(new RmlDiagnostic(
-                                        inRange,
-                                        DiagnosticSeverity.Warning,
-                                        RER.UnknownFunctionParameterIRI.getURI(),
+                                errors.add(new RmlError(
                                         "Parameter " + paramDisplay + " is a predicate IRI; consider using its parameter definition IRI " + paramDefDisplay + " instead.",
-                                        "BURP Validator"
+                                        inOrigin,
+                                        RER.UnknownFunctionParameterIRI
                                 ));
                             }
                         }
@@ -168,26 +146,19 @@ public class FunctionExecutionValidator implements MappingValidator {
                     List<FnmlParameter> missing = FnmlOntologyRegistry.getMissingRequiredParameters(funcResource, boundParams);
                     for (FnmlParameter missingParam : missing) {
                         String missingParamDisplay = RmlEvaluationResultFormatter.compactIri(missingParam.iri().getURI(), prefixMap);
-                        diagnostics.add(new RmlDiagnostic(
-                                feRange,
-                                DiagnosticSeverity.Error,
-                                RER.MissingParameter.getURI(),
+                        errors.add(new RmlError(
                                 "Missing required parameter " + missingParam.name() + " (" + missingParamDisplay + ") for function " + funcDisplay + ".",
-                                "BURP Validator"
+                                feOrigin,
+                                RER.MissingParameter
                         ));
                     }
                 }
 
                 // 4. Validate return map if defined
                 if (fe.returnMap != null) {
-                    Range returnRange = null;
-                    Origin returnOrigin = fe.emitOrigin("returnMap", StatementPart.Object);
-                    if (returnOrigin.sourceStatements() != null) {
-                        List<PointRange> ranges = ProvTurtleVisitor.retrieveTurtleLocation(returnOrigin.sourceStatements());
-                        if (!ranges.isEmpty()) returnRange = ranges.getFirst().toLsp();
-                    }
-                    if (returnRange == null) returnRange = PlanNodeDescriptor.getFirstRangeForNode(fe.returnMap);
-                    if (returnRange == null) returnRange = feRange;
+                    Origin returnOrigin = MappingValidator.resolveNodeOrigin(fe, "returnMap");
+                    if (returnOrigin == null) returnOrigin = MappingValidator.firstNodeRangeOrigin(fe.returnMap);
+                    if (returnOrigin == null) returnOrigin = feOrigin;
 
                     Resource returnResource = null;
                     if (fe.returnMap.expression instanceof RDFNodeConstant c && c.constant instanceof IRITerm iriTerm) {
@@ -198,21 +169,17 @@ public class FunctionExecutionValidator implements MappingValidator {
                         String returnDisplay = RmlEvaluationResultFormatter.compactIri(returnResource.getURI(), prefixMap);
                         FnmlOutput matchedOutput = FnmlOntologyRegistry.findMatchingOutput(funcResource, returnResource);
                         if (matchedOutput == null) {
-                            diagnostics.add(new RmlDiagnostic(
-                                    returnRange,
-                                    DiagnosticSeverity.Warning,
-                                    RER.UnknownFunctionReturnIRI.getURI(),
+                            errors.add(new RmlError(
                                     "Return " + returnDisplay + " is not a recognized return output for function " + funcDisplay + ".",
-                                    "BURP Validator"
+                                    returnOrigin,
+                                    RER.UnknownFunctionReturnIRI
                             ));
                         } else if (matchedOutput.isUsingPredicateWhenOutputDefined(returnResource)) {
                             String returnDefDisplay = RmlEvaluationResultFormatter.compactIri(matchedOutput.iri().getURI(), prefixMap);
-                            diagnostics.add(new RmlDiagnostic(
-                                    returnRange,
-                                    DiagnosticSeverity.Warning,
-                                    RER.UnknownFunctionReturnIRI.getURI(),
+                            errors.add(new RmlError(
                                     "Return " + returnDisplay + " is an output predicate IRI; consider using its return definition IRI " + returnDefDisplay + " instead.",
-                                    "BURP Validator"
+                                    returnOrigin,
+                                    RER.UnknownFunctionReturnIRI
                             ));
                         }
                     }

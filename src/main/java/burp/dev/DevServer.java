@@ -99,6 +99,17 @@ public class DevServer {
             .registerSubtype(burp.model.rdf.RdfAltTerm.class, "alt")
             .registerSubtype(burp.model.rdf.RdfBagTerm.class, "bag")
             .registerSubtype(burp.model.rdf.RdfSeqTerm.class, "seq"));
+        builder.registerTypeAdapterFactory(RuntimeTypeAdapterFactory.of(burp.model.rdf.Term.class, "type")
+            .registerSubtype(IRITerm.class, "uri")
+            .registerSubtype(LiteralTerm.class, "literal")
+            .registerSubtype(BlankNodeTerm.class, "bnode")
+            .registerSubtype(burp.model.rdf.RdfListTerm.class, "list")
+            .registerSubtype(burp.model.rdf.RdfAltTerm.class, "alt")
+            .registerSubtype(burp.model.rdf.RdfBagTerm.class, "bag")
+            .registerSubtype(burp.model.rdf.RdfSeqTerm.class, "seq"));
+        builder.registerTypeAdapterFactory(RuntimeTypeAdapterFactory.of(burp.model.rdf.BlankNodeOrIRI.class, "type")
+            .registerSubtype(IRITerm.class, "uri")
+            .registerSubtype(BlankNodeTerm.class, "bnode"));
         builder.registerTypeAdapterFactory(RuntimeTypeAdapterFactory.of(StructureSelector.class, "type")
             .registerSubtype(CursorSelector.class, "cursor")
             .registerSubtype(IriSelector.class, "iri")

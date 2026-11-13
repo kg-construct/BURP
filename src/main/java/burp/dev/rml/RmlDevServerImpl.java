@@ -10,7 +10,7 @@ import burp.dev.rml.service.source.SourceDataInspector;
 import burp.dev.rml.service.source.SourceDataParams;
 import burp.dev.rml.service.source.SourceDataResult;
 import burp.dev.rml.service.trace.*;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.dev.rml.service.validator.RmlValidationService;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.util.VersionProvider;
@@ -185,7 +185,7 @@ public class RmlDevServerImpl implements RmlLanguageServer, LanguageClientAware 
     }
 
     @Override
-    public CompletableFuture<List<RmlDiagnostic>> validate(ValidateParams params) {
+    public CompletableFuture<List<RmlErrorDto>> validate(ValidateParams params) {
         return validationService.validate(params, workspace);
     }
 

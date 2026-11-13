@@ -2,7 +2,7 @@ package burp.dev.ontology;
 
 import burp.dev.rml.service.ontology.OntologyRegistry;
 import burp.dev.rml.service.validator.OntologyValidator;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.reporting.RmlError;
 import burp.model.*;
 import burp.model.rdf.IRITerm;
 import burp.vocabularies.RER;
@@ -46,11 +46,11 @@ public class OntologyValidatorTest {
         pom.predicateMaps.add(pm);
         tm.predicateObjectMaps.add(pom);
 
-        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+        List<RmlError> diagnostics = new ArrayList<>();
         validator.validate(List.of(tm), registry, prefixMap, diagnostics);
 
         assertThat(diagnostics)
-                .filteredOn(d -> RER.OntologyDomainMismatch.getURI().equals(d.rerCodeUri()))
+                .filteredOn(d -> RER.OntologyDomainMismatch.getURI().equals(d.errorType().getURI()))
                 .hasSize(1);
         assertThat(diagnostics.getFirst().message())
                 .contains("ex:worksAt")
@@ -74,11 +74,11 @@ public class OntologyValidatorTest {
         pom.objectMaps.add(om);
         tm.predicateObjectMaps.add(pom);
 
-        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+        List<RmlError> diagnostics = new ArrayList<>();
         validator.validate(List.of(tm), registry, prefixMap, diagnostics);
 
         assertThat(diagnostics)
-                .filteredOn(d -> RER.OntologyTermTypeMismatch.getURI().equals(d.rerCodeUri()))
+                .filteredOn(d -> RER.OntologyTermTypeMismatch.getURI().equals(d.errorType().getURI()))
                 .hasSize(1);
         assertThat(diagnostics.getFirst().message())
                 .contains("rml:Literal")
@@ -102,11 +102,11 @@ public class OntologyValidatorTest {
         pom.objectMaps.add(om);
         tm.predicateObjectMaps.add(pom);
 
-        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+        List<RmlError> diagnostics = new ArrayList<>();
         validator.validate(List.of(tm), registry, prefixMap, diagnostics);
 
         assertThat(diagnostics)
-                .filteredOn(d -> RER.OntologyDatatypeMismatch.getURI().equals(d.rerCodeUri()))
+                .filteredOn(d -> RER.OntologyDatatypeMismatch.getURI().equals(d.errorType().getURI()))
                 .hasSize(1);
         assertThat(diagnostics.getFirst().message())
                 .contains("xsd:string")

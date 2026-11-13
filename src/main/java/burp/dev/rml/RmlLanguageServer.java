@@ -13,7 +13,7 @@ import burp.dev.rml.service.trace.TraceIterationParams;
 import burp.dev.rml.service.trace.TraceParams;
 import burp.dev.rml.service.trace.TraceResult;
 import burp.dev.rml.service.trace.TraceResultParams;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.dev.rml.service.validator.ValidateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -85,7 +85,7 @@ public interface RmlLanguageServer extends LanguageServer {
      * unused RML elements, and shape conformance.
      */
     @JsonRequest("rml/validate")
-    CompletableFuture<List<RmlDiagnostic>> validate(ValidateParams params);
+    CompletableFuture<List<RmlErrorDto>> validate(ValidateParams params);
 
     /**
      * Steps the active inline evaluation iteration for the anchor TriplesMap referenced by structure.

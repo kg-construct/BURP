@@ -18,7 +18,10 @@ public class ReferenceCompleter implements CompletionContributor {
 
     @Override
     public boolean isApplicable(CompletionContext ctx) {
-        if (ctx.hasAnyAncestor(PredicateMap.class, DatatypeMap.class, ReferencingObjectMap.class)) {
+        if (ctx.hasAnyAncestor(PredicateMap.class, DatatypeMap.class)) {
+            return false;
+        }
+        if (ctx.hasAncestor(ReferencingObjectMap.class) && !ctx.hasAnyAncestor(ChildMap.class, ParentMap.class)) {
             return false;
         }
         String clause = ctx.currentClauseText();

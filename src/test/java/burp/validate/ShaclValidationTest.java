@@ -1,11 +1,12 @@
 package burp.validate;
 
 import burp.dev.rml.RmlDevServerImpl;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.parse.RmlLoader;
 import burp.parse.ValidationMode;
 import burp.reporting.*;
+import burp.vocabularies.RER;
 import burp.vocabularies.RML;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.Test;
@@ -241,9 +242,9 @@ public class ShaclValidationTest {
         assertThat(report.getErrors())
                 .extracting(RmlError::errorType)
                 .anySatisfy(errorType ->
-                        assertThat(errorType.getURI())
-                                .as("Error type should be ReferenceFormulationSyntaxError")
-                                .contains("ReferenceFormulationSyntaxError")
+                        assertThat(errorType)
+                                .as("Error type should be TemplateSyntaxError")
+                                .isEqualTo(RER.TemplateSyntaxError)
                 );
 
         assertThat(report.getErrors())
@@ -270,8 +271,8 @@ public class ShaclValidationTest {
                 .isInstanceOf(BurpException.class)
                 .satisfies(ex -> {
                     RmlError error = ((BurpException) ex).getError();
-                    assertThat(error.errorType().getURI())
-                            .contains("ReferenceFormulationSyntaxError");
+                    assertThat(error.errorType())
+                            .isEqualTo(RER.TemplateSyntaxError);
                     assertThat(error.message())
                             .contains("{Name}")
                             .contains("has non escaped");
@@ -282,9 +283,9 @@ public class ShaclValidationTest {
     public void testValidateShaclShapeMissingLogicalSourceViaServer() throws Exception {
         Path mappingPath = testResourcesDir.resolve("missing_logical_source/mapping.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(mappingPath.toUri().toString())).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(mappingPath.toUri().toString())).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Error &&
+                "ERROR".equals(d.severity()) &&
                 d.message().toLowerCase().contains("logicalsource")
         );
     }
@@ -293,9 +294,9 @@ public class ShaclValidationTest {
     public void testValidateShaclShapeMissingSubjectMapViaServer() throws Exception {
         Path mappingPath = testResourcesDir.resolve("missing_subject_map/mapping.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(mappingPath.toUri().toString())).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(mappingPath.toUri().toString())).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Error &&
+                "ERROR".equals(d.severity()) &&
                 (d.message().contains("subjectMap") || d.message().contains("subject"))
         );
     }

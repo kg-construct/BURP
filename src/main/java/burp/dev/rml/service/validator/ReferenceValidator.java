@@ -1,6 +1,5 @@
 package burp.dev.rml.service.validator;
 
-import burp.dev.rml.service.plan.PlanNodeDescriptor;
 import burp.dev.rml.service.MappingWorkspace;
 import burp.dev.rml.service.completion.ReferenceSchemaResolver;
 import burp.dev.rml.service.schema.SqlSchemaProvider;
@@ -8,18 +7,18 @@ import burp.ls.JSONPathError;
 import burp.ls.JSONSourceRFC;
 import burp.ls.RDBSource;
 import burp.model.*;
-import burp.parse.turtleprov.ProvTurtleVisitor;
-import burp.reporting.PointRange;
-import burp.reporting.StatementPart;
+import burp.parse.turtleprov.Point;
 import burp.reporting.Origin;
+import burp.reporting.PointRange;
+import burp.reporting.RmlError;
+import burp.reporting.StatementPart;
+import burp.reporting.TextFilePointer;
 import burp.vocabularies.RER;
 import burp.vocabularies.Rml;
-import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -46,19 +45,19 @@ public class ReferenceValidator implements MappingValidator {
     }
 
     @Override
-    public List<RmlDiagnostic> validate(ValidationContext context) {
-        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+    public List<RmlError> validate(ValidationContext context) {
+        List<RmlError> errors = new ArrayList<>();
         List<PlanNode> allNodes = new ArrayList<>();
         context.workspace().collectAllNodes(context.loaded().document(), allNodes);
-        validate(allNodes, context.loaded().document().triplesMaps, context.workspace(), diagnostics);
-        return diagnostics;
+        validate(allNodes, context.loaded().document().triplesMaps, context.workspace(), errors);
+        return errors;
     }
 
     public void validate(
             List<PlanNode> allNodes,
             List<TriplesMap> triplesMaps,
             MappingWorkspace workspace,
-            List<RmlDiagnostic> diagnostics
+            List<RmlError> errors
     ) {
         SqlSchemaProvider sqlProvider = new SqlSchemaProvider(workspace.getCache());
 
@@ -66,14 +65,14 @@ public class ReferenceValidator implements MappingValidator {
         Set<RDBSource> validatedSources = new HashSet<>();
         for (TriplesMap tm : triplesMaps) {
             if (tm.logicalSource instanceof RDBSource rdb && validatedSources.add(rdb)) {
-                validateRdbSource(rdb, tm, sqlProvider, diagnostics);
+                validateRdbSource(rdb, tm, sqlProvider, errors);
             }
         }
 
         // 2. Validate all references (both standalone and inside templates)
         for (PlanNode node : allNodes) {
             if (node instanceof Reference r && !(node.getParent() instanceof RawReference)) {
-                validateReference(r, sqlProvider, workspace.getIterationSampleLimit(), diagnostics);
+                validateReference(r, sqlProvider, workspace.getIterationSampleLimit(), errors);
             }
         }
     }
@@ -82,7 +81,7 @@ public class ReferenceValidator implements MappingValidator {
             Reference refNode,
             SqlSchemaProvider sqlProvider,
             @Nullable Integer iterationSampleLimit,
-            List<RmlDiagnostic> diagnostics
+            List<RmlError> errors
     ) {
         String ref = refNode.getReference();
         if (ref == null || ref.isBlank()) {
@@ -90,21 +89,18 @@ public class ReferenceValidator implements MappingValidator {
         }
 
         boolean isTemplateSegment = refNode.getParent() instanceof Template.ReferenceSegment;
-        Range range = switch (refNode.getParent()) {
-            case Template.ReferenceSegment seg -> PlanNodeDescriptor.getFirstRangeForNode(seg);
+        Origin origin = switch (refNode.getParent()) {
+            case Template.ReferenceSegment seg -> MappingValidator.firstNodeRangeOrigin(seg);
             case null, default -> {
                 Origin refOrigin = refNode.emitOrigin("reference", StatementPart.Object);
-                if (refOrigin.sourceStatements() != null) {
-                    List<PointRange> ranges = ProvTurtleVisitor.retrieveTurtleLocation(refOrigin.sourceStatements());
-                    if (!ranges.isEmpty()) {
-                        yield ranges.getFirst().toLsp();
-                    }
+                if (!refOrigin.ranges().isEmpty()) {
+                    yield refOrigin;
                 }
-                yield PlanNodeDescriptor.getFirstRangeForNode(refNode);
+                yield MappingValidator.firstNodeRangeOrigin(refNode);
             }
         };
 
-        if (range == null) {
+        if (origin == null || origin.ranges().isEmpty()) {
             return;
         }
 
@@ -125,22 +121,22 @@ public class ReferenceValidator implements MappingValidator {
         // Syntax checking for JSONPath
         if (schemaInfo.referenceFormulation().equals(Rml.JSONPath)) {
             List<JSONPathError> syntaxErrors = JSONSourceRFC.validateJsonPath(ref);
+            PointRange baseRange = origin.ranges().getFirst();
             for (JSONPathError se : syntaxErrors) {
                 String msg = isTemplateSegment
                         ? "Invalid JSONPath in template: " + se.message()
                         : "Invalid JSONPath reference: " + se.message();
-                Range errRange = range;
+                Origin errOrigin = origin;
                 if (se.start() != null && isTemplateSegment && refNode.getParent() instanceof Template.ReferenceSegment seg) {
                     int mappedCol = seg.offsetMapper().toRawOffset(se.start().column());
-                    Position errPos = new Position(range.getStart().getLine(), range.getStart().getCharacter() + mappedCol);
-                    errRange = new Range(errPos, range.getEnd());
+                    Point errStart = new Point(baseRange.start().line(), baseRange.start().column() + mappedCol);
+                    PointRange errRange = new PointRange(errStart, baseRange.end());
+                    errOrigin = new Origin(List.of(new TextFilePointer(Path.of(""), errRange)));
                 }
-                diagnostics.add(new RmlDiagnostic(
-                        errRange,
-                        DiagnosticSeverity.Error,
-                        RER.ReferenceFormulationSyntaxError.getURI(),
+                errors.add(new RmlError(
                         msg,
-                        "BURP Validator"
+                        errOrigin,
+                        RER.ReferenceFormulationSyntaxError
                 ));
             }
         }
@@ -152,12 +148,10 @@ public class ReferenceValidator implements MappingValidator {
                 String msg = isTemplateSegment
                         ? "Template reference '{" + ref + "}' was not found in source schema or dataset."
                         : "Reference '" + ref + "' was not found in source schema or dataset.";
-                diagnostics.add(new RmlDiagnostic(
-                        range,
-                        DiagnosticSeverity.Warning,
-                        RER.ReferenceFormulationExecutionError.getURI(),
+                errors.add(new RmlError(
                         msg,
-                        "BURP Validator"
+                        origin,
+                        RER.ReferenceFormulationExecutionError
                 ));
             }
         }
@@ -181,48 +175,41 @@ public class ReferenceValidator implements MappingValidator {
         return false;
     }
 
-    private void validateRdbSource(RDBSource rdb, TriplesMap tm, SqlSchemaProvider sqlProvider, List<RmlDiagnostic> diagnostics) {
+    private void validateRdbSource(RDBSource rdb, TriplesMap tm, SqlSchemaProvider sqlProvider, List<RmlError> errors) {
         sqlProvider.extractSchema(rdb);
         SqlSchemaProvider.SqlSourceError error = sqlProvider.getError(rdb);
         if (error == null) {
             return;
         }
 
-        Range sourceRange = null;
+        Origin sourceOrigin = null;
         if (error.kind() == SqlSchemaProvider.ErrorKind.QUERY_ERROR) {
             Origin queryOrigin = rdb.emitOrigin("query", StatementPart.Object);
-            if (queryOrigin.sourceStatements() != null) {
-                List<PointRange> ranges = ProvTurtleVisitor.retrieveTurtleLocation(queryOrigin.sourceStatements());
-                if (!ranges.isEmpty()) {
-                    sourceRange = ranges.getFirst().toLsp();
-                }
+            if (!queryOrigin.ranges().isEmpty()) {
+                sourceOrigin = queryOrigin;
             }
         }
-        if (sourceRange == null) {
-            sourceRange = PlanNodeDescriptor.getFirstRangeForNode(rdb);
+        if (sourceOrigin == null) {
+            sourceOrigin = MappingValidator.firstNodeRangeOrigin(rdb);
         }
-        if (sourceRange == null) {
-            sourceRange = PlanNodeDescriptor.getFirstRangeForNode(tm);
+        if (sourceOrigin == null) {
+            sourceOrigin = MappingValidator.firstNodeRangeOrigin(tm);
         }
-        if (sourceRange == null) {
+        if (sourceOrigin == null) {
             return;
         }
 
         if (error.kind() == SqlSchemaProvider.ErrorKind.CONNECTION_ERROR) {
-            diagnostics.add(new RmlDiagnostic(
-                    sourceRange,
-                    DiagnosticSeverity.Information,
-                    RER.SourceAccessError.getURI(),
+            errors.add(new RmlError(
                     error.message(),
-                    "BURP Validator"
+                    sourceOrigin,
+                    RER.SourceAccessError
             ));
         } else if (error.kind() == SqlSchemaProvider.ErrorKind.QUERY_ERROR) {
-            diagnostics.add(new RmlDiagnostic(
-                    sourceRange,
-                    DiagnosticSeverity.Error,
-                    RER.IteratorSyntaxError.getURI(),
+            errors.add(new RmlError(
                     error.message(),
-                    "BURP Validator"
+                    sourceOrigin,
+                    RER.IteratorSyntaxError
             ));
         }
     }

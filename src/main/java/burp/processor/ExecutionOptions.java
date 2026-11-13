@@ -4,6 +4,8 @@ import burp.dev.rml.service.selector.StructureSelector;
 import burp.model.context.CancellationToken;
 import org.jspecify.annotations.Nullable;
 
+import java.util.function.Consumer;
+
 /**
  * Execution options for configuring RmlProcessor runs.
  */
@@ -11,14 +13,15 @@ public record ExecutionOptions(
         boolean useCache,
         @Nullable String baseIri,
         @Nullable StructureSelector focusStructure,
-        @Nullable CancellationToken cancellationToken
+        @Nullable CancellationToken cancellationToken,
+        @Nullable Consumer<EvaluatedStatementContext> statementObserver
 ) {
     public static ExecutionOptions defaults() {
-        return new ExecutionOptions(true, null, null, null);
+        return new ExecutionOptions(true, null, null, null, null);
     }
 
     public static ExecutionOptions withoutCache() {
-        return new ExecutionOptions(false, null, null, null);
+        return new ExecutionOptions(false, null, null, null, null);
     }
 
     public static Builder builder() {
@@ -30,6 +33,7 @@ public record ExecutionOptions(
         private @Nullable String baseIri;
         private @Nullable StructureSelector focusStructure;
         private @Nullable CancellationToken cancellationToken;
+        private @Nullable Consumer<EvaluatedStatementContext> statementObserver;
 
         public Builder useCache(boolean useCache) {
             this.useCache = useCache;
@@ -51,8 +55,13 @@ public record ExecutionOptions(
             return this;
         }
 
+        public Builder statementObserver(@Nullable Consumer<EvaluatedStatementContext> statementObserver) {
+            this.statementObserver = statementObserver;
+            return this;
+        }
+
         public ExecutionOptions build() {
-            return new ExecutionOptions(useCache, baseIri, focusStructure, cancellationToken);
+            return new ExecutionOptions(useCache, baseIri, focusStructure, cancellationToken, statementObserver);
         }
     }
 }

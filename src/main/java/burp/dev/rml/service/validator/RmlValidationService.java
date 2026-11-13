@@ -2,7 +2,12 @@ package burp.dev.rml.service.validator;
 
 import burp.dev.rml.service.MappingWorkspace;
 import burp.parse.ValidationMode;
+import burp.reporting.AggregatedRmlError;
 import burp.reporting.BurpException;
+import burp.reporting.PointRange;
+import burp.reporting.RmlError;
+import burp.reporting.RmlErrorAggregator;
+import burp.reporting.Severity;
 import burp.vocabularies.RER;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -48,7 +53,8 @@ public class RmlValidationService {
                 new FunctionExecutionValidator(),
                 new UnusedElementValidator(),
                 new OntologyValidator(),
-                new ReferenceValidator()
+                new ReferenceValidator(),
+                new RuntimeOntologyValidator()
         ));
     }
 
@@ -85,7 +91,7 @@ public class RmlValidationService {
     /**
      * Synchronous complete validation for RPC (rml/validate) used by non-textual systems (e.g. Baukasten UI / PTR navigation).
      */
-    public CompletableFuture<List<RmlDiagnostic>> validate(
+    public CompletableFuture<List<RmlErrorDto>> validate(
             @Nullable ValidateParams params,
             MappingWorkspace workspace
     ) {
@@ -96,30 +102,44 @@ public class RmlValidationService {
         try {
             MappingWorkspace.LoadedMapping loaded = workspace.loadMappingDetailed(params.mappingFileUri(), ValidationMode.LENIENT);
             ValidationContext context = new ValidationContext(loaded, params.mappingFileUri(), workspace);
-            List<RmlDiagnostic> diagnostics = new ArrayList<>();
+            List<RmlErrorDto> dtos = new ArrayList<>();
 
             for (MappingValidator validator : validators) {
-                diagnostics.addAll(validator.validate(context));
+                RmlErrorAggregator aggregator = new RmlErrorAggregator();
+                for (RmlError err : validator.validate(context)) {
+                    aggregator.add(err);
+                }
+                for (AggregatedRmlError agg : aggregator.getAggregatedLogs()) {
+                    dtos.add(RmlErrorDto.from(agg, validator.getSourceName()));
+                }
             }
 
-            return CompletableFuture.completedFuture(deduplicateAndSort(diagnostics));
+            return CompletableFuture.completedFuture(deduplicateAndSortDtos(dtos));
         } catch (BurpException be) {
-            Range range = SyntaxAndReportValidator.resolveOriginRange(be.getError() != null ? be.getError().origin() : null);
+            List<PointRange> ranges = be.getError() != null && be.getError().origin() != null
+                    ? be.getError().origin().ranges()
+                    : Collections.emptyList();
             String code = resolveErrorCode(be);
-            return CompletableFuture.completedFuture(List.of(new RmlDiagnostic(
-                    range,
-                    DiagnosticSeverity.Error,
-                    code,
+            return CompletableFuture.completedFuture(List.of(new RmlErrorDto(
                     "Failed to validate mapping: " + (be.getMessage() != null ? be.getMessage() : be.toString()),
+                    code,
+                    RER.superClassesOf(be.getError() != null ? be.getError().errorType() : null),
+                    Severity.ERROR.name(),
+                    ranges,
+                    Collections.emptyList(),
+                    0,
                     "RER Validator"
             )));
         } catch (Exception e) {
             String code = resolveExceptionErrorCode(e);
-            return CompletableFuture.completedFuture(List.of(new RmlDiagnostic(
-                    null,
-                    DiagnosticSeverity.Error,
-                    code,
+            return CompletableFuture.completedFuture(List.of(new RmlErrorDto(
                     "Failed to validate mapping: " + (e.getMessage() != null ? e.getMessage() : e.toString()),
+                    code,
+                    Collections.emptyList(),
+                    Severity.ERROR.name(),
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    0,
                     "BURP Validator"
             )));
         }
@@ -168,10 +188,14 @@ public class RmlValidationService {
         long version = documentVersions.computeIfAbsent(uri, u -> new AtomicLong(0)).incrementAndGet();
         cancelPendingDynamicTask(uri);
 
-        // Run both immediate and async validators synchronously
         boolean loadedOk = executeImmediateValidators(uri, version, workspace, client, false);
         if (loadedOk) {
-            executeAsyncValidators(uri, version, workspace, client);
+            ScheduledFuture<?> scheduledFuture = debounceExecutor.schedule(
+                    () -> executeAsyncValidators(uri, version, workspace, client),
+                    0,
+                    TimeUnit.MILLISECONDS
+            );
+            pendingDynamicTasks.put(uri, scheduledFuture);
         }
     }
 
@@ -216,12 +240,15 @@ public class RmlValidationService {
 
         ValidationContext context = new ValidationContext(loaded, uri, workspace);
         Map<String, List<Diagnostic>> validatorMap = documentValidatorDiagnostics.computeIfAbsent(uri, u -> new ConcurrentHashMap<>());
-        List<RmlDiagnostic> unlocatedAccumulator = new ArrayList<>();
+        List<RmlErrorDto> unlocatedAccumulator = new ArrayList<>();
 
         for (MappingValidator validator : validators) {
             if (validator.getExecutionPolicy() == ValidationExecutionPolicy.IMMEDIATE) {
-                List<RmlDiagnostic> results = validator.validate(context);
-                Partitioned partitioned = partition(results);
+                RmlErrorAggregator aggregator = new RmlErrorAggregator();
+                for (RmlError err : validator.validate(context)) {
+                    aggregator.add(err);
+                }
+                Partitioned partitioned = partition(aggregator.getAggregatedLogs(), validator.getSourceName());
                 validatorMap.put(validator.getId(), partitioned.located());
                 unlocatedAccumulator.addAll(partitioned.unlocated());
             }
@@ -268,14 +295,26 @@ public class RmlValidationService {
             return;
         }
 
-        ValidationContext context = new ValidationContext(loaded, uri, workspace);
+        ValidationContext context = new ValidationContext(loaded, uri, workspace, () -> {
+            AtomicLong latest = documentVersions.get(uri);
+            return latest == null || latest.get() != version;
+        });
         Map<String, List<Diagnostic>> validatorMap = documentValidatorDiagnostics.computeIfAbsent(uri, u -> new ConcurrentHashMap<>());
-        List<RmlDiagnostic> unlocatedAccumulator = new ArrayList<>();
+        List<RmlErrorDto> unlocatedAccumulator = new ArrayList<>();
 
         for (MappingValidator validator : validators) {
+            if (context.isCancelled()) {
+                return;
+            }
             if (validator.getExecutionPolicy() == ValidationExecutionPolicy.DEBOUNCED_ASYNC) {
-                List<RmlDiagnostic> results = validator.validate(context);
-                Partitioned partitioned = partition(results);
+                RmlErrorAggregator aggregator = new RmlErrorAggregator();
+                for (RmlError err : validator.validate(context)) {
+                    if (context.isCancelled()) {
+                        return;
+                    }
+                    aggregator.add(err);
+                }
+                Partitioned partitioned = partition(aggregator.getAggregatedLogs(), validator.getSourceName());
                 validatorMap.put(validator.getId(), partitioned.located());
                 unlocatedAccumulator.addAll(partitioned.unlocated());
             }
@@ -295,33 +334,52 @@ public class RmlValidationService {
     // Helper & Partitioning Methods
     // -------------------------------------------------------------------------------------------------
 
-    private record Partitioned(List<Diagnostic> located, List<RmlDiagnostic> unlocated) {}
+    private record Partitioned(List<Diagnostic> located, List<RmlErrorDto> unlocated) {}
 
-    private Partitioned partition(List<RmlDiagnostic> list) {
+    private Partitioned partition(List<AggregatedRmlError> list, String sourceName) {
         List<Diagnostic> located = new ArrayList<>();
-        List<RmlDiagnostic> unlocated = new ArrayList<>();
-        for (RmlDiagnostic d : list) {
-            if (d.range() != null) {
-                located.add(toLspDiagnostic(d));
+        List<RmlErrorDto> unlocated = new ArrayList<>();
+        for (AggregatedRmlError agg : list) {
+            RmlErrorDto dto = RmlErrorDto.from(agg, sourceName);
+            if (!dto.ranges().isEmpty()) {
+                located.add(toLspDiagnostic(dto));
             } else {
-                unlocated.add(d);
+                unlocated.add(dto);
+            }
+        }
+        return new Partitioned(located, unlocated);
+    }
+
+    private Partitioned partitionDtos(List<RmlErrorDto> list) {
+        List<Diagnostic> located = new ArrayList<>();
+        List<RmlErrorDto> unlocated = new ArrayList<>();
+        for (RmlErrorDto dto : list) {
+            if (!dto.ranges().isEmpty()) {
+                located.add(toLspDiagnostic(dto));
+            } else {
+                unlocated.add(dto);
             }
         }
         return new Partitioned(located, unlocated);
     }
 
     private void publishFatalException(String uri, BurpException be, @Nullable LanguageClient client) {
-        Range range = SyntaxAndReportValidator.resolveOriginRange(be.getError() != null ? be.getError().origin() : null);
+        List<PointRange> ranges = be.getError() != null && be.getError().origin() != null
+                ? be.getError().origin().ranges()
+                : Collections.emptyList();
         String code = resolveErrorCode(be);
-        RmlDiagnostic diag = new RmlDiagnostic(
-                range,
-                DiagnosticSeverity.Error,
-                code,
+        RmlErrorDto dto = new RmlErrorDto(
                 "Failed to validate mapping: " + (be.getMessage() != null ? be.getMessage() : be.toString()),
+                code,
+                RER.superClassesOf(be.getError() != null ? be.getError().errorType() : null),
+                Severity.ERROR.name(),
+                ranges,
+                Collections.emptyList(),
+                0,
                 "RER Validator"
         );
 
-        Partitioned partitioned = partition(List.of(diag));
+        Partitioned partitioned = partitionDtos(List.of(dto));
         Map<String, List<Diagnostic>> validatorMap = documentValidatorDiagnostics.computeIfAbsent(uri, u -> new ConcurrentHashMap<>());
         validatorMap.clear();
         validatorMap.put("fatal-error", partitioned.located());
@@ -335,15 +393,18 @@ public class RmlValidationService {
 
     private void publishFatalGenericException(String uri, Exception e, @Nullable LanguageClient client) {
         String code = resolveExceptionErrorCode(e);
-        RmlDiagnostic diag = new RmlDiagnostic(
-                null,
-                DiagnosticSeverity.Error,
-                code,
+        RmlErrorDto dto = new RmlErrorDto(
                 "Failed to validate mapping: " + (e.getMessage() != null ? e.getMessage() : e.toString()),
+                code,
+                Collections.emptyList(),
+                Severity.ERROR.name(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                0,
                 "BURP Validator"
         );
 
-        Partitioned partitioned = partition(List.of(diag));
+        Partitioned partitioned = partitionDtos(List.of(dto));
         Map<String, List<Diagnostic>> validatorMap = documentValidatorDiagnostics.computeIfAbsent(uri, u -> new ConcurrentHashMap<>());
         validatorMap.clear();
         handleUnlocatedDiagnostics(uri, partitioned.unlocated(), client);
@@ -390,14 +451,14 @@ public class RmlValidationService {
         return result;
     }
 
-    public List<RmlDiagnostic> deduplicateAndSort(List<RmlDiagnostic> list) {
-        Map<String, RmlDiagnostic> uniqueWithRange = new LinkedHashMap<>();
-        Map<String, RmlDiagnostic> uniqueWithoutRange = new LinkedHashMap<>();
+    public List<RmlErrorDto> deduplicateAndSortDtos(List<RmlErrorDto> list) {
+        Map<String, RmlErrorDto> uniqueWithRange = new LinkedHashMap<>();
+        Map<String, RmlErrorDto> uniqueWithoutRange = new LinkedHashMap<>();
 
-        for (RmlDiagnostic d : list) {
-            Range range = d.range();
-            if (range != null) {
-                String key = range.getStart().getLine() + ":" + range.getStart().getCharacter()
+        for (RmlErrorDto d : list) {
+            if (!d.ranges().isEmpty()) {
+                PointRange pr = d.ranges().getFirst();
+                String key = pr.start().line() + ":" + pr.start().column()
                         + ":" + d.severity() + ":" + d.message();
                 uniqueWithRange.putIfAbsent(key, d);
             } else {
@@ -406,9 +467,9 @@ public class RmlValidationService {
             }
         }
 
-        List<RmlDiagnostic> result = new ArrayList<>(uniqueWithRange.values());
-        result.sort(Comparator.comparingInt((RmlDiagnostic d) -> Objects.requireNonNull(d.range()).getStart().getLine())
-                .thenComparingInt(d -> Objects.requireNonNull(d.range()).getStart().getCharacter()));
+        List<RmlErrorDto> result = new ArrayList<>(uniqueWithRange.values());
+        result.sort(Comparator.comparingInt((RmlErrorDto d) -> d.ranges().getFirst().start().line())
+                .thenComparingInt(d -> d.ranges().getFirst().start().column()));
         result.addAll(uniqueWithoutRange.values());
         return result;
     }
@@ -432,23 +493,55 @@ public class RmlValidationService {
         return copy;
     }
 
-    public Diagnostic toLspDiagnostic(RmlDiagnostic d) {
+    public Diagnostic toLspDiagnostic(RmlErrorDto d) {
         Diagnostic diag = new Diagnostic();
-        diag.setRange(d.range() != null ? d.range() : new Range(new Position(0, 0), new Position(0, 0)));
-        diag.setSeverity(d.severity());
-        if (d.rerCodeUri() != null) {
-            diag.setCode(d.rerCodeUri());
-            diag.setCodeDescription(new DiagnosticCodeDescription(d.rerCodeUri()));
+        Range lspRange;
+        if (!d.ranges().isEmpty()) {
+            PointRange first = d.ranges().getFirst();
+            PointRange last = d.ranges().getLast();
+            lspRange = new Range(
+                    first.start().toLsp(),
+                    (last.end() != null ? last.end() : last.start()).toLsp()
+            );
+        } else {
+            lspRange = new Range(new Position(0, 0), new Position(0, 0));
         }
-        diag.setMessage(d.message());
+        diag.setRange(lspRange);
+        diag.setSeverity(mapSeverity(d.severity()));
+        diag.setCode(d.errorTypeUri());
+        diag.setCodeDescription(new DiagnosticCodeDescription(d.errorTypeUri()));
+        diag.setMessage(formatDiagnosticMessage(d));
         diag.setSource(d.source() != null ? d.source() : "BURP Validator");
-        if (RER.UnusedRmlElement.getURI().equals(d.rerCodeUri())) {
+        if (RER.UnusedRmlElement.getURI().equals(d.errorTypeUri())
+                || d.superClassUris().contains(RER.UnusedRmlElement.getURI())) {
             diag.setTags(List.of(DiagnosticTag.Unnecessary));
         }
         return diag;
     }
 
-    private void handleUnlocatedDiagnostics(String uri, List<RmlDiagnostic> unlocated, @Nullable LanguageClient client) {
+    private static String formatDiagnosticMessage(RmlErrorDto d) {
+        List<String> details = new ArrayList<>();
+        if (!d.samples().isEmpty()) {
+            var lineage = d.samples().getFirst().originLineage();
+            if (lineage != null) {
+                details.add("iteration " + lineage.primary().index());
+            }
+        }
+        if (d.additionalCount() > 0) {
+            details.add(d.additionalCount() + " more");
+        }
+        return details.isEmpty() ? d.message() : d.message() + " (" + String.join(", ", details) + ")";
+    }
+
+    private static DiagnosticSeverity mapSeverity(String severity) {
+        return switch (severity) {
+            case "WARNING" -> DiagnosticSeverity.Warning;
+            case "INFORMATION" -> DiagnosticSeverity.Information;
+            default -> DiagnosticSeverity.Error;
+        };
+    }
+
+    private void handleUnlocatedDiagnostics(String uri, List<RmlErrorDto> unlocated, @Nullable LanguageClient client) {
         if (unlocated.isEmpty()) {
             if (documentsWithActiveUnlocatedErrors.remove(uri)) {
                 if (client != null) {
@@ -461,7 +554,7 @@ public class RmlValidationService {
 
         documentsWithActiveUnlocatedErrors.add(uri);
 
-        for (RmlDiagnostic d : unlocated) {
+        for (RmlErrorDto d : unlocated) {
             String msg = d.message();
             if (client != null) {
                 client.logMessage(new MessageParams(MessageType.Error, "[Unlocated Error] " + msg));

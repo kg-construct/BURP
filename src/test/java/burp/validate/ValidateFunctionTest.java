@@ -1,7 +1,7 @@
 package burp.validate;
 
 import burp.dev.rml.RmlDevServerImpl;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.vocabularies.RER;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -23,10 +23,10 @@ public class ValidateFunctionTest {
     public void testValidateDuplicateParameterBinding() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/dup-param.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Error &&
-                RER.DuplicateParameter.getURI().equals(d.rerCodeUri()) &&
+                "ERROR".equals(d.severity()) &&
+                RER.DuplicateParameter.getURI().equals(d.errorTypeUri()) &&
                 d.message().contains("Duplicate parameter binding")
         );
     }
@@ -35,10 +35,10 @@ public class ValidateFunctionTest {
     public void testValidateInvalidFunctionParameter() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/invalid-param.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Warning &&
-                RER.InvalidParameter.getURI().equals(d.rerCodeUri()) &&
+                "ERROR".equals(d.severity()) &&
+                RER.InvalidParameter.getURI().equals(d.errorTypeUri()) &&
                 d.message().contains("nonExistentParam")
         );
     }
@@ -47,10 +47,10 @@ public class ValidateFunctionTest {
     public void testValidateMissingRequiredFunctionParameter() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/missing-param.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Error &&
-                RER.MissingParameter.getURI().equals(d.rerCodeUri()) &&
+                "ERROR".equals(d.severity()) &&
+                RER.MissingParameter.getURI().equals(d.errorTypeUri()) &&
                 (d.message().contains("from") || d.message().contains("p_int_i_from"))
         );
     }
@@ -59,10 +59,10 @@ public class ValidateFunctionTest {
     public void testValidateUnknownFunction() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/unknown-func.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Warning &&
-                RER.UnknownFunction.getURI().equals(d.rerCodeUri()) &&
+                "ERROR".equals(d.severity()) &&
+                RER.UnknownFunction.getURI().equals(d.errorTypeUri()) &&
                 d.message().contains("nonExistentFunction")
         );
     }
@@ -71,11 +71,11 @@ public class ValidateFunctionTest {
     public void testValidateCustomOntologyFunctions() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/custom-ontologies.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).noneMatch(d ->
-                RER.UnknownFunction.getURI().equals(d.rerCodeUri()) ||
-                RER.InvalidParameter.getURI().equals(d.rerCodeUri()) ||
-                RER.MissingParameter.getURI().equals(d.rerCodeUri())
+                RER.UnknownFunction.getURI().equals(d.errorTypeUri()) ||
+                RER.InvalidParameter.getURI().equals(d.errorTypeUri()) ||
+                RER.MissingParameter.getURI().equals(d.errorTypeUri())
         );
     }
 
@@ -83,10 +83,10 @@ public class ValidateFunctionTest {
     public void testValidatePredicateParameterIriWarning() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/raw-param.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Warning &&
-                RER.UnknownFunctionParameterIRI.getURI().equals(d.rerCodeUri()) &&
+                "WARNING".equals(d.severity()) &&
+                RER.UnknownFunctionParameterIRI.getURI().equals(d.errorTypeUri()) &&
                 d.message().contains("str")
         );
     }
@@ -95,10 +95,10 @@ public class ValidateFunctionTest {
     public void testValidatePredicateParameterIriWarningWithFilePrefixes() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/raw-param-prefix.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Warning &&
-                RER.UnknownFunctionParameterIRI.getURI().equals(d.rerCodeUri()) &&
+                "WARNING".equals(d.severity()) &&
+                RER.UnknownFunctionParameterIRI.getURI().equals(d.errorTypeUri()) &&
                 d.message().equals("Parameter grel:valueParameter is a predicate IRI; consider using its parameter definition IRI grel:valueParam instead.")
         );
     }
@@ -107,10 +107,10 @@ public class ValidateFunctionTest {
     public void testValidateParameterEntityIriProducesNoWarning() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/custom-ontologies.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).noneMatch(d ->
-                RER.UnknownFunctionParameterIRI.getURI().equals(d.rerCodeUri()) ||
-                RER.UnknownFunctionReturnIRI.getURI().equals(d.rerCodeUri())
+                RER.UnknownFunctionParameterIRI.getURI().equals(d.errorTypeUri()) ||
+                RER.UnknownFunctionReturnIRI.getURI().equals(d.errorTypeUri())
         );
     }
 }

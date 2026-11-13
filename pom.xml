@@ -354,6 +354,7 @@
                         <pattern>burp.model.rdf.**</pattern>
                         <pattern>burp.parse.turtleprov.Point</pattern>
                         <pattern>burp.reporting.PointRange</pattern>
+                        <pattern>burp.reporting.SampleOccurrence</pattern>
                     </classPatterns>
                     <outputFile>rml-dev-server/src/generated/types.ts</outputFile>
                     <outputFileType>implementationFile</outputFileType>

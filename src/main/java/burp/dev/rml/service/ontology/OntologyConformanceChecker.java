@@ -7,6 +7,7 @@ import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ext.xerces.xs.XSTypeDefinition;
+import org.apache.jena.ontapi.model.OntClass;
 import org.apache.jena.ontapi.model.OntModel;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 public class OntologyConformanceChecker {
 
     public record Issue(
-            Resource errorType,
+            OntClass errorType,
             String message
     ) {}
 

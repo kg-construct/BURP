@@ -2,7 +2,7 @@ package burp.validate;
 
 import burp.dev.rml.RmlDevServerImpl;
 import burp.dev.rml.RmlLanguageServer;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.vocabularies.RER;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -24,17 +24,17 @@ public class ValidateSqlTest {
     public void testValidateValidSqlTableMappingHasNoErrors() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/BURPIOTC-SQLITE/mapping.ttl");
         RmlLanguageServer server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
 
         assertThat(diagnostics).isNotNull();
-        List<RmlDiagnostic> errors = diagnostics.stream()
-                .filter(d -> d.severity() == DiagnosticSeverity.Error)
+        List<RmlErrorDto> errors = diagnostics.stream()
+                .filter(d -> "ERROR".equals(d.severity()))
                 .toList();
         assertThat(errors).isEmpty();
 
-        List<RmlDiagnostic> warnings = diagnostics.stream()
-                .filter(d -> d.severity() == DiagnosticSeverity.Warning)
-                .filter(d -> !RER.UnusedRmlElement.getURI().equals(d.rerCodeUri()))
+        List<RmlErrorDto> warnings = diagnostics.stream()
+                .filter(d -> "WARNING".equals(d.severity()))
+                .filter(d -> !RER.UnusedRmlElement.getURI().equals(d.errorTypeUri()))
                 .toList();
         assertThat(warnings).isEmpty();
     }
@@ -43,10 +43,10 @@ public class ValidateSqlTest {
     public void testValidateInvalidSqlColumnReference() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/invalid-sql-col.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Warning &&
-                RER.ReferenceFormulationExecutionError.getURI().equals(d.rerCodeUri()) &&
+                "ERROR".equals(d.severity()) &&
+                RER.ReferenceFormulationExecutionError.getURI().equals(d.errorTypeUri()) &&
                 d.message().contains("non_existent_col")
         );
     }
@@ -55,15 +55,15 @@ public class ValidateSqlTest {
     public void testValidateInvalidSqlQuerySyntax() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/bad-sql-query.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
 
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Error &&
-                RER.IteratorSyntaxError.getURI().equals(d.rerCodeUri())
+                "ERROR".equals(d.severity()) &&
+                RER.IteratorSyntaxError.getURI().equals(d.errorTypeUri())
         );
 
         assertThat(diagnostics).noneMatch(d ->
-                RER.ReferenceFormulationExecutionError.getURI().equals(d.rerCodeUri())
+                RER.ReferenceFormulationExecutionError.getURI().equals(d.errorTypeUri())
         );
     }
 
@@ -71,15 +71,15 @@ public class ValidateSqlTest {
     public void testValidateUnreachableDatabase() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/bad-db-dsn.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
 
         assertThat(diagnostics).anyMatch(d ->
-                d.severity() == DiagnosticSeverity.Information &&
-                RER.SourceAccessError.getURI().equals(d.rerCodeUri())
+                "ERROR".equals(d.severity()) &&
+                RER.SourceAccessError.getURI().equals(d.errorTypeUri())
         );
 
         assertThat(diagnostics).noneMatch(d ->
-                RER.ReferenceFormulationExecutionError.getURI().equals(d.rerCodeUri())
+                RER.ReferenceFormulationExecutionError.getURI().equals(d.errorTypeUri())
         );
     }
 
@@ -87,10 +87,10 @@ public class ValidateSqlTest {
     public void testValidateCaseInsensitiveSqlColumnMatching() throws ExecutionException, InterruptedException {
         String uri = toUri("src/test/resources/burp/validate/case-insensitive-sql-col.ttl");
         RmlDevServerImpl server = new RmlDevServerImpl();
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
 
         assertThat(diagnostics).noneMatch(d ->
-                RER.ReferenceFormulationExecutionError.getURI().equals(d.rerCodeUri())
+                RER.ReferenceFormulationExecutionError.getURI().equals(d.errorTypeUri())
         );
     }
 

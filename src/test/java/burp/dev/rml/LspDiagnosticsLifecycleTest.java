@@ -184,8 +184,20 @@ public class LspDiagnosticsLifecycleTest {
                 text
         ));
 
-        // Dynamic diagnostics must be published immediately
-        List<Diagnostic> published = workspace.getValidationService().getLastPublishedDiagnostics(uri);
+        // Dynamic diagnostics must be published promptly without waiting for the 10s debounce
+        long deadline = System.currentTimeMillis() + 500;
+        List<Diagnostic> published = List.of();
+        while (System.currentTimeMillis() < deadline) {
+            published = workspace.getValidationService().getLastPublishedDiagnostics(uri);
+            boolean ready = published.stream().anyMatch(d -> {
+                String msg = d.getMessage() != null && d.getMessage().isLeft() ? d.getMessage().getLeft() : "";
+                return msg.contains("non_existent_col") && !msg.startsWith(RmlValidationService.REVALIDATING_PREFIX);
+            });
+            if (ready) {
+                break;
+            }
+            Thread.sleep(10);
+        }
         assertThat(published).anyMatch(d -> {
             String msg = d.getMessage() != null && d.getMessage().isLeft() ? d.getMessage().getLeft() : "";
             return msg.contains("non_existent_col") && !msg.startsWith(RmlValidationService.REVALIDATING_PREFIX);

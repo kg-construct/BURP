@@ -4,7 +4,10 @@ import burp.dev.rml.service.MappingWorkspace;
 import burp.dev.rml.service.RmlEvaluationResultFormatter;
 import burp.dev.rml.service.cache.DevServerCache;
 import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
+import burp.dev.rml.service.ontology.OntologyConformanceChecker;
+import burp.dev.rml.service.ontology.OntologyRegistry;
 import burp.dev.rml.service.selector.CursorSelector;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.ls.JSONSourceRFC;
 import burp.ls.LogicalSourceProvider;
 import burp.model.*;
@@ -12,8 +15,16 @@ import burp.model.context.EvaluationContext;
 import burp.model.join.ParentJoinIndex;
 import burp.model.key.AstKey;
 import burp.model.lv.LogicalIteration;
+import burp.model.rdf.IRITerm;
+import burp.model.rdf.LiteralTerm;
+import burp.model.rdf.Term;
 import burp.reporting.BurpException;
 import burp.reporting.RmlError;
+import burp.reporting.Severity;
+import burp.vocabularies.RER;
+import burp.vocabularies.RML;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import kotlinx.serialization.json.*;
 import org.apache.jena.rdf.model.Resource;
 import org.eclipse.lsp4j.Position;
@@ -80,7 +91,17 @@ public class RmlEvaluator {
                 );
             } catch (Exception iterEx) {
                 String errMsg = iterEx.getMessage() != null ? iterEx.getMessage() : iterEx.toString();
-                EvaluateResult errResult = new EvaluateResult("0", "", Collections.emptyList(), List.of(errMsg), null, Collections.emptyMap());
+                RmlErrorDto errDto = new RmlErrorDto(
+                        errMsg,
+                        RER.SourceAccessError.getURI(),
+                        RER.superClassesOf(RER.SourceAccessError),
+                        Severity.ERROR.name(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        0,
+                        "BURP Evaluator"
+                );
+                EvaluateResult errResult = new EvaluateResult("0", "", Collections.emptyList(), List.of(errDto), Collections.emptyMap());
                 return CompletableFuture.completedFuture(List.of(errResult));
             }
 
@@ -177,7 +198,7 @@ public class RmlEvaluator {
             InlineHintsEvaluationMode evalMode = workspace.getInlineHintsEvaluationMode();
 
             if (iterations.isEmpty()) {
-                EvaluateResult emptyResult = new EvaluateResult("0", "", Collections.emptyList(), Collections.emptyList(), null, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode);
+                EvaluateResult emptyResult = new EvaluateResult("0", "", Collections.emptyList(), Collections.emptyList(), prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode);
                 return CompletableFuture.completedFuture(List.of(emptyResult));
             }
 
@@ -188,13 +209,23 @@ public class RmlEvaluator {
             for (int i = 0; i < iterations.size(); i++) {
                 Iteration iter = iterations.get(i);
                 int index = iter.getId() != null ? iter.getId().index() : i;
-                EvaluateResult er = evaluateIteration(targetNode, targetKey, iter, index, context, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode);
+                EvaluateResult er = evaluateIteration(targetNode, targetKey, iter, index, context, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evalMode, ontRegistry);
                 results.add(er);
             }
             return CompletableFuture.completedFuture(results);
         } catch (Exception e) {
             String errMsg = e.getMessage() != null ? e.getMessage() : e.toString();
-            EvaluateResult errResult = new EvaluateResult("0", "", Collections.emptyList(), List.of(errMsg), null, Collections.emptyMap(), null, null, null, null, null);
+            RmlErrorDto errDto = new RmlErrorDto(
+                    errMsg,
+                    RER.UnexpectedError.getURI(),
+                    Collections.emptyList(),
+                    Severity.ERROR.name(),
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    0,
+                    "BURP Evaluator"
+            );
+            EvaluateResult errResult = new EvaluateResult("0", "", Collections.emptyList(), List.of(errDto), Collections.emptyMap(), null, null, null, null, null);
             return CompletableFuture.completedFuture(List.of(errResult));
         }
     }
@@ -239,16 +270,10 @@ public class RmlEvaluator {
 
         List<Iteration> computed = resolveIterationsInternal(dataContext, logicalSource);
         if (cache != null && !computed.isEmpty()) {
-            if (dataContext instanceof CustomDataContext) {
+            if (dataContext instanceof CustomDataContext || dataContext instanceof RangeDataContext) {
                 cache.putIterations(logicalSource, dataContext, computed);
             } else if (dataContext instanceof AllDataContext) {
                 cache.putIterations(logicalSource, computed);
-            } else {
-                List<Iteration> all = new ArrayList<>();
-                for (Iteration iter : logicalSource.iterator()) {
-                    all.add(iter);
-                }
-                cache.putIterations(logicalSource, all);
             }
         }
         return computed;
@@ -359,15 +384,72 @@ public class RmlEvaluator {
      * Evaluates a single iteration for a target plan node with AST cache key, trace summary, and target node metadata.
      */
     public EvaluateResult evaluateIteration(PlanNode targetNode, @Nullable AstKey targetKey, @Nullable Iteration iter, int index, EvaluationContext context, Map<String, String> prefixMap, @Nullable List<String> traceSummary, @Nullable String targetNodeType, @Nullable String targetParentTriplesMap, @Nullable String targetNodeSummary, @Nullable InlineHintsEvaluationMode evaluationMode) {
+        return evaluateIteration(targetNode, targetKey, iter, index, context, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evaluationMode, null);
+    }
+
+    public EvaluateResult evaluateIteration(PlanNode targetNode, @Nullable AstKey targetKey, @Nullable Iteration iter, int index, EvaluationContext context, Map<String, String> prefixMap, @Nullable List<String> traceSummary, @Nullable String targetNodeType, @Nullable String targetParentTriplesMap, @Nullable String targetNodeSummary, @Nullable InlineHintsEvaluationMode evaluationMode, @Nullable OntologyRegistry ontRegistry) {
         String iterationId = String.valueOf(index);
         String iterationData = iter != null ? iter.asString() : "";
-        List<RmlEvaluationResult> results = evaluateNodeSafe(targetNode, targetKey, iter, context);
+        EvaluationContext iterContext = context.withReport(new burp.reporting.RmlExecutionReport());
+        List<RmlEvaluationResult> results = evaluateNodeSafe(targetNode, targetKey, iter, iterContext);
 
-        List<String> diagnostics = context.report().getErrors() != null ?
-                context.report().getErrors().stream().map(RmlError::message).toList() :
-                Collections.emptyList();
+        if (ontRegistry != null && targetNode instanceof TriplesMap tm) {
+            Set<Resource> subjectClasses = tm.subjectMap != null
+                    ? new LinkedHashSet<>(tm.subjectMap.classes)
+                    : Collections.emptySet();
+            for (RmlEvaluationResult res : results) {
+                if (res instanceof RdfStatement stmt) {
+                    checkStatementConformance(stmt, subjectClasses, ontRegistry, prefixMap, iterContext.report());
+                }
+            }
+        }
 
-        return new EvaluateResult(iterationId, iterationData, results, diagnostics, null, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evaluationMode);
+        List<RmlErrorDto> errors = iterContext.report().getAggregatedLogs().stream()
+                .map(agg -> RmlErrorDto.from(agg, "BURP Evaluator"))
+                .toList();
+
+        return new EvaluateResult(iterationId, iterationData, results, errors, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evaluationMode);
+    }
+
+    private static void checkStatementConformance(
+            RdfStatement stmt,
+            Set<Resource> subjectClasses,
+            OntologyRegistry ontRegistry,
+            Map<String, String> prefixMap,
+            burp.reporting.RmlExecutionReport report
+    ) {
+        Resource predicate = ResourceFactory.createResource(stmt.getPredicate().uri());
+        Term objTerm = stmt.getObject();
+        Resource termType;
+        String lexical = null;
+        Resource litDatatype = null;
+
+        if (objTerm instanceof LiteralTerm lit) {
+            termType = RML.Literal;
+            lexical = lit.value();
+            if (lit.datatype() != null) {
+                litDatatype = ResourceFactory.createResource(lit.datatype().uri());
+            }
+        } else if (objTerm instanceof IRITerm) {
+            termType = RML.IRI;
+        } else {
+            termType = RML.BlankNode;
+        }
+
+        for (var issue : OntologyConformanceChecker.check(
+                subjectClasses, predicate, termType, null, lexical, litDatatype, ontRegistry, prefixMap
+        )) {
+            report.addLog(new RmlError(
+                    issue.message(),
+                    null,
+                    issue.errorType(),
+                    null,
+                    null,
+                    null,
+                    stmt.lineage(),
+                    stmt
+            ));
+        }
     }
 
     private @Nullable String computeNodeSummary(@Nullable PlanNode node, @Nullable Map<String, String> prefixMap) {
@@ -444,8 +526,9 @@ public class RmlEvaluator {
         // 2. Incremental Cache Check (Tier 3: Node Evaluation Memoization)
         int iterId = (iter != null) ? (iter.asString().hashCode()) : 0;
         AstKey key = nodeKey != null ? nodeKey : (cache != null ? node.getAstKey() : null);
+        String baseIri = context != null ? context.baseIri() : null;
         if (cache != null && key != null) {
-            List<RmlEvaluationResult> cached = cache.getEvaluation(key, iterId);
+            List<RmlEvaluationResult> cached = cache.getEvaluation(key, iterId, baseIri);
             if (cached != null) {
                 return cached;
             }
@@ -454,7 +537,7 @@ public class RmlEvaluator {
         try {
             List<RmlEvaluationResult> eval = evaluateNode(node, iter, context);
             if (cache != null && key != null) {
-                cache.putEvaluation(key, iterId, eval);
+                cache.putEvaluation(key, iterId, baseIri, eval);
             }
             return eval;
         } catch (BurpException e) {

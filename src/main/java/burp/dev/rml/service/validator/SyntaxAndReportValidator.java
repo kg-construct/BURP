@@ -6,8 +6,6 @@ import burp.reporting.Origin;
 import burp.reporting.PointRange;
 import burp.reporting.RmlError;
 import burp.reporting.RmlExecutionReport;
-import burp.vocabularies.RER;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -29,35 +27,22 @@ public class SyntaxAndReportValidator implements MappingValidator {
     }
 
     @Override
+    public String getSourceName() {
+        return "BURP Parser";
+    }
+
+    @Override
     public ValidationExecutionPolicy getExecutionPolicy() {
         return ValidationExecutionPolicy.IMMEDIATE;
     }
 
     @Override
-    public List<RmlDiagnostic> validate(ValidationContext context) {
-        List<RmlDiagnostic> diagnostics = new ArrayList<>();
+    public List<RmlError> validate(ValidationContext context) {
         RmlExecutionReport report = context.loaded().report();
-        if (report.getErrors() == null) {
-            return diagnostics;
-        }
-
-        for (RmlError error : report.getErrors()) {
-            Range range = resolveOriginRange(error.origin());
-            DiagnosticSeverity severity = DiagnosticSeverity.Error;
-            String code = error.errorType().getURI() != null
-                    ? error.errorType().getURI()
-                    : RER.MappingError.getURI();
-
-            diagnostics.add(new RmlDiagnostic(
-                    range,
-                    severity,
-                    code,
-                    error.message(),
-                    "BURP Parser"
-            ));
-        }
-
-        return diagnostics;
+        List<RmlError> results = new ArrayList<>();
+        results.addAll(report.getErrors());
+        results.addAll(report.getWarnings());
+        return results;
     }
 
     public static @Nullable Range resolveOriginRange(@Nullable Origin origin) {

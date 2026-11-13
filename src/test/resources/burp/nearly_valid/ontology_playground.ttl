@@ -4,7 +4,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 @prefix owl: <http://www.w3.org/2002/07/owl#>.
 
-<> owl:imports <./hospital_ontology.ttl> .
+<> owl:imports <./ontology.ttl>.
 
 ex:PatientMapping a rml:TriplesMap;
   rml:logicalSource [
@@ -21,9 +21,7 @@ ex:PatientMapping a rml:TriplesMap;
   ];
   rml:predicateObjectMap [
     rml:predicate ex:name;
-    rml:objectMap [
-      rml:reference "Name";
-    ];
+    rml:objectMap [ rml:reference "Name" ];
   ];
   # Dynamic check 1: invalid lexical values in CSV (row 2 is negative -5, row 3 is not_a_number)
   rml:predicateObjectMap [
@@ -44,9 +42,7 @@ ex:PatientMapping a rml:TriplesMap;
   # Dynamic check 3: reference outputs Literal, but ex:treatedBy is an owl:ObjectProperty
   rml:predicateObjectMap [
     rml:predicate ex:treatedBy;
-    rml:objectMap [
-      rml:reference "doctorID";
-    ];
+    rml:objectMap [ rml:reference "doctorID" ];
   ].
 
 ex:DoctorMapping a rml:TriplesMap;

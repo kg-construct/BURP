@@ -7,6 +7,7 @@ import burp.parse.loader.annotations.RdfId;
 import burp.parse.loader.annotations.RdfProperty;
 import burp.parse.loader.annotations.RdfShortcutProperty;
 import burp.parse.loader.annotations.RdfType;
+import burp.processor.EvaluatedStatementContext;
 import burp.vocabularies.Rml;
 import org.apache.jena.rdf.model.Resource;
 import org.jspecify.annotations.Nullable;
@@ -69,6 +70,8 @@ public class PredicateObjectMap extends AbstractPlanNode implements LogicalTarge
 
     public List<RdfPredicateObject> generate(@Nullable Iteration i, EvaluationContext context) {
         List<RdfPredicateObject> lists = new ArrayList<>();
+        var observer = context.statementObserver();
+        TriplesMap parentTm = observer != null ? ancestor(TriplesMap.class) : null;
 
         for (PredicateMap pm : predicateMaps) {
             var predicates = pm.generateTerms(i, context);
@@ -78,8 +81,9 @@ public class PredicateObjectMap extends AbstractPlanNode implements LogicalTarge
                 for (BaseObjectMap om : objectMaps) {
                     var objects = om.generateTerms(i, context);
                     for (Term o : objects) {
+                        RdfPredicateObject observedPo = new RdfPredicateObject(pIri, o, null, unionLogicalTargets(p.targets(), o.targets()));
                         if (graphMaps.isEmpty()) {
-                            lists.add(new RdfPredicateObject(pIri, o, null, unionLogicalTargets(p.targets(), o.targets())));
+                            lists.add(observedPo);
                         } else {
                             for (GraphMap gm : graphMaps) {
                                 var graphs = gm.generateTerms(i, context);
@@ -91,6 +95,24 @@ public class PredicateObjectMap extends AbstractPlanNode implements LogicalTarge
                                     }
                                 }
                             }
+                        }
+
+                        if (observer != null && parentTm != null) {
+                            OriginLineage lineage = i != null ? i.getLineage() : null;
+                            if (p.lineage() != null) {
+                                lineage = lineage != null ? lineage.merge(p.lineage()) : p.lineage();
+                            }
+                            if (o.lineage() != null) {
+                                lineage = lineage != null ? lineage.merge(o.lineage()) : o.lineage();
+                            }
+                            observer.accept(new EvaluatedStatementContext(
+                                    parentTm,
+                                    this,
+                                    pm,
+                                    om,
+                                    observedPo,
+                                    lineage
+                            ));
                         }
                     }
                 }

@@ -1,7 +1,7 @@
 package burp.dev;
 
 import burp.dev.rml.RmlDevServerImpl;
-import burp.dev.rml.service.validator.RmlDiagnostic;
+import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.dev.rml.service.validator.ValidateParams;
 import burp.model.*;
 import burp.parse.RmlLoader;
@@ -304,23 +304,26 @@ public class NearlyValidMappingTest {
         var prefixMap = server.getWorkspace().getPrefixMap(uri);
 
         // 1. Static and Dynamic validation (server.validate runs both immediate and async validators)
-        List<RmlDiagnostic> diagnostics = server.validate(new ValidateParams(uri)).get();
+        List<RmlErrorDto> diagnostics = server.validate(new ValidateParams(uri)).get();
 
         // Static checks:
         assertThat(diagnostics)
-                .filteredOn(d -> burp.vocabularies.RER.OntologyDatatypeMismatch.getURI().equals(d.rerCodeUri()))
+                .filteredOn(d -> burp.vocabularies.RER.OntologyDatatypeMismatch.getURI().equals(d.errorTypeUri()))
                 .isNotEmpty(); // ex:name declared as xsd:integer on string range property
 
         assertThat(diagnostics)
-                .filteredOn(d -> burp.vocabularies.RER.OntologyDomainMismatch.getURI().equals(d.rerCodeUri()))
+                .filteredOn(d -> burp.vocabularies.RER.OntologyDomainMismatch.getURI().equals(d.errorTypeUri()))
                 .isNotEmpty(); // ex:treatedBy declared on ex:DoctorMapping (domain is ex:Patient)
 
-        // Dynamic checks from sampled source data:
+        // Dynamic checks from sampled source data (aggregated per mapping origin with SampleOccurrence):
         assertThat(diagnostics)
-                .extracting(RmlDiagnostic::message)
-                .anyMatch(msg -> msg.contains("[row 2]") && msg.contains("'12/04/1995'") && msg.contains("xsd:date"))
-                .anyMatch(msg -> msg.contains("[row 2]") && msg.contains("'-5'") && msg.contains("xsd:nonNegativeInteger"))
-                .anyMatch(msg -> msg.contains("[row 3]") && msg.contains("'not_a_number'") && msg.contains("xsd:nonNegativeInteger"));
+                .extracting(RmlErrorDto::message)
+                .anyMatch(msg -> msg.contains("'12/04/1995'") && msg.contains("xsd:date"))
+                .anyMatch(msg -> msg.contains("'-5'") && msg.contains("xsd:nonNegativeInteger"));
+        assertThat(diagnostics)
+                .filteredOn(d -> d.message().contains("'-5'") && d.message().contains("xsd:nonNegativeInteger"))
+                .flatExtracting(RmlErrorDto::samples)
+                .hasSizeGreaterThanOrEqualTo(2);
 
         // 2. Dynamic evaluation: checks runtime generated terms against ontology
         burp.model.TriplesMap doctorTm = loaded.document().triplesMaps.stream()
@@ -334,7 +337,8 @@ public class NearlyValidMappingTest {
         ));
         var evalResults = evalFuture.get();
         assertThat(evalResults).isNotEmpty();
-        assertThat(evalResults.getFirst().diagnostics())
+        assertThat(evalResults.getFirst().errors())
+                .extracting(RmlErrorDto::message)
                 .anyMatch(msg -> msg.contains("ex:treatedBy") && msg.contains("ex:Doctor"));
 
         // 3. Dynamic evaluation on PatientMapping: checks runtime data-driven violations
@@ -351,16 +355,19 @@ public class NearlyValidMappingTest {
         assertThat(patientEvalResults).hasSize(3);
 
         // Iteration 1 (Alice): valid Age 30, valid BirthDate 1993-04-12, but ex:treatedBy receives literal "101"
-        assertThat(patientEvalResults.get(0).diagnostics())
+        assertThat(patientEvalResults.get(0).errors())
+                .extracting(RmlErrorDto::message)
                 .anyMatch(msg -> msg.contains("ex:treatedBy") && msg.contains("object property") && msg.contains("Literal"));
 
         // Iteration 2 (Bob): invalid negative age -5 for xsd:nonNegativeInteger, invalid date format 12/04/1995 for xsd:date
-        assertThat(patientEvalResults.get(1).diagnostics())
+        assertThat(patientEvalResults.get(1).errors())
+                .extracting(RmlErrorDto::message)
                 .anyMatch(msg -> msg.contains("'-5'") && msg.contains("xsd:nonNegativeInteger"))
                 .anyMatch(msg -> msg.contains("'12/04/1995'") && msg.contains("xsd:date"));
 
         // Iteration 3 (Charlie): invalid lexical integer "not_a_number"
-        assertThat(patientEvalResults.get(2).diagnostics())
+        assertThat(patientEvalResults.get(2).errors())
+                .extracting(RmlErrorDto::message)
                 .anyMatch(msg -> msg.contains("'not_a_number'") && msg.contains("xsd:nonNegativeInteger"));
     }
 }
