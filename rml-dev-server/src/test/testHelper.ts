@@ -36,7 +36,7 @@ export async function setupTestServer(outputChannelName: string = 'Test Output')
     await config.update('server.port', 0, vscode.ConfigurationTarget.Global);
     await config.update('inlineHints.enableEvaluation', true, vscode.ConfigurationTarget.Global);
 
-    const outputChannel = vscode.window.createOutputChannel(outputChannelName);
+    const outputChannel = vscode.window.createOutputChannel(outputChannelName, {log: true});
     const serverProcess = new ServerProcess(outputChannel);
     const client = new RmlDevClient(outputChannel);
 

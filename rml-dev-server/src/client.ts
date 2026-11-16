@@ -41,12 +41,12 @@ export interface HealthCheckResult {
 export class RmlDevClient {
     private languageClient: LanguageClient | null = null;
     private socket: net.Socket | null = null;
-    private outputChannel: vscode.OutputChannel;
+    private outputChannel: vscode.LogOutputChannel;
     private lastLatencyMs: number | null = null;
     private quadChunkEmitter = new vscode.EventEmitter<QuadChunkNotification>();
     public readonly onQuadChunkReceived = this.quadChunkEmitter.event;
 
-    constructor(outputChannel: vscode.OutputChannel) {
+    constructor(outputChannel: vscode.LogOutputChannel) {
         this.outputChannel = outputChannel;
     }
 

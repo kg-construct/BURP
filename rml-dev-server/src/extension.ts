@@ -28,7 +28,7 @@ let rdfVisualizerManager: RdfVisualizerManager | null = null;
 export async function activate(context: vscode.ExtensionContext) {
     telemetry.initialize(context);
     telemetry.capture('extension_activated');
-    const outputChannel = vscode.window.createOutputChannel('RML Dev Server');
+    const outputChannel = vscode.window.createOutputChannel('RML Dev Server', {log: true});
     const serverProcess = new ServerProcess(outputChannel, context);
     const client = new RmlDevClient(outputChannel);
     const statusBar = new StatusBarManager();
