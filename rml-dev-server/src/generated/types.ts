@@ -60,6 +60,7 @@ export interface RmlEvaluationResultFormatter {
 export interface DevServerCache {
     sourceIterationCache: Cache<AstKey, Iteration[]>;
     customIterationCache: Cache<CustomSourceCacheKey, Iteration[]>;
+    rangeIterationCache: Cache<RangeSourceCacheKey, Iteration[]>;
     parentJoinCache: Cache<ParentJoinCacheKey, ParentJoinIndex>;
     nodeMemoCache: Cache<NodeMemoCacheKey, RmlEvaluationResult[]>;
     sqlSchemaCache: Cache<string, CachedSchema>;
@@ -73,12 +74,18 @@ export interface CustomSourceCacheKey {
 export interface NodeMemoCacheKey {
     nodeKey: AstKey;
     iterationKey: number;
+    baseIri?: string;
 }
 
 export interface ParentJoinCacheKey {
     nodeKey: AstKey;
     parentSourceKey: AstKey;
     dataContext?: EvaluationDataContext;
+}
+
+export interface RangeSourceCacheKey {
+    sourceKey: AstKey;
+    rangeContext: RangeDataContext;
 }
 
 export interface CompletionContext {
@@ -187,8 +194,7 @@ export interface EvaluateResult {
     iterationId: string;
     iterationData: string;
     generatedRdf: RmlEvaluationResult[];
-    diagnostics: string[];
-    rerDiagnostic?: string;
+    errors: RmlErrorDto[];
     prefixMap: { [index: string]: string };
     traceSummary?: string[];
     targetNodeType?: string;
@@ -296,6 +302,7 @@ export interface ExecuteResult {
     reportUpdate: string;
     prefixMap: { [index: string]: string };
     logicalSources: { [index: string]: string };
+    errors: RmlErrorDto[];
 }
 
 export interface LogicalTargetInfo {
@@ -344,7 +351,7 @@ export interface OntologyConformanceChecker {
 }
 
 export interface Issue {
-    errorType: Resource;
+    errorType: OntClass;
     message: string;
 }
 
@@ -638,11 +645,14 @@ export interface OntologyValidator extends MappingValidator {
 export interface ReferenceValidator extends MappingValidator {
 }
 
-export interface RmlDiagnostic {
-    range?: Range;
-    severity: DiagnosticSeverity;
-    rerCodeUri?: string;
+export interface RmlErrorDto {
     message: string;
+    errorTypeUri: string;
+    superClassUris: string[];
+    severity: string;
+    ranges: PointRange[];
+    samples: SampleOccurrence[];
+    additionalCount: number;
     source?: string;
 }
 
@@ -661,7 +671,17 @@ export interface RmlValidationService {
 
 export interface Partitioned {
     located: Diagnostic[];
-    unlocated: RmlDiagnostic[];
+    unlocated: RmlErrorDto[];
+}
+
+export interface RuntimeOntologyValidator extends MappingValidator {
+}
+
+export interface PredicateObjectPair {
+    pm: PredicateMap;
+    om: BaseObjectMap;
+    pmOrigin?: Origin;
+    omOrigin?: Origin;
 }
 
 export interface SyntaxAndReportValidator extends MappingValidator {
@@ -678,6 +698,7 @@ export interface ValidationContext {
     loaded: LoadedMapping;
     mappingFileUri: string;
     workspace: MappingWorkspace;
+    cancellationCheck: BooleanSupplier;
 }
 
 export interface RawValue extends RmlEvaluationResult {
@@ -771,6 +792,11 @@ export interface PointRange extends Comparable<PointRange> {
     end?: Point;
 }
 
+export interface SampleOccurrence {
+    originLineage?: OriginLineage;
+    evaluationResult?: RmlEvaluationResult;
+}
+
 export interface Path extends Comparable<Path>, Iterable<Path>, Watchable {
 }
 
@@ -795,7 +821,7 @@ export interface RmlLoader {
     mappingModel?: Model;
     mappingDirectory: Path;
     currentDirectory: Path;
-    report?: RmlExecutionReport;
+    report: RmlExecutionReport;
     validationMode: ValidationMode;
     prefixMap: { [index: string]: string };
     mappingPaths: Path[];
@@ -805,8 +831,8 @@ export interface Model extends ModelCon, ModelGraphInterface, RDFReaderF, RDFWri
 }
 
 export interface RmlExecutionReport {
-    errors: RmlError[];
-    executionPlan: MappingDocument;
+    logAggregator: RmlErrorAggregator;
+    executionPlan?: MappingDocument;
     statistics: Statistics;
 }
 
@@ -845,6 +871,10 @@ export interface EvaluationContext {
     joinIndexes: { [index: string]: ParentJoinIndex };
     validationMode: ValidationMode;
     templateSafety: TemplateReferenceSafety;
+    statementObserver?: Consumer<EvaluatedStatementContext>;
+}
+
+export interface OntClass extends OntObject, AsNamed<Named>, HasDisjoint<OntClass> {
 }
 
 export interface OntModel extends Model, MutableModel<OntModel>, PrefixedModel<OntModel>, IOModel<OntModel>, CreateClasses, CreateRanges, CreateDisjoint, CreateSWRL {
@@ -863,6 +893,19 @@ export interface OriginLineage {
 }
 
 export interface ScheduledExecutorService extends ExecutorService {
+}
+
+export interface PredicateMap extends TermMap {
+}
+
+export interface BaseObjectMap extends PlanNode, TermGenerator {
+}
+
+export interface Origin {
+    sourceStatements?: RDFPointer[];
+}
+
+export interface BooleanSupplier {
 }
 
 export interface RdfStatementLike extends RmlEvaluationResult {
@@ -907,6 +950,11 @@ export interface PrefixMapping {
 export interface Lock {
 }
 
+export interface RmlErrorAggregator {
+    maxSamples: number;
+    entries: { [index: string]: MutableAggregate };
+}
+
 export interface Statistics {
     generatedStatementPerTriplesMap: { [index: string]: number };
     generatedStatements: number;
@@ -941,6 +989,9 @@ export interface BlankNodeScope {
 
 export interface CancellationToken {
     cancelled: AtomicBoolean;
+}
+
+export interface OntObject extends OntResource {
 }
 
 export interface CreateClasses {
@@ -985,6 +1036,38 @@ export interface ScheduledFuture<V> extends Delayed, Future<V> {
 export interface ExecutorService extends Executor, AutoCloseable {
 }
 
+export interface DatatypeMap extends TermMap {
+}
+
+export interface LanguageMap extends ExpressionMap {
+}
+
+export interface GatherMap extends AbstractPlanNode, LogicalTargetScope {
+    subject: Resource;
+    logicalTargets: LogicalTarget[];
+    allowEmptyListAndContainer: boolean;
+    gatherAs?: Resource;
+    strategy: Resource;
+    gatherMaps: TermGenerator[];
+}
+
+export interface Expression extends PlanNode {
+}
+
+export interface Condition extends ExpressionMap {
+}
+
+export interface TermMap extends ExpressionMap, TermGenerator {
+    datatypeMap?: DatatypeMap;
+    languageMap?: LanguageMap;
+    termType?: Resource;
+    gatherMap?: GatherMap;
+    baseIRI?: string;
+}
+
+export interface TermGenerator extends PlanNode {
+}
+
 export interface LogicalTarget {
     subject: Resource;
     target?: RMLTarget;
@@ -999,20 +1082,7 @@ export interface Comparable<T> {
 export interface Iterable<T> {
 }
 
-export interface Origin {
-    sourceStatements?: RDFPointer[];
-}
-
 export interface RdfLoaderContext {
-}
-
-export interface RmlError {
-    message: string;
-    origin?: Origin;
-    errorType: OntClass;
-    exception?: Exception;
-    context: { [index: string]: any };
-    planNode?: PlanNode;
 }
 
 export interface FrontsNode {
@@ -1040,6 +1110,30 @@ export interface LogicalTargetScope extends PlanNode {
 
 export interface AtomicBoolean extends Serializable {
     value: number;
+}
+
+export interface Consumer<T> {
+}
+
+export interface EvaluatedStatementContext {
+    triplesMap: TriplesMap;
+    predicateObjectMap: PredicateObjectMap;
+    predicateMap?: PredicateMap;
+    objectMap?: BaseObjectMap;
+    evaluationResult: RmlEvaluationResult;
+    originLineage?: OriginLineage;
+}
+
+export interface OntResource extends Resource {
+}
+
+export interface AsNamed<E> {
+}
+
+export interface Named extends OntEntity, OntClass {
+}
+
+export interface HasDisjoint<E> {
 }
 
 export interface MutableModel<R> extends Model {
@@ -1078,6 +1172,16 @@ export interface Executor {
 export interface AutoCloseable {
 }
 
+export interface ExpressionMap extends AbstractPlanNode, LogicalTargetScope {
+    subject: Resource;
+    expression: Expression;
+    condition: Condition;
+    logicalTargets: LogicalTarget[];
+}
+
+export interface RDFPointer {
+}
+
 export interface RMLTarget {
 }
 
@@ -1107,7 +1211,10 @@ export interface ClassMetadata {
 export interface Statement extends FrontsTriple {
 }
 
-export interface OntClass extends OntResource {
+export interface MutableAggregate {
+    primary: RmlError;
+    samples: SampleOccurrence[];
+    additionalCount: number;
 }
 
 export interface Multimap<K, V> {
@@ -1126,41 +1233,15 @@ export interface FieldParent {
 export interface ExportedReferenceScope extends PlanNode {
 }
 
-export interface DatatypeMap extends TermMap {
-}
-
-export interface LanguageMap extends ExpressionMap {
-}
-
-export interface GatherMap extends AbstractPlanNode, LogicalTargetScope {
-    subject: Resource;
-    logicalTargets: LogicalTarget[];
-    allowEmptyListAndContainer: boolean;
-    gatherAs?: Resource;
-    strategy: Resource;
-    gatherMaps: TermGenerator[];
-}
-
-export interface Expression extends PlanNode {
-}
-
-export interface Condition extends ExpressionMap {
-}
-
-export interface TermMap extends ExpressionMap, TermGenerator {
-    datatypeMap?: DatatypeMap;
-    languageMap?: LanguageMap;
-    termType?: Resource;
-    gatherMap?: GatherMap;
-    baseIRI?: string;
-}
-
 export interface PredicateObjectMap extends AbstractPlanNode, LogicalTargetScope {
     subject: Resource;
     logicalTargets: LogicalTarget[];
     predicateMaps: PredicateMap[];
     objectMaps: BaseObjectMap[];
     graphMaps: GraphMap[];
+}
+
+export interface OntEntity extends OntObject {
 }
 
 export interface Either<L, R> {
@@ -1181,9 +1262,6 @@ export interface DiagnosticRelatedInformation {
 export interface Future<V> {
 }
 
-export interface RDFPointer {
-}
-
 export interface GenericDeclaration extends AnnotatedElement {
 }
 
@@ -1202,20 +1280,18 @@ export interface Field extends AccessibleObject, Member {
 export interface FrontsTriple {
 }
 
-export interface OntResource extends Resource {
+export interface RmlError {
+    message: string;
+    origin?: Origin;
+    errorType: OntClass;
+    exception?: Exception;
+    context: { [index: string]: any };
+    planNode?: PlanNode;
+    originLineage?: OriginLineage;
+    evaluationResult?: RmlEvaluationResult;
 }
 
 export interface GraphMap extends TermMap {
-}
-
-export interface ExpressionMap extends AbstractPlanNode, LogicalTargetScope {
-    subject: Resource;
-    expression: Expression;
-    condition: Condition;
-    logicalTargets: LogicalTarget[];
-}
-
-export interface TermGenerator extends PlanNode {
 }
 
 export interface Location {
@@ -1267,12 +1343,6 @@ export interface CanonicalJoinKey {
     normalizedValue: any;
 }
 
-export interface PredicateMap extends TermMap {
-}
-
-export interface BaseObjectMap extends PlanNode, TermGenerator {
-}
-
 export interface TypeDescriptor {
 }
 
@@ -1284,11 +1354,11 @@ export type PlanNodeStage = "LOGICAL_SOURCE" | "REFERENCE" | "INPUT_PARAMETER" |
 
 export type ValidationExecutionPolicy = "IMMEDIATE" | "DEBOUNCED_ASYNC";
 
-export type DiagnosticSeverity = "Error" | "Warning" | "Information" | "Hint";
-
 export type ValidationMode = "STRICT" | "LENIENT" | "NONE";
 
 export type TemplateReferenceSafety = "UNSAFE" | "SAFE_IRI" | "SAFE_URI";
+
+export type DiagnosticSeverity = "Error" | "Warning" | "Information" | "Hint";
 
 export type DiagnosticTag = "Unnecessary" | "Deprecated";
 

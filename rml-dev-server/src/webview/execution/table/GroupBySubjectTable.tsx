@@ -4,6 +4,7 @@ import { ParsedQuadItem } from '../nquadsParser';
 import { TermRenderer } from '../../common/TermRenderer';
 import { vscodeApi } from '../../common/vscode';
 import { GroupedQuadTable } from './GroupedQuadTable';
+import { PointRange, RmlErrorDto } from '../../../generated/types';
 
 export interface GroupedSubjectItem {
     subject: Term;
@@ -23,6 +24,8 @@ export interface GroupBySubjectTableProps {
     isRdfVisualizer?: boolean;
     groupLimit?: number;
     onLoadMore?: () => void;
+    errors?: RmlErrorDto[];
+    onNavigateRange?: (range: PointRange) => void;
 }
 
 export const GroupBySubjectTable: React.FC<GroupBySubjectTableProps> = ({
@@ -38,10 +41,14 @@ export const GroupBySubjectTable: React.FC<GroupBySubjectTableProps> = ({
     groupLimit = 50,
     onLoadMore,
     isRdfVisualizer = false,
+    errors = [],
+    onNavigateRange,
 }) => {
     return (
         <GroupedQuadTable<GroupedSubjectItem>
             groups={groupedBySubject}
+            errors={errors}
+            onNavigateRange={onNavigateRange}
             getGroupKey={(g) => g.subject.value}
             getGroupQuads={(g) => g.quads}
             expandedKeys={expandedSubjects}

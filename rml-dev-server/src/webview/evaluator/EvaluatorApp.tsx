@@ -3,8 +3,12 @@ import {Alert, Button, Icon, Input, Tag, Text, TextArea, Tooltip} from 'baukaste
 import {getVsCodeApi} from '../common/vscode';
 import {RdfToken} from '../common/RdfToken';
 import {PrefixAccordion} from '../common/PrefixAccordion';
+import {
+    errorSeverityToVariant,
+    formatErrorRange
+} from '../common/RmlErrorUI';
 import {EvaluatorFromWebviewMessage, EvaluatorToWebviewMessage} from "../protocol/evaluator";
-import {EvaluateResult} from "../../generated/types";
+import {EvaluateResult, PointRange, RmlErrorDto} from "../../generated/types";
 
 const vscodeApi = getVsCodeApi<EvaluatorFromWebviewMessage>();
 
@@ -285,22 +289,19 @@ export const EvaluatorApp: React.FC = () => {
                 {(!results || results.length === 0) ? (
                     <div className="bk-empty-state">{emptyMessage}</div>
                 ) : (
-                    results.map((iter, idx) => (
+                    results.map((iter, idx) => {
+                        const iterErrors: RmlErrorDto[] = iter.errors || [];
+                        const generated = iter.generatedRdf || [];
+                        const handleNavigateRange = (range: PointRange) => {
+                            vscodeApi.postMessage({command: 'navigateToRange', range});
+                        };
+
+                        return (
                         <div key={iter.iterationId || idx} className="bk-iteration-card">
                             <div className="bk-card-header">
                                 <span>Iteration #{iter.iterationId || '0'}</span>
                             </div>
                             <div className="bk-card-body">
-                                {iter.diagnostics && iter.diagnostics.length > 0 && (
-                                    <div style={{marginBottom: '8px'}}>
-                                        {iter.diagnostics.map((d: string, dIdx: number) => (
-                                            <Alert key={dIdx} variant="error">
-                                                {d}
-                                            </Alert>
-                                        ))}
-                                    </div>
-                                )}
-
                                 {iter.iterationData && (
                                     <div className="bk-section-block">
                                         <Tag size="xs" variant="info">INPUT</Tag>
@@ -312,9 +313,9 @@ export const EvaluatorApp: React.FC = () => {
 
                                 <div className="bk-section-block">
                                     <Tag size="xs" variant="success">OUTPUT</Tag>
-                                    {iter.generatedRdf && iter.generatedRdf.length > 0 ? (
+                                    {generated.length > 0 ? (
                                         <div className="bk-token-stack">
-                                            {iter.generatedRdf.map((rdf: any, rIdx: number) => (
+                                            {generated.map((rdf, rIdx: number) => (
                                                 <RdfToken key={rIdx} rdf={rdf} prefixMap={prefixes}/>
                                             ))}
                                         </div>
@@ -322,9 +323,34 @@ export const EvaluatorApp: React.FC = () => {
                                         <div className="bk-empty-hint">(No terms generated)</div>
                                     )}
                                 </div>
+
+                                {iterErrors.length > 0 && (
+                                    <div style={{display: 'flex', flexDirection: 'column', gap: 'var(--bk-gap-xs)', marginTop: '8px'}}>
+                                        {iterErrors.map((err, dIdx) => {
+                                            const rangeLabel = formatErrorRange(err.ranges);
+                                            const firstRange = err.ranges?.[0];
+                                            return (
+                                                <Alert key={dIdx} variant={errorSeverityToVariant(err.severity)}>
+                                                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--bk-gap-sm)'}}>
+                                                        <span style={{wordBreak: 'break-word'}}>
+                                                            {err.message}
+                                                            {err.additionalCount > 0 ? ` (${err.additionalCount} more)` : ''}
+                                                        </span>
+                                                        {rangeLabel && firstRange && (
+                                                            <Button size="xs" variant="ghost" onClick={() => handleNavigateRange(firstRange)}>
+                                                                {rangeLabel}
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </Alert>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
 

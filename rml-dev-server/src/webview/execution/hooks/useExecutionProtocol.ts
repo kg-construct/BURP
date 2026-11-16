@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getVsCodeApi } from '../../common/vscode';
-import { ExecuteResult, LogicalTargetInfo, QuadChunkNotification, TargetExecutionResult } from '../../../generated/types';
+import { ExecuteResult, LogicalTargetInfo, QuadChunkNotification, RmlErrorDto, TargetExecutionResult } from '../../../generated/types';
 import { ParsedQuadItem, convertStatementsToParsedQuads } from '../nquadsParser';
 import { DEFAULT_PREFIXES } from '../rdfUtils';
 import { ExecutionFromWebviewMessage, ExecutionToWebviewMessage } from '../../protocol/execution';
@@ -26,6 +26,7 @@ export function useExecutionProtocol() {
     const [fileName, setFileName] = useState<string>('');
     const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'error'>('idle');
     const [error, setError] = useState<string | null>(null);
+    const [rmlErrors, setRmlErrors] = useState<RmlErrorDto[]>([]);
     const [targets, setTargets] = useState<Map<string, TargetState>>(new Map());
     const [prefixes, setPrefixes] = useState<Record<string, string>>(DEFAULT_PREFIXES);
     const [logicalSources, setLogicalSources] = useState<Record<string, string>>({});
@@ -39,6 +40,7 @@ export function useExecutionProtocol() {
                 setFileName(msg.fileName || '');
                 setStatus('running');
                 setError(null);
+                setRmlErrors([]);
                 setTargets(new Map());
                 setLogicalSources({});
                 if (msg.graphBackgroundMethod) {
@@ -77,9 +79,11 @@ export function useExecutionProtocol() {
                 if (result && result.reportUpdate && result.reportUpdate.startsWith('Execution error:')) {
                     setStatus('error');
                     setError(result.reportUpdate);
+                    setRmlErrors(result.errors || []);
                     return;
                 }
                 setStatus('completed');
+                setRmlErrors(result?.errors || []);
                 if (result && (result as any).prefixMap) {
                     setPrefixes((result as any).prefixMap);
                 }
@@ -113,12 +117,14 @@ export function useExecutionProtocol() {
             } else if (msg.type === 'executionError') {
                 setStatus('error');
                 setError(msg.error);
+                setRmlErrors(msg.errors || []);
             } else if (msg.type === 'sessionState') {
                 const session = msg.session;
                 if (session) {
                     setFileName(session.fileName || '');
                     setStatus(session.status);
                     setError(session.error || null);
+                    setRmlErrors(session.result?.errors || []);
                     if (session.graphBackgroundMethod) {
                         setDefaultHullMode(session.graphBackgroundMethod);
                     }
@@ -165,6 +171,7 @@ export function useExecutionProtocol() {
         fileName,
         status,
         error,
+        rmlErrors,
         targets,
         prefixes,
         logicalSources,

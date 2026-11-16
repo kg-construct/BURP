@@ -4,6 +4,8 @@ import { ParsedQuadItem } from '../nquadsParser';
 import { TermRenderer, GraphRenderer } from '../../common/TermRenderer';
 import { SubjectHeader, PredicateHeader, ObjectHeader, GraphHeader, TargetHeader } from './TableHeaders';
 import { vscodeApi } from '../../common/vscode';
+import { PointRange, RmlErrorDto } from '../../../generated/types';
+import { matchesQuadError, RmlErrorBadge } from '../../common/RmlErrorUI';
 
 export interface GroupedQuadTableProps<T> {
     groups: T[];
@@ -15,6 +17,9 @@ export interface GroupedQuadTableProps<T> {
     collapseAll: () => void;
     renderGroupHeaderContent: (group: T) => React.ReactNode;
     renderGroupHeaderActions?: (group: T) => React.ReactNode;
+    renderGroupHeaderBadges?: (group: T) => React.ReactNode;
+    errors?: RmlErrorDto[];
+    onNavigateRange?: (range: PointRange) => void;
     hideSubjectInRows?: boolean;
     prefixMap?: Record<string, string>;
     showTargetColumn?: boolean;
@@ -36,6 +41,9 @@ export function GroupedQuadTable<T>({
     collapseAll,
     renderGroupHeaderContent,
     renderGroupHeaderActions,
+    renderGroupHeaderBadges,
+    errors = [],
+    onNavigateRange,
     hideSubjectInRows = false,
     prefixMap,
     showGraphColumn = false,
@@ -122,6 +130,7 @@ export function GroupedQuadTable<T>({
                                                 <Tag size="xs" color="info">
                                                     {quads.length} {quads.length === 1 ? 'statement' : 'statements'}
                                                 </Tag>
+                                                {renderGroupHeaderBadges && renderGroupHeaderBadges(group)}
                                             </div>
                                         </td>
                                     </tr>
@@ -175,13 +184,20 @@ export function GroupedQuadTable<T>({
                                                     <TermRenderer term={q.predicate} isPredicate prefixMap={prefixMap} />
                                                 </td>
                                                 <td>
-                                                    <TermRenderer
-                                                        term={q.object}
-                                                        isObject
-                                                        datatype={q.datatypeIri}
-                                                        language={q.language}
-                                                        prefixMap={prefixMap}
-                                                    />
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--bk-gap-xs)' }}>
+                                                        <TermRenderer
+                                                            term={q.object}
+                                                            isObject
+                                                            datatype={q.datatypeIri}
+                                                            language={q.language}
+                                                            prefixMap={prefixMap}
+                                                        />
+                                                        <RmlErrorBadge
+                                                            errors={errors.filter((e) => matchesQuadError(e, q))}
+                                                            onNavigateRange={onNavigateRange}
+                                                            compact
+                                                        />
+                                                    </div>
                                                 </td>
                                                 {showGraphColumn && (
                                                     <td>

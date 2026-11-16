@@ -65,6 +65,19 @@ export class EvaluatorViewProvider implements vscode.WebviewViewProvider {
                         await vscode.commands.executeCommand('rml.previousInlineIteration');
                     }
                     break;
+                case 'navigateToRange':
+                    if (this.activeFileUri || msg.fileUri) {
+                        const targetUri = vscode.Uri.parse(msg.fileUri || this.activeFileUri!);
+                        const start = new vscode.Position(msg.range.start.line, msg.range.start.column);
+                        const end = msg.range.end
+                            ? new vscode.Position(msg.range.end.line, msg.range.end.column)
+                            : start;
+                        await vscode.window.showTextDocument(targetUri, {
+                            viewColumn: vscode.ViewColumn.One,
+                            selection: new vscode.Range(start, end)
+                        });
+                    }
+                    break;
                 case 'telemetry':
                     telemetry.capture(msg.event, msg.properties);
                     break;
@@ -133,7 +146,7 @@ export class EvaluatorViewProvider implements vscode.WebviewViewProvider {
             const results: EvaluateResult[] = await this.client.evaluate(params);
             const nodeType = this.getSelectedNodeType ? this.getSelectedNodeType() : undefined;
             const hasResults = results && results.some(r => r.generatedRdf && r.generatedRdf.length > 0);
-            const hasErrors = results && results.some(r => (r.diagnostics && r.diagnostics.length > 0) || !!r.rerDiagnostic);
+            const hasErrors = results && results.some(r => r.errors && r.errors.length > 0);
 
             telemetry.capture('evaluate', {
                 node_type: nodeType,

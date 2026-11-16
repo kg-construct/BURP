@@ -177,6 +177,7 @@ export class RdfVisualizerManager {
                 reportUpdate: '',
                 prefixMap,
                 logicalSources: {},
+                errors: [],
                 targets: {
                     default: {
                         targetId: 'default',

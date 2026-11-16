@@ -1,4 +1,4 @@
-import {EvaluateResult, ReferenceDependency} from "../../generated/types";
+import {EvaluateResult, PointRange, ReferenceDependency} from "../../generated/types";
 import {TypedDataContext} from "../../dataContext";
 import {TelemetryFromWebviewMessage} from "./telemetry";
 
@@ -21,4 +21,5 @@ export type EvaluatorFromWebviewMessage =
     | { command: 'stepInlineIteration'; delta: number; }
     | { command: 'fetchDependencies'; }
     | { command: 'runEvaluation'; dataContext: TypedDataContext; }
+    | { command: 'navigateToRange'; range: PointRange; fileUri?: string; }
     | TelemetryFromWebviewMessage;

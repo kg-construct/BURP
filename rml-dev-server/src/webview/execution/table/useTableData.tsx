@@ -8,6 +8,13 @@ import {TableFilterContextValue} from './TableFilterContext';
 import {SubjectHeader, PredicateHeader, ObjectHeader, GraphHeader, TargetHeader} from './TableHeaders';
 import {vscodeApi} from '../../common/vscode';
 import {Button} from "baukasten-ui/core";
+import {PointRange, RmlErrorDto} from '../../../generated/types';
+import {
+    IssueSampleFilter,
+    matchesQuadError,
+    quadMatchesIssueFilter,
+    RmlErrorBadge
+} from '../../common/RmlErrorUI';
 import {GroupedIterationItem} from "./GroupByIterationTable";
 import {GroupedSubjectItem} from "./GroupBySubjectTable";
 import {webviewTelemetry} from "../../common/telemetry";
@@ -60,6 +67,9 @@ function useFilterTelemetry(
 
 export interface UseTableDataProps {
     quads: ParsedQuadItem[];
+    errors?: RmlErrorDto[];
+    issueFilter?: IssueSampleFilter | null;
+    onNavigateRange?: (range: PointRange) => void;
     prefixMap?: Record<string, string>;
     logicalSources?: Record<string, string>;
     showGraphColumn?: boolean;
@@ -73,6 +83,9 @@ export interface UseTableDataProps {
  */
 export function useTableData({
                                  quads,
+                                 errors = [],
+                                 issueFilter = null,
+                                 onNavigateRange,
                                  prefixMap,
                                  logicalSources,
                                  showGraphColumn = false,
@@ -139,6 +152,9 @@ export function useTableData({
         const tQ = targetSearch.trim().toLowerCase();
 
         return quads.filter((q) => {
+            if (issueFilter && !quadMatchesIssueFilter(q, issueFilter)) {
+                return false;
+            }
             if (sQ) {
                 const sVal = q.subject.value.toLowerCase();
                 const sDisplay = shortenIri(q.subject.value, prefixMap).display.toLowerCase();
@@ -199,6 +215,7 @@ export function useTableData({
         });
     }, [
         quads,
+        issueFilter,
         prefixMap,
         subjectSearch,
         subjectType,
@@ -415,15 +432,21 @@ export function useTableData({
                 id: 'object',
                 accessorFn: (row) => row.object.value,
                 header: ObjectHeader,
-                cell: ({row}) => (
-                    <TermRenderer
-                        term={row.original.object}
-                        isObject
-                        datatype={row.original.datatypeIri}
-                        language={row.original.language}
-                        prefixMap={prefixMap}
-                    />
-                )
+                cell: ({row}) => {
+                    const rowErrors = errors.filter((e) => matchesQuadError(e, row.original));
+                    return (
+                        <div style={{display: 'flex', alignItems: 'center', gap: 'var(--bk-gap-xs)'}}>
+                            <TermRenderer
+                                term={row.original.object}
+                                isObject
+                                datatype={row.original.datatypeIri}
+                                language={row.original.language}
+                                prefixMap={prefixMap}
+                            />
+                            <RmlErrorBadge errors={rowErrors} onNavigateRange={onNavigateRange} compact/>
+                        </div>
+                    );
+                }
             }
         ];
 
@@ -450,7 +473,7 @@ export function useTableData({
         }
 
         return cols;
-    }, [prefixMap, showGraphColumn, showTargetColumn]);
+    }, [prefixMap, showGraphColumn, showTargetColumn, errors, onNavigateRange]);
 
     return {
         grouping,

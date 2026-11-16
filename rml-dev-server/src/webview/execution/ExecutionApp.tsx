@@ -7,6 +7,8 @@ import { PrefixAccordion } from '../common/PrefixAccordion';
 import { PartitionSelector } from '../common/PartitionSelector';
 import { useExecution } from './hooks/useExecution';
 import { webviewTelemetry } from '../common/telemetry';
+import { formatErrorRange } from '../common/RmlErrorUI';
+import { vscodeApi } from './hooks/useExecutionProtocol';
 
 
 // @ts-ignore
@@ -30,6 +32,7 @@ export const ExecutionApp: React.FC<ExecutionAppProps> = ({ isRdfVisualizer = fa
         fileName,
         status,
         error,
+        rmlErrors,
         prefixes,
         logicalSources,
         defaultHullMode,
@@ -129,7 +132,18 @@ export const ExecutionApp: React.FC<ExecutionAppProps> = ({ isRdfVisualizer = fa
             {/* Error banner */}
             {error && (
                 <Alert variant="error" title="Execution Error">
-                    {error}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--bk-gap-sm)' }}>
+                        <span>{error}</span>
+                        {rmlErrors[0]?.ranges?.[0] && formatErrorRange(rmlErrors[0].ranges) && (
+                            <Button
+                                size="xs"
+                                variant="ghost"
+                                onClick={() => vscodeApi.postMessage({ command: 'navigateToRange', range: rmlErrors[0].ranges[0] })}
+                            >
+                                {formatErrorRange(rmlErrors[0].ranges)}
+                            </Button>
+                        )}
+                    </div>
                 </Alert>
             )}
 
@@ -205,6 +219,7 @@ export const ExecutionApp: React.FC<ExecutionAppProps> = ({ isRdfVisualizer = fa
                         ) : (
                             <ExecutionTable
                                 quads={displayQuads}
+                                errors={rmlErrors}
                                 prefixMap={prefixes}
                                 logicalSources={logicalSources}
                                 showGraphColumn={selectedGraphId === 'all' && graphOptions.length > 1}

@@ -3,6 +3,8 @@ import { Button } from 'baukasten-ui/core';
 import { ParsedQuadItem } from '../nquadsParser';
 import { vscodeApi } from '../../common/vscode';
 import { GroupedQuadTable } from './GroupedQuadTable';
+import { PointRange, RmlErrorDto } from '../../../generated/types';
+import { matchesIterationGroupError, RmlErrorBadge } from '../../common/RmlErrorUI';
 
 export interface GroupedIterationItem {
     key: string;
@@ -24,6 +26,8 @@ export interface GroupByIterationTableProps {
     totalCols: number;
     groupLimit?: number;
     onLoadMore?: () => void;
+    errors?: RmlErrorDto[];
+    onNavigateRange?: (range: PointRange) => void;
 }
 
 export const GroupByIterationTable: React.FC<GroupByIterationTableProps> = ({
@@ -38,10 +42,22 @@ export const GroupByIterationTable: React.FC<GroupByIterationTableProps> = ({
     totalCols,
     groupLimit = 50,
     onLoadMore,
+    errors = [],
+    onNavigateRange,
 }) => {
     return (
         <GroupedQuadTable<GroupedIterationItem>
             groups={groupedByIteration}
+            errors={errors}
+            onNavigateRange={onNavigateRange}
+            renderGroupHeaderBadges={(group) => (
+                <RmlErrorBadge
+                    errors={errors.filter((e) =>
+                        matchesIterationGroupError(e, group.logicalSourceId, group.iterationIndex)
+                    )}
+                    onNavigateRange={onNavigateRange}
+                />
+            )}
             getGroupKey={(g) => g.key}
             getGroupQuads={(g) => g.quads}
             expandedKeys={expandedIterations}

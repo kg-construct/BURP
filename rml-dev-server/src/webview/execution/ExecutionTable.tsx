@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Tag } from 'baukasten-ui/core';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Icon, Tag } from 'baukasten-ui/core';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { ParsedQuadItem } from './nquadsParser';
 import { TableFilterContext } from './table/TableFilterContext';
@@ -8,9 +8,13 @@ import { GroupBySubjectTable } from './table/GroupBySubjectTable';
 import { GroupByIterationTable } from './table/GroupByIterationTable';
 import {SegmentedButton} from "../common/SegmentedButton";
 import {webviewTelemetry} from "../common/telemetry";
+import { PointRange, RmlErrorDto } from '../../generated/types';
+import { IssueSampleFilter, RmlIssuesPanel } from '../common/RmlErrorUI';
+import { vscodeApi } from '../common/vscode';
 
 export interface ExecutionTableProps {
     quads: ParsedQuadItem[];
+    errors?: RmlErrorDto[];
     prefixMap?: Record<string, string>;
     logicalSources?: Record<string, string>;
     showGraphColumn?: boolean;
@@ -25,12 +29,22 @@ export interface ExecutionTableProps {
  */
 export const ExecutionTable: React.FC<ExecutionTableProps> = ({
     quads,
+    errors = [],
     prefixMap,
     logicalSources,
     showGraphColumn = false,
     showTargetColumn = false,
     isRdfVisualizer = false,
 }) => {
+    const [issueFilter, setIssueFilter] = useState<IssueSampleFilter | null>(null);
+
+    useEffect(() => {
+        setIssueFilter(null);
+    }, [errors]);
+
+    const handleNavigateRange = useCallback((range: PointRange) => {
+        vscodeApi.postMessage({ command: 'navigateToRange', range });
+    }, []);
 
 
     const {
@@ -56,6 +70,9 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
         totalCols
     } = useTableData({
         quads,
+        errors,
+        issueFilter,
+        onNavigateRange: handleNavigateRange,
         prefixMap,
         logicalSources,
         showGraphColumn,
@@ -125,6 +142,14 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
     return (
         <TableFilterContext.Provider value={filterContextValue}>
             <div className="bk-execution-table-container">
+                {!isRdfVisualizer && (
+                    <RmlIssuesPanel
+                        errors={errors}
+                        activeFilter={issueFilter}
+                        onSelectFilter={setIssueFilter}
+                        onNavigateRange={handleNavigateRange}
+                    />
+                )}
                 {/* Toolbar */}
                 <div className="bk-exec-toolbar">
                     <div className="bk-exec-toolbar-row">
@@ -160,6 +185,20 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
                         />
 
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {issueFilter && (
+                                <Tag size="xs" variant="warning">
+                                    <span>{issueFilter.label}</span>
+                                    <Button
+                                        size="xs"
+                                        variant="ghost"
+                                        onClick={() => setIssueFilter(null)}
+                                        title="Clear issue filter"
+                                        style={{ marginLeft: '4px', padding: '0 2px', minHeight: 'auto' }}
+                                    >
+                                        <Icon name="close" size="xs" />
+                                    </Button>
+                                </Tag>
+                            )}
                             <Tag size="xs" color="purple">
                                 Showing {grouping === 'flat' ? Math.min(flatLimit, sortedFilteredQuads.length) : Math.min(groupLimit, totalGroupCount)} of {grouping === 'flat' ? sortedFilteredQuads.length : totalGroupCount} {groupUnitName}
                                 {filteredQuads.length !== quads.length ? ` (filtered from ${quads.length})` : ''}
@@ -183,6 +222,8 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
                         groupLimit={groupLimit}
                         onLoadMore={handleLoadMoreGroups}
                         isRdfVisualizer={isRdfVisualizer}
+                        errors={errors}
+                        onNavigateRange={handleNavigateRange}
                     />
                 ) : !isRdfVisualizer && grouping === 'iteration' && groupedByIteration ? (
                     <GroupByIterationTable
@@ -197,6 +238,8 @@ export const ExecutionTable: React.FC<ExecutionTableProps> = ({
                         totalCols={totalCols}
                         groupLimit={groupLimit}
                         onLoadMore={handleLoadMoreGroups}
+                        errors={errors}
+                        onNavigateRange={handleNavigateRange}
                     />
                 ) : (
                     <div 

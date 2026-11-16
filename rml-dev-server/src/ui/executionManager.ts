@@ -100,6 +100,15 @@ export class ExecutionManager {
                         {type: 'document', textDocument: {uri: uriStr}},
                         msg.iterationIndex
                     );
+                } else if (msg.command === 'navigateToRange') {
+                    const start = new vscode.Position(msg.range.start.line, msg.range.start.column);
+                    const end = msg.range.end
+                        ? new vscode.Position(msg.range.end.line, msg.range.end.column)
+                        : start;
+                    await vscode.window.showTextDocument(targetUri, {
+                        viewColumn: vscode.ViewColumn.One,
+                        selection: new vscode.Range(start, end)
+                    });
                 } else if (msg.command === 'telemetry') {
                     telemetry.capture(msg.event, msg.properties);
                 }
@@ -176,6 +185,7 @@ export class ExecutionManager {
                         const errorMsg = result.reportUpdate;
                         sessionState.status = 'error';
                         sessionState.error = errorMsg;
+                        sessionState.result = result;
 
                         telemetry.capture('mapping_execution_completed', {
                             duration_ms: durationMs,
@@ -186,7 +196,8 @@ export class ExecutionManager {
                         await panel?.webview.postMessage({
                             type: 'executionError',
                             executionId,
-                            error: errorMsg
+                            error: errorMsg,
+                            errors: result.errors
                         });
 
                         await vscode.window.showErrorMessage(`Execution failed for ${fileName}: ${errorMsg}`);
