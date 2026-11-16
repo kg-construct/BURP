@@ -34,9 +34,7 @@ export class TelemetryService {
         this.extensionContext = context;
         this.isTestMode =
             context.extensionMode === vscode.ExtensionMode.Test ||
-            (context as any).extensionMode === 3 ||
-            process.env.VSCODE_TEST !== undefined ||
-            process.env.NODE_ENV === 'test';
+            process.env.VSCODE_TEST !== undefined;
 
         let id = context.globalState.get<string>('rml.telemetry.sessionId');
         if (!id) {
@@ -52,10 +50,17 @@ export class TelemetryService {
                 disable_session_recording: true,
                 capture_pageview: false,
                 capture_pageleave: false,
-                persistence: 'memory'
+                persistence: 'memory',
+                bootstrap: {
+                    distinctID: this.getDistinctId()
+                }
             });
             this.isInitialized = true;
         }
+    }
+
+    public getDistinctId(): string {
+        return vscode.env.machineId || this.sessionId;
     }
 
     public getSessionId(): string {
@@ -94,7 +99,7 @@ export class TelemetryService {
             return;
         }
 
-        const distinctId = vscode.env.machineId || 'anonymous';
+        const distinctId = this.getDistinctId();
         const sessionId = (vscode.env as any).sessionId || this.sessionId;
 
         const fullProperties: Record<string, any> = {
@@ -111,6 +116,20 @@ export class TelemetryService {
             posthog.capture(event, fullProperties as any);
         } catch {
             // Fire-and-forget: ignore any capture errors in non-browser environment
+        }
+    }
+
+    public setStudyPseudo(pseudo: string): void {
+        const normalized = pseudo.trim();
+        if (!normalized || !this.isTelemetryEnabled()) {
+            return;
+        }
+        try {
+            posthog.identify(this.getDistinctId(), {
+                study_pseudo: normalized
+            });
+        } catch {
+            // Fire-and-forget: ignore any identify errors in non-browser environment
         }
     }
 

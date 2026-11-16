@@ -125,6 +125,11 @@
         "title": "Previous Inline Iteration",
         "category": "RML",
         "icon": "$(arrow-left)"
+      },
+      {
+        "command": "rml.setStudyPseudo",
+        "title": "Set Study Pseudo",
+        "category": "RML"
       }
     ],
     "keybindings": [

@@ -100,5 +100,42 @@ export function registerCommands(ctx: CommandContext): vscode.Disposable[] {
         disposables.push(vscode.commands.registerCommand(cmd, handleOpenSourceData));
     }
 
+    disposables.push(
+        vscode.commands.registerCommand('rml.setStudyPseudo', async () => {
+            if (!telemetry.isTelemetryEnabled()) {
+                const choice = await vscode.window.showWarningMessage(
+                    'Telemetry is currently disabled. Enable telemetry to assign a study pseudo.',
+                    'Enable Telemetry',
+                    'Cancel'
+                );
+                if (choice !== 'Enable Telemetry') {
+                    return;
+                }
+                await vscode.workspace
+                    .getConfiguration('rml')
+                    .update('telemetry.enabled', 'enabled', vscode.ConfigurationTarget.Global);
+                if (!telemetry.isTelemetryEnabled()) {
+                    vscode.window.showWarningMessage(
+                        'Telemetry is still disabled (for example, by VS Code global settings or test mode).'
+                    );
+                    return;
+                }
+            }
+
+            const pseudo = await vscode.window.showInputBox({
+                title: 'Set Study Pseudo',
+                prompt: 'Enter your assigned study pseudonym for telemetry identification',
+                validateInput: (value) => (value.trim().length === 0 ? 'Study pseudo cannot be empty.' : undefined)
+            });
+
+            if (!pseudo) {
+                return;
+            }
+
+            telemetry.setStudyPseudo(pseudo);
+            vscode.window.showInformationMessage(`Study pseudo "${pseudo.trim()}" registered for telemetry.`);
+        })
+    );
+
     return disposables;
 }
