@@ -7,6 +7,7 @@ import burp.dev.rml.service.hint.InlineHintsEvaluationMode;
 import burp.dev.rml.service.ontology.OntologyConformanceChecker;
 import burp.dev.rml.service.ontology.OntologyRegistry;
 import burp.dev.rml.service.selector.CursorSelector;
+import burp.dev.rml.service.validator.MappingValidator;
 import burp.dev.rml.service.validator.RmlErrorDto;
 import burp.ls.JSONSourceRFC;
 import burp.ls.LogicalSourceProvider;
@@ -19,6 +20,7 @@ import burp.model.rdf.IRITerm;
 import burp.model.rdf.LiteralTerm;
 import burp.model.rdf.Term;
 import burp.reporting.BurpException;
+import burp.reporting.Origin;
 import burp.reporting.RmlError;
 import burp.reporting.Severity;
 import burp.vocabularies.RER;
@@ -393,15 +395,8 @@ public class RmlEvaluator {
         EvaluationContext iterContext = context.withReport(new burp.reporting.RmlExecutionReport());
         List<RmlEvaluationResult> results = evaluateNodeSafe(targetNode, targetKey, iter, iterContext);
 
-        if (ontRegistry != null && targetNode instanceof TriplesMap tm) {
-            Set<Resource> subjectClasses = tm.subjectMap != null
-                    ? new LinkedHashSet<>(tm.subjectMap.classes)
-                    : Collections.emptySet();
-            for (RmlEvaluationResult res : results) {
-                if (res instanceof RdfStatement stmt) {
-                    checkStatementConformance(stmt, subjectClasses, ontRegistry, prefixMap, iterContext.report());
-                }
-            }
+        if (ontRegistry != null) {
+            checkEvaluationConformance(targetNode, results, ontRegistry, prefixMap, iterContext.report());
         }
 
         List<RmlErrorDto> errors = iterContext.report().getAggregatedLogs().stream()
@@ -411,15 +406,99 @@ public class RmlEvaluator {
         return new EvaluateResult(iterationId, iterationData, results, errors, prefixMap, traceSummary, targetNodeType, targetParentTriplesMap, targetNodeSummary, evaluationMode);
     }
 
-    private static void checkStatementConformance(
-            RdfStatement stmt,
-            Set<Resource> subjectClasses,
+    private static void checkEvaluationConformance(
+            PlanNode targetNode,
+            List<RmlEvaluationResult> results,
             OntologyRegistry ontRegistry,
             Map<String, String> prefixMap,
             burp.reporting.RmlExecutionReport report
     ) {
-        Resource predicate = ResourceFactory.createResource(stmt.getPredicate().uri());
-        Term objTerm = stmt.getObject();
+        TriplesMap tm = targetNode.ancestor(TriplesMap.class, true);
+        if (tm == null) {
+            return;
+        }
+        Set<Resource> subjectClasses = tm.subjectMap != null
+                ? new LinkedHashSet<>(tm.subjectMap.classes)
+                : Collections.emptySet();
+
+        if (targetNode instanceof TriplesMap) {
+            for (RmlEvaluationResult res : results) {
+                if (res instanceof RdfStatement stmt) {
+                    checkTermConformance(
+                            ResourceFactory.createResource(stmt.getPredicate().uri()),
+                            stmt.getObject(),
+                            subjectClasses,
+                            ontRegistry,
+                            prefixMap,
+                            null,
+                            res,
+                            report
+                    );
+                }
+            }
+            return;
+        }
+
+        if (targetNode instanceof PredicateObjectMap) {
+            for (RmlEvaluationResult res : results) {
+                if (res instanceof RdfPredicateObject po) {
+                    checkTermConformance(
+                            ResourceFactory.createResource(po.predicate().uri()),
+                            po.object(),
+                            subjectClasses,
+                            ontRegistry,
+                            prefixMap,
+                            MappingValidator.resolveNodeOrigin(targetNode, "predicate"),
+                            res,
+                            report
+                    );
+                }
+            }
+            return;
+        }
+
+        if (targetNode.ancestor(DatatypeMap.class, true) != null
+                || targetNode.ancestor(LanguageMap.class, true) != null
+                || targetNode.ancestor(GraphMap.class, true) != null
+                || targetNode.ancestor(JoinCondition.class, true) != null) {
+            return;
+        }
+        PredicateObjectMap pom = targetNode.ancestor(PredicateObjectMap.class, true);
+        BaseObjectMap bom = targetNode.ancestor(BaseObjectMap.class, true);
+        if (pom == null || bom == null) {
+            return;
+        }
+        for (PredicateMap pm : pom.predicateMaps) {
+            if (pm.expression instanceof RDFNodeConstant c && c.constant instanceof IRITerm predIri) {
+                Resource predicate = ResourceFactory.createResource(predIri.uri());
+                for (RmlEvaluationResult res : results) {
+                    if (res instanceof Term objTerm) {
+                        checkTermConformance(
+                                predicate,
+                                objTerm,
+                                subjectClasses,
+                                ontRegistry,
+                                prefixMap,
+                                MappingValidator.resolveNodeOrigin(bom, "constant"),
+                                res,
+                                report
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private static void checkTermConformance(
+            Resource predicate,
+            Term objTerm,
+            Set<Resource> subjectClasses,
+            OntologyRegistry ontRegistry,
+            Map<String, String> prefixMap,
+            @Nullable Origin origin,
+            RmlEvaluationResult evaluationResult,
+            burp.reporting.RmlExecutionReport report
+    ) {
         Resource termType;
         String lexical = null;
         Resource litDatatype = null;
@@ -441,13 +520,13 @@ public class RmlEvaluator {
         )) {
             report.addLog(new RmlError(
                     issue.message(),
-                    null,
+                    origin,
                     issue.errorType(),
                     null,
                     null,
                     null,
-                    stmt.lineage(),
-                    stmt
+                    evaluationResult.lineage(),
+                    evaluationResult
             ));
         }
     }

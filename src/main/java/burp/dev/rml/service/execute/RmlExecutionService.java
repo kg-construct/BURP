@@ -18,6 +18,7 @@ import burp.parse.ValidationMode;
 import burp.processor.EvaluatedStatementContext;
 import burp.processor.ExecutionOptions;
 import burp.processor.RmlProcessor;
+import burp.reporting.BurpException;
 import burp.reporting.Origin;
 import burp.reporting.RmlError;
 import burp.reporting.RmlExecutionReport;
@@ -81,8 +82,9 @@ public class RmlExecutionService {
                     baseIri = workspace.getBaseIri();
                 }
 
+                var loaded = workspace.loadMappingDetailed(mappingFileUri, ValidationMode.LENIENT);
                 Map<String, String> prefixMap = workspace.getPrefixMap(mappingFileUri);
-                OntologyRegistry ontologyRegistry = workspace.getOntologyRegistry(null, mappingFileUri);
+                OntologyRegistry ontologyRegistry = workspace.getOntologyRegistry(loaded.model(), mappingFileUri);
                 RmlExecutionReport report = new RmlExecutionReport();
                 Consumer<EvaluatedStatementContext> observer = createConformanceObserver(report, ontologyRegistry, prefixMap);
 
@@ -200,16 +202,18 @@ public class RmlExecutionService {
 
             } catch (Exception e) {
                 String errMsg = e.getMessage() != null ? e.getMessage() : e.toString();
-                RmlErrorDto errDto = new RmlErrorDto(
-                        errMsg,
-                        RER.UnexpectedError.getURI(),
-                        Collections.emptyList(),
-                        Severity.ERROR.name(),
-                        Collections.emptyList(),
-                        Collections.emptyList(),
-                        0,
-                        "BURP Execution"
-                );
+                RmlErrorDto errDto = e instanceof BurpException be
+                        ? RmlErrorDto.from(be.getError(), "BURP Execution")
+                        : new RmlErrorDto(
+                                errMsg,
+                                RER.UnexpectedError.getURI(),
+                                Collections.emptyList(),
+                                Severity.ERROR.name(),
+                                Collections.emptyList(),
+                                Collections.emptyList(),
+                                0,
+                                "BURP Execution"
+                        );
                 return new ExecuteResult(Collections.emptyMap(), "Execution error: " + errMsg, Collections.emptyMap(), Collections.emptyMap(), List.of(errDto));
             }
         });
