@@ -173,7 +173,7 @@
         {
           "id": "rml-explorer",
           "title": "RML Dev Server",
-          "icon": "$(telescope)"
+          "icon": "assets/rml-icon.svg"
         }
       ]
     },
