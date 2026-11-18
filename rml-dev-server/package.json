@@ -3,7 +3,7 @@
   "displayName": "RML: RDF Mapping Language",
   "icon": "assets/rml-128.png",
   "description": "A RDF Mapping Language (RML) Development Server with the BURP RML Processor",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "serverVersion": "0.1.4",
   "publisher": "uliege-dre",
   "repository": {
@@ -346,7 +346,9 @@
     "format": "prettier --write .",
     "test": "vscode-test",
     "ui-test:setup": "extest setup-tests && extest install-from-marketplace ajuvercr.semantic-web-lsp",
-    "ui-test": "npm run compile && extest setup-tests && extest install-from-marketplace ajuvercr.semantic-web-lsp && extest run-tests"
+    "ui-test": "npm run compile && extest setup-tests && extest install-from-marketplace ajuvercr.semantic-web-lsp && extest run-tests",
+    "demo:record": "npm run compile && extest run-tests --config extester.demo.json",
+    "demo:record:trace": "npm run compile && extest run-tests --config extester.demo.json out/demo/manual/traceDataflow.demo.js"
   },
   "devDependencies": {
     "@posthog/types": "^1.425.1",
