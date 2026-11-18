@@ -1,8 +1,10 @@
 package burp;
 
 import burp.util.Util;
+import org.apache.jena.vocabulary.XSD;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class IRISafeTest {
 
@@ -45,4 +47,33 @@ public class IRISafeTest {
     public void testToIRISafe_Zoe() {
         assertEquals("Zoë%20Krüger", Util.toIRISafe("Zoë Krüger"));
     }
+
+    @Test
+    public void testIsValidAndAbsoluteIRI() {
+        assertTrue(Util.isValidAndAbsoluteIRI("http://example.org/valid"));
+        assertTrue(Util.isValidAndAbsoluteIRI("http://example.org/héllö"));
+        assertTrue(Util.isValidAndAbsoluteIRI("urn:isbn:0451450523"));
+        assertTrue(Util.isValidAndAbsoluteIRI(XSD.xstring.getURI()));
+
+        assertFalse(Util.isValidAndAbsoluteIRI(null));
+        assertFalse(Util.isValidAndAbsoluteIRI(""));
+        assertFalse(Util.isValidAndAbsoluteIRI("   "));
+        assertFalse(Util.isValidAndAbsoluteIRI("relative/path"));
+    }
+
+    @Test
+    public void testIsValidAndAbsoluteURI() {
+        assertTrue(Util.isValidAndAbsoluteURI("http://example.org/valid"));
+        assertTrue(Util.isValidAndAbsoluteURI("urn:isbn:0451450523"));
+        assertTrue(Util.isValidAndAbsoluteURI(XSD.xstring.getURI()));
+
+        // Non-ASCII characters are invalid in strict URIs
+        assertFalse(Util.isValidAndAbsoluteURI("http://example.org/héllö"));
+        assertFalse(Util.isValidAndAbsoluteURI("http://example.org/Zoë"));
+
+        assertFalse(Util.isValidAndAbsoluteURI(null));
+        assertFalse(Util.isValidAndAbsoluteURI(""));
+        assertFalse(Util.isValidAndAbsoluteURI("relative/path"));
+    }
 }
+

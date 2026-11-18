@@ -1,15 +1,14 @@
 package burp.model;
 
+import burp.parse.loader.annotations.RdfType;
 import burp.vocabularies.RML;
+import burp.vocabularies.Rml;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.Set;
 
+@RdfType(Rml.PredicateMap)
 public class PredicateMap extends TermMap {
-
-    public PredicateMap() {
-        this.termType = RML.IRI;
-    }
 
     @Override
     public String getName() {
@@ -20,4 +19,5 @@ public class PredicateMap extends TermMap {
     public Set<Resource> getAllowedTermTypes() {
         return Set.of(RML.IRI, RML.URI);
     }
+
 }

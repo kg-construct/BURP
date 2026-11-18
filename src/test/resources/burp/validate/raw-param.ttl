@@ -1,0 +1,32 @@
+PREFIX rml: <http://w3id.org/rml/>
+PREFIX idlab-fn: <https://w3id.org/imec/idlab/function#>
+PREFIX ex: <http://example.com/>
+
+ex:TM a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [ a rml:RelativePathSource ; rml:path "student.csv" ] ;
+        rml:referenceFormulation rml:CSV
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/Student/{id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:concat ;
+        rml:objectMap [
+            rml:functionExecution [
+                rml:function idlab-fn:concat ;
+                rml:input [
+                    rml:parameter idlab-fn:str ; # predicate IRI instead of parameter URI idlab-fn:_str
+                    rml:inputValue "Hello"
+                ] ,
+                [
+                    rml:parameter idlab-fn:_otherStr ;
+                    rml:inputValue "World"
+                ] ,
+                [
+                    rml:parameter idlab-fn:_delimiter ;
+                    rml:inputValue " "
+                ]
+            ]
+        ]
+    ] .

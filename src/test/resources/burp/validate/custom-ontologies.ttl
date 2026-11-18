@@ -1,0 +1,47 @@
+PREFIX rml: <http://w3id.org/rml/>
+PREFIX grel: <http://users.ugent.be/~bjdmeest/function/grel.ttl#>
+PREFIX burp-fn: <http://BURP.noname/function/>
+PREFIX exfn: <http://example.com/functions/>
+PREFIX morph-fn: <https://github.com/morph-kgc/morph-kgc/function/built-in.ttl#>
+PREFIX ex: <http://example.com/>
+
+ex:TM a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [ a rml:RelativePathSource ; rml:path "student.csv" ] ;
+        rml:referenceFormulation rml:CSV
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/Student/{id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:safeIri ;
+        rml:objectMap [
+            rml:functionExecution [
+                rml:function burp-fn:toSafeIRI ;
+                rml:input [
+                    rml:parameter grel:valueParam ;
+                    rml:inputValue "test"
+                ]
+            ]
+        ]
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:parsed ;
+        rml:objectMap [
+            rml:functionExecution [
+                rml:function exfn:parseURL ;
+                rml:input [
+                    rml:parameter exfn:stringParameter ;
+                    rml:inputValue "http://example.org/test"
+                ]
+            ]
+        ]
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:uuid ;
+        rml:objectMap [
+            rml:functionExecution [
+                rml:function morph-fn:uuid
+            ]
+        ]
+    ] .

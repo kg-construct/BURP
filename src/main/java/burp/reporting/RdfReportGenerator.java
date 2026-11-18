@@ -71,16 +71,16 @@ public class RdfReportGenerator {
     }
 
     private static void addRmlError(Model model, Resource reportResource, RmlError error) {
-        Resource errorResource = model.createResource(error.getErrorType());
+        Resource errorResource = model.createResource(error.errorType());
         model.add(reportResource, RER.hasError, errorResource);
-        errorResource.addProperty(RER.message, error.getMessage());
+        errorResource.addProperty(RER.message, error.message());
 
-        if (error.getException() != null) {
-            errorResource.addProperty(RER.stackTrace, getStackTraceAsString(error.getException()));
+        if (error.exception() != null) {
+            errorResource.addProperty(RER.stackTrace, getStackTraceAsString(error.exception()));
         }
 
-        if (error.getContext() != null) {
-            for (var entry : error.getContext().entrySet()) {
+        if (error.context() != null) {
+            for (var entry : error.context().entrySet()) {
                 Object value = entry.getValue();
                 if (value instanceof Resource) {
                     errorResource.addProperty(entry.getKey(), (Resource) value);
@@ -90,11 +90,12 @@ public class RdfReportGenerator {
             }
         }
 
-        if (error.getOrigin() != null) {
-            Origin origin = error.getOrigin();
-            if (origin.planNode() != null) {
-                errorResource.addProperty(RER.planNode, origin.planNode().toString());
-            }
+        if (error.getPlanNode() != null) {
+            errorResource.addProperty(RER.planNode, error.getPlanNode().toString());
+        }
+
+        if (error.origin() != null) {
+            Origin origin = error.origin();
 
             if (origin.sourceStatements() != null) {
                 for (RDFPointer rdfPtr : origin.sourceStatements()) {
@@ -115,7 +116,9 @@ public class RdfReportGenerator {
                             Resource sp = model.createResource(PTR.StatementPart);
                             sp.addProperty(PTR.statement, model.createStatementTerm(stmt));
                             sp.addProperty(PTR.part, PTR.Object);
-                            sp.addProperty(PTR.textRange, createRangeResource(model, range));
+                            if (range != null) {
+                                sp.addProperty(PTR.textRange, createRangeResource(model, range));
+                            }
                             model.add(errorResource, RER.mappingStatement, sp);
                         }
                         case TextFilePointer tfp -> {

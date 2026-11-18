@@ -1,0 +1,6 @@
+PREFIX ex: <http://example.com/>
+
+ASK {
+  ?student ex:enrollmentStatus ?status .
+  FILTER(STRSTARTS(STR(?status), "ACTIVE") || STRSTARTS(STR(?status), "ALUMNI"))
+}

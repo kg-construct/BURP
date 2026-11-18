@@ -10,3 +10,7 @@ BURPIOTC-SQLITE,sqlite,Tests SQLite DB reading,rml-io,mapping.ttl,application/sq
 BURPIOTC-BSON,bson,Tests BSON reading,rml-io,mapping.ttl,application/bson,application/n-quads,student.bson,output.nq,false
 ELSDVLEE-20,RML-LV left join causes error,,rml-lv,mapping.ttl,,,"",output.nt,false
 ELSDVLEE-21,explicit rml:TriplesMap statement needed to use TriplesMap as ParentTriplesMap,,rml-lv,mapping.ttl,,,,output.nt,false
+BURP-FNML+CC-01,fnml_and_cc,Tests FNML functionExecution guarded by rml:condition,fnml,mapping.ttl,text/csv,application/n-quads,student.csv,output.nq,false
+BURP-FNML+CC-02,condition_and_gather,Tests rml:condition side-by-side with rml:gather,fnml,mapping.ttl,text/csv,application/n-quads,student.csv,output.nq,false
+BURP-RMLLVTC0005d,reference_record_key,Tests referencing the record key with rdf:JSON datatype,rml-lv,mapping.ttl,application/json,application/n-quads,people.json,output.nq,false
+BURP-LV+CC-01,lv_and_cc,Tests rml:gather on LogicalView,rml-lv,mapping.ttl,application/json,application/n-quads,people.json,output.nq,false

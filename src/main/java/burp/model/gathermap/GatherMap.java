@@ -1,45 +1,77 @@
 package burp.model.gathermap;
 
-import burp.model.Iteration;
-import burp.model.PlanNode;
-import burp.model.TermGenerator;
+import burp.model.*;
+import burp.model.context.EvaluationContext;
+import burp.model.key.AstKey;
 import burp.model.rdf.*;
+import burp.parse.loader.annotations.RdfId;
+import burp.parse.loader.annotations.RdfList;
+import burp.parse.loader.annotations.RdfProperty;
+import burp.parse.loader.annotations.RdfType;
 import burp.reporting.BurpException;
 import burp.reporting.Origin;
 import burp.reporting.RmlError;
 import burp.vocabularies.RER;
 import burp.vocabularies.RML;
+import burp.vocabularies.Rml;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class GatherMap implements PlanNode {
+@RdfType(Rml.GatherMap)
+public class GatherMap extends AbstractPlanNode implements LogicalTargetScope {
 
-    private PlanNode parent = null;
+    @RdfId
+    public Resource subject;
+
+    @Override
+    public @NonNull Resource getIri() {
+        return (subject);
+    }
+
+    @Override
+    public void collectAttributes(AttributeCollector sink) {
+        if (gatherAs != null) {
+            Origin orig = originOf("gatherAs");
+            sink.put("gatherAs", gatherAs.getLocalName(), orig);
+        }
+        if (strategy != null) {
+            Origin orig = originOf("strategy");
+            sink.put("strategy", strategy.getLocalName(), orig);
+        }
+    }
+
+    @RdfProperty(Rml.logicalTarget)
+    public Set<LogicalTarget> logicalTargets = new HashSet<>();
+
+    @Override
+    public Set<LogicalTarget> getLogicalTargets() {
+        return logicalTargets;
+    }
+
+    @RdfProperty(Rml.allowEmptyListAndContainer)
     public boolean allowEmptyListAndContainer = false;
-    public Resource gatherAs = null;
+
+    @RdfProperty(Rml.gatherAs)
+    public @Nullable Resource gatherAs = null;
+
+    @RdfProperty(Rml.strategy)
     public Resource strategy = RML.append;
-    public Origin strategyOrigin = null;
+
+    @RdfList(Rml.gather)
     public List<TermGenerator> gatherMaps = new ArrayList<>();
 
-    private static long idCounter = 0L;
-
-    public static BlankNodeTerm nextId() {
-        return new BlankNodeTerm("gathermap-" + (idCounter++));
+    public static BlankNodeTerm nextId(EvaluationContext context, Set<LogicalTarget> targets, @Nullable OriginLineage lineage) {
+        return new BlankNodeTerm(context.blankNodeScope().allocateFresh("gathermap-"), targets, lineage);
     }
 
-    @Override
-    public PlanNode getParent() {
-        return parent;
+    public static BlankNodeTerm nextId(EvaluationContext context) {
+        return nextId(context, Set.of(), null);
     }
 
-    @Override
-    public void setParent(PlanNode parent) {
-        this.parent = parent;
-    }
 
     @Override
     public List<PlanNode> children() {
@@ -51,9 +83,9 @@ public class GatherMap implements PlanNode {
         return children();
     }
 
-    public List<Term> generateTerms(Iteration i, List<BlankNodeOrIRI> explicitIds) {
+    public List<Term> generateTerms(@Nullable Iteration i, @Nullable List<BlankNodeOrIRI> explicitIds, EvaluationContext context) {
         var superCollection = gatherMaps.stream()
-                .map(gm -> gm.generateTerms(i))
+                .map(gm -> gm.generateTerms(i, context))
                 .toList();
 
         List<List<Term>> itemSets;
@@ -69,15 +101,18 @@ public class GatherMap implements PlanNode {
             throw new BurpException(
                 new RmlError(
                     "Unknown strategy: " + strategy + ", choose either " + RML.append + " or " + RML.cartesianProduct + ".",
-                    strategyOrigin,
+                    emitOrigin("strategy"),
                     RER.OutOfSpec,
                     null,
-                    Map.of(RML.strategy, strategy)
+                    Map.of(RML.strategy, strategy),
+                    this
                 )
             );
         }
 
         List<Term> results = new ArrayList<>();
+        OriginLineage containerLineage = (i != null) ? i.getLineage() : null;
+        Set<LogicalTarget> targets = getEffectiveTargets();
 
         for (List<Term> items : itemSets) {
             List<BlankNodeOrIRI> idsToUse;
@@ -86,25 +121,19 @@ public class GatherMap implements PlanNode {
                 idsToUse = explicitIds;
                 idGenerated = false;
             } else {
-                idsToUse = List.of(nextId());
+                idsToUse = List.of(nextId(context, targets, containerLineage));
                 idGenerated = true;
             }
 
             for (BlankNodeOrIRI id : idsToUse) {
                 if (items.isEmpty() && !allowEmptyListAndContainer) continue;
 
-                List<Term> itemsMutable = new ArrayList<>(items);
-                CollectionOrContainerTerm container;
+                Set<LogicalTarget> effectiveTargets = !id.targets().isEmpty() ? id.targets() : targets;
+                OriginLineage effectiveLineage = id.lineage() != null
+                        ? (containerLineage != null ? containerLineage.merge(id.lineage()) : id.lineage())
+                        : containerLineage;
 
-                if (RDF.Alt.equals(gatherAs)) {
-                    container = new RdfAltTerm(itemsMutable, id, idGenerated);
-                } else if (RDF.Bag.equals(gatherAs)) {
-                    container = new RdfBagTerm(itemsMutable, id, idGenerated);
-                } else if (RDF.Seq.equals(gatherAs)) {
-                    container = new RdfSeqTerm(itemsMutable, id, idGenerated);
-                } else {
-                    container = new RdfListTerm(itemsMutable, id, idGenerated);
-                }
+                CollectionOrContainerTerm container = buildCollectionOrContainer(items, id, idGenerated, effectiveTargets, effectiveLineage);
                 results.add(container);
             }
         }
@@ -112,8 +141,35 @@ public class GatherMap implements PlanNode {
         return results;
     }
 
-    public List<Term> generateTerms(Iteration i) {
-        return generateTerms(i, null);
+    private @NonNull CollectionOrContainerTerm buildCollectionOrContainer(
+            List<Term> items,
+            BlankNodeOrIRI id,
+            boolean idGenerated,
+            Set<LogicalTarget> targets,
+            @Nullable OriginLineage lineage
+    ) {
+        List<Term> itemsMutable = new ArrayList<>(items);
+        if (RDF.Alt.equals(gatherAs)) {
+            return new RdfAltTerm(itemsMutable, id, idGenerated, targets, lineage);
+        } else if (RDF.Bag.equals(gatherAs)) {
+            return new RdfBagTerm(itemsMutable, id, idGenerated, targets, lineage);
+        } else if (RDF.Seq.equals(gatherAs)) {
+            return new RdfSeqTerm(itemsMutable, id, idGenerated, targets, lineage);
+        } else {
+            return new RdfListTerm(itemsMutable, id, idGenerated, targets, lineage);
+        }
+    }
+
+    public List<Term> generateTerms(@Nullable Iteration i, @Nullable List<BlankNodeOrIRI> explicitIds) {
+        return generateTerms(i, explicitIds, EvaluationContext.createDefault());
+    }
+
+    public List<Term> generateTerms(@Nullable Iteration i, EvaluationContext context) {
+        return generateTerms(i, null, context);
+    }
+
+    public List<Term> generateTerms(@Nullable Iteration i) {
+        return generateTerms(i, null, EvaluationContext.createDefault());
     }
 
     private <T> List<List<T>> cartesianProduct(List<List<T>> lists) {
@@ -132,5 +188,20 @@ public class GatherMap implements PlanNode {
             result = currentResult;
         }
         return result;
+    }
+
+    @Override
+    public List<RmlEvaluationResult> evaluateNode(@Nullable Iteration iter, @NonNull EvaluationContext context) {
+        return new ArrayList<>(generateTerms(iter, context));
+    }
+
+    @Override
+    public AstKey computeAstKey() {
+        String strat = strategy != null ? strategy.getURI() : "append";
+        List<AstKey> childKeys = new ArrayList<>();
+        for (PlanNode child : children()) {
+            childKeys.add(child.getAstKey());
+        }
+        return new AstKey.GatherMapKey(strat, childKeys);
     }
 }

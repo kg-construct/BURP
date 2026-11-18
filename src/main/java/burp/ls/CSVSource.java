@@ -74,6 +74,8 @@ public class CSVSource extends FileBasedLogicalSource {
                     }
                 }
 
+                String sourceId = getSourceIdentifier();
+                int rowIdx = 0;
                 for (String[] rec : all) {
                     if (trim) {
                         for (int i = 0; i < rec.length; i++) {
@@ -82,14 +84,14 @@ public class CSVSource extends FileBasedLogicalSource {
                             }
                         }
                     }
-                    iterations.add(new CSVIteration(header, rec, nulls));
+                    iterations.add(new CSVIteration(new burp.model.IterationId(sourceId, rowIdx++), header, rec, nulls));
                 }
             }
             return iterations;
         } catch (BurpException e) {
             throw e;
         } catch (Exception e) {
-            throw new BurpException(new RmlError(e.getMessage(), new Origin(this, null), RER.Error, e));
+            throw new BurpException(new RmlError(e.getMessage(), emitOrigin(), RER.Error, e, this));
         }
     }
 

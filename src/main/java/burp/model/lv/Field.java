@@ -1,25 +1,40 @@
 package burp.model.lv;
 
-import burp.model.AbstractLogicalSource;
-import burp.model.PlanNode;
+import burp.model.*;
+import burp.model.key.AstKey;
+import burp.parse.loader.annotations.RdfId;
+import burp.parse.loader.annotations.RdfProperty;
+import burp.reporting.Origin;
+import burp.vocabularies.Rml;
+import org.apache.jena.rdf.model.Resource;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Field implements ContainsFields, FieldParent, PlanNode {
+public abstract class Field extends AbstractPlanNode implements ContainsFields, FieldParent, LocalReferenceScope {
 
-	public String fieldName ;
+    @RdfId
+    public Resource subject;
+
+    @Override
+    public @NonNull Resource getIri() {
+        return (subject);
+    }
+
+    @RdfProperty(Rml.fieldName)
+    public String fieldName;
+
+    @RdfProperty(Rml.field)
+    public List<Field> fields = new ArrayList<>();
+
     public FieldParent parentField;
-    private PlanNode planNodeParent;
-
-    public List<ExpressionField> expressionFields = new ArrayList<>();
-    public List<IterableField> iterableFields = new ArrayList<>();
 
     public static List<LogicalIteration> expand(List<LogicalIteration> list, List<ExpressionField> expressionFields, List<IterableField> iterableFields) {
         List<LogicalIteration> result = new ArrayList<>(list);
 
         if (expressionFields != null && !expressionFields.isEmpty()) {
-            // Let's process the expression fields
             for (ExpressionField expressionField : expressionFields) {
                 List<LogicalIteration> nlist = new ArrayList<>();
                 for (LogicalIteration li : result) {
@@ -30,7 +45,6 @@ public abstract class Field implements ContainsFields, FieldParent, PlanNode {
         }
 
         if (iterableFields != null && !iterableFields.isEmpty()) {
-            // Let's process the iterable fields
             List<LogicalIteration> nlist = new ArrayList<>();
             for (LogicalIteration li : result) {
                 for (IterableField iterableField : iterableFields) {
@@ -43,55 +57,94 @@ public abstract class Field implements ContainsFields, FieldParent, PlanNode {
         return result;
     }
 
+    private @Nullable String absoluteFieldName = null;
+
+    public void wire(FieldParent parent) {
+        this.parentField = parent;
+        if (parent instanceof AbstractLogicalSource) {
+            this.absoluteFieldName = fieldName;
+        } else if (parent instanceof Field f) {
+            this.absoluteFieldName = f.getAbsoluteFieldName() + "." + fieldName;
+        } else if (parent != null) {
+            this.absoluteFieldName = parent.getAbsoluteFieldName() + "." + fieldName;
+        }
+        for (Field child : fields) {
+            child.wire(this);
+        }
+    }
+
     @Override
     public String getAbsoluteFieldName() {
+        if (absoluteFieldName != null) {
+            return absoluteFieldName;
+        }
         if (parentField instanceof AbstractLogicalSource)
             return fieldName;
 
-        Field parent = (Field) this.parentField;
-        return parent.getAbsoluteFieldName() + "." + fieldName;
+        if (parentField instanceof Field pf)
+            return pf.getAbsoluteFieldName() + "." + fieldName;
+
+        return fieldName;
     }
 
-    @Override
-    public PlanNode getParent() {
-        return planNodeParent;
-    }
-
-    @Override
-    public void setParent(PlanNode parent) {
-        this.planNodeParent = parent;
-    }
 
     @Override
     public Iterable<PlanNode> children() {
         List<PlanNode> children = new ArrayList<>();
-        children.addAll(expressionFields);
-        children.addAll(iterableFields);
+        children.addAll(getExpressionFields());
+        children.addAll(getIterableFields());
         return children;
     }
 
     @Override
     public List<IterableField> getIterableFields() {
-        return iterableFields;
+        List<IterableField> list = new ArrayList<>();
+        for (Field f : fields) {
+            if (f instanceof IterableField inf) {
+                list.add(inf);
+            }
+        }
+        return list;
     }
 
     @Override
     public List<ExpressionField> getExpressionFields() {
-        return expressionFields;
+        List<ExpressionField> list = new ArrayList<>();
+        for (Field f : fields) {
+            if (f instanceof ExpressionField ef) {
+                list.add(ef);
+            }
+        }
+        return list;
     }
 
     @Override
-    public void addField(Field field) {
-        field.parentField = this;
-
-        if (field instanceof IterableField) {
-            getIterableFields().add((IterableField) field);
-        } else if (field instanceof ExpressionField) {
-            getExpressionFields().add((ExpressionField) field);
-        }
-        else
-            throw new RuntimeException("Unknown field type.");
+    public @Nullable AbstractLogicalSource getLogicalSource() {
+        LocalReferenceScope ancestorScope = ancestor(LocalReferenceScope.class);
+        return ancestorScope != null ? ancestorScope.getLogicalSource() : null;
     }
 
-}
+    @Override
+    public Reference buildLocalReference(String reference, Origin origin) {
+        LocalReferenceScope ancestorScope = ancestor(LocalReferenceScope.class);
+        if (ancestorScope != null) {
+            return ancestorScope.buildLocalReference(reference, origin);
+        }
+        AbstractLogicalSource ls = getLogicalSource();
+        if (ls != null) {
+            return ls.buildExportedReference(reference, origin);
+        }
+        throw new IllegalArgumentException("Cannot resolve reference " + reference + " in " + this);
+    }
 
+    @Override
+    public AstKey computeAstKey() {
+        List<AstKey> childKeys = new ArrayList<>();
+        for (PlanNode child : children()) {
+            if (child != null) {
+                childKeys.add(child.getAstKey());
+            }
+        }
+        return new AstKey.FieldKey(fieldName != null ? fieldName : "", childKeys);
+    }
+}

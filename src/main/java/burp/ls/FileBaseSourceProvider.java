@@ -9,7 +9,6 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.RDF;
-import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -27,15 +26,21 @@ public class FileBaseSourceProvider {
         if (RML.zip.equals(compression) || RML.gzip.equals(compression) || RML.targz.equals(compression) || RML.tarxz.equals(compression)) {
             return compression;
         }
-        throw new RuntimeException("Provided compression " + compression + " not supported.");
+        throw new BurpException(
+                new RmlError(
+                        "Provided compression " + compression + " not supported.",
+                        new Origin(source.getProperty(RML.compression), StatementPart.Predicate, StatementPart.Object),
+                        RER.UnsupportedMapping
+                )
+        );
     }
 
     public static Charset getEncoding(Resource source) {
         Resource enc = source.getPropertyResourceValue(RML.encoding);
-        if (enc == null || RML.UTF8.equals(enc)) {
+        if (enc == null || RML.UTF_8.equals(enc)) {
             return StandardCharsets.UTF_8;
         }
-        if (RML.UTF16.equals(enc)) {
+        if (RML.UTF_16.equals(enc)) {
             return StandardCharsets.UTF_16;
         }
         throw new BurpException(
@@ -49,7 +54,7 @@ public class FileBaseSourceProvider {
 
     public static List<Object> getNullValues(Resource source) {
         List<Object> os = new ArrayList<>();
-        source.listProperties(RML.NULL).forEachRemaining(stmt -> {
+        source.listProperties(RML.null_).forEachRemaining(stmt -> {
             RDFNode obj = stmt.getObject();
             // WE ASSUME WE CAN HAVE RESOURCES AS NULL FOR SPARQL SOURCES
             if (obj.isResource()) {
@@ -73,7 +78,7 @@ public class FileBaseSourceProvider {
 
     public static FileAndOrigin getFile(Resource source, Path mappingDir, Path currentWorkingDir) {
         if (source.hasProperty(RDF.type, RML.RelativePathSource) || source.hasProperty(RDF.type, RML.FilePath)) {
-            @Nullable Statement pathStmt = source.getProperty(RML.path);
+            Statement pathStmt = source.getProperty(RML.path);
             String file;
             if (pathStmt != null && pathStmt.getObject().isLiteral()) {
                 file = pathStmt.getLiteral().getString();
@@ -93,11 +98,13 @@ public class FileBaseSourceProvider {
             } else if (root.isLiteral()) {
                 var literal = root.asLiteral();
                 if (literal.getLanguage() != null && !literal.getLanguage().isEmpty() || literal.getDatatypeURI() != null && !literal.getDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#string")) {
-                    throw new RuntimeException("rml:root must be a plain literal or string " + literal);
+                    Origin origin = rootStmt != null ? new Origin(rootStmt, StatementPart.Predicate, StatementPart.Object) : null;
+                    throw new BurpException(new RmlError("rml:root must be a plain literal or string " + literal, origin, RER.MappingError));
                 }
                 resolved = Path.of(literal.getString()).resolve(file);
             } else {
-                throw new RuntimeException("RelativePathSource specified root " + root + " is not supported.");
+                Origin origin = rootStmt != null ? new Origin(rootStmt, StatementPart.Predicate, StatementPart.Object) : null;
+                throw new BurpException(new RmlError("RelativePathSource specified root " + root + " is not supported.", origin, RER.UnsupportedMapping));
             }
 
             List<StatementParts> originList = new ArrayList<>();

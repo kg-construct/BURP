@@ -1,9 +1,8 @@
 package burp.model.rdf;
 
-import burp.model.LogicalTarget;
+import burp.model.RmlEvaluationResult;
 
-import java.util.Set;
-
-public sealed interface Term permits BlankNodeOrIRI, LiteralTerm {
-    Set<LogicalTarget> targets();
+/// An RDF term for generation.
+/// Equality and hash code are based of the underlying value, not the object itself or its lineage.
+public sealed interface Term extends RmlEvaluationResult permits BlankNodeOrIRI, LiteralTerm {
 }

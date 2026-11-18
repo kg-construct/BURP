@@ -1,0 +1,5 @@
+PREFIX ex: <http://example.com/>
+
+ASK {
+  ?student ex:letterGrade ?grade .
+}

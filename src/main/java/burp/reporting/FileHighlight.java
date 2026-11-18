@@ -7,19 +7,29 @@ import java.util.*;
 
 public class FileHighlight {
 
+    public static boolean hasColorSupport() {
+        if (System.getenv("NO_COLOR") != null) return false;
+        if ("dumb".equalsIgnoreCase(System.getenv("TERM"))) return false;
+        return System.console() != null || System.getenv("COLORTERM") != null;
+    }
+
     public static String extractAndHighlight(Path filePath, List<PointRange> nodes) {
-        return extractAndHighlight(filePath, nodes, 1, Severity.ERROR);
+        return extractAndHighlight(filePath, nodes, 1, Severity.ERROR, hasColorSupport());
     }
 
     public static String extractAndHighlight(Path filePath, List<PointRange> nodes, Severity severity) {
-        return extractAndHighlight(filePath, nodes, 1, severity);
+        return extractAndHighlight(filePath, nodes, 1, severity, hasColorSupport());
     }
 
     public static String extractAndHighlight(Path filePath, List<PointRange> nodes, int contextLines) {
-        return extractAndHighlight(filePath, nodes, contextLines, Severity.ERROR);
+        return extractAndHighlight(filePath, nodes, contextLines, Severity.ERROR, hasColorSupport());
     }
 
     public static String extractAndHighlight(Path filePath, List<PointRange> nodes, int contextLines, Severity severity) {
+        return extractAndHighlight(filePath, nodes, contextLines, severity, hasColorSupport());
+    }
+
+    public static String extractAndHighlight(Path filePath, List<PointRange> nodes, int contextLines, Severity severity, boolean useColors) {
         if (!Files.exists(filePath)) {
             return null;
         }
@@ -56,17 +66,56 @@ public class FileHighlight {
             List<FileGeometry.ColumnRange> rangesOnLine = highlightsByLine.getOrDefault(lineIndex, Collections.emptyList());
             String lineNumberStr = formatLineNumber(lineIndex + 1);
 
-            sb.append(lineNumberStr);
-            sb.append(renderLineWithColors(lineContent, rangesOnLine, severity)).append(System.lineSeparator());
+            if (useColors) {
+                sb.append(lineNumberStr);
+                sb.append(renderLineWithColors(lineContent, rangesOnLine, severity)).append(System.lineSeparator());
+            } else {
+                sb.append(lineNumberStr);
+                sb.append(lineContent).append(System.lineSeparator());
+                if (!rangesOnLine.isEmpty()) {
+                    String underline = renderUnderline(lineContent, rangesOnLine);
+                    if (!underline.isEmpty()) {
+                        String gutter = String.format("%5s", "") + "| ";
+                        sb.append(gutter).append(underline).append(System.lineSeparator());
+                    }
+                }
+            }
         }
 
         return sb.toString();
     }
 
+    public static String renderUnderline(String line, List<FileGeometry.ColumnRange> ranges) {
+        if (ranges.isEmpty()) {
+            return "";
+        }
+        int maxEnd = 0;
+        for (FileGeometry.ColumnRange range : ranges) {
+            maxEnd = Math.max(maxEnd, Math.min(range.last(), line.length()));
+        }
+        StringBuilder underline = new StringBuilder();
+        for (int i = 0; i < maxEnd; i++) {
+            boolean highlighted = false;
+            for (FileGeometry.ColumnRange range : ranges) {
+                if (i >= range.first() && i < range.last()) {
+                    highlighted = true;
+                    break;
+                }
+            }
+            if (highlighted) {
+                underline.append('^');
+            } else {
+                char c = i < line.length() ? line.charAt(i) : ' ';
+                underline.append(c == '\t' ? '\t' : ' ');
+            }
+        }
+        return underline.toString();
+    }
+
     private static List<Integer> calculateLinesToPrint(
-        Set<Integer> highlightedLines,
-        int maxLineIndex,
-        int contextLines
+            Set<Integer> highlightedLines,
+            int maxLineIndex,
+            int contextLines
     ) {
         Set<Integer> linesToPrint = new TreeSet<>();
         for (int lineIdx : highlightedLines) {
@@ -104,7 +153,7 @@ public class FileHighlight {
 
             // Append highlighted text
             // Ensure we don't go out of bounds if the range extends slightly beyond line length (rare but possible)
-            int safeEnd = Math.min(range.last() + 1, line.length());
+            int safeEnd = Math.min(range.last(), line.length());
             if (range.first() < safeEnd) {
                 String textToHighlight = line.substring(range.first(), safeEnd);
                 if (severity == Severity.WARNING) {

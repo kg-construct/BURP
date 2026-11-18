@@ -1,8 +1,8 @@
 package burp.parse.turtleprov;
 
 import burp.reporting.PointRange;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -10,6 +10,15 @@ public class ProvStore {
     public final Set<ProvTriple> triples = new HashSet<>();
     public final Map<String, String> prefixes = new HashMap<>();
     public final List<SyntaxError> syntaxErrors = new ArrayList<>();
+    private @Nullable String documentUri = null;
+
+    public @Nullable String getDocumentUri() {
+        return documentUri;
+    }
+
+    public void setDocumentUri(@Nullable String documentUri) {
+        this.documentUri = documentUri;
+    }
 
     public Set<ProvTriple> getTriples() {
         return triples;
@@ -19,7 +28,7 @@ public class ProvStore {
         return prefixes;
     }
 
-    @NotNull
+    @NonNull
     public List<SyntaxError> getSyntaxErrors() {
         return syntaxErrors;
     }
@@ -34,6 +43,20 @@ public class ProvStore {
 
         public SyntaxError(int line, int charPositionInLine, String message, String offendingSymbol) {
             this(line, charPositionInLine, message, offendingSymbol, null);
+        }
+
+        public SyntaxError(String message, String offendingSymbol, @Nullable PointRange range) {
+            this(
+                    range != null ? range.start().line + 1 : 0,
+                    range != null ? range.start().column : 0,
+                    message,
+                    offendingSymbol,
+                    range
+            );
+        }
+
+        public SyntaxError(TurtleProvException e, String offendingSymbol) {
+            this(e.getMessage(), offendingSymbol, e.getRange());
         }
 
         @Override

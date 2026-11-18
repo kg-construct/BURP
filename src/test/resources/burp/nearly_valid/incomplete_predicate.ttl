@@ -1,0 +1,18 @@
+PREFIX ex:   <http://example.org/>
+PREFIX rml:  <http://w3id.org/rml/>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+ex:TriplesMap1 a rml:TriplesMap ;
+  rml:logicalSource [
+    rml:source [ a rml:RelativePathSource ; rml:root rml:MappingDirectory ; rml:path "student.csv" ] ;
+    rml:referenceFormulation rml:CSV
+  ] ;
+  rml:predicateObjectMap [
+    rml:objectMap [ rml:reference "Doc" ] ;
+    rml:predicate #cursor
+  ] ;
+  rml:subjectMap [
+    rml:template "http://example.com/{Name}" ;
+    rml:class ex:Patient
+  ] .

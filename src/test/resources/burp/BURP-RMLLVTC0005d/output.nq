@@ -1,0 +1,2 @@
+<http://example.org/person/alice> <http://example.org/isDerivedFrom> "{\"name\":\"alice\",\"items\":[\"sword\",\"shield\"]}"^^<http://www.w3.org/1999/02/22-rdf-syntax-ns#JSON> .
+<http://example.org/person/bob> <http://example.org/isDerivedFrom> "{\"name\":\"bob\",\"items\":[\"flower\"]}"^^<http://www.w3.org/1999/02/22-rdf-syntax-ns#JSON> .

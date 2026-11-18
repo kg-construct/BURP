@@ -1,0 +1,38 @@
+# DO NOT FORMAT THIS FILE.
+# Token positions (line and column coordinates) are explicitly tested by CursorSelector and findNodeBySelector.
+# Any reformatting, indentation adjustment, or whitespace change will break cursor tests.
+
+@prefix rml: <http://w3id.org/rml/> .
+@prefix ex: <http://example.com/> .
+@prefix idlab-fn: <https://w3id.org/imec/idlab/function#> .
+
+ex:PersonMapping a rml:TriplesMap ;
+    rml:logicalSource [
+        a rml:LogicalSource ;
+        rml:referenceFormulation rml:JSONPath ;
+        rml:iterator "$.*" ;
+        rml:source [
+            a rml:RelativePathSource ;
+            rml:root rml:MappingDirectory ;
+            rml:path "data.json"
+        ]
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/person/{$.id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:fullName ;
+        rml:objectMap [
+            rml:functionExecution [
+                rml:function idlab-fn:concat ;
+                rml:input [
+                    rml:parameter idlab-fn:str1 ;
+                    rml:inputValueMap [ rml:reference "$.firstName" ]
+                ] ;
+                rml:input [
+                    rml:parameter idlab-fn:str2 ;
+                    rml:inputValueMap [ rml:reference "$.lastName" ]
+                ]
+            ]
+        ]
+    ] .

@@ -5,6 +5,7 @@ import burp.reporting.Origin;
 import burp.reporting.StatementPart;
 import burp.reporting.StatementParts;
 import burp.util.Util;
+import burp.vocabularies.Formats;
 import burp.vocabularies.RML;
 import burp.vocabularies.SD;
 import com.google.auto.service.AutoService;
@@ -23,10 +24,10 @@ import static burp.ls.FileBaseSourceProvider.*;
 public class SPARQLSourceProvider implements LogicalSourceProvider {
     @Override
     public boolean supports(Resource referenceFormulation) {
-        return RML.SPARQL_Results_CSV.equals(referenceFormulation)
-                || RML.SPARQL_Results_TSV.equals(referenceFormulation)
-                || RML.SPARQL_Results_XML.equals(referenceFormulation)
-                || RML.SPARQL_Results_JSON.equals(referenceFormulation);
+        return Formats.SPARQL_Results_CSV.equals(referenceFormulation)
+                || Formats.SPARQL_Results_TSV.equals(referenceFormulation)
+                || Formats.SPARQL_Results_XML.equals(referenceFormulation)
+                || Formats.SPARQL_Results_JSON.equals(referenceFormulation);
     }
 
     @Override
@@ -36,7 +37,7 @@ public class SPARQLSourceProvider implements LogicalSourceProvider {
         String iterator = ls.getProperty(RML.iterator).getLiteral().getString();
         Origin iteratorOrigin = new Origin(ls.getProperty(RML.iterator), StatementPart.Object);
         Resource sourceNode = ls.getPropertyResourceValue(RML.source);
-        boolean isTSV = RML.SPARQL_Results_TSV.equals(sourceNode.getPropertyResourceValue(RDF.type));
+        boolean isTSV = Formats.SPARQL_Results_TSV.equals(sourceNode.getPropertyResourceValue(RDF.type));
         Resource referenceFormulation = ls.getPropertyResourceValue(RML.referenceFormulation);
 
         if (sourceNode.hasProperty(RDF.type, VOID.Dataset)) {

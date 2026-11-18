@@ -1,8 +1,7 @@
 package burp.reporting;
 
 import burp.vocabularies.RER;
-import org.apache.jena.ontology.OntClass;
-import org.apache.jena.ontology.OntProperty;
+import org.apache.jena.ontapi.model.OntClass;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
@@ -45,7 +44,7 @@ public class RmlErrorBuilder {
         context.put(RER.allowedTermTypes, termTypes);
     }
 
-    public void withContext(OntProperty property, Object value) {
+    public void withContext(Property property, Object value) {
         context.put(property, value);
     }
 

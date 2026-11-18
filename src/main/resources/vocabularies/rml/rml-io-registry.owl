@@ -1,0 +1,112 @@
+@prefix : <http://w3id.org/rml/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix bibo: <http://purl.org/ontology/bibo/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix d2rq: <http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix csvw: <http://www.w3.org/ns/csvw#> .
+@prefix td: <https://www.w3.org/2019/wot/td#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@base <http://w3id.org/rml/> .
+
+# NEW FILE -- derived by reading every module under
+# use-cases/rml/rml-io-registry/*/section/*.md (csv, csvw, d2rq, dcat,
+# file-path, json-path, sql, wot, xpath).
+#
+# Finding: RML-IO-Registry mints almost no new RML-namespaced vocabulary of
+# its own. Its actual content splits into two kinds of module:
+#
+#   - Reference-formulation modules (csv, csvw, json-path, sql, xpath):
+#     define SEMANTICS (how rml:iterator/expressions are evaluated for that
+#     format) for identifiers that already exist in rml-io.owl
+#     (rml:CSV, rml:JSONPath, rml:XPath, rml:SQL2008Query, rml:SQL2008Table).
+#     Nothing new to declare here.
+#   - Access-description modules (d2rq, dcat, wot): each reuses one class
+#     from an EXTERNAL, independently-published vocabulary as the value of
+#     rml:source/rml:target, via co-typing with rml:Source/rml:Target
+#     (e.g. "a rml:Source, d2rq:Database"), never via rdfs:subClassOf --
+#     confirmed identically worded across all three module docs ("RML
+#     leverages/reuses X for defining how ... can be accessed"). This file
+#     does not re-declare those external ontologies (D2RQ, DCAT, WoT already
+#     publish their own); it only stub-declares the specific classes RML
+#     recognizes, with rdfs:seeAlso pointing at the canonical definition, so
+#     a shapes graph has something in the rml:Source/rml:Target
+#     neighbourhood to reference.
+#   - file-path is the one module whose class is RML-namespaced
+#     (rml:FilePath) -- but that class is already introduced by rml-io's own
+#     spec (section 3.3) and is declared in rml-io.owl (see
+#     rml-io.review.owl for the corrected version). Not redeclared here to
+#     avoid a second, divergent definition of the same IRI.
+
+<http://w3id.org/rml/io-registry/> rdf:type owl:Ontology ;
+    owl:imports <http://w3id.org/rml/io/> ;
+    dc:description "RML-IO-Registry catalogs concrete Source/Target access descriptions (D2RQ, DCAT, WoT) and reference formulations (CSV, CSVW, JSONPath, SQL, XPath) usable with RML-IO's rml:Source/rml:Target."@en ;
+    dc:title "RML-IO-Registry"@en ;
+    bibo:status "draft" ;
+    vann:preferredNamespacePrefix "rml" ;
+    vann:preferredNamespaceUri "http://w3id.org/rml/" ;
+    owl:versionInfo "0.1.0" .
+
+#################################################################
+#    D2RQ (SQL databases) -- prefix d2rq, external ontology
+#    http://d2rq.org/d2rq-language#database
+#################################################################
+
+d2rq:Database rdf:type owl:Class ;
+    rdfs:comment "Defines a JDBC connection to a local or remote SQL database. Used as a value of rml:source via co-typing (a rml:Source, d2rq:Database), not as an rdfs:subClassOf rml:Source. RML only uses d2rq:jdbcDSN, d2rq:jdbcDriver, d2rq:username, d2rq:password of the full D2RQ vocabulary."@en ;
+    rdfs:seeAlso <http://d2rq.org/d2rq-language#database> .
+
+d2rq:jdbcDSN rdf:type owl:DatatypeProperty ;
+    rdfs:domain d2rq:Database ;
+    rdfs:range xsd:string ;
+    rdfs:comment "The JDBC database URL, of the form jdbc:subprotocol:subname."@en .
+
+d2rq:jdbcDriver rdf:type owl:DatatypeProperty ;
+    rdfs:domain d2rq:Database ;
+    rdfs:range xsd:string ;
+    rdfs:comment "The JDBC driver class name for the database, used together with d2rq:jdbcDSN."@en .
+
+d2rq:username rdf:type owl:DatatypeProperty ;
+    rdfs:domain d2rq:Database ;
+    rdfs:range xsd:string ;
+    rdfs:comment "A username, if required by the database."@en .
+
+d2rq:password rdf:type owl:DatatypeProperty ;
+    rdfs:domain d2rq:Database ;
+    rdfs:range xsd:string ;
+    rdfs:comment "A password, if required by the database."@en .
+
+
+#################################################################
+#    DCAT (datasets) -- prefix dcat, external ontology
+#    https://www.w3.org/TR/vocab-dcat-3/
+#################################################################
+
+dcat:Distribution rdf:type owl:Class ;
+    rdfs:comment "Defines access to a remote or local dataset. Used as a value of rml:source/rml:target via co-typing (a rml:Source, dcat:Distribution), not as an rdfs:subClassOf rml:Source/rml:Target. RML-IO-Registry does not restrict which dcat:Distribution properties are used."@en ;
+    rdfs:seeAlso <https://www.w3.org/TR/vocab-dcat-3/> .
+
+
+#################################################################
+#    CSVW (CSV with fine-grained control) -- prefix csvw, external ontology
+#    https://www.w3.org/TR/tabular-data-primer/
+#################################################################
+
+csvw:Table rdf:type owl:Class ;
+    rdfs:comment "Defines a CSV table with fine-grained control (delimiters, encoding, etc.) beyond plain rml:CSV. Used as a value of rml:source via co-typing, not required for RML-IO Processor conformance -- plain rml:CSV is the minimum."@en ;
+    rdfs:seeAlso <https://www.w3.org/TR/tabular-data-primer/> .
+
+
+#################################################################
+#    W3C Web of Things (WoT) -- prefix td/hctl/htv, external ontologies
+#    https://www.w3.org/TR/wot-thing-description/
+#################################################################
+
+td:Thing rdf:type owl:Class ;
+    rdfs:comment "Defines how a Web API or datastream can be accessed. Used as a value of rml:source/rml:target via co-typing, not as an rdfs:subClassOf rml:Source/rml:Target. A td:Thing also draws on the WoT Hypermedia ontology (hctl:) and the W3C HTTP ontology (htv:)."@en ;
+    rdfs:seeAlso <https://www.w3.org/TR/wot-thing-description/> .

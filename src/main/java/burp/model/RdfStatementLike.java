@@ -1,7 +1,4 @@
 package burp.model;
 
-import java.util.Set;
-
-public interface RdfStatementLike {
-    Set<LogicalTarget> targets();
+public interface RdfStatementLike extends RmlEvaluationResult {
 }

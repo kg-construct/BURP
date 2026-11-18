@@ -1,0 +1,139 @@
+{
+  "extension_activated": {
+    "description": "Triggered when the RML Dev Server extension is activated upon opening a Turtle or RML document.",
+    "properties": {}
+  },
+  "evaluate": {
+    "description": "Triggered when evaluating a mapping expression or node in the Evaluator & Value Inspector.",
+    "properties": {
+      "node_type": { "description": "AST node type being evaluated." },
+      "data_context_type": { "description": "EvaluationDataContext subtype: all, range, rawString, referenceValues, multiSource." },
+      "has_results": { "description": "Whether evaluation produced results." },
+      "has_errors": { "description": "Whether evaluation produced errors." }
+    }
+  },
+  "plan_node_expanded": {
+    "description": "Triggered when a node in the execution plan tree hierarchy is expanded.",
+    "properties": {
+      "node_type": { "description": "Type of the plan node." },
+      "node_id": { "description": "Identifier of the plan node." }
+    }
+  },
+  "inline_evaluate_hover": {
+    "description": "Triggered when a user hovers over an inline evaluation hint in the editor to inspect values.",
+    "properties": {
+      "hint_label": { "description": "Summary label of the inspected inlay hint." },
+      "hint_kind": { "description": "Kind of the inlay hint (parameter or type)." }
+    }
+  },
+  "validation_diagnostic_hover": {
+    "description": "Triggered when a user hovers over a validation diagnostic message in the editor.",
+    "properties": {
+      "severity": {
+        "description": "Diagnostic severity (Error, Warning, Information, Hint)."
+      },
+      "rerCodeUri": {
+        "description": "RER error or diagnostic code URI."
+      },
+      "source": {
+        "description": "Source subsystem producing the diagnostic."
+      }
+    }
+  },
+  "abstract_logical_source_view": {
+    "description": "Triggered when viewing sample source data or a logical view.",
+    "properties": {
+      "source_type": { "description": "Type of source (e.g. LogicalView, JSONSourceRFC, XMLSource, CSVSource)." },
+      "format": { "description": "Data representation format (table, json, xml)." }
+    }
+  },
+  "trace_from_source": {
+    "description": "Triggered when tracing iteration dataflow starting from a source iteration.",
+    "properties": {
+      "iteration_index": { "description": "0-based iteration index traced." }
+    }
+  },
+  "trace_from_statement": {
+    "description": "Triggered when tracing provenance dataflow from a generated output statement quad.",
+    "properties": {}
+  },
+  "run_mapping": {
+    "description": "Triggered when the user requests mapping materialization execution.",
+    "properties": {
+      "trigger_source": { "description": "UI entry point used to launch execution (editor_title, command_palette)." }
+    }
+  },
+  "mapping_execution_completed": {
+    "description": "Emitted when mapping execution completes, recording execution duration and triple count scale.",
+    "properties": {
+      "duration_ms": { "description": "Wall-clock duration in milliseconds." },
+      "triples_magnitude": { "description": "Order of magnitude bucket for triples generated." },
+      "success": { "description": "Whether execution succeeded without errors." }
+    }
+  },
+  "trace_execution_completed": {
+    "description": "Emitted when trace generation completes, recording trace duration and graph scale.",
+    "properties": {
+      "duration_ms": { "description": "Wall-clock duration in milliseconds." },
+      "mode": { "description": "Trace mode (iteration or result quad)." },
+      "trace_node_magnitude": { "description": "Order of magnitude bucket for trace nodes." },
+      "success": { "description": "Whether trace generation succeeded." }
+    }
+  },
+  "visualise_rdf": {
+    "description": "Triggered when opening the RDF graph/table visualizer on an RDF document.",
+    "properties": {}
+  },
+  "execution_view_mode_changed": {
+    "description": "Triggered when switching between Table and Graph views in the execution results.",
+    "properties": {
+      "view_mode": { "description": "Active view mode (table or graph)." }
+    }
+  },
+  "execution_group_by_changed": {
+    "description": "Triggered when changing the quad grouping in the execution table.",
+    "properties": {
+      "group_by": { "description": "Active grouping mode (flat, subject, iteration)." }
+    }
+  },
+  "execution_filter_applied": {
+    "description": "Triggered when setting or clearing column filters or searches in the execution table.",
+    "properties": {
+      "filter_kind": { "description": "Whether this is a search or a filter." },
+      "column": { "description": "Column name filtered (subject, predicate, object, graph, target)." },
+      "filter_type": { "description": "Specific filter or search type applied (text, term_type, datatype, language)." },
+      "is_active": { "description": "Whether a filter or search string is currently active." }
+    }
+  },
+  "execution_scroll_loaded_more": {
+    "description": "Triggered when scrolling in the execution table loads an additional batch of rows.",
+    "properties": {
+      "view_type": { "description": "Type of view scrolled (flat or grouped)." },
+      "current_limit": { "description": "Number of rows now loaded." },
+      "reached_end": { "description": "Whether the user scrolled to the end of all results." }
+    }
+  },
+  "execution_partition_changed": {
+    "description": "Triggered when selecting a target or graph partition tab in execution results.",
+    "properties": {
+      "partition_type": { "description": "Partition kind (target or graph)." },
+      "is_all": { "description": "Whether the All partition tab is selected." },
+      "partition_id": { "description": "Identifier of the partition selected." }
+    }
+  },
+  "execution_rerun_clicked": {
+    "description": "Triggered when re-running mapping execution from within the execution view.",
+    "properties": {
+      "clear_cache": { "description": "Whether cache was cleared prior to re-running." }
+    }
+  },
+  "$exception": {
+    "description": "Captures unhandled exceptions or error reports.",
+    "properties": {
+      "$exception_message": { "description": "Error message." },
+      "$exception_type": { "description": "Error class/type." },
+      "source": { "description": "Subsystem where the error occurred." },
+      "handled": { "description": "Whether the error was caught and handled." }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix ex: <http://example.com/> .
+
+ex:StudentMapping a rml:TriplesMap ;
+  rml:logicalSource [
+    a rml:LogicalSource ;
+    rml:iterator "$.students[*]" ;
+    rml:referenceFormulation rml:JSONPath ;
+    rml:source [
+      a rml:RelativePathSource ;
+      rml:root rml:MappingDirectory ;
+      rml:path "students.json"
+    ]
+  ] ;
+  rml:subjectMap [
+    rml:template "http://example.com/student/{$.ID}"
+  ] ;
+  rml:predicateObjectMap [
+    rml:predicate foaf:name ;
+    rml:objectMap [ rml:reference "$.Name" ]
+  ] ;
+  rml:predicateObjectMap [
+    rml:predicate ex:grade ;
+    rml:objectMap [ rml:reference "$.Grade" ]
+  ] ;
+  rml:predicateObjectMap ex:SportJoinPOM .
+
+ex:SportJoinPOM a rml:PredicateObjectMap ;
+  rml:predicate ex:practises ;
+  rml:objectMap [
+    a rml:RefObjectMap ;
+    rml:parentTriplesMap ex:SportMapping ;
+    rml:joinCondition [
+      rml:child "$.SportID" ;
+      rml:parent "$.ID"
+    ]
+  ] .
+
+ex:SportMapping a rml:TriplesMap ;
+  rml:logicalSource [
+    a rml:LogicalSource ;
+    rml:iterator "$.sports[*]" ;
+    rml:referenceFormulation rml:JSONPath ;
+    rml:source [
+      a rml:RelativePathSource ;
+      rml:root rml:MappingDirectory ;
+      rml:path "sports.json"
+    ]
+  ] ;
+  rml:subjectMap [
+    rml:template "http://example.com/sport/{$.ID}"
+  ] ;
+  rml:predicateObjectMap [
+    rml:predicate rdfs:label ;
+    rml:objectMap [ rml:reference "$.Name" ]
+  ] .

@@ -1,5 +1,6 @@
 package burp.ls;
 
+import burp.model.AttributeCollector;
 import burp.model.Iteration;
 import burp.model.LogicalSource;
 import burp.reporting.BurpException;
@@ -19,6 +20,15 @@ import java.util.List;
 
 public abstract class FileBasedLogicalSource extends LogicalSource {
 
+    @Override
+    public void collectAttributes(AttributeCollector sink) {
+        super.collectAttributes(sink);
+        if (file != null) {
+            Origin orig = !fileOriginStmts.isEmpty() ? new Origin(fileOriginStmts) : originOf("source");
+            sink.put("source", file.toString(), orig);
+        }
+    }
+
     public List<Iteration> iterations = null;
 
     public SourceFile file = null;
@@ -29,10 +39,10 @@ public abstract class FileBasedLogicalSource extends LogicalSource {
     public Resource compression = RML.none;
 
     public String getDecompressedFile() {
-        Origin origin = new Origin(this, fileOriginStmts);
+        Origin origin = new Origin(fileOriginStmts);
         File fileFile = file != null ? file.getFile(fileOriginStmts) : null;
         if (fileFile == null || !fileFile.exists()) {
-            throw new BurpException(new RmlError("SourceAccessError: Cannot obtain file " + file, origin, RER.SourceAccessError));
+            throw new BurpException(new RmlError("SourceAccessError: Cannot obtain file " + file, origin, RER.SourceAccessError, this));
         }
         return Util.getDecompressedFile(fileFile.getAbsolutePath(), compression);
     }
