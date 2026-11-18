@@ -1,10 +1,13 @@
 package burp.dev.ontology;
 
+import burp.dev.rml.service.MappingWorkspace;
 import burp.dev.rml.service.ontology.OntologyRegistry;
 import burp.dev.rml.service.validator.OntologyValidator;
-import burp.reporting.RmlError;
+import burp.dev.rml.service.validator.ValidationContext;
 import burp.model.*;
 import burp.model.rdf.IRITerm;
+import burp.parse.ValidationMode;
+import burp.reporting.RmlError;
 import burp.vocabularies.RER;
 import burp.vocabularies.RML;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -111,5 +114,29 @@ public class OntologyValidatorTest {
         assertThat(diagnostics.getFirst().message())
                 .contains("xsd:string")
                 .contains("xsd:integer");
+    }
+
+    @Test
+    public void testDemoValidationOntologyMappingLocation() throws Exception {
+        Path mappingFile = Path.of("rml-dev-server/src/demo/mappings/validation-ontology/mapping.ttl").toAbsolutePath();
+        String uri = mappingFile.toUri().toString();
+        MappingWorkspace workspace = new MappingWorkspace();
+        MappingWorkspace.LoadedMapping loaded = workspace.loadMappingDetailed(uri, ValidationMode.LENIENT);
+        ValidationContext ctx = new ValidationContext(loaded, uri, workspace);
+
+        List<RmlError> diagnostics = validator.validate(ctx);
+
+        assertThat(diagnostics)
+                .filteredOn(d -> RER.OntologyDatatypeMismatch.getURI().equals(d.errorType().getURI()))
+                .hasSize(1);
+        RmlError error = diagnostics.getFirst();
+        assertThat(error.origin()).isNotNull();
+        assertThat(error.origin().ranges()).hasSize(1);
+        var range = error.origin().ranges().getFirst();
+        assertThat(range.start().line()).isEqualTo(25);
+        assertThat(range.start().column()).isEqualTo(19);
+        assertThat(range.end()).isNotNull();
+        assertThat(range.end().line()).isEqualTo(25);
+        assertThat(range.end().column()).isEqualTo(29);
     }
 }

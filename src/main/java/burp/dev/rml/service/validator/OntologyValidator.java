@@ -12,7 +12,6 @@ import burp.vocabularies.RML;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -84,16 +83,21 @@ public class OntologyValidator implements MappingValidator {
                             }
                         } else {
                             for (BaseObjectMap bom : pom.objectMaps) {
-                                Origin bomOrigin = MappingValidator.resolveNodeOrigin(bom, "constant");
                                 Resource termType = null;
                                 Resource declaredDatatype = null;
                                 String lexical = null;
                                 Resource litDatatype = null;
+                                Origin datatypeOrigin = null;
+                                Origin termTypeOrigin = null;
 
                                 if (bom instanceof TermMap tmMap) {
                                     termType = tmMap.termType != null ? tmMap.termType : tmMap.getDefaultTermType();
+                                    if (tmMap.originOf("termType") != null) {
+                                        termTypeOrigin = MappingValidator.resolveNodeOrigin(tmMap, "termType");
+                                    }
                                     if (tmMap.datatypeMap != null && tmMap.datatypeMap.expression instanceof RDFNodeConstant dc && dc.constant instanceof IRITerm dIri) {
                                         declaredDatatype = ResourceFactory.createResource(dIri.uri());
+                                        datatypeOrigin = MappingValidator.resolveNodeOrigin(tmMap.datatypeMap, "constant");
                                     }
                                     if (tmMap.expression instanceof RDFNodeConstant oc && oc.constant instanceof LiteralTerm lit) {
                                         lexical = lit.value();
@@ -115,11 +119,18 @@ public class OntologyValidator implements MappingValidator {
                                         registry,
                                         prefixMap
                                 );
+                                if (issues.isEmpty()) continue;
 
+                                Origin bomOrigin = MappingValidator.resolveNodeOrigin(bom, "constant");
                                 for (var issue : issues) {
-                                    @Nullable Origin issueOrigin = issue.errorType().equals(RER.OntologyDomainMismatch)
-                                            ? pmOrigin
-                                            : (bomOrigin != null ? bomOrigin : pmOrigin);
+                                    Origin issueOrigin = bomOrigin != null ? bomOrigin : pmOrigin;
+                                    if (issue.errorType().equals(RER.OntologyDomainMismatch)) {
+                                        issueOrigin = pmOrigin;
+                                    } else if (issue.errorType().equals(RER.OntologyDatatypeMismatch) && datatypeOrigin != null) {
+                                        issueOrigin = datatypeOrigin;
+                                    } else if (issue.errorType().equals(RER.OntologyTermTypeMismatch) && termTypeOrigin != null) {
+                                        issueOrigin = termTypeOrigin;
+                                    }
                                     errors.add(new RmlError(issue.message(), issueOrigin, issue.errorType()));
                                 }
                             }
@@ -129,4 +140,5 @@ public class OntologyValidator implements MappingValidator {
             }
         }
     }
+
 }
