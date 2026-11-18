@@ -3,6 +3,7 @@
 test-resources/**
 .test-extensions/**
 screenshots/**
+demos/**
 src/**
 out/**
 esbuild.mjs
@@ -15,6 +16,7 @@ vsc-extension-quickstart.md
 **/*.ts
 **/.vscode-test.*
 extester.config.json
+extester.demo.json
 test-settings.json
 .mocharc.js
 node_modules/**

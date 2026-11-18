@@ -12,5 +12,12 @@
   "telemetry.telemetryLevel": "off",
   "update.mode": "none",
   "git.enabled": false,
-  "git.autorefresh": false
+  "git.autorefresh": false,
+  "chat.disableAIFeatures": true,
+  "editor.minimap.enabled": false,
+  "swls.disabled": [
+    "inlay_hint"
+  ],
+  "window.zoomLevel": 0.5,
+  "window.restoreWindows": "none"
 }

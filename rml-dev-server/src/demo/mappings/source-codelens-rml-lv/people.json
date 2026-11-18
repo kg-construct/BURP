@@ -1,0 +1,70 @@
+{
+  "people": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "items": [
+        {
+          "type": "Book"
+        },
+        {
+          "type": "Laptop"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Bob",
+      "items": [
+        {
+          "type": "Pen"
+        },
+        {
+          "type": "Notebook"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Charlie",
+      "items": [
+        {
+          "type": "Tablet"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Diana",
+      "items": [
+        {
+          "type": "Camera"
+        },
+        {
+          "type": "Tripod"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Eve",
+      "items": [
+        {
+          "type": "Headphones"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Frank",
+      "items": [
+        {
+          "type": "Monitor"
+        },
+        {
+          "type": "Keyboard"
+        }
+      ]
+    }
+  ]
+}
