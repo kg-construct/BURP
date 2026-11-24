@@ -70,8 +70,7 @@ export const ExecutionApp: React.FC<ExecutionAppProps> = ({ isRdfVisualizer = fa
         setSelectedTargetId(targetId);
         webviewTelemetry.capture('execution_partition_changed', {
             partition_type: 'target',
-            is_all: targetId === 'all',
-            partition_id: targetId
+            is_all: targetId === 'all'
         });
     };
 
@@ -79,8 +78,7 @@ export const ExecutionApp: React.FC<ExecutionAppProps> = ({ isRdfVisualizer = fa
         setSelectedGraphId(graphId);
         webviewTelemetry.capture('execution_partition_changed', {
             partition_type: 'graph',
-            is_all: graphId === 'all',
-            partition_id: graphId
+            is_all: graphId === 'all'
         });
     };
 

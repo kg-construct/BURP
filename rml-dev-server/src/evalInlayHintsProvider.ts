@@ -115,14 +115,10 @@ export class RmlEvalInlayHintsProvider implements vscode.InlayHintsProvider {
             return hint;
         }
 
-        const label = typeof hint.label === 'string'
-            ? hint.label
-            : (Array.isArray(hint.label) ? hint.label.map((p: any) => p.value).join('') : '');
         const kind: 'parameter' | 'type' | undefined =
             hint.kind === vscode.InlayHintKind.Parameter ? 'parameter' : (hint.kind === vscode.InlayHintKind.Type ? 'type' : undefined);
 
         telemetry.capture('inline_evaluate_hover', {
-            hint_label: label,
             hint_kind: kind
         });
 

@@ -22,7 +22,6 @@
   "inline_evaluate_hover": {
     "description": "Triggered when a user hovers over an inline evaluation hint in the editor to inspect values.",
     "properties": {
-      "hint_label": { "description": "Summary label of the inspected inlay hint." },
       "hint_kind": { "description": "Kind of the inlay hint (parameter or type)." }
     }
   },
@@ -117,8 +116,7 @@
     "description": "Triggered when selecting a target or graph partition tab in execution results.",
     "properties": {
       "partition_type": { "description": "Partition kind (target or graph)." },
-      "is_all": { "description": "Whether the All partition tab is selected." },
-      "partition_id": { "description": "Identifier of the partition selected." }
+      "is_all": { "description": "Whether the All partition tab is selected." }
     }
   },
   "execution_rerun_clicked": {
@@ -128,10 +126,11 @@
     }
   },
   "$exception": {
-    "description": "Captures unhandled exceptions or error reports.",
+    "description": "Captures unhandled exceptions or error reports with sanitized messages and stack traces.",
     "properties": {
-      "$exception_message": { "description": "Error message." },
+      "$exception_message": { "description": "Sanitized error message (redacts URIs, local paths, emails, and quoted literals)." },
       "$exception_type": { "description": "Error class/type." },
+      "$exception_stack_trace_raw": { "description": "Sanitized stack trace (up to 20 frames with directory prefixes stripped)." },
       "source": { "description": "Subsystem where the error occurred." },
       "handled": { "description": "Whether the error was caught and handled." }
     }
