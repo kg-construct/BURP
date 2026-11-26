@@ -10,6 +10,17 @@ import java.util.stream.Collectors;
 
 public class IdlabFunctions {
 
+    /**
+     * The value of a parameter given by its fno:Parameter IRI (idlab-fn:_str) or by
+     * its fno:predicate (idlab-fn:str): a parameter map generates the parameter
+     * (RML-FNML), and the test cases now use the parameter IRI (kg-construct/rml-fnml#85),
+     * while earlier mappings use the predicate.
+     */
+    static Object parameter(Map<String, Object> parameters, String parameterIri, String predicateIri) {
+        Object value = parameters.get(parameterIri);
+        return value != null ? value : parameters.get(predicateIri);
+    }
+
     public static String toValueString(Object obj) {
         if (obj instanceof LiteralTerm literalTerm) {
             return literalTerm.value();
@@ -35,7 +46,7 @@ public class IdlabFunctions {
 
         @Override
         public List<Return> apply(Map<String, Object> parameters, Origin origin) {
-            Object strParam = parameters.get("https://w3id.org/imec/idlab/function#str");
+            Object strParam = parameter(parameters, "https://w3id.org/imec/idlab/function#_str", "https://w3id.org/imec/idlab/function#str");
             String strVal = toValueString(strParam);
             String strUpper = strVal != null ? strVal.toUpperCase(Locale.getDefault()) : null;
 
@@ -94,7 +105,7 @@ public class IdlabFunctions {
 
         @Override
         public List<Return> apply(Map<String, Object> parameters, Origin origin) {
-            String str = toValueString(parameters.get("https://w3id.org/imec/idlab/function#str"));
+            String str = toValueString(parameter(parameters, "https://w3id.org/imec/idlab/function#_str", "https://w3id.org/imec/idlab/function#str"));
             String otherStr = toValueString(parameters.get("https://w3id.org/imec/idlab/function#otherStr"));
 
             Object delimObj = parameters.get("https://w3id.org/imec/idlab/function#delimiter");
