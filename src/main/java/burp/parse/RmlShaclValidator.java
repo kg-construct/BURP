@@ -2,6 +2,7 @@ package burp.parse;
 
 import burp.reporting.*;
 import burp.vocabularies.RER;
+import burp.vocabularies.RML;
 import org.apache.jena.ontapi.model.OntClass;
 import org.apache.jena.ontapi.model.OntModel;
 import org.apache.jena.rdf.model.*;
@@ -15,6 +16,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Validates RML mapping models against W3C RML SHACL shapes
@@ -23,6 +25,10 @@ import java.util.List;
  */
 @NullMarked
 public class RmlShaclValidator {
+
+    private static final Map<String, OntClass> SHAPE_ERROR_OVERRIDES = Map.of(
+            "http://w3id.org/rml/shapes/RMLTermMapShape", RER.IncorrectTermType
+    );
 
     public static boolean validate(Model mapping, @Nullable RmlExecutionReport report) {
         return validate(mapping, report, null);
@@ -124,7 +130,7 @@ public class RmlShaclValidator {
         // generates more precise errors on the segment level
         if (SH.PatternConstraintComponent.equals(vr.getSourceConstraintComponent())) {
             Resource path = vr.getPath();
-            if (path != null && path.isURIResource() && path.getURI().equals(burp.vocabularies.RML.template.getURI())) {
+            if (path != null && path.isURIResource() && path.getURI().equals(RML.template.getURI())) {
                 return true;
             }
         }
@@ -164,6 +170,12 @@ public class RmlShaclValidator {
                     if (ontClass != null) return ontClass;
                 }
             }
+        }
+
+        // 3. Known upstream SHACL shape IRI -> RER error mapping (e.g. RMLTermMapShape for RMLTC0024a-JSON)
+        if (shape != null && shape.isURIResource()) {
+            OntClass mapped = SHAPE_ERROR_OVERRIDES.get(shape.getURI());
+            if (mapped != null) return mapped;
         }
 
         return RER.MappingError;

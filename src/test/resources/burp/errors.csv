@@ -13,10 +13,10 @@ RMLTC0012c-JSON,MappingError,,,,5,25
 RMLTC0015b-JSON,MappingError,,"[] rml:language ""a-english"";
 [] rml:language ""a-spanish""","15,35",,
 RMLTC0019b-JSON,InvalidIRI,,$.FirstName,20,,
-RMLTC0023a-JSON,ReferenceFormulationSyntaxError,,"[] rml:template ""http://example.com/{{Name}}""",14,,
+RMLTC0023a-JSON,TemplateSyntaxError,,"[] rml:template ""http://example.com/{{Name}}""",14,,
 RMLTC0023b-JSON,RDFMappingSyntaxError,,,14,,
 RMLTC0023c-JSON,RDFMappingSyntaxError,,,14,,
-RMLTC0023d-JSON,ReferenceFormulationSyntaxError,,"[] rml:template ""http://example.com/{\\\\{Name\\\\}}""",14,,
+RMLTC0023d-JSON,TemplateSyntaxError,,"[] rml:template ""http://example.com/{\\\\{Name\\\\}}""",14,,
 RMLTC0023e-JSON,RDFMappingSyntaxError,,"",14,,
 RMLTC0024a-JSON,IncorrectTermType,,"[ rml:constant ""School"";
   rml:termType rml:BlankNode ]",,21,22
