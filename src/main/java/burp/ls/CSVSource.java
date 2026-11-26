@@ -77,6 +77,14 @@ public class CSVSource extends FileBasedLogicalSource {
                 String sourceId = getSourceIdentifier();
                 int rowIdx = 0;
                 for (String[] rec : all) {
+                    if (rec.length != header.length) {
+                        throw new BurpException(new RmlError(
+                                "CSV row " + rowIdx + " has " + rec.length + " columns, expected " + header.length,
+                                emitOrigin(),
+                                RER.LogicalSourceError,
+                                this
+                        ));
+                    }
                     if (trim) {
                         for (int i = 0; i < rec.length; i++) {
                             if (rec[i] != null) {
