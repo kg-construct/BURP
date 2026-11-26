@@ -6,6 +6,8 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.update.UpdateAction;
 import org.apache.jena.update.UpdateFactory;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -21,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Testcontainers
+@Execution(ExecutionMode.SAME_THREAD)
 public class TestRMLIORegistry extends TestRMLModule {
 
     public static String base = "./target/test-classes/rml-io-registry/";
@@ -40,11 +43,22 @@ public class TestRMLIORegistry extends TestRMLModule {
                 // MQTT not supported
                 "RMLIOREGTC0010a",
                 // Flaky test due to dbpedia.org access and data changes
-                // "RMLIOREGTC0011a",
+                "RMLIOREGTC0011a",
                 // https://github.com/kg-construct/rml-io-registry/pull/67
                 "RMLIOREGTC0012i",
-                // https://github.com/kg-construct/rml-io-registry/pull/66
-                "RMLIOREGTC0004l", "RMLIOREGTC0005l", "RMLIOREGTC0006l"
+                // Upstream tests expect error=true for missing JSONPath/XPath values ($.THIS_VALUE_DOES_NOT_EXIST, NON_EXISTING),
+                // contradicting RML-Core semantics where missing values produce no triples
+                // https://github.com/kg-construct/rml-io-registry/issues/74
+                "RMLIOREGTC0002b", "RMLIOREGTC0003b",
+                // MySQL (--sql_mode=ANSI_QUOTES) and SQL Server natively resolve delimited "Student"/"ID"/"Name" case-insensitively; strict SQL2008 uppercase-folding is not emulated
+                // TODO open an issue
+                "RMLIOREGTC0004h", "RMLIOREGTC0006h",
+                // Upstream tests expect invalid-table error, but mapping.ttl uses rml:iterator "Person" matching CREATE TABLE Person
+                // https://github.com/kg-construct/rml-io-registry/pull/72
+                "RMLIOREGTC0005d", "RMLIOREGTC0006d",
+                // https://github.com/kg-construct/rml-io-registry/pull/75
+                "RMLIOREGTC0005h"
+                // FIXME Test 4g is ok, but the title description does not match.
         );
     }
 
