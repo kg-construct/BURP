@@ -9,6 +9,7 @@ import burp.dev.rml.service.trace.*;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -453,9 +454,9 @@ public class TraceTest {
 
     @Test
     public void testTraceSingleTriplesMapWithReferencedParentNotInTrace() throws ExecutionException, InterruptedException {
-        String mappingUri = "file:///home/jakub/Documents/DevExplore/rml-playground/configs/kgc/examples/KGC-03-io1/mapping.ttl";
+        String mappingUri = Path.of("src/test/resources/burp/KGC-03-io1/mapping.ttl").toAbsolutePath().toUri().toString();
         TraceIterationParams params = new TraceIterationParams(
-                new IriSelector(mappingUri, "_:file:///home/jakub/Documents/DevExplore/rml-playground/configs/kgc/examples/KGC-03-io1/mapping.ttl#[8:21]"),
+                new IriSelector(mappingUri, "_:" + mappingUri + "#[8:21]"),
                 2
         );
 
@@ -490,9 +491,9 @@ public class TraceTest {
 
     @Test
     public void testTraceJoinIterationMatchesCorrectParentRow() throws ExecutionException, InterruptedException {
-        String mappingUri = "file:///home/jakub/Documents/DevExplore/rml-playground/configs/kgc/examples/KGC-03-io1/mapping.ttl";
+        String mappingUri = Path.of("src/test/resources/burp/KGC-03-io1/mapping.ttl").toAbsolutePath().toUri().toString();
         TraceIterationParams params = new TraceIterationParams(
-                new IriSelector(mappingUri, "_:file:///home/jakub/Documents/DevExplore/rml-playground/configs/kgc/examples/KGC-03-io1/mapping.ttl#[38:21]"),
+                new IriSelector(mappingUri, "_:" + mappingUri + "#[38:21]"),
                 2
         );
 

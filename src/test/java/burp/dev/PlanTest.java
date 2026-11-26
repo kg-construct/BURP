@@ -239,28 +239,6 @@ public class PlanTest {
                 });
     }
 
-    @Test
-    public void testPlanForKgc10() throws ExecutionException, InterruptedException {
-        String mappingUri = "/home/jakub/Documents/DevExplore/rml-playground/configs/kgc/examples/KGC-10-lv2/mapping.ttl";
-        PlanParams params = new PlanParams(mappingUri, null);
-
-        RmlLanguageServer server = new RmlDevServerImpl();
-        PlanResult result = server.plan(params).get();
-
-        System.err.println("=== KGC-10 FULL TREE ===");
-        dumpRootsErr(result.roots(), 0);
-        System.err.println("=== END KGC-10 FULL TREE ===");
-    }
-
-    private void dumpRootsErr(java.util.List<PlanNodeItem> items, int depth) {
-        for (PlanNodeItem item : items) {
-            System.err.println("  ".repeat(depth) + item.type() + " [" + item.id() + "] " + (item.displayResource() != null ? item.displayResource() : "") + " " + item.attributes());
-            if (item.children() != null) {
-                dumpRootsErr(item.children(), depth + 1);
-            }
-        }
-    }
-
     private void dumpRoots(java.util.List<PlanNodeItem> items, int depth) {
         for (PlanNodeItem item : items) {
             System.out.println("  ".repeat(depth) + item.type() + " [" + item.id() + "] " + (item.displayResource() != null ? item.displayResource() : "") + " " + item.attributes());

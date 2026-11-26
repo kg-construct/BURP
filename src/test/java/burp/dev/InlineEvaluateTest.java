@@ -649,7 +649,7 @@ public class InlineEvaluateTest {
 
     @Test
     public void test1000recordsTemplateAndSegmentInlayHints() throws Exception {
-        String filePathStr = "/home/jakub/Documents/Dev/RmlTests/1000records.rml.ttl";
+        String filePathStr = "src/test/resources/burp/1000records/mapping.ttl";
         RmlDevServerImpl server = createServer();
         server.getWorkspace().setBaseIri("http://example.com/base/");
 

@@ -118,7 +118,7 @@ public class OntologyValidatorTest {
 
     @Test
     public void testDemoValidationOntologyMappingLocation() throws Exception {
-        Path mappingFile = Path.of("rml-dev-server/src/demo/mappings/validation-ontology/mapping.ttl").toAbsolutePath();
+        Path mappingFile = Path.of("src/test/resources/burp/ontology/validation-ontology/mapping.ttl").toAbsolutePath();
         String uri = mappingFile.toUri().toString();
         MappingWorkspace workspace = new MappingWorkspace();
         MappingWorkspace.LoadedMapping loaded = workspace.loadMappingDetailed(uri, ValidationMode.LENIENT);
