@@ -30,6 +30,9 @@ public class BURPConfiguration {
     @Option(names = {"-v", "--validate"}, description = "Validate the RML mapping against SHACL shapes without executing it")
     public boolean validate;
 
+    @Option(names = {"--verbose"}, description = "Include stack traces in the report")
+    public boolean verbose;
+
     @Option(names = {"--color"}, arity = "0..1", fallbackValue = "true", description = "Enable or disable ANSI colors in report (default: auto-detect)")
     public Boolean color;
 

@@ -79,7 +79,8 @@ public class Main {
                 conf.reportFile,
                 conf.baseIRI,
                 currentWorkingDirectory,
-                conf.color
+                conf.color,
+                conf.verbose
         );
     }
 
@@ -99,7 +100,7 @@ public class Main {
         }
 
         boolean useColors = conf.color != null ? conf.color : FileHighlight.hasColorSupport();
-        System.out.print(PlainTextReportGenerator.generateTextReport(report, useColors));
+        System.out.print(PlainTextReportGenerator.generateTextReport(report, useColors, conf.verbose));
 
         if (conf.reportFile != null && !conf.reportFile.isBlank()) {
             RdfReportGenerator.generateRdfReport(report, conf.reportFile);
@@ -127,7 +128,7 @@ public class Main {
             String baseIRI,
             Path currentWorkingDirectory
     ) {
-        return doMain(List.of(mappingFilePath), outputFilePath, outputFormat, reportFilePath, baseIRI, currentWorkingDirectory, null);
+        return doMain(List.of(mappingFilePath), outputFilePath, outputFormat, reportFilePath, baseIRI, currentWorkingDirectory, null, false);
     }
 
     public static int doMain(
@@ -139,7 +140,7 @@ public class Main {
             Path currentWorkingDirectory,
             @org.jspecify.annotations.Nullable Boolean color
     ) {
-        return doMain(List.of(mappingFilePath), outputFilePath, outputFormat, reportFilePath, baseIRI, currentWorkingDirectory, color);
+        return doMain(List.of(mappingFilePath), outputFilePath, outputFormat, reportFilePath, baseIRI, currentWorkingDirectory, color, false);
     }
 
     public static int doMain(
@@ -149,10 +150,12 @@ public class Main {
             String reportFilePath,
             String baseIRI,
             Path currentWorkingDirectory,
-            @org.jspecify.annotations.Nullable Boolean color
+            @org.jspecify.annotations.Nullable Boolean color,
+            boolean verbose
     ) {
         RmlExecutionReport report = new RmlExecutionReport();
         List<Path> mappingFiles = mappingFilePaths.stream().map(Path::of).toList();
+        boolean wroteToStdout = false;
 
         try {
             RmlLoader loader = new RmlLoader(mappingFiles)
@@ -200,6 +203,7 @@ public class Main {
                     }
                 } else {
                     writeStatements(System.out, defaultStatements, lang, StandardCharsets.UTF_8, report);
+                    wroteToStdout = true;
                 }
             }
 
@@ -241,8 +245,11 @@ public class Main {
         } catch (Exception e) {
             report.addLog(Errors.UnexpectedError(e));
         } finally {
+            if (wroteToStdout) {
+                System.out.print(System.lineSeparator() + System.lineSeparator());
+            }
             boolean useColors = color != null ? color : FileHighlight.hasColorSupport();
-            System.out.print(PlainTextReportGenerator.generateTextReport(report, useColors));
+            System.out.print(PlainTextReportGenerator.generateTextReport(report, useColors, verbose));
             if (reportFilePath != null && !reportFilePath.isBlank()) {
                 RdfReportGenerator.generateRdfReport(report, reportFilePath);
             }

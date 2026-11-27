@@ -19,16 +19,12 @@ import burp.model.lv.LogicalIteration;
 import burp.model.rdf.IRITerm;
 import burp.model.rdf.LiteralTerm;
 import burp.model.rdf.Term;
-import burp.reporting.BurpException;
-import burp.reporting.Origin;
-import burp.reporting.RmlError;
-import burp.reporting.Severity;
+import burp.reporting.*;
 import burp.vocabularies.RER;
 import burp.vocabularies.RML;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
 import kotlinx.serialization.json.*;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -392,7 +388,7 @@ public class RmlEvaluator {
     public EvaluateResult evaluateIteration(PlanNode targetNode, @Nullable AstKey targetKey, @Nullable Iteration iter, int index, EvaluationContext context, Map<String, String> prefixMap, @Nullable List<String> traceSummary, @Nullable String targetNodeType, @Nullable String targetParentTriplesMap, @Nullable String targetNodeSummary, @Nullable InlineHintsEvaluationMode evaluationMode, @Nullable OntologyRegistry ontRegistry) {
         String iterationId = String.valueOf(index);
         String iterationData = iter != null ? iter.asString() : "";
-        EvaluationContext iterContext = context.withReport(new burp.reporting.RmlExecutionReport());
+        EvaluationContext iterContext = context.withReport(new RmlExecutionReport());
         List<RmlEvaluationResult> results = evaluateNodeSafe(targetNode, targetKey, iter, iterContext);
 
         if (ontRegistry != null) {
@@ -411,7 +407,7 @@ public class RmlEvaluator {
             List<RmlEvaluationResult> results,
             OntologyRegistry ontRegistry,
             Map<String, String> prefixMap,
-            burp.reporting.RmlExecutionReport report
+            RmlExecutionReport report
     ) {
         TriplesMap tm = targetNode.ancestor(TriplesMap.class, true);
         if (tm == null) {
@@ -497,7 +493,7 @@ public class RmlEvaluator {
             Map<String, String> prefixMap,
             @Nullable Origin origin,
             RmlEvaluationResult evaluationResult,
-            burp.reporting.RmlExecutionReport report
+            RmlExecutionReport report
     ) {
         Resource termType;
         String lexical = null;
