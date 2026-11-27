@@ -5,10 +5,12 @@ import burp.vocabularies.PTR;
 import burp.vocabularies.RER;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -16,9 +18,23 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Properties;
 
+@NullMarked
 public class RdfReportGenerator {
 
     public static void generateRdfReport(RmlExecutionReport report, String outputFile) {
+        Model model = buildReportModel(report);
+
+        Lang lang = RDFLanguages.filenameToLang(outputFile);
+        if (lang == null) lang = Lang.NT;
+
+        try (FileOutputStream out = new FileOutputStream(outputFile)) {
+            RDFDataMgr.write(out, model, lang);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write RDF report to " + outputFile, e);
+        }
+    }
+
+    public static Model buildReportModel(RmlExecutionReport report) {
         Model model = ModelFactory.createDefaultModel();
         Resource reportRdf = model.createResource(RER.RmlExecutionReport);
 
@@ -30,8 +46,8 @@ public class RdfReportGenerator {
         } catch (Exception ignored) {
         }
 
-        String processorName = props.getProperty("processor.name", null);
-        String processorVersion = props.getProperty("processor.version", null);
+        String processorName = props.getProperty("processor.name");
+        String processorVersion = props.getProperty("processor.version");
 
         if (processorName != null) {
             reportRdf.addProperty(RER.processorName, processorName);
@@ -54,48 +70,40 @@ public class RdfReportGenerator {
             }
         }
 
-        if (report.getErrors() != null) {
-            for (RmlError error : report.getErrors()) {
-                addRmlError(model, reportRdf, error);
-            }
+        for (RmlError log : report.getLogs()) {
+            addRmlLog(model, reportRdf, log);
         }
 
-        Lang lang = RDFLanguages.filenameToLang(outputFile);
-        if (lang == null) lang = Lang.NT;
-
-        try (FileOutputStream out = new FileOutputStream(outputFile)) {
-            RDFDataMgr.write(out, model, lang);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to write RDF report to " + outputFile, e);
-        }
+        return model;
     }
 
-    private static void addRmlError(Model model, Resource reportResource, RmlError error) {
-        Resource errorResource = model.createResource(error.errorType());
-        model.add(reportResource, RER.hasError, errorResource);
-        errorResource.addProperty(RER.message, error.message());
+    private static void addRmlLog(Model model, Resource reportResource, RmlError log) {
+        Resource logResource = model.createResource(log.errorType());
+        Property linkProperty = log.severity() == Severity.ERROR ? RER.hasError : RER.hasLog;
+        model.add(reportResource, linkProperty, logResource);
+        logResource.addProperty(RER.message, log.message());
 
-        if (error.exception() != null) {
-            errorResource.addProperty(RER.stackTrace, getStackTraceAsString(error.exception()));
+        if (log.exception() != null) {
+            logResource.addProperty(RER.stackTrace, getStackTraceAsString(log.exception()));
         }
 
-        if (error.context() != null) {
-            for (var entry : error.context().entrySet()) {
+        if (log.context() != null) {
+            for (var entry : log.context().entrySet()) {
                 Object value = entry.getValue();
                 if (value instanceof Resource) {
-                    errorResource.addProperty(entry.getKey(), (Resource) value);
+                    logResource.addProperty(entry.getKey(), (Resource) value);
                 } else {
-                    errorResource.addProperty(entry.getKey(), model.createTypedLiteral(value));
+                    logResource.addProperty(entry.getKey(), model.createTypedLiteral(value));
                 }
             }
         }
 
-        if (error.getPlanNode() != null) {
-            errorResource.addProperty(RER.planNode, error.getPlanNode().toString());
+        if (log.planNode() != null) {
+            logResource.addProperty(RER.planNode, log.planNode().toString());
         }
 
-        if (error.origin() != null) {
-            Origin origin = error.origin();
+        if (log.origin() != null) {
+            Origin origin = log.origin();
 
             if (origin.sourceStatements() != null) {
                 for (RDFPointer rdfPtr : origin.sourceStatements()) {
@@ -110,7 +118,7 @@ public class RdfReportGenerator {
                             if (predicate) sp.addProperty(PTR.part, PTR.Predicate);
                             if (object) sp.addProperty(PTR.part, PTR.Object);
 
-                            model.add(errorResource, RER.mappingStatement, sp);
+                            model.add(logResource, RER.mappingStatement, sp);
                         }
                         case LiteralPart(var stmt, var range) -> {
                             Resource sp = model.createResource(PTR.StatementPart);
@@ -119,7 +127,7 @@ public class RdfReportGenerator {
                             if (range != null) {
                                 sp.addProperty(PTR.textRange, createRangeResource(model, range));
                             }
-                            model.add(errorResource, RER.mappingStatement, sp);
+                            model.add(logResource, RER.mappingStatement, sp);
                         }
                         case TextFilePointer tfp -> {
                             Resource tfpRes = model.createResource(PTR.TextFilePointer);
@@ -127,7 +135,7 @@ public class RdfReportGenerator {
                                 tfpRes.addProperty(PTR.path, tfp.path().toString());
                             if (tfp.range() != null)
                                 tfpRes.addProperty(PTR.range, createRangeResource(model, tfp.range()));
-                            model.add(errorResource, RER.mappingStatement, tfpRes);
+                            model.add(logResource, RER.mappingStatement, tfpRes);
                         }
 
                         case null, default -> {

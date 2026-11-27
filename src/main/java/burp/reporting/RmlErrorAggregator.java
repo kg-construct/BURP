@@ -78,6 +78,12 @@ public final class RmlErrorAggregator {
                 .toList();
     }
 
+    public synchronized List<RmlError> getLogs() {
+        return entries.values().stream()
+                .map(e -> e.primary)
+                .toList();
+    }
+
     public synchronized List<RmlError> getErrors() {
         return getBySeverity(Severity.ERROR);
     }

@@ -58,6 +58,10 @@ public class RmlExecutionReport {
         }
     }
 
+    public List<RmlError> getLogs() {
+        return logAggregator.getLogs();
+    }
+
     public List<RmlError> getErrors() {
         return logAggregator.getErrors();
     }
