@@ -759,6 +759,11 @@ public class Parse {
         return results;
     }
 
+    private static Resource targetOrLogicalTarget(Resource target, Resource logicalTarget, Property property) {
+        Resource value = target.getPropertyResourceValue(property);
+        return value != null ? value : logicalTarget.getPropertyResourceValue(property);
+    }
+
     private LogicalTarget prepareLogicalTarget(Resource r) {
         if (logicalTargets.containsKey(r)) return logicalTargets.get(r);
 
@@ -778,8 +783,11 @@ public class Parse {
         }
 
         Resource serialization = r.getPropertyResourceValue(RML.serialization);
-        Resource compression = r.getPropertyResourceValue(RML.compression);
-        Resource encoding = r.getPropertyResourceValue(RML.encoding);
+        // RML-IO gives the compression and the encoding to the target (rml:Target, the
+        // domain of rml:compression and rml:encoding); on the logical target, as before,
+        // they are still read
+        Resource compression = targetOrLogicalTarget(targetRes, r, RML.compression);
+        Resource encoding = targetOrLogicalTarget(targetRes, r, RML.encoding);
 
         LogicalTarget lt = new LogicalTarget(target, serialization, compression, encoding);
         logicalTargets.put(r, lt);
