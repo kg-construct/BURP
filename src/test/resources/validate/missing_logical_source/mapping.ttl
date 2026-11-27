@@ -1,0 +1,13 @@
+PREFIX rml: <http://w3id.org/rml/>
+PREFIX ex: <http://example.com/>
+
+ex:InvalidTriplesMap a rml:TriplesMap ;
+    rml:subjectMap [
+        rml:template "http://example.com/student/{id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:name ;
+        rml:objectMap [
+            rml:reference "name"
+        ]
+    ] .

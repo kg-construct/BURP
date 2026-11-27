@@ -1,0 +1,25 @@
+@prefix ex: <http://example.org/>.
+@prefix rml: <http://w3id.org/rml/>.
+@prefix : <http://example.org/mapping/>.
+
+:LS rml:source [
+  a rml:FilePath;
+  rml:root rml:MappingDirectory;
+  rml:path "people.json";
+];
+  rml:referenceFormulation rml:JSONPath;
+  rml:iterator "$[*]"
+.
+
+:TM a rml:TriplesMap;
+  rml:logicalSource :LS;
+  rml:subjectMap [ rml:template "http://example.org/{$.id}" ];
+  rml:predicateObjectMap [
+    rml:predicate ex:id;
+    rml:objectMap [ rml:reference "$.name" ];
+  ];
+  rml:predicateObjectMap [
+    rml:predicate ex:email;
+    rml:objectMap [ rml:reference "email" ];
+  ].
+

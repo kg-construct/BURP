@@ -1,21 +1,30 @@
 package burp.model;
 
+import burp.vocabularies.RML;
 import org.apache.jena.rdf.model.Resource;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-public class FilePathTarget extends RMLTarget {
-    private String path;
-    private Resource root;
+import java.io.File;
+import java.nio.file.Path;
 
-    public FilePathTarget(String path, Resource root) {
-        this.path = path;
-        this.root = root;
+public record FilePathTarget(String path, Resource root) implements RMLTarget {
+
+    public @NonNull File getResolvedPath(Path currentWorkingDirectory, @Nullable Path primaryMappingFile) {
+        File resolvedPath;
+        if (root.equals(RML.MappingDirectory)
+                && primaryMappingFile != null
+                && primaryMappingFile.getParent() != null) {
+            resolvedPath = primaryMappingFile.getParent().resolve(path).toFile();
+        } else {
+            resolvedPath = currentWorkingDirectory.resolve(path).toFile();
+        }
+        return resolvedPath;
     }
 
-    public String getPath() {
-        return path;
-    }
 
-    public Resource getRoot() {
-        return root;
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(path, root);
     }
 }

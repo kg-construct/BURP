@@ -2,93 +2,141 @@ package burp.model.lv;
 
 import burp.model.*;
 import burp.model.rdf.Datardf;
+import burp.parse.loader.annotations.RdfId;
+import burp.parse.loader.annotations.RdfProperty;
 import burp.reporting.BurpException;
 import burp.reporting.Origin;
 import burp.reporting.RmlError;
 import burp.vocabularies.RER;
+import burp.vocabularies.Rml;
+import burp.model.context.EvaluationContext;
+import burp.model.key.AstKey;
+import burp.model.AbstractPlanNode;
+import org.apache.jena.rdf.model.Resource;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class ViewJoin implements PlanNode, ParentJoinReferenceScope, LocalReferenceScope, ReferenceHolder {
+public class ViewJoin extends AbstractPlanNode implements ParentJoinReferenceScope, LocalReferenceScope, ReferenceHolder {
 
+    @RdfId
+    public Resource subject;
+
+    @Override
+    public @NonNull Resource getIri() {
+        return subject;
+    }
+
+    @RdfProperty(Rml.parentLogicalView)
     public LogicalView parentLogicalView;
+
+    @RdfProperty(Rml.joinCondition)
     public List<JoinCondition> joinConditions = new ArrayList<>();
-    public List<ExpressionField> expressionFields = new ArrayList<>();
+
+    @RdfProperty(Rml.field)
+    public List<Field> fields = new ArrayList<>();
+
     public JoinType joinType;
 
     private List<LogicalIteration> iterations = null;
 
-    private PlanNode parent = null;
-
-    @Override
-    public PlanNode getParent() {
-        return parent;
-    }
-
-    @Override
-    public void setParent(PlanNode parent) {
-        this.parent = parent;
-    }
-
-    @Override
-    public Iterable<PlanNode> children() {
-        List<PlanNode> list = new ArrayList<>();
-        list.add(parentLogicalView);
-        list.addAll(joinConditions);
-        for (ExpressionField e : expressionFields) {
-            if (e.fieldExpressionMap != null) {
-                list.add(e.fieldExpressionMap);
+    public List<ExpressionField> getExpressionFields() {
+        List<ExpressionField> list = new ArrayList<>();
+        for (Field f : fields) {
+            if (f instanceof ExpressionField ef) {
+                list.add(ef);
             }
         }
         return list;
     }
 
+
+    @Override
+    public Iterable<PlanNode> children() {
+        List<PlanNode> list = new ArrayList<>(joinConditions);
+        list.addAll(fields);
+        return list;
+    }
+
     @Override
     public Iterable<PlanNode> dependencies() {
-        return children();
+        List<PlanNode> list = new ArrayList<>(joinConditions);
+        if (parentLogicalView != null) list.add(parentLogicalView);
+        return list;
+    }
+
+    @Override
+    public void collectAttributes(AttributeCollector sink) {
+        if (joinType != null) {
+            Origin orig = originOf("joinType");
+            sink.put("joinType", joinType.name(), orig);
+        }
+    }
+
+    @Override
+    public List<PlanNodeReference> nodeReferences() {
+        if (parentLogicalView != null) {
+            return List.of(new PlanNodeReference("parentLogicalView", parentLogicalView, originOf("parentLogicalView")));
+        }
+        return Collections.emptyList();
     }
 
     public List<LogicalIteration> expand(List<LogicalIteration> childIterations) {
+        return expand(childIterations, null);
+    }
+
+    public List<LogicalIteration> expand(List<LogicalIteration> childIterations, @Nullable EvaluationContext context) {
         try {
             if (iterations == null) {
+                Iterable<Iteration> parentSource = context != null
+                        ? context.getIterations(parentLogicalView)
+                        : parentLogicalView.iterator();
                 iterations = StreamSupport
-                        .stream(parentLogicalView.iterator().spliterator(), false)
+                        .stream(parentSource.spliterator(), false)
                         .filter(a -> a instanceof LogicalIteration)
                         .map(a -> (LogicalIteration) a)
                         .collect(Collectors.toList());
             }
 
+            var unsafeChildCtx = (context != null) ? context.withTemplateSafety(TemplateReferenceSafety.UNSAFE) : EvaluationContext.createDefault().withTemplateSafety(TemplateReferenceSafety.UNSAFE);
+            var unsafeParentCtx = (context != null) ? context.withTemplateSafety(TemplateReferenceSafety.UNSAFE) : EvaluationContext.createDefault().withTemplateSafety(TemplateReferenceSafety.UNSAFE);
+
+            burp.model.join.ParentJoinIndex joinIndex = (context != null) ? context.getJoinIndex(this) : null;
+            if (joinIndex == null) {
+                joinIndex = burp.model.join.ParentJoinIndex.build(new ArrayList<>(iterations), joinConditions, unsafeParentCtx);
+            }
+
             List<LogicalIteration> newList = new ArrayList<>();
 
             for (LogicalIteration childIteration : childIterations) {
-                boolean hasACorrespondence = false;
+                List<Iteration> matches = joinIndex.findMatches(childIteration, joinConditions, unsafeChildCtx);
 
-                int count = -1;
-
-                for (LogicalIteration parentIteration : iterations) {
-                    if (matches(childIteration, parentIteration)) {
-                        hasACorrespondence = true;
-
-                        count++;
-
-                        List<LogicalIteration> result = new ArrayList<>();
-                        result.add(childIteration);
-                        for (ExpressionField e : expressionFields) {
-                            result = enrichForJoin(e, count, result, parentIteration);
+                if (!matches.isEmpty()) {
+                    int count = -1;
+                    for (Iteration iter : matches) {
+                        if (iter instanceof LogicalIteration parentIteration) {
+                            count++;
+                            OriginLineage combinedLineage = childIteration.getLineage() != null
+                                    ? childIteration.getLineage().merge(parentIteration.getLineage())
+                                    : parentIteration.getLineage();
+                            List<LogicalIteration> result = new ArrayList<>();
+                            result.add(childIteration.copyWithLineage(combinedLineage));
+                            for (ExpressionField e : getExpressionFields()) {
+                                result = enrichForJoin(e, count, result, parentIteration);
+                            }
+                            newList.addAll(result);
                         }
-
-                        newList.addAll(result);
                     }
-                }
-
-                if (!hasACorrespondence && joinType == JoinType.LEFT) {
+                } else if (joinType == JoinType.LEFT) {
                     LogicalIteration newIteration = childIteration.copy();
-                    for (ExpressionField e : expressionFields) {
+                    for (ExpressionField e : getExpressionFields()) {
                         newIteration.put(e.fieldName, null);
                         newIteration.put(e.fieldName + ".#", null);
                     }
@@ -100,7 +148,7 @@ public class ViewJoin implements PlanNode, ParentJoinReferenceScope, LocalRefere
         } catch (BurpException e) {
             throw e;
         } catch (Throwable e) {
-            throw new BurpException(new RmlError("Error while expanding ViewJoin: " + e.getMessage(), null, RER.ExecutionError));
+            throw new BurpException(new RmlError("Error while expanding ViewJoin: " + e.getMessage(), emitOrigin(), RER.ExecutionError, e instanceof Exception ex ? ex : new RuntimeException(e), this));
         }
     }
 
@@ -108,8 +156,11 @@ public class ViewJoin implements PlanNode, ParentJoinReferenceScope, LocalRefere
         List<LogicalIteration> nList = new ArrayList<>();
 
         for (LogicalIteration li : result) {
+            OriginLineage combinedLineage = li.getLineage() != null
+                    ? li.getLineage().merge(parentIteration.getLineage())
+                    : parentIteration.getLineage();
             for (Object o : e.fieldExpressionMap.generateValues(parentIteration, TemplateReferenceSafety.SAFE_IRI)) {
-                LogicalIteration newLogicalIteration = li.copy();
+                LogicalIteration newLogicalIteration = li.copyWithLineage(combinedLineage);
                 newLogicalIteration.put(e.fieldName, o);
                 newLogicalIteration.put(e.fieldName + ".#", index);
                 nList.add(newLogicalIteration);
@@ -132,35 +183,58 @@ public class ViewJoin implements PlanNode, ParentJoinReferenceScope, LocalRefere
         return true;
     }
 
-    public void addField(Field field) {
-        field.parentField = parentLogicalView;
-        if (field instanceof ExpressionField) {
-            this.expressionFields.add((ExpressionField) field);
-        } else {
-            throw new RuntimeException("Unknown field type for ViewJoin.");
-        }
-    }
 
     @Override
     public Reference buildLocalReference(String reference, Origin origin) {
-        return ((LogicalView) parent).buildExportedReference(reference, origin);
+        return parentLogicalView != null ? parentLogicalView.buildExportedReference(reference, origin) : null;
+    }
+
+    @Override
+    public @Nullable AbstractLogicalSource getLogicalSource() {
+        return parentLogicalView;
     }
 
     @Override
     public Reference buildParentJoinReference(String reference, Origin origin) {
-        return parentLogicalView.buildExportedReference(reference, origin);
+        return parentLogicalView != null ? parentLogicalView.buildExportedReference(reference, origin) : null;
+    }
+
+    @Override
+    public @Nullable AbstractLogicalSource getParentLogicalSource() {
+        return parentLogicalView;
+    }
+
+    @Override
+    public @Nullable Reference buildChildJoinReference(String reference, Origin origin) {
+        return parent instanceof LogicalView lv ? lv.buildExportedReference(reference, origin) : null;
+    }
+
+    @Override
+    public @Nullable AbstractLogicalSource getChildLogicalSource() {
+        return parent instanceof LogicalView lv ? lv : null;
     }
 
     @Override
     public void compileReferences() {
-        for (ExpressionField field : expressionFields) {
+        for (ExpressionField field : getExpressionFields()) {
             if (field.fieldExpressionMap != null) {
                 for (RawReference ref : field.fieldExpressionMap.descendants(RawReference.class).toList()) {
                     if (ref.getReference() != null && ref.getCompiledReference() == null) {
-                        ref.setCompiledReference(this.buildParentJoinReference(ref.getReference(), ref.getOrigin()));
+                        ref.setCompiledReference(this.buildParentJoinReference(ref.getReference(), ref.originOf("reference")));
                     }
                 }
             }
         }
+    }
+
+    @Override
+    public AstKey computeAstKey() {
+        String pIri = parentLogicalView != null ? PlanNode.resourceToIriOrBNode(parentLogicalView.getIri()) : "";
+        String jt = (joinType != null) ? joinType.name() : "INNER";
+        List<AstKey> childKeys = new ArrayList<>();
+        for (PlanNode child : children()) {
+            childKeys.add(child.getAstKey());
+        }
+        return new AstKey.ViewJoinKey(pIri, jt, childKeys);
     }
 }

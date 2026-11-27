@@ -1,0 +1,27 @@
+@prefix ex: <http://example.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> owl:imports <./hospital_ontology.ttl> .
+
+ex:PatientMapping a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [
+            a rml:FilePath ;
+            rml:root rml:MappingDirectory ;
+            rml:path "dynamic_ill_typed_literal.csv" ;
+        ] ;
+        rml:referenceFormulation rml:CSV ;
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.org/patient/{id}" ;
+        rml:class ex:Patient ;
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:patientId ;
+        rml:objectMap [
+            rml:reference "patientId" ;
+            rml:datatype xsd:integer ;
+        ] ;
+    ] .

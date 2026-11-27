@@ -1,44 +1,75 @@
 package burp.model;
 
-import burp.parse.turtleprov.Point;
+import burp.model.context.EvaluationContext;
+import burp.model.key.AstKey;
+import burp.model.rdf.LiteralTerm;
+import burp.parse.TemplateParser;
+import burp.parse.ValidationMode;
+import burp.parse.turtleprov.OffsetMapper;
+import burp.parse.turtleprov.ProvTurtleVisitor;
 import burp.reporting.LiteralPart;
-import burp.reporting.Origin;
 import burp.reporting.PointRange;
+import burp.reporting.RmlExecutionReport;
 import burp.util.Util;
 import com.google.common.collect.Lists;
-import org.apache.commons.text.StringEscapeUtils;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class Template implements Expression {
+public class Template extends AbstractPlanNode implements Expression {
 
-    private String template;
-    private Statement stmt;
-    private PlanNode parent = null;
-    private List<Segment> segments;
-
-    public Template(String template) {
-        this(template, null);
+    @Override
+    public @Nullable Resource getIri() {
+        return null;
     }
 
-    public Template(String template, Statement stmt) {
+    @Override
+    public void collectAttributes(AttributeCollector sink) {
+        sink.put("template", template, emitOrigin());
+    }
+
+    private final String template;
+    private Statement stmt;
+    private List<Segment> segments;
+
+    public Template(String template, @Nullable Statement stmt) {
+        this(template, stmt, null, ValidationMode.STRICT);
+    }
+
+    public Template(String template) {
+        this(template, null, null, ValidationMode.STRICT);
+    }
+
+    public Template(
+            String template,
+            @Nullable Statement stmt,
+            @Nullable RmlExecutionReport report,
+            @Nullable ValidationMode validationMode
+    ) {
         this.template = template;
         this.stmt = stmt;
-        this.segments = parseTemplate();
+        this.segments = TemplateParser.parseSegments(
+                template,
+                this,
+                stmt,
+                report,
+                validationMode != null ? validationMode : ValidationMode.STRICT
+        );
+    }
+
+    public boolean hasReferenceSegments() {
+        if (segments == null) return false;
+        return segments.stream().anyMatch(s -> s instanceof ReferenceSegment);
     }
 
     public String getTemplate() {
         return template;
-    }
-
-    public void setTemplate(String template) {
-        this.template = template;
     }
 
     public Statement getStmt() {
@@ -58,29 +89,47 @@ public class Template implements Expression {
     }
 
     @Override
-    public PlanNode getParent() {
-        return parent;
+    public AstKey computeAstKey() {
+        List<AstKey> childKeys = new ArrayList<>();
+        for (PlanNode child : children()) {
+            childKeys.add(child.getAstKey());
+        }
+        return new AstKey.TemplateKey(template != null ? template : "", childKeys);
     }
 
     @Override
-    public void setParent(PlanNode parent) {
-        this.parent = parent;
-    }
-
-    @Override
-    public Iterable<PlanNode> children() {
+    public List<PlanNode> children() {
         return new ArrayList<>(segments);
     }
 
-    public List<String> values(Iteration i) {
-        return values(i, TemplateReferenceSafety.UNSAFE);
+    @Override
+    public List<PlanNode> dependencies() {
+        return new ArrayList<>(segments);
     }
 
-    public List<String> values(Iteration i, boolean safe) {
-        return values(i, safe ? TemplateReferenceSafety.SAFE_IRI : TemplateReferenceSafety.UNSAFE);
+    @Override
+    public @NonNull List<PointRange> nodeRanges() {
+        if (stmt != null) {
+            return ProvTurtleVisitor.retrieveTurtleLocation(Collections.singletonList(new LiteralPart(stmt, new PointRange())));
+        }
+        return Collections.emptyList();
     }
 
-    public List<String> values(Iteration i, TemplateReferenceSafety safety) {
+    @Override
+    public List<RmlEvaluationResult> evaluateNode(@Nullable Iteration iter, @NonNull EvaluationContext context) {
+        var tplCtx = context.withTemplateSafety(TemplateReferenceSafety.UNSAFE);
+        List<RmlEvaluationResult> resList = new ArrayList<>();
+        for (String str : values(iter, tplCtx)) {
+            resList.add(new RawValue(str, Collections.emptySet(), iter != null ? iter.getLineage() : null));
+        }
+        return resList;
+    }
+
+    public List<String> values(@Nullable Iteration i, EvaluationContext context) {
+        if (segments == null || segments.isEmpty()) {
+            return Collections.emptyList();
+        }
+        TemplateReferenceSafety safety = context.templateSafety();
         List<List<String>> evaluatedSegments = new ArrayList<>();
         for (Segment segment : segments) {
             evaluatedSegments.add(switch (segment) {
@@ -101,13 +150,25 @@ public class Template implements Expression {
                 .collect(Collectors.toList());
     }
 
-    private static final Pattern bracesPattern = Pattern.compile("(?<!\\\\)\\{(.+?)(?<!\\\\)}");
-    public List<String> references() {
+    public List<String> values(Iteration i) {
+        return values(i, EvaluationContext.createDefault().withTemplateSafety(TemplateReferenceSafety.UNSAFE));
+    }
+
+    public List<String> values(Iteration i, boolean safe) {
+        return values(i, EvaluationContext.createDefault().withTemplateSafety(safe ? TemplateReferenceSafety.SAFE_IRI : TemplateReferenceSafety.UNSAFE));
+    }
+
+    public List<String> values(Iteration i, TemplateReferenceSafety safety) {
+        return values(i, EvaluationContext.createDefault().withTemplateSafety(safety));
+    }
+
+    public List<String> getReferenceNames() {
+        if (segments == null) return Collections.emptyList();
         List<String> list = new ArrayList<>();
-        Matcher m = bracesPattern.matcher(template);
-        while (m.find()) {
-            String temp = template.substring(m.start(1), m.end(1));
-            list.add(StringEscapeUtils.unescapeJava(temp));
+        for (Segment segment : segments) {
+            if (segment instanceof ReferenceSegment refSegment) {
+                list.add(refSegment.reference().getReference());
+            }
         }
         return list;
     }
@@ -119,6 +180,11 @@ public class Template implements Expression {
         PointRange range();
 
         PlanNode parent();
+
+        @Override
+        default @Nullable Resource getIri() {
+            return null;
+        }
 
         @Override
         default PlanNode getParent() {
@@ -134,88 +200,63 @@ public class Template implements Expression {
     }
 
     public record LiteralSegment(int offset, PointRange range, Template parent, String literal) implements Segment {
+
+        @Override
+        public AstKey computeAstKey() {
+            return new AstKey.TermMapKey(literal != null ? literal : "", "LiteralSegment", String.valueOf(offset));
+        }
     }
 
-    public record ReferenceSegment(int offset, PointRange range, Template parent, Reference reference)
-            implements Segment {
+    public record ReferenceSegment(
+            int offset,
+            PointRange range,
+            Template parent,
+            Reference reference,
+            OffsetMapper offsetMapper,
+            OffsetMapper innerOffsetMapper
+    ) implements Segment {
+
         @Override
         public Iterable<PlanNode> children() {
             return Collections.singletonList(reference);
         }
-    }
 
-    public enum SegmentKind {Literal, Reference}
-
-    private record SegmentData(SegmentKind kind, String value, int offset) {
-    }
-
-    private List<Segment> parseTemplate() {
-        String rest = template;
-        int offset = 0;
-        List<SegmentData> segments = new ArrayList<>();
-
-        while (!rest.isEmpty()) {
-            Matcher m = bracesPattern.matcher(rest);
-            if (m.find()) {
-                if (m.start() > 0) {
-                    String literal = rest.substring(0, m.start());
-                    String escapeLiteral = escape(literal);
-                    segments.add(new SegmentData(SegmentKind.Literal, escapeLiteral, offset));
-                    offset += literal.length();
-                }
-                String reference = m.group(1);
-                String escapeReference = escape(reference);
-                segments.add(new SegmentData(SegmentKind.Reference, escapeReference, offset + 1));
-
-                offset += m.end() - m.start(); // Advance offset by the exact matched length (including braces)
-                rest = rest.substring(m.end());
-            } else {
-                segments.add(new SegmentData(SegmentKind.Literal, escape(rest), offset));
-                offset += rest.length();
-                rest = "";
+        @Override
+        public Iterable<PlanNode> dependencies() {
+            LocalReferenceScope scope = ancestor(LocalReferenceScope.class);
+            if (scope != null && scope.getLogicalSource() != null) {
+                return List.of(scope.getLogicalSource());
             }
-        }
-        return constructSegmentsRangeAndReference(segments);
-    }
-
-    private List<Segment> constructSegmentsRangeAndReference(List<SegmentData> segments) {
-        if (segments.isEmpty()) return Collections.emptyList();
-
-        List<Point> points = new ArrayList<>();
-        for (SegmentData segment : segments) {
-            points.add(Point.fromOffset(template, segment.offset()));
-        }
-        points.add(Point.fromOffset(template, template.length()));
-
-        List<Segment> constructedSegments = new ArrayList<>();
-        for (int i = 0; i < segments.size(); i++) {
-            SegmentData segment = segments.get(i);
-            Point startPoint = points.get(i);
-            Point endPoint = points.get(i + 1);
-            PointRange range = new PointRange(startPoint, endPoint);
-
-            constructedSegments.add(switch (segment.kind()) {
-                case Literal -> new LiteralSegment(segment.offset(), range, this, segment.value());
-                case Reference -> {
-                    Origin origin = (stmt == null) ? new Origin() : new Origin(this, Collections.singletonList(new LiteralPart(stmt, range)));
-                    RawReference rawReference = new RawReference(segment.value(), origin);
-                    yield new ReferenceSegment(segment.offset(), range, this, rawReference);
-                }
-            });
+            return reference != null ? Collections.singletonList(reference) : Collections.emptyList();
         }
 
-        return constructedSegments;
+        @Override
+        public List<PointRange> nodeRanges() {
+            if (parent != null && parent.stmt != null) {
+                return ProvTurtleVisitor.retrieveTurtleLocation(Collections.singletonList(new LiteralPart(parent.stmt, range)));
+            }
+            return Collections.emptyList();
+        }
+
+        @Override
+        public AstKey computeAstKey() {
+            List<AstKey> childKeys = reference != null ? List.of(reference.getAstKey()) : List.of();
+            return new AstKey.TermMapKey(reference != null ? reference.getReference() : "", "ReferenceSegment", String.valueOf(offset), childKeys);
+        }
+
+        @Override
+        public List<RmlEvaluationResult> evaluateNode(@Nullable Iteration iter, EvaluationContext context) {
+            if (reference == null) return Collections.emptyList();
+            List<RmlEvaluationResult> resList = new ArrayList<>();
+            for (String str : reference.getStrings(iter)) {
+                resList.add(new LiteralTerm(str));
+            }
+            return resList;
+        }
     }
 
-    private static final Pattern unescapePattern = Pattern.compile("\\\\([{}\\\\])");
-    /**
-     * Unescapes the escaping backslash from \{ and \} and \\.
-     */
-    private String escape(String s) {
-        if (s == null || s.indexOf('\\') < 0) return s;
-        return unescapePattern.matcher(s).replaceAll("$1");
+    @Override
+    public String toString() {
+        return template;
     }
-
-
-
 }

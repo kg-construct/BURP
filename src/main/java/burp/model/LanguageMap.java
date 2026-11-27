@@ -1,25 +1,29 @@
 package burp.model;
 
-
+import burp.model.context.EvaluationContext;
 import burp.model.rdf.LiteralTerm;
+import burp.parse.loader.annotations.RdfType;
 import burp.reporting.BurpException;
 import burp.reporting.RmlError;
 import burp.vocabularies.RER;
+import burp.vocabularies.Rml;
 import org.apache.jena.langtagx.LangTagX;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+@RdfType(Rml.LanguageMap)
 public class LanguageMap extends ExpressionMap {
 
     /**
      * Generate valid Language Tags according to RFC 5646
      */
-    public List<LanguageTag> generateLanguageTags(Iteration i) {
-        Set<LogicalTarget> targets = getEffectiveTargets();
-        return generateValues(i, TemplateReferenceSafety.UNSAFE)
+    public List<LanguageTag> generateLanguageTags(@Nullable Iteration i, EvaluationContext context) {
+        var targets = getEffectiveTargets();
+        var tplCtx = context.withTemplateSafety(TemplateReferenceSafety.UNSAFE);
+        return generateValues(i, tplCtx)
                 .stream()
                 .filter(Objects::nonNull)
                 .map(it -> {
@@ -36,12 +40,14 @@ public class LanguageMap extends ExpressionMap {
                         throw new BurpException(
                                 new RmlError(
                                         "Invalid language code: " + it,
-                                        getExpressionOrigin(),
-                                        RER.InvalidLanguageTagError
+                                        expressionOrigin(),
+                                        RER.InvalidLanguageTagError,
+                                        this
                                 )
                         );
                     }
                 })
                 .collect(Collectors.toList());
     }
+
 }

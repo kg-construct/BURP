@@ -1,0 +1,23 @@
+@prefix ex: <http://example.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix idlab-fn: <https://w3id.org/imec/idlab/function#> .
+
+<#TriplesMap>
+    rml:logicalSource [
+        rml:source [ a rml:RelativePathSource; rml:root rml:MappingDirectory; rml:path "student.csv" ];
+        rml:referenceFormulation rml:CSV
+    ];
+    rml:subjectMap [ rml:template "http://example.com/{Id}" ];
+    rml:predicateObjectMap [
+        rml:predicate ex:birthDate;
+        rml:objectMap [
+            rml:functionExecution [
+                rml:function idlab-fn:concat ;
+                rml:input
+                    [ rml:parameter idlab-fn:str ; rml:inputValueMap [ rml:reference "Name" ] ],
+                    [ rml:parameter idlab-fn:otherStr ; rml:inputValueMap [ rml:reference "Class" ] ]
+            ];
+            rml:datatype xsd:date;
+        ]
+    ] .

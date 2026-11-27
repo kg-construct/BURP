@@ -67,4 +67,8 @@ public final class Point implements Comparable<Point> {
     public String toString() {
         return "Point[line=" + line + ", column=" + column + "]";
     }
+
+    public org.eclipse.lsp4j.Position toLsp(){
+        return new org.eclipse.lsp4j.Position(line, column);
+    }
 }

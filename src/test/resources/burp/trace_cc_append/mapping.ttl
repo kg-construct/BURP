@@ -1,0 +1,45 @@
+@prefix ex: <http://example.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+ex:TM1 a rml:TriplesMap ;
+    rml:logicalSource [ a rml:LogicalSource ;
+        rml:referenceFormulation rml:JSONPath ;
+        rml:iterator "$[*]" ;
+        rml:source [ a rml:RelativePathSource ;
+            rml:root rml:MappingDirectory ;
+            rml:path "data1.json"
+        ]
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.org/entity/1"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:hasList ;
+        rml:objectMap [
+            rml:template "http://example.org/list/{$.id}" ;
+            rml:gather ( [ rml:reference "$.values.*" ] ) ;
+            rml:gatherAs rdf:List
+        ]
+    ] .
+
+ex:TM2 a rml:TriplesMap ;
+    rml:logicalSource [ a rml:LogicalSource ;
+        rml:referenceFormulation rml:JSONPath ;
+        rml:iterator "$[*]" ;
+        rml:source [ a rml:RelativePathSource ;
+            rml:root rml:MappingDirectory ;
+            rml:path "data2.json"
+        ]
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.org/entity/2"
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:hasList ;
+        rml:objectMap [
+            rml:template "http://example.org/list/{$.id}" ;
+            rml:gather ( [ rml:reference "$.values.*" ] ) ;
+            rml:gatherAs rdf:List
+        ]
+    ] .

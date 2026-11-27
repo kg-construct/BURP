@@ -1,29 +1,42 @@
 package burp.model.lv;
 
 import burp.model.ConcreteExpressionMap;
+import burp.model.Iteration;
 import burp.model.PlanNode;
+import burp.model.RmlEvaluationResult;
 import burp.model.TemplateReferenceSafety;
+import burp.model.context.EvaluationContext;
+import burp.parse.loader.annotations.RdfType;
 import burp.reporting.BurpException;
 import burp.reporting.RmlError;
 import burp.vocabularies.RER;
+import burp.vocabularies.Rml;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+@RdfType(Rml.ExpressionField)
 public class ExpressionField extends Field {
 
     public ConcreteExpressionMap fieldExpressionMap;
 
     public List<LogicalIteration> enrich(LogicalIteration underlying) {
-        var underlyingIteration = underlying.getIteration(parentField.getAbsoluteFieldName());
+        String parentName = parentField != null ? parentField.getAbsoluteFieldName() : (fieldName != null ? fieldName : "");
+        var underlyingIteration = underlying.getIteration(parentName);
         if (underlyingIteration == null)
             throw new BurpException(
                     new RmlError(
-                            "Cannot get iterations for ${parentField.absoluteFieldName}, which is required for expression field $absoluteFieldName.",
-                            null, // TODO: Add origin to field
+                            "Cannot get iterations for " + parentName + ", which is required for expression field " + getAbsoluteFieldName() + ".",
+                            emitOrigin(),
                             RER.ReferenceFormulationExecutionError
                     )
             );
+
+        if (fieldExpressionMap == null) {
+            return List.of(underlying);
+        }
 
         var generatedValues = fieldExpressionMap.generateValues(underlyingIteration, TemplateReferenceSafety.SAFE_IRI);
         var list = new ArrayList<LogicalIteration>();
@@ -43,7 +56,7 @@ public class ExpressionField extends Field {
             }
         }
 
-        return Field.expand(list, expressionFields, iterableFields);
+        return Field.expand(list, getExpressionFields(), getIterableFields());
     }
 
     @Override
@@ -52,6 +65,14 @@ public class ExpressionField extends Field {
         if (fieldExpressionMap != null) children.add(fieldExpressionMap);
         for (PlanNode child : super.children()) children.add(child);
         return children;
+    }
+
+    @Override
+    public List<RmlEvaluationResult> evaluateNode(@Nullable Iteration iter, EvaluationContext context) {
+        if (fieldExpressionMap == null) {
+            return Collections.emptyList();
+        }
+        return fieldExpressionMap.evaluateNode(iter, context);
     }
 
 }

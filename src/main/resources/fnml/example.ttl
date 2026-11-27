@@ -1,0 +1,54 @@
+@prefix fno:     <https://w3id.org/function/ontology#> .
+@prefix exfn:    <http://example.com/functions/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+
+exfn:helloworld
+    a                   fno:Function ;
+    fno:name            "helloworld" ;
+    rdfs:label          "helloworld" ;
+    dcterms:description "Returns Hello World!" ;
+    fno:expects         ( ) ;
+    fno:returns         ( exfn:stringOutput ) .
+
+exfn:schema
+    a                   fno:Function ;
+    fno:name            "schema" ;
+    rdfs:label          "schema" ;
+    dcterms:description "Prepends https://schema.org/ to the string parameter." ;
+    fno:expects         ( exfn:stringParameter ) ;
+    fno:returns         ( exfn:stringOutput ) .
+
+exfn:parseURL
+    a                   fno:Function ;
+    fno:name            "parseURL" ;
+    rdfs:label          "parseURL" ;
+    dcterms:description "Parses a URL string into path, protocol, and domain." ;
+    fno:expects         ( exfn:stringParameter ) ;
+    fno:returns         ( exfn:stringOutput exfn:protocolOutput exfn:domainOutput ) .
+
+exfn:stringParameter
+    a             fno:Parameter ;
+    fno:name      "string" ;
+    rdfs:label    "string" ;
+    fno:type      xsd:string ;
+    fno:required  "true"^^xsd:boolean .
+
+exfn:stringOutput
+    a             fno:Output ;
+    fno:name      "string output" ;
+    rdfs:label    "string output" ;
+    fno:type      xsd:string .
+
+exfn:protocolOutput
+    a             fno:Output ;
+    fno:name      "protocol output" ;
+    rdfs:label    "protocol output" ;
+    fno:type      xsd:string .
+
+exfn:domainOutput
+    a             fno:Output ;
+    fno:name      "domain output" ;
+    rdfs:label    "domain output" ;
+    fno:type      xsd:string .

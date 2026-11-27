@@ -1,5 +1,6 @@
 package burp.model.fnml;
 
+import burp.model.context.EvaluationContext;
 import burp.model.rdf.LiteralTerm;
 import burp.model.rdf.RdfSeqTerm;
 import burp.reporting.Origin;
@@ -34,7 +35,7 @@ public class IdlabFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             Object strParam = parameters.get("https://w3id.org/imec/idlab/function#str");
             String strVal = toValueString(strParam);
             String strUpper = strVal != null ? strVal.toUpperCase(Locale.getDefault()) : null;
@@ -59,7 +60,7 @@ public class IdlabFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String out = UUID.randomUUID().toString();
             Return r = new Return(out, createReturnMap("https://w3id.org/imec/idlab/function#_stringOut", out));
             return List.of(r);
@@ -74,7 +75,7 @@ public class IdlabFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             var val1 = parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam");
             String val1Str = toValueString(val1);
             var val2 = parameters.get("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParam2");
@@ -93,7 +94,7 @@ public class IdlabFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String str = toValueString(parameters.get("https://w3id.org/imec/idlab/function#str"));
             String otherStr = toValueString(parameters.get("https://w3id.org/imec/idlab/function#otherStr"));
 
@@ -128,7 +129,7 @@ public class IdlabFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String delimiter = toValueString(parameters.get("https://w3id.org/imec/idlab/function#_delimiter"));
             if (delimiter == null) {
                 delimiter = "";
@@ -168,7 +169,7 @@ public class IdlabFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             var condition = parameters.get("https://w3id.org/imec/idlab/function#boolParameter");
             var expr = parameters.get("https://w3id.org/imec/idlab/function#expressionParameter");
 
@@ -199,7 +200,7 @@ public class IdlabFunctions {
         }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             String out = "ABC";
             return List.of(new Return(out, createReturnMap("https://w3id.org/imec/idlab/function#_stringOut", out)));
         }

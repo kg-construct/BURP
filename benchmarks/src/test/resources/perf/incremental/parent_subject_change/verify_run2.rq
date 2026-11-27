@@ -1,0 +1,6 @@
+PREFIX ex: <http://example.com/>
+
+ASK {
+  ?student ex:practises ?activity .
+  FILTER(STRSTARTS(STR(?activity), "http://example.com/activity/"))
+}

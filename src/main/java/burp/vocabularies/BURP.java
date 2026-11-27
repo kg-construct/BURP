@@ -7,6 +7,8 @@ import org.apache.jena.rdf.model.ResourceFactory;
 public class BURP {
     public static final String NS = "http://BURP.noname/";
     public static final String base_uri = NS;
+    public static final String synthBase = "urn:burp:synth:";
+
     private static Property property(String local) {
         return ResourceFactory.createProperty(NS + local);
     }
@@ -22,16 +24,18 @@ public class BURP {
     public static final Resource CollectionOrContainer = resource("CollectionOrContainer");
 
     public static final Property TOKEN = property("token");
-    public static final Property FILE_ID = property("file");
+    public static final Property DocumentUri = property("documentUri");
+    public static final Property FILE_ID = DocumentUri;
     public static final Property START_LINE = property("startLine");
     public static final Property START_COLUMN = property("startColumn");
     public static final Property END_LINE = property("endLine");
     public static final Property END_COLUMN = property("endColumn");
 
-    public static final Property STRING_START_LINE = property("startLine");
-    public static final Property STRING_START_COLUMN = property("startColumn");
-    public static final Property STRING_END_LINE = property("endLine");
-    public static final Property STRING_END_COLUMN = property("endColumn");
+    public static final Property STRING_START_LINE = property("stringStartLine");
+    public static final Property STRING_START_COLUMN = property("stringStartColumn");
+    public static final Property STRING_END_LINE = property("stringEndLine");
+    public static final Property STRING_END_COLUMN = property("stringEndColumn");
+    public static final Property OFFSET_MAPPER = property("offsetMapper");
 
     public static final Property BLANK_NODE_ID = property("blankNodeId");
 
@@ -40,6 +44,10 @@ public class BURP {
     public static final Resource OBJECT = resource("ObjectProv");
 
     public static final Resource TestTurtleAnnotation = resource("TestTurtleAnnotation");
+
+    public static final Property jsonSchema = property("jsonSchema");
+
+    public static final Resource hole = ResourceFactory.createResource(synthBase + "hole");
 
     /**
      * Indicate the allowed term types of an Expression Map.

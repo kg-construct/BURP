@@ -1,5 +1,6 @@
 package burp.model.fnml;
 
+import burp.model.context.EvaluationContext;
 import burp.reporting.Origin;
 import com.google.auto.service.AutoService;
 import java.util.List;
@@ -15,7 +16,7 @@ public class MorphKgcFunctions {
         public String getName() { return "https://github.com/morph-kgc/morph-kgc/function/built-in.ttl#uuid"; }
 
         @Override
-        public List<Return> apply(Map<String, Object> parameters, Origin origin) {
+        public List<Return> apply(Map<String, Object> parameters, Origin origin, EvaluationContext context) {
             return List.of(new Return(UUID.randomUUID().toString()));
         }
     }

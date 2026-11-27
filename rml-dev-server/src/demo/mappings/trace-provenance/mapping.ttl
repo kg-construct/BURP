@@ -1,0 +1,42 @@
+@prefix rml: <http://w3id.org/rml/> .
+@prefix ex: <http://example.com/> .
+
+ex:StudentMapping a rml:TriplesMap ;
+  rml:logicalSource [
+    a rml:LogicalSource ;
+    rml:source [
+      a rml:RelativePathSource ;
+      rml:root rml:MappingDirectory ;
+      rml:path "students.json"
+    ] ;
+    rml:referenceFormulation rml:JSONPath ;
+    rml:iterator "$[*]"
+  ] ;
+  rml:subjectMap [
+    rml:template "http://example.com/{$.ID}/{$.Name}"
+  ] ;
+  rml:predicateObjectMap [
+    rml:predicate ex:practises ;
+    rml:objectMap [
+      rml:parentTriplesMap ex:SportMapping ;
+      rml:joinCondition [
+        rml:child "$.Sport" ;
+        rml:parent "$.ID"
+      ]
+    ]
+  ] .
+
+ex:SportMapping a rml:TriplesMap ;
+  rml:logicalSource [
+    a rml:LogicalSource ;
+    rml:source [
+      a rml:RelativePathSource ;
+      rml:root rml:MappingDirectory ;
+      rml:path "sports.json"
+    ] ;
+    rml:referenceFormulation rml:JSONPath ;
+    rml:iterator "$[*]"
+  ] ;
+  rml:subjectMap [
+    rml:template "http://example.com/sport/{$.ID}"
+  ] .

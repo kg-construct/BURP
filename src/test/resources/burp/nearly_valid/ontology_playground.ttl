@@ -1,0 +1,79 @@
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix ex: <http://example.org/>.
+@prefix rml: <http://w3id.org/rml/>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+<> owl:imports <./ontology.ttl>.
+
+ex:PatientMapping a rml:TriplesMap;
+  rml:logicalSource [
+    rml:source [
+      a rml:FilePath;
+      rml:root rml:MappingDirectory;
+      rml:path "patients.csv";
+    ];
+    rml:referenceFormulation rml:CSV;
+  ];
+  rml:subjectMap [
+    rml:template "http://example.org/patient/{ID}";
+    rml:class ex:Patient;
+  ];
+  rml:predicateObjectMap [
+    rml:predicate ex:name;
+    rml:objectMap [ rml:reference "Name" ];
+  ];
+  # Dynamic check 1: invalid lexical values in CSV (row 2 is negative -5, row 3 is not_a_number)
+  rml:predicateObjectMap [
+    rml:predicate ex:age;
+    rml:objectMap [
+      rml:reference "Age";
+      rml:datatype xsd:nonNegativeInteger;
+    ];
+  ];
+  # Dynamic check 2: invalid date format in CSV (row 2 has European format 12/04/1995 instead of YYYY-MM-DD)
+  rml:predicateObjectMap [
+    rml:predicate ex:birthDate;
+    rml:objectMap [
+      rml:reference "BirthDate";
+      rml:datatype xsd:date;
+    ];
+  ];
+  # Dynamic check 3: reference outputs Literal, but ex:treatedBy is an owl:ObjectProperty
+  rml:predicateObjectMap [
+    rml:predicate ex:treatedBy;
+    rml:objectMap [ rml:reference "doctorID" ];
+  ].
+
+ex:DoctorMapping a rml:TriplesMap;
+  rml:logicalSource [
+    rml:source [
+      a rml:FilePath;
+      rml:root rml:MappingDirectory;
+      rml:path "doctor.csv";
+    ];
+    rml:referenceFormulation rml:CSV;
+  ];
+  rml:subjectMap [
+    rml:template "http://example.org/doct/{ID}";
+    rml:class ex:Doctor;
+  ];
+  # Static check 1: explicit datatype mismatch (xsd:integer declared on xsd:string property ex:name)
+  rml:predicateObjectMap [
+    rml:predicate ex:name;
+    rml:objectMap [
+      rml:reference "Name";
+      rml:datatype xsd:integer;
+    ];
+  ];
+  # Static check 2 & dynamic check: ex:treatedBy declared on ex:Doctor subject (domain is ex:Patient)
+  rml:predicateObjectMap [
+    rml:predicate ex:treatedBy;
+    rml:objectMap [
+      rml:parentTriplesMap ex:PatientMapping;
+      rml:joinCondition [
+        rml:child "doctorID";
+        rml:parent "ID";
+      ];
+    ];
+  ].

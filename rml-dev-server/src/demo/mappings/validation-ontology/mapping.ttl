@@ -1,0 +1,28 @@
+@prefix ex: <http://example.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> owl:imports <./ontology.ttl> .
+
+ex:PersonMapping a rml:TriplesMap ;
+  rml:logicalSource [
+    a rml:LogicalSource ;
+    rml:source [
+      a rml:RelativePathSource ;
+      rml:root rml:MappingDirectory ;
+      rml:path "data.csv"
+    ] ;
+    rml:referenceFormulation rml:CSV
+  ] ;
+  rml:subjectMap [
+    rml:template "http://example.org/person/{id}" ;
+    rml:class ex:Person
+  ] ;
+  rml:predicateObjectMap [
+    rml:predicate ex:birthday ;
+    rml:objectMap [
+      rml:reference "age" ;
+      rml:datatype xsd:string
+    ]
+  ] .

@@ -144,24 +144,28 @@ public abstract class AbstractManifestTest {
         return list;
     }
 
+    protected boolean isExcluded(TestInfo info) {
+        return false;
+    }
+
     public Stream<Arguments> positiveSyntaxTests() {
         return getTestsOfType(RdfTest.TestTurtlePositiveSyntax)
-            .stream().map(Arguments::of);
+            .stream().filter(info -> !isExcluded(info)).map(Arguments::of);
     }
 
     public Stream<Arguments> negativeSyntaxTests() {
         return getTestsOfType(RdfTest.TestTurtleNegativeSyntax)
-            .stream().map(Arguments::of);
+            .stream().filter(info -> !isExcluded(info)).map(Arguments::of);
     }
 
     public Stream<Arguments> evalTests() {
         return getTestsOfType(RdfTest.TestTurtleEval)
-            .stream().map(Arguments::of);
+            .stream().filter(info -> !isExcluded(info)).map(Arguments::of);
     }
 
     public Stream<Arguments> negativeEvalTests() {
         return getTestsOfType(RdfTest.TestTurtleNegativeEval)
-            .stream().map(Arguments::of);
+            .stream().filter(info -> !isExcluded(info)).map(Arguments::of);
     }
 
 
@@ -185,7 +189,8 @@ public abstract class AbstractManifestTest {
     @MethodSource("evalTests")
     public void testEvaluation(TestInfo info) throws Exception {
         if ("dummy".equals(info.name)) return;
-        ProvStore store = TurtleProvParser.parseTurtleFromString(Files.readString(info.actionFile));
+        String documentUri = "https://w3c.github.io/rdf-tests/rdf/rdf11/rdf-turtle/" + info.actionFile.getFileName();
+        ProvStore store = TurtleProvParser.parseTurtleFromString(Files.readString(info.actionFile), documentUri);
         Model actionModel = RDF12Converter.toModel(store, false);
         Model expectedModel = RDFDataMgr.loadModel(info.resultFile.toString());
         Assertions.assertTrue(expectedModel.isIsomorphicWith(actionModel), () ->

@@ -1,0 +1,15 @@
+@prefix ex: <http://example.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> owl:imports <./hospital_ontology.ttl> .
+
+ex:PatientMapping a rml:TriplesMap ;
+    rml:subjectMap [
+        rml:constant ex:p1 ;
+        rml:class ex:Patient ;
+    ] ;
+    rml:predicateObjectMap [
+        rml:predicate ex:worksAt ;
+        rml:object ex:h1 ;
+    ] .

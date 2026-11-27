@@ -1,0 +1,7 @@
+<http://example.org/person/Alice> <http://example.org/altName> _:b1 .
+_:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Alt> .
+_:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#_1> "Alice" .
+<http://example.org/person/Bob> <http://example.org/altName> _:b2 .
+_:b2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Alt> .
+_:b2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#_1> "Bob" .
+_:b2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#_2> "Bobbie" .

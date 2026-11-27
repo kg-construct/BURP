@@ -1,13 +1,13 @@
 package burp.model;
 
+import burp.parse.loader.annotations.RdfType;
 import burp.vocabularies.RML;
+import burp.vocabularies.Rml;
 import org.apache.jena.rdf.model.Resource;
 import java.util.Set;
 
+@RdfType(Rml.ParameterMap)
 public class ParameterMap extends TermMap {
-    public ParameterMap() {
-        this.termType = RML.IRI;
-    }
 
     @Override
     public String getName() {

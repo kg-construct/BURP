@@ -50,8 +50,10 @@ public class XMLSource extends FileBasedLogicalSource {
                 XPathSelector selector = xPathCompiler.compile(iterator).load();
                 selector.setContextItem(xmlDocument);
 
+                String sourceId = getSourceIdentifier();
+                int rowIdx = 0;
                 for (XdmItem item : selector) {
-                    iterations.add(new XMLIteration(item, getNulls(), xPathCompiler));
+                    iterations.add(new XMLIteration(new burp.model.IterationId(sourceId, rowIdx++), item, getNulls(), xPathCompiler));
                 }
             }
 

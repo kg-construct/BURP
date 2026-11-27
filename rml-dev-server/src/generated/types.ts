@@ -1,0 +1,1365 @@
+/* tslint:disable */
+/* eslint-disable */
+
+export interface MappingWorkspace extends WorkspaceService {
+    openDocuments: { [index: string]: string };
+    documentPrefixes: { [index: string]: { [index: string]: string } };
+    currentWorkingDirectory: Path;
+    rmlSettings: RmlSettings;
+    swlsSettings: SwlsSettings;
+    client?: LanguageClient;
+    validationService: RmlValidationService;
+    documentInlineDataContexts: { [index: string]: EvaluationDataContext };
+    documentCursorPositions: { [index: string]: Position };
+    documentOntologies: { [index: string]: OntologyRegistry };
+    cache: DevServerCache;
+    mappingCompleter: MappingCompleter;
+    inlayHintProvider: LspInlineHintProvider;
+    codeLensProvider: LspCodeLensProvider;
+    evaluator: RmlEvaluator;
+    textDocumentService: TextDocumentService;
+}
+
+export interface InlineHintsSettings {
+    enableEvaluation?: boolean;
+    evaluationMode?: InlineHintsEvaluationMode;
+    joinIndexLimit?: number;
+}
+
+export interface LoadedMapping {
+    document: MappingDocument;
+    loader: RmlLoader;
+    model?: Model;
+    report: RmlExecutionReport;
+}
+
+export interface ResolvedNode {
+    targetNode: PlanNode;
+    mappingDocument: MappingDocument;
+}
+
+export interface RmlSettings {
+    baseIRI?: string;
+    inlineHints?: InlineHintsSettings;
+    iterationSampleLimit?: number;
+    ontologies?: string[];
+}
+
+export interface Settings {
+    rml?: RmlSettings;
+    swls?: SwlsSettings;
+}
+
+export interface SwlsSettings {
+    ontologies?: string[];
+}
+
+export interface RmlEvaluationResultFormatter {
+}
+
+export interface DevServerCache {
+    sourceIterationCache: Cache<AstKey, Iteration[]>;
+    customIterationCache: Cache<CustomSourceCacheKey, Iteration[]>;
+    rangeIterationCache: Cache<RangeSourceCacheKey, Iteration[]>;
+    parentJoinCache: Cache<ParentJoinCacheKey, ParentJoinIndex>;
+    nodeMemoCache: Cache<NodeMemoCacheKey, RmlEvaluationResult[]>;
+    sqlSchemaCache: Cache<string, CachedSchema>;
+}
+
+export interface CustomSourceCacheKey {
+    sourceKey: AstKey;
+    customContext: CustomDataContext;
+}
+
+export interface NodeMemoCacheKey {
+    nodeKey: AstKey;
+    iterationKey: number;
+    baseIri?: string;
+}
+
+export interface ParentJoinCacheKey {
+    nodeKey: AstKey;
+    parentSourceKey: AstKey;
+    dataContext?: EvaluationDataContext;
+}
+
+export interface RangeSourceCacheKey {
+    sourceKey: AstKey;
+    rangeContext: RangeDataContext;
+}
+
+export interface CompletionContext {
+    uri: string;
+    position: Position;
+    effectivePrefix: string;
+    replaceRange?: Range;
+    loadedMapping: LoadedMapping;
+    targetNode?: PlanNode;
+    prefixMap: { [index: string]: string };
+    workspace: MappingWorkspace;
+}
+
+export interface CompletionContextResolver {
+}
+
+export interface CompletionContributor {
+}
+
+export interface FunctionCompleter extends CompletionContributor {
+}
+
+export interface MappingCompleter {
+    referenceCompleter: ReferenceCompleter;
+    functionCompleter: FunctionCompleter;
+    ontologyCompleter: OntologyCompleter;
+    contextResolver: CompletionContextResolver;
+    completers: CompletionContributor[];
+}
+
+export interface ParameterCompleter extends CompletionContributor {
+    functionCompleter: FunctionCompleter;
+}
+
+export interface ParentTriplesMapCompleter extends CompletionContributor {
+}
+
+export interface ReferenceCompleter extends CompletionContributor {
+}
+
+export interface ReferenceSchemaResolver {
+}
+
+export interface SchemaInfo {
+    referenceFormulation: string;
+    candidateValues: { [index: string]: string };
+    candidateOrigins: { [index: string]: ReferenceCompletionOrigin };
+    hasKnownSchemaOrData: boolean;
+}
+
+export interface DatatypeCompleter extends CompletionContributor {
+    ontologyCompleter: OntologyCompleter;
+}
+
+export interface OntologyCompleter {
+}
+
+export interface ScoredCandidate {
+    candidate: PropertyCandidate;
+    fuzzyScore: number;
+    isAlreadyPresent: boolean;
+}
+
+export interface ScoredClass {
+    cls: Resource;
+    compactIri: string;
+    fuzzyScore: number;
+}
+
+export interface PredicateCompleter extends CompletionContributor {
+    ontologyCompleter: OntologyCompleter;
+}
+
+export interface SubjectClassCompleter extends CompletionContributor {
+    ontologyCompleter: OntologyCompleter;
+}
+
+export interface AllDataContext extends EvaluationDataContext {
+}
+
+export interface CoherentIterationResolver {
+}
+
+export interface AssignedIteration {
+    iteration: Iteration;
+    index: number;
+    reason: IterationReason;
+}
+
+export interface ResolutionResult {
+    assignedIterations: { [index: string]: AssignedIteration };
+    unmatchedTriplesMaps: TriplesMap[];
+    joinIndexes: { [index: string]: ParentJoinIndex };
+    traceSummary: string[];
+}
+
+export interface CustomDataContext extends EvaluationDataContext {
+}
+
+export interface EvaluateParams {
+    structure?: StructureSelector;
+    dataContext: EvaluationDataContext;
+}
+
+export interface EvaluateResult {
+    iterationId: string;
+    iterationData: string;
+    generatedRdf: RmlEvaluationResult[];
+    errors: RmlErrorDto[];
+    prefixMap: { [index: string]: string };
+    traceSummary?: string[];
+    targetNodeType?: string;
+    targetParentTriplesMap?: string;
+    targetNodeSummary?: string;
+    evaluationMode?: InlineHintsEvaluationMode;
+}
+
+export interface EvaluationContexts {
+}
+
+export interface NodeEvaluationScope {
+    iteration: Iteration;
+    context: EvaluationContext;
+}
+
+export interface EvaluationDataContext {
+}
+
+export interface InlineEvaluateItem {
+    id: string;
+    type: string;
+    originRange: Range;
+    values: RmlEvaluationResult[];
+    formattedValues: string[];
+    rawFormattedValues: string[];
+    diagnostics: string[];
+    iterationReason?: IterationReason;
+}
+
+export interface InlineEvaluateParams {
+    mappingFileUri: string;
+    dataContext: EvaluationDataContext;
+    range?: Range;
+    cursorPosition?: Position;
+    evaluationMode?: InlineHintsEvaluationMode;
+    joinIndexLimit?: number;
+}
+
+export interface InlineEvaluator {
+}
+
+export interface IterationReason {
+}
+
+export interface Direct extends IterationReason {
+    iterationIndex: number;
+}
+
+export interface MatchedJoin extends IterationReason {
+    sourceNodeId: string;
+    sourceIri?: string;
+    sourceIterationIndex: number;
+    iterationIndex: number;
+    joinConditionSummary?: string;
+}
+
+export interface MultiSourceDataContext extends EvaluationDataContext {
+    sources: { [index: string]: EvaluationDataContext };
+    defaultContext?: EvaluationDataContext;
+}
+
+export interface RangeDataContext extends EvaluationDataContext {
+    startIndex: number;
+    endIndex: number;
+    specificIndices?: number[];
+}
+
+export interface RawStringCustomDataContext extends CustomDataContext {
+    rawString: string;
+}
+
+export interface ReferenceValuesCustomDataContext extends CustomDataContext {
+    referenceValues: { [index: string]: any };
+}
+
+export interface RmlEvaluator {
+    cache?: DevServerCache;
+}
+
+export interface SetDataContextParams {
+    mappingFileUri: string;
+    dataContext: EvaluationDataContext;
+}
+
+export interface StepInlineIterationParams {
+    structure: StructureSelector;
+    delta: number;
+}
+
+export interface StepInlineIterationResult {
+    dataContext: EvaluationDataContext;
+    activeIterationIndex: number;
+    traceSummary: string[];
+}
+
+export interface ExecuteParams {
+    structure?: StructureSelector;
+    executionId?: string;
+    baseIri?: string;
+}
+
+export interface ExecuteResult {
+    targets: { [index: string]: TargetExecutionResult };
+    reportUpdate: string;
+    prefixMap: { [index: string]: string };
+    logicalSources: { [index: string]: string };
+    errors: RmlErrorDto[];
+}
+
+export interface LogicalTargetInfo {
+    targetType?: string;
+    targetPath?: string;
+    serialization?: string;
+    compression?: string;
+    encoding?: string;
+}
+
+export interface QuadChunkNotification {
+    executionId: string;
+    targetId: string;
+    statements: RdfStatement[];
+    logicalSources: { [index: string]: string };
+    chunkIndex: number;
+    isLast: boolean;
+}
+
+export interface RmlExecutionService {
+}
+
+export interface TargetExecutionResult {
+    targetId: string;
+    logicalTarget?: LogicalTargetInfo;
+    statements: RdfStatement[];
+    statementCount: number;
+}
+
+export interface ExpressionFormatter {
+}
+
+export interface JoinSourceHintProvider {
+}
+
+export interface LspInlineHintProvider {
+    inlineEvaluator: InlineEvaluator;
+    joinSourceHintProvider: JoinSourceHintProvider;
+    parameterHintProvider: ParameterHintProvider;
+}
+
+export interface ParameterHintProvider {
+}
+
+export interface OntologyConformanceChecker {
+}
+
+export interface Issue {
+    errorType: OntClass;
+    message: string;
+}
+
+export interface OntologyLoader {
+}
+
+export interface OntologyRegistry {
+    ontModel: OntModel;
+}
+
+export interface PropertyCandidate {
+    property: Resource;
+    compactIri: string;
+    label?: string;
+    comment?: string;
+    expectedRange?: Resource;
+    isObjectProperty: boolean;
+    isDatatypeProperty: boolean;
+    inheritanceDistance: number;
+    definedOnClass?: Resource;
+}
+
+export interface PropertyConstraint {
+    predicate: Resource;
+    isKnownProperty: boolean;
+    isDomainCompatible: boolean;
+    declaredDomains: Resource[];
+    expectedRange?: Resource;
+    isObjectProperty: boolean;
+    isDatatypeProperty: boolean;
+}
+
+export interface PlanAttributeItem {
+    key: string;
+    value: string;
+    originRange?: Range;
+}
+
+export interface PlanInspector {
+}
+
+export interface PlanNodeDescriptor {
+}
+
+export interface PlanNodeItem {
+    id: string;
+    type: string;
+    originRange: Range[];
+    resource?: string;
+    displayResource?: string;
+    attributes: PlanAttributeItem[];
+    references: PlanReferenceItem[];
+    children: PlanNodeItem[];
+}
+
+export interface PlanParams {
+    mappingFileUri: string;
+    structure?: StructureSelector;
+}
+
+export interface PlanReferenceItem {
+    role: string;
+    targetId: string;
+    targetLabel: string;
+    targetResource?: string;
+    originRange?: Range;
+}
+
+export interface PlanResult {
+    roots: PlanNodeItem[];
+    selectedNodeId?: string;
+}
+
+export interface ReferenceDependency {
+    referenceFormulationType: string;
+    referenceId: string;
+    placeholders: string[];
+}
+
+export interface ReferencesDependenciesParams {
+    structure: StructureSelector;
+}
+
+export interface CsvSchemaProvider extends SchemaProvider {
+}
+
+export interface JsonSampledSchemaProvider extends SchemaProvider {
+    iterationSampleLimit?: number;
+}
+
+export interface JsonSchemaProvider extends SchemaProvider {
+}
+
+export interface LogicalViewSchemaProvider extends SchemaProvider {
+}
+
+export interface ReferenceCompletionOrigin {
+    type: string;
+    resource?: Resource;
+    location?: string;
+    graphPointer?: string;
+}
+
+export interface SchemaProvider {
+}
+
+export interface SqlSchemaProvider extends SchemaProvider {
+    devServerCache?: DevServerCache;
+    localCache: { [index: string]: CachedSchema };
+}
+
+export interface CachedSchema {
+    schemaInfo: SchemaInfo;
+    dialectRules: SqlDialectRules;
+    error?: SqlSourceError;
+    timestamp: number;
+}
+
+export interface SqlDialectRules {
+    storesUpperCase: boolean;
+    storesLowerCase: boolean;
+    storesMixedCase: boolean;
+    quoteString: string;
+}
+
+export interface SqlSourceError {
+    kind: ErrorKind;
+    message: string;
+    cause?: Exception;
+}
+
+export interface CursorSelector extends StructureSelector {
+    mappingFileUri: string;
+    position: Position;
+}
+
+export interface DocumentSelector extends StructureSelector {
+    textDocument: TextDocumentIdentifier;
+}
+
+export interface IdSelector extends StructureSelector {
+    mappingFileUri: string;
+    id: string;
+}
+
+export interface IriSelector extends StructureSelector {
+    mappingFileUri: string;
+    iri: string;
+}
+
+export interface StructureSelector {
+}
+
+export interface DocumentData {
+    language: string;
+    items: string[];
+}
+
+export interface LspCodeLensProvider {
+}
+
+export interface SourceDataInspector {
+}
+
+export interface SourceDataParams {
+    structure: StructureSelector;
+    offset: number;
+    limit: number;
+    dataContext?: EvaluationDataContext;
+}
+
+export interface SourceDataResult {
+    structureId: string;
+    structureResource?: string;
+    sourceType: string;
+    format: string;
+    table?: TableData;
+    document?: DocumentData;
+    offset: number;
+    limit: number;
+    totalItems: number;
+    totalExact: boolean;
+    hasMore: boolean;
+    diagnostics: string[];
+}
+
+export interface TableData {
+    headers: string[];
+    columnTypes: { [index: string]: string };
+    cellTypes: string[][];
+    rows: string[][];
+}
+
+export interface PlanNodeTopologicalSorter {
+}
+
+export interface RerProvSerializer {
+}
+
+export interface RmlTracer {
+    engine: TracePipelineEngine;
+}
+
+export interface TraceExecutor {
+}
+
+export interface TraceGraph {
+    nodes: { [index: string]: Node };
+}
+
+export interface Node {
+    planNode: PlanNode;
+    inputs: Value[];
+    outputs: Value[];
+    upstream: Node[];
+    downstream: Node[];
+}
+
+export interface Value {
+    producer: PlanNode;
+    iteration?: Iteration;
+    result?: RmlEvaluationResult;
+    text: string;
+    derivedFrom: Value[];
+}
+
+export interface TraceGraphExporter {
+}
+
+export interface TraceIterationParams {
+    structure: StructureSelector;
+    iterationIndex: number;
+}
+
+export interface TraceNode {
+    nodeId: string;
+    nodeType: string;
+    label?: string;
+    originRange?: Range;
+    attributes: PlanAttributeItem[];
+    inputs: TraceValue[];
+    outputs: TraceValue[];
+    dependencyIds: string[];
+    futureIds: string[];
+}
+
+export interface TraceParams {
+    structure: StructureSelector;
+    dataContext: EvaluationDataContext;
+}
+
+export interface TracePipelineEngine {
+}
+
+export interface TraceResult {
+    nodes: TraceNode[];
+    graphJsonLD: string;
+    prefixMap: { [index: string]: string };
+}
+
+export interface TraceResultParams {
+    structure: StructureSelector;
+    subject: string;
+    predicate: string;
+    object: string;
+    graph?: string;
+    lineage?: OriginLineage;
+}
+
+export interface TraceSlicer {
+}
+
+export interface TraceValue {
+    valueId: string;
+    iterationId: string;
+    text: string;
+    term?: RmlEvaluationResult;
+    producerNodeId: string;
+    derivedFromValueIds: string[];
+}
+
+export interface FunctionExecutionValidator extends MappingValidator {
+}
+
+export interface MappingValidator {
+}
+
+export interface OntologyValidator extends MappingValidator {
+}
+
+export interface ReferenceValidator extends MappingValidator {
+}
+
+export interface RmlErrorDto {
+    message: string;
+    errorTypeUri: string;
+    superClassUris: string[];
+    severity: string;
+    ranges: PointRange[];
+    samples: SampleOccurrence[];
+    additionalCount: number;
+    source?: string;
+}
+
+export interface RmlValidationService {
+    validators: MappingValidator[];
+    debounceDelayMs: number;
+    documentValidatorDiagnostics: { [index: string]: { [index: string]: Diagnostic[] } };
+    lastPublishedDiagnostics: { [index: string]: Diagnostic[] };
+    documentVersions: { [index: string]: number };
+    pendingDynamicTasks: { [index: string]: ScheduledFuture<any> };
+    debounceExecutor: ScheduledExecutorService;
+    lastToastTimes: { [index: string]: number };
+    lastToastMessages: { [index: string]: string };
+    documentsWithActiveUnlocatedErrors: string[];
+}
+
+export interface Partitioned {
+    located: Diagnostic[];
+    unlocated: RmlErrorDto[];
+}
+
+export interface RuntimeOntologyValidator extends MappingValidator {
+}
+
+export interface PredicateObjectPair {
+    pm: PredicateMap;
+    om: BaseObjectMap;
+    pmOrigin?: Origin;
+    omOrigin?: Origin;
+}
+
+export interface SyntaxAndReportValidator extends MappingValidator {
+}
+
+export interface UnusedElementValidator extends MappingValidator {
+}
+
+export interface ValidateParams {
+    mappingFileUri: string;
+}
+
+export interface ValidationContext {
+    loaded: LoadedMapping;
+    mappingFileUri: string;
+    workspace: MappingWorkspace;
+    cancellationCheck: BooleanSupplier;
+}
+
+export interface RawValue extends RmlEvaluationResult {
+    value?: any;
+    targets: LogicalTarget[];
+    lineage?: OriginLineage;
+}
+
+export interface RdfPredicateObject extends RmlEvaluationResult {
+    predicate: IRITerm;
+    object: Term;
+    graph?: IRITerm;
+    targets: LogicalTarget[];
+}
+
+export interface RdfStatement extends RdfStatementLike {
+    subject: BlankNodeOrIRI;
+    predicate: IRITerm;
+    object: Term;
+    graph?: IRITerm;
+    targets: LogicalTarget[];
+    lineage?: OriginLineage;
+}
+
+export interface RdfStatementSubjectGraph extends RdfStatementLike {
+    subject: BlankNodeOrIRI;
+    graph?: IRITerm;
+    targets: LogicalTarget[];
+    lineage?: OriginLineage;
+}
+
+export interface RmlEvaluationResult {
+}
+
+export interface BlankNodeOrIRI extends Term {
+}
+
+export interface BlankNodeTerm extends BlankNodeOrIRI {
+    id: string;
+    targets: LogicalTarget[];
+    lineage?: OriginLineage;
+}
+
+export interface CollectionOrContainerTerm extends BlankNodeOrIRI {
+    elements: Term[];
+    id: BlankNodeOrIRI;
+    idGenerated: boolean;
+    targets: LogicalTarget[];
+    lineage?: OriginLineage;
+}
+
+export interface Datardf {
+}
+
+export interface IRITerm extends BlankNodeOrIRI {
+    uri: string;
+    targets: LogicalTarget[];
+    lineage?: OriginLineage;
+}
+
+export interface LiteralTerm extends Term {
+    value: string;
+    datatype?: IRITerm;
+    language?: string;
+    targets: LogicalTarget[];
+    lineage?: OriginLineage;
+}
+
+export interface RdfAltTerm extends CollectionOrContainerTerm {
+}
+
+export interface RdfBagTerm extends CollectionOrContainerTerm {
+}
+
+export interface RdfListTerm extends CollectionOrContainerTerm {
+}
+
+export interface RdfSeqTerm extends CollectionOrContainerTerm {
+}
+
+export interface Term extends RmlEvaluationResult {
+}
+
+export interface Point extends Comparable<Point> {
+    line: number;
+    column: number;
+}
+
+export interface PointRange extends Comparable<PointRange> {
+    start: Point;
+    end?: Point;
+}
+
+export interface SampleOccurrence {
+    originLineage?: OriginLineage;
+    evaluationResult?: RmlEvaluationResult;
+}
+
+export interface Path extends Comparable<Path>, Iterable<Path>, Watchable {
+}
+
+export interface LanguageClient {
+}
+
+export interface TextDocumentService {
+}
+
+export interface WorkspaceService {
+}
+
+export interface MappingDocument extends AbstractPlanNode {
+    triplesMaps: TriplesMap[];
+    prefixMap: { [index: string]: string };
+}
+
+export interface RmlLoader {
+    reflectiveLoader: ReflectiveRdfObjectLoader;
+    mappingPath?: Path;
+    mappingContent?: string;
+    mappingModel?: Model;
+    mappingDirectory: Path;
+    currentDirectory: Path;
+    report: RmlExecutionReport;
+    validationMode: ValidationMode;
+    prefixMap: { [index: string]: string };
+    mappingPaths: Path[];
+}
+
+export interface Model extends ModelCon, ModelGraphInterface, RDFReaderF, RDFWriterF, PrefixMapping, Lock {
+}
+
+export interface RmlExecutionReport {
+    logAggregator: RmlErrorAggregator;
+    executionPlan?: MappingDocument;
+    statistics: Statistics;
+}
+
+export interface PlanNode {
+}
+
+export interface AstKey {
+}
+
+export interface Position {
+    line: number;
+    character: number;
+}
+
+export interface Range {
+    start: Position;
+    end: Position;
+}
+
+export interface Resource extends RDFNode {
+}
+
+export interface Iteration {
+    nulls: any[];
+    lineage?: OriginLineage;
+}
+
+export interface EvaluationContext {
+    report: RmlExecutionReport;
+    baseIri?: string;
+    blankNodeScope: BlankNodeScope;
+    activeTargets: LogicalTarget[];
+    cancellationToken: CancellationToken;
+    sourceIterations: { [index: string]: Iteration[] };
+    nodeOverrides: { [index: string]: RmlEvaluationResult[] };
+    joinIndexes: { [index: string]: ParentJoinIndex };
+    validationMode: ValidationMode;
+    templateSafety: TemplateReferenceSafety;
+    statementObserver?: Consumer<EvaluatedStatementContext>;
+}
+
+export interface OntClass extends OntObject, AsNamed<Named>, HasDisjoint<OntClass> {
+}
+
+export interface OntModel extends Model, MutableModel<OntModel>, PrefixedModel<OntModel>, IOModel<OntModel>, CreateClasses, CreateRanges, CreateDisjoint, CreateSWRL {
+}
+
+export interface Exception extends Throwable {
+}
+
+export interface TextDocumentIdentifier {
+    uri: string;
+}
+
+export interface OriginLineage {
+    primary: IterationId;
+    joined: IterationId[];
+}
+
+export interface ScheduledExecutorService extends ExecutorService {
+}
+
+export interface PredicateMap extends TermMap {
+}
+
+export interface BaseObjectMap extends PlanNode, TermGenerator {
+}
+
+export interface Origin {
+    sourceStatements?: RDFPointer[];
+}
+
+export interface BooleanSupplier {
+}
+
+export interface RdfStatementLike extends RmlEvaluationResult {
+}
+
+export interface Watchable {
+}
+
+export interface AbstractPlanNode extends PlanNode {
+    parent?: PlanNode;
+    cachedAstKey?: AstKey;
+    propertyOrigins: { [index: string]: Origin };
+    extraOrigins: Origin[];
+}
+
+export interface ReflectiveRdfObjectLoader {
+    context: RdfLoaderContext;
+    typeDeciders: TypeDecider[];
+    customMappers: { [index: string]: CustomMapper<any> };
+    postProcessors: { [index: string]: PostProcessor<any>[] };
+    typeBindings: { [index: string]: Class<any> };
+    instanceCache: { [index: string]: any };
+    metadataCache: { [index: string]: ClassMetadata };
+    accessedStatements: Statement[];
+}
+
+export interface ModelCon {
+}
+
+export interface ModelGraphInterface {
+}
+
+export interface RDFReaderF {
+}
+
+export interface RDFWriterF {
+}
+
+export interface PrefixMapping {
+}
+
+export interface Lock {
+}
+
+export interface RmlErrorAggregator {
+    maxSamples: number;
+    entries: { [index: string]: MutableAggregate };
+}
+
+export interface Statistics {
+    generatedStatementPerTriplesMap: { [index: string]: number };
+    generatedStatements: number;
+}
+
+export interface Cache<K, V> {
+}
+
+export interface ParentJoinIndex {
+    unconditional: boolean;
+    allParentIterations: Iteration[];
+    index: Multimap<CompositeJoinKey, Iteration>;
+}
+
+export interface RDFNode extends FrontsNode {
+}
+
+export interface TriplesMap extends AbstractPlanNode, BaseIRIScope, LocalReferenceScope, LogicalTargetScope {
+    subject: Resource;
+    logicalSource: AbstractLogicalSource;
+    subjectMap: SubjectMap;
+    predicateObjectMaps: PredicateObjectMap[];
+    baseIRI: string;
+    logicalTargets: LogicalTarget[];
+    countGeneratedStatements: number;
+}
+
+export interface BlankNodeScope {
+    counter: number;
+    idMap: { [index: string]: string };
+}
+
+export interface CancellationToken {
+    cancelled: AtomicBoolean;
+}
+
+export interface OntObject extends OntResource {
+}
+
+export interface CreateClasses {
+}
+
+export interface CreateRanges {
+}
+
+export interface CreateDisjoint {
+}
+
+export interface CreateSWRL {
+}
+
+export interface Throwable extends Serializable {
+    detailMessage: string;
+    cause: Throwable;
+    stackTrace: StackTraceElement[];
+    suppressedExceptions: Throwable[];
+}
+
+export interface IterationId {
+    logicalSourceId: string;
+    index: number;
+}
+
+export interface Diagnostic {
+    range: Range;
+    severity: DiagnosticSeverity;
+    code: Either<string, number>;
+    codeDescription: DiagnosticCodeDescription;
+    source: string;
+    message: Either<string, MarkupContent>;
+    tags: DiagnosticTag[];
+    relatedInformation: DiagnosticRelatedInformation[];
+    data: any;
+}
+
+export interface ScheduledFuture<V> extends Delayed, Future<V> {
+}
+
+export interface ExecutorService extends Executor, AutoCloseable {
+}
+
+export interface DatatypeMap extends TermMap {
+}
+
+export interface LanguageMap extends ExpressionMap {
+}
+
+export interface GatherMap extends AbstractPlanNode, LogicalTargetScope {
+    subject: Resource;
+    logicalTargets: LogicalTarget[];
+    allowEmptyListAndContainer: boolean;
+    gatherAs?: Resource;
+    strategy: Resource;
+    gatherMaps: TermGenerator[];
+}
+
+export interface Expression extends PlanNode {
+}
+
+export interface Condition extends ExpressionMap {
+}
+
+export interface TermMap extends ExpressionMap, TermGenerator {
+    datatypeMap?: DatatypeMap;
+    languageMap?: LanguageMap;
+    termType?: Resource;
+    gatherMap?: GatherMap;
+    baseIRI?: string;
+}
+
+export interface TermGenerator extends PlanNode {
+}
+
+export interface LogicalTarget {
+    subject: Resource;
+    target?: RMLTarget;
+    serialization?: Resource;
+    compression?: Resource;
+    encoding?: Resource;
+}
+
+export interface Comparable<T> {
+}
+
+export interface Iterable<T> {
+}
+
+export interface RdfLoaderContext {
+}
+
+export interface FrontsNode {
+}
+
+export interface AbstractLogicalSource extends AbstractPlanNode, FormulationIterable, FieldParent, ExportedReferenceScope, LogicalTargetScope {
+    subject: Resource;
+    nulls: any[];
+    logicalTargets: LogicalTarget[];
+}
+
+export interface SubjectMap extends TermMap {
+    classes: Resource[];
+    graphMaps: GraphMap[];
+}
+
+export interface BaseIRIScope extends PlanNode {
+}
+
+export interface LocalReferenceScope extends PlanNode {
+}
+
+export interface LogicalTargetScope extends PlanNode {
+}
+
+export interface AtomicBoolean extends Serializable {
+    value: number;
+}
+
+export interface Consumer<T> {
+}
+
+export interface EvaluatedStatementContext {
+    triplesMap: TriplesMap;
+    predicateObjectMap: PredicateObjectMap;
+    predicateMap?: PredicateMap;
+    objectMap?: BaseObjectMap;
+    evaluationResult: RmlEvaluationResult;
+    originLineage?: OriginLineage;
+}
+
+export interface OntResource extends Resource {
+}
+
+export interface AsNamed<E> {
+}
+
+export interface Named extends OntEntity, OntClass {
+}
+
+export interface HasDisjoint<E> {
+}
+
+export interface MutableModel<R> extends Model {
+}
+
+export interface PrefixedModel<R> extends PrefixMapping {
+}
+
+export interface IOModel<R> extends Model {
+}
+
+export interface Serializable {
+}
+
+export interface StackTraceElement extends Serializable {
+    classLoaderName: string;
+    moduleName: string;
+    moduleVersion: string;
+    declaringClass: string;
+    methodName: string;
+    fileName: string;
+    lineNumber: number;
+    format: number;
+}
+
+export interface DiagnosticCodeDescription {
+    href: string;
+}
+
+export interface Delayed extends Comparable<Delayed> {
+}
+
+export interface Executor {
+}
+
+export interface AutoCloseable {
+}
+
+export interface ExpressionMap extends AbstractPlanNode, LogicalTargetScope {
+    subject: Resource;
+    expression: Expression;
+    condition: Condition;
+    logicalTargets: LogicalTarget[];
+}
+
+export interface RDFPointer {
+}
+
+export interface RMLTarget {
+}
+
+export interface TypeDecider {
+}
+
+export interface CustomMapper<T> {
+}
+
+export interface PostProcessor<T> {
+}
+
+export interface Class<T> extends Serializable, GenericDeclaration, Type, AnnotatedElement, OfField<Class<any>>, Constable {
+    componentType: Class<any>;
+}
+
+export interface ClassMetadata {
+    idField: Field;
+    properties: PropertyMetadata[];
+    lists: ListPropertyMetadata[];
+    mappedFrom: MappedFromMetadata[];
+    origins: OriginMetadata[];
+    originPredicates: OriginPredicateMetadata[];
+    rdfTypeUri?: string;
+}
+
+export interface Statement extends FrontsTriple {
+}
+
+export interface MutableAggregate {
+    primary: RmlError;
+    samples: SampleOccurrence[];
+    additionalCount: number;
+}
+
+export interface Multimap<K, V> {
+}
+
+export interface CompositeJoinKey {
+    keys: CanonicalJoinKey[];
+}
+
+export interface FormulationIterable extends PlanNode {
+}
+
+export interface FieldParent {
+}
+
+export interface ExportedReferenceScope extends PlanNode {
+}
+
+export interface PredicateObjectMap extends AbstractPlanNode, LogicalTargetScope {
+    subject: Resource;
+    logicalTargets: LogicalTarget[];
+    predicateMaps: PredicateMap[];
+    objectMaps: BaseObjectMap[];
+    graphMaps: GraphMap[];
+}
+
+export interface OntEntity extends OntObject {
+}
+
+export interface Either<L, R> {
+    left: L;
+    right: R;
+}
+
+export interface MarkupContent {
+    kind: string;
+    value: string;
+}
+
+export interface DiagnosticRelatedInformation {
+    location: Location;
+    message: string;
+}
+
+export interface Future<V> {
+}
+
+export interface GenericDeclaration extends AnnotatedElement {
+}
+
+export interface Type {
+}
+
+export interface AnnotatedElement {
+}
+
+export interface Constable {
+}
+
+export interface Field extends AccessibleObject, Member {
+}
+
+export interface FrontsTriple {
+}
+
+export interface RmlError {
+    message: string;
+    origin?: Origin;
+    errorType: OntClass;
+    exception?: Exception;
+    context: { [index: string]: any };
+    planNode?: PlanNode;
+    originLineage?: OriginLineage;
+    evaluationResult?: RmlEvaluationResult;
+}
+
+export interface GraphMap extends TermMap {
+}
+
+export interface Location {
+    uri: string;
+    range: Range;
+}
+
+export interface OfField<F> extends TypeDescriptor {
+}
+
+export interface AccessibleObject extends AnnotatedElement {
+}
+
+export interface Member {
+}
+
+export interface PropertyMetadata {
+    field: Field;
+    propertyUri: string;
+    required: boolean;
+    shortcutPropertyUri: string;
+    targetPropertyUri: string;
+    genericType: Class<any>;
+}
+
+export interface ListPropertyMetadata {
+    field: Field;
+    propertyUri: string;
+    genericType: Class<any>;
+}
+
+export interface MappedFromMetadata {
+    field: Field;
+    candidateClasses: Class<any>[];
+}
+
+export interface OriginMetadata {
+    field: Field;
+    targetPropertyName: string;
+    part: StatementPart;
+}
+
+export interface OriginPredicateMetadata {
+    field: Field;
+    targetPropertyName: string;
+}
+
+export interface CanonicalJoinKey {
+    normalizedValue: any;
+}
+
+export interface TypeDescriptor {
+}
+
+export type InlineHintsEvaluationMode = "INDEPENDENT_EVALUATION" | "TRACE";
+
+export type ErrorKind = "CONNECTION_ERROR" | "QUERY_ERROR";
+
+export type PlanNodeStage = "LOGICAL_SOURCE" | "REFERENCE" | "INPUT_PARAMETER" | "FUNCTION" | "TEMPLATE_EXPRESSION" | "TERM_MAP" | "PREDICATE_OBJECT_MAP" | "TRIPLES_MAP" | "OTHER";
+
+export type ValidationExecutionPolicy = "IMMEDIATE" | "DEBOUNCED_ASYNC";
+
+export type ValidationMode = "STRICT" | "LENIENT" | "NONE";
+
+export type TemplateReferenceSafety = "UNSAFE" | "SAFE_IRI" | "SAFE_URI";
+
+export type DiagnosticSeverity = "Error" | "Warning" | "Information" | "Hint";
+
+export type DiagnosticTag = "Unnecessary" | "Deprecated";
+
+export type StatementPart = "Subject" | "Predicate" | "Object";

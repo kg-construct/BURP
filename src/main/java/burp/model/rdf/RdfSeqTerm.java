@@ -1,17 +1,15 @@
 package burp.model.rdf;
 
 import burp.model.LogicalTarget;
+import burp.model.OriginLineage;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
 
 public final class RdfSeqTerm extends CollectionOrContainerTerm {
-    public RdfSeqTerm(List<Term> elements, BlankNodeOrIRI id, boolean idGenerated, Set<LogicalTarget> targets) {
-        super(elements, id, idGenerated, targets);
-    }
-
-    public RdfSeqTerm(List<Term> elements, BlankNodeOrIRI id, boolean idGenerated) {
-        super(elements, id, idGenerated, Set.of());
+    public RdfSeqTerm(List<Term> elements, BlankNodeOrIRI id, boolean idGenerated, Set<LogicalTarget> targets, @Nullable OriginLineage lineage) {
+        super(elements, id, idGenerated, targets, lineage);
     }
 
     @Override

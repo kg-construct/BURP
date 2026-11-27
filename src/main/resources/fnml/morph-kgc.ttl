@@ -1,0 +1,19 @@
+@prefix fno:      <https://w3id.org/function/ontology#> .
+@prefix morph-fn: <https://github.com/morph-kgc/morph-kgc/function/built-in.ttl#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+
+morph-fn:uuid
+    a                   fno:Function ;
+    fno:name            "uuid" ;
+    rdfs:label          "uuid" ;
+    dcterms:description "Generates a random UUID string." ;
+    fno:expects         ( ) ;
+    fno:returns         ( morph-fn:stringOutput ) .
+
+morph-fn:stringOutput
+    a             fno:Output ;
+    fno:name      "output string" ;
+    rdfs:label    "output string" ;
+    fno:type      xsd:string .

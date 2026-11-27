@@ -1,0 +1,29 @@
+# DO NOT FORMAT THIS FILE.
+# Token positions (line and column coordinates) are explicitly tested by CursorSelector and findNodeBySelector.
+# Any reformatting, indentation adjustment, or whitespace change will break cursor tests.
+
+@prefix rml: <http://w3id.org/rml/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ex: <http://example.com/ns#> .
+
+ex:TM a rml:TriplesMap ;
+    rml:logicalSource [
+        rml:source [
+            a rml:RelativePathSource ;
+            rml:root rml:MappingDirectory ;
+            rml:path "data.json"
+        ] ;
+        rml:referenceFormulation rml:JSONPath ;
+        rml:iterator "$.*"
+    ] ;
+    rml:subjectMap [
+        rml:template "http://example.com/item/{$.id}"
+    ] ;
+    rml:predicateObjectMap [
+        rml:graphMap [ rml:template "http://example.com/graph/{$.graph}" ] ;
+        rml:predicate ex:with ;
+        rml:objectMap [
+            rml:gather ( [ rml:reference "$.values.*" ] ) ;
+            rml:gatherAs rdf:List
+        ]
+    ] .
